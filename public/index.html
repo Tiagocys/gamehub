@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gamehub - Login e Primeiro Anúncio</title>
+  <title>Gamehub - Marketplace seguro</title>
   <style>
     :root {
       --bg: #0b1220;
@@ -24,6 +24,7 @@
                   var(--bg);
       color: var(--text);
       font-family: "Inter", system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
     }
     header {
       padding: 18px 20px;
@@ -35,6 +36,7 @@
       position: sticky;
       top: 0;
       z-index: 10;
+      background: rgba(11, 18, 32, 0.9);
     }
     .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.5px; }
     .pill {
@@ -45,7 +47,7 @@
       font-size: 12px;
       border: 1px solid var(--border);
     }
-    main { max-width: 1080px; margin: 0 auto; padding: 32px 20px 60px; display: grid; gap: 20px; }
+    main { max-width: 1140px; margin: 0 auto; padding: 28px 20px 60px; display: grid; gap: 20px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
     .card {
       background: var(--card);
@@ -54,9 +56,11 @@
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
-    h1 { margin: 0 0 8px; font-size: 26px; }
-    h2 { margin: 0 0 12px; font-size: 18px; }
-    p { color: var(--muted); margin: 4px 0 14px; }
+    h1 { margin: 0 0 12px; font-size: 30px; }
+    h2 { margin: 0 0 12px; font-size: 20px; }
+    h3 { margin: 10px 0 8px; }
+    p { color: var(--muted); margin: 6px 0 12px; }
+    ul { padding-left: 18px; color: var(--muted); margin-top: 6px; }
     label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
     input, select, textarea {
       width: 100%;
@@ -75,7 +79,6 @@
     }
     textarea { resize: vertical; min-height: 90px; }
     button {
-      width: 100%;
       padding: 12px;
       border: none;
       border-radius: 10px;
@@ -93,7 +96,7 @@
       border: 1px solid var(--border);
     }
     button:active { transform: translateY(1px); }
-    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
     .status { display: flex; align-items: center; gap: 8px; font-size: 14px; }
     .dot { width: 10px; height: 10px; border-radius: 999px; background: #f6d87c; }
     .dot.ok { background: var(--accent); }
@@ -112,8 +115,39 @@
     }
     .error { color: var(--danger); font-size: 13px; min-height: 18px; }
     .success { color: var(--accent); font-size: 13px; min-height: 18px; }
-    .divider { height: 1px; background: var(--border); margin: 16px 0; }
-    .small-btn { width: auto; padding: 8px 12px; font-size: 13px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 60% 20%, rgba(124,246,196,0.12), transparent 45%),
+                  radial-gradient(circle at 20% 80%, rgba(118,168,255,0.08), transparent 40%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; z-index: 1; display: grid; gap: 12px; }
+    .mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; }
+    .pill-strong {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(124,246,196,0.2);
+      color: var(--text);
+      border: 1px solid rgba(124,246,196,0.35);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .list-inline { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .list-inline span {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
@@ -130,82 +164,66 @@
   </header>
 
   <main>
+    <section class="card hero">
+      <div class="hero-content">
+        <span class="pill-strong">Marketplace seguro para servidores alternativos</span>
+        <h1>Venda e compre itens com escrow, chat privado e disputas moderadas.</h1>
+        <p>Login só com Google para simplificar. Dados ficam no Supabase; automações e webhooks rodam em Cloudflare Workers.</p>
+        <div class="actions">
+          <button id="google-btn">Entrar com Google</button>
+          <button class="secondary" id="signout-btn">Sair</button>
+          <span class="muted" id="session-status">Sem sessão.</span>
+        </div>
+        <div class="mini-grid">
+          <div class="notice">
+            <strong>Fluxo:</strong> anúncios → compra → pagamento via Stripe → entrega no chat → liberação → avaliações.
+          </div>
+          <div class="notice">
+            <strong>Segurança:</strong> JWT do Supabase, RLS ligada, logs de eventos na transação, e limite de quem cria servidores (somente admins).
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="grid">
       <section class="card">
-        <h1>Entrar ou criar conta</h1>
-        <p>Google OAuth ou email/senha. Perfil é salvo na tabela <code>public.users</code>.</p>
-
-        <div class="actions" style="margin-bottom:12px;">
-          <button id="google-btn">Entrar com Google</button>
-          <button class="secondary small-btn" id="toggle-mode-btn">Usar cadastro</button>
+        <h2>Painel rápido</h2>
+        <p id="profile-info">Faça login para ver seu perfil.</p>
+        <div class="list-inline">
+          <span>Auth: Google</span>
+          <span>Banco: Supabase</span>
+          <span>Storage: listing_media</span>
+          <span>Webhook: Cloudflare Worker</span>
         </div>
-        <div class="notice">Dica: defina <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> em <code>public/env.js</code>. Veja o rodapé.</div>
-        <div class="divider"></div>
-
-        <div id="auth-form">
-          <div class="row">
-            <div>
-              <label for="email">Email</label>
-              <input id="email" type="email" autocomplete="email" placeholder="voce@email.com" />
-            </div>
-            <div>
-              <label for="password">Senha</label>
-              <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
-            </div>
-          </div>
-          <div id="username-wrap">
-            <label for="username">Username (para perfil)</label>
-            <input id="username" type="text" autocomplete="username" placeholder="nick_mercado" />
-          </div>
-          <div style="margin-top:14px;" class="actions">
-            <button id="submit-auth">Continuar</button>
-            <button class="secondary small-btn" id="switch-auth">Já tenho conta</button>
-          </div>
-          <div class="error" id="auth-error"></div>
-        </div>
-
-        <div class="divider"></div>
-        <div class="notice" id="session-box">
-          <strong>Status:</strong> <span id="session-status">Sem sessão.</span>
+        <div class="notice">
+          Apenas administradores podem criar novos servidores. Para marcar alguém como admin, use a service key e atualize <code>public.users.is_admin</code>.
         </div>
       </section>
 
       <section class="card">
-        <h2>Criar primeiro anúncio <span class="tag">Requer login</span></h2>
-        <p>Salva em <code>public.listings</code>. Se o servidor não existir, criaremos antes em <code>public.servers</code>.</p>
+        <h2>Criar anúncio <span class="tag">Requer login</span></h2>
+        <p>Escolha um servidor já aprovado ou, se for admin, crie um novo.</p>
         <form id="listing-form">
           <div class="row">
             <div>
-              <label for="server-select">Servidor</label>
+              <label for="server-select">Servidor existente</label>
               <select id="server-select">
-                <option value="">Selecione um servidor existente</option>
+                <option value="">Selecione um servidor</option>
               </select>
             </div>
-            <div>
-              <label for="server-name">Ou criar servidor</label>
+            <div id="server-create-fields">
+              <label for="server-name">Criar servidor (admins)</label>
               <input id="server-name" placeholder="Nome do servidor" />
             </div>
           </div>
-          <div class="row">
-            <div>
-              <label for="game-type">Tipo de jogo</label>
-              <select id="game-type">
-                <option value="MMORPG">MMORPG</option>
-                <option value="MOBA">MOBA</option>
-                <option value="FPS">FPS</option>
-                <option value="OTSERVER">OTServer</option>
-                <option value="OTHER">Outro</option>
-              </select>
-            </div>
-            <div>
-              <label for="server-site">Site oficial (opcional)</label>
-              <input id="server-site" placeholder="https://..." />
-            </div>
-          </div>
+          <label for="server-site">Site oficial (opcional)</label>
+          <input id="server-site" placeholder="https://..." />
+
           <label for="server-description">Descrição do servidor (opcional)</label>
           <textarea id="server-description" placeholder="Breve resumo do servidor..."></textarea>
 
-          <div class="divider"></div>
+          <div class="divider" style="height:1px;background:var(--border);margin:16px 0;"></div>
+
           <label for="title">Título do anúncio</label>
           <input id="title" placeholder="Conta premium, set, coins..." />
 
@@ -247,13 +265,25 @@
     </div>
 
     <section class="card">
-      <h2>Config rápida</h2>
-      <p>Para funcionar localmente, crie <code>public/env.js</code> com suas chaves públicas:</p>
-      <pre style="white-space:pre-wrap;background:rgba(0,0,0,0.35);border:1px solid var(--border);padding:12px;border-radius:10px;">window.__ENV = {
-  SUPABASE_URL: "https://<project>.supabase.co",
-  SUPABASE_ANON_KEY: "supabase-anon-key"
-};</pre>
-      <p class="muted">Também adicione <strong>GOOGLE_CLIENT_ID</strong> e <strong>GOOGLE_CLIENT_SECRET</strong> no <code>supabase/.env</code> (ou variáveis do projeto) para habilitar OAuth.</p>
+      <h2>Como funciona na prática</h2>
+      <div class="mini-grid">
+        <div>
+          <h3>Escrow + webhooks</h3>
+          <p>Stripe captura → Worker valida → atualiza transação para paid/delivered/completed.</p>
+        </div>
+        <div>
+          <h3>Chat privado</h3>
+          <p>Cria chat vinculado à transação; mensagens filtradas; anexo só imagem.</p>
+        </div>
+        <div>
+          <h3>Disputas e auditoria</h3>
+          <p>Eventos ficam em <code>transactions.events</code>; admins revisam e decidem.</p>
+        </div>
+        <div>
+          <h3>RLS ativa</h3>
+          <p>Listings visíveis a todos; transações e mensagens só para participantes; servers apenas admins criam.</p>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -264,22 +294,21 @@
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
     const statusDot = document.getElementById("status-dot");
     const statusText = document.getElementById("status-text");
     const sessionStatus = document.getElementById("session-status");
+    const profileInfo = document.getElementById("profile-info");
     const googleBtn = document.getElementById("google-btn");
-    const authError = document.getElementById("auth-error");
-    const toggleModeBtn = document.getElementById("toggle-mode-btn");
-    const switchAuth = document.getElementById("switch-auth");
-    const usernameWrap = document.getElementById("username-wrap");
-    const submitAuth = document.getElementById("submit-auth");
+    const signoutBtn = document.getElementById("signout-btn");
     const listingForm = document.getElementById("listing-form");
     const listingError = document.getElementById("listing-error");
     const listingSuccess = document.getElementById("listing-success");
     const serverSelect = document.getElementById("server-select");
+    const serverCreateFields = document.getElementById("server-create-fields");
 
-    let mode = "signup"; // signup | login
     let supabase;
+    let profile = null;
 
     function setStatus(ok, text) {
       statusDot.classList.toggle("ok", ok);
@@ -296,40 +325,10 @@
       return supabase;
     }
 
-    function setMode(next) {
-      mode = next;
-      usernameWrap.classList.toggle("hide", mode === "login");
-      submitAuth.textContent = mode === "signup" ? "Criar conta" : "Entrar";
-      switchAuth.textContent = mode === "signup" ? "Já tenho conta" : "Quero me cadastrar";
-      toggleModeBtn.textContent = mode === "signup" ? "Usar login" : "Usar cadastro";
-      authError.textContent = "";
-    }
-
-    toggleModeBtn.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
-    switchAuth.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
-
-    async function refreshSession() {
-      try {
-        ensureClient();
-        const { data } = await supabase.auth.getSession();
-        const session = data.session;
-        if (session?.user) {
-          sessionStatus.textContent = `Logado como ${session.user.email}`;
-          await loadServers();
-        } else {
-          sessionStatus.textContent = "Sem sessão.";
-          serverSelect.innerHTML = '<option value=\"\">Selecione um servidor existente</option>';
-        }
-      } catch (err) {
-        console.error(err);
-        sessionStatus.textContent = "Erro ao checar sessão.";
-      }
-    }
-
-    async function upsertProfile(user, username) {
+    async function upsertProfile(user) {
       const payload = {
         id: user.id,
-        username: username || user.email.split("@")[0],
+        username: user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
         email: user.email,
         avatar_url: user.user_metadata?.avatar_url ?? null
       };
@@ -337,36 +336,60 @@
       if (error) throw error;
     }
 
-    submitAuth.addEventListener("click", async () => {
-      authError.textContent = "";
+    async function fetchProfile(userId) {
+      const { data, error } = await supabase.from("users").select("id, username, is_admin").eq("id", userId).single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    }
+
+    async function refreshSession() {
       try {
         ensureClient();
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const username = document.getElementById("username").value.trim();
-        if (!email || !password) {
-          authError.textContent = "Preencha email e senha.";
-          return;
-        }
-
-        if (mode === "signup") {
-          const { data, error } = await supabase.auth.signUp({ email, password });
-          if (error) throw error;
-          if (data.user) await upsertProfile(data.user, username);
+        const { data } = await supabase.auth.getSession();
+        const session = data.session;
+        if (session?.user) {
+          const user = session.user;
+          await upsertProfile(user);
+          profile = await fetchProfile(user.id);
+          sessionStatus.textContent = `Logado como ${user.email}`;
+          profileInfo.textContent = profile
+            ? `Perfil: ${profile.username} ${profile.is_admin ? "(admin)" : ""}`
+            : "Perfil não encontrado.";
+          serverCreateFields.classList.toggle("hide", !profile?.is_admin);
+          await loadServers();
         } else {
-          const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          if (data.user) await upsertProfile(data.user, username);
+          profile = null;
+          sessionStatus.textContent = "Sem sessão.";
+          profileInfo.textContent = "Faça login para ver seu perfil.";
+          serverCreateFields.classList.add("hide");
+          serverSelect.innerHTML = '<option value=\"\">Selecione um servidor</option>';
         }
-        await refreshSession();
       } catch (err) {
         console.error(err);
-        authError.textContent = err?.message || "Falha na autenticação.";
+        sessionStatus.textContent = "Erro ao checar sessão.";
       }
-    });
+    }
+
+    async function loadServers() {
+      const { data, error } = await supabase
+        .from("servers")
+        .select("id,name,status")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) {
+        console.error(error);
+        return;
+      }
+      serverSelect.innerHTML = '<option value=\"\">Selecione um servidor</option>';
+      data?.forEach((srv) => {
+        const opt = document.createElement("option");
+        opt.value = srv.id;
+        opt.textContent = `${srv.name} · ${srv.status}`;
+        serverSelect.appendChild(opt);
+      });
+    }
 
     googleBtn.addEventListener("click", async () => {
-      authError.textContent = "";
       try {
         ensureClient();
         const { error } = await supabase.auth.signInWithOAuth({
@@ -376,28 +399,19 @@
         if (error) throw error;
       } catch (err) {
         console.error(err);
-        authError.textContent = err?.message || "Falha no OAuth.";
+        alert(err?.message || "Falha no OAuth.");
       }
     });
 
-    async function loadServers() {
-      const { data, error } = await supabase
-        .from("servers")
-        .select("id,name,game_type")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) {
-        console.error(error);
-        return;
+    signoutBtn.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        await refreshSession();
+      } catch (err) {
+        console.error(err);
       }
-      serverSelect.innerHTML = '<option value=\"\">Selecione um servidor existente</option>';
-      data?.forEach((srv) => {
-        const opt = document.createElement("option");
-        opt.value = srv.id;
-        opt.textContent = `${srv.name} · ${srv.game_type}`;
-        serverSelect.appendChild(opt);
-      });
-    }
+    });
 
     listingForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -413,10 +427,10 @@
           return;
         }
 
+        const isAdmin = profile?.is_admin === true;
         const formValues = {
           serverId: document.getElementById("server-select").value || null,
           serverName: document.getElementById("server-name").value.trim(),
-          gameType: document.getElementById("game-type").value,
           serverSite: document.getElementById("server-site").value.trim() || null,
           serverDescription: document.getElementById("server-description").value.trim() || null,
           title: document.getElementById("title").value.trim(),
@@ -428,21 +442,25 @@
         };
 
         if (!formValues.title || !formValues.category) {
-          listingError.textContent = "Preencha pelo menos título e categoria.";
+          listingError.textContent = "Preencha título e categoria.";
           return;
         }
 
         let serverId = formValues.serverId;
         if (!serverId) {
+          if (!isAdmin) {
+            listingError.textContent = "Somente admins podem criar servidores. Selecione um existente.";
+            return;
+          }
           if (!formValues.serverName) {
-            listingError.textContent = "Escolha um servidor existente ou informe um novo nome.";
+            listingError.textContent = "Informe o nome do servidor para criar.";
             return;
           }
           const { data: newServer, error: serverErr } = await supabase
             .from("servers")
             .insert({
               name: formValues.serverName,
-              game_type: formValues.gameType,
+              game_type: "general",
               official_site: formValues.serverSite,
               description: formValues.serverDescription,
               owner_id: user.id
@@ -470,7 +488,6 @@
 
         listingSuccess.textContent = "Anúncio criado!";
         listingForm.reset();
-        document.getElementById("game-type").value = "MMORPG";
         document.getElementById("currency").value = "BRL";
       } catch (err) {
         console.error(err);
@@ -479,8 +496,13 @@
     });
 
     // Inicializa
-    setMode("signup");
-    try { ensureClient(); refreshSession(); } catch (err) { console.warn(err.message); }
+    try {
+      ensureClient();
+      refreshSession();
+      supabase.auth.onAuthStateChange(() => refreshSession());
+    } catch (err) {
+      console.warn(err.message);
+    }
   </script>
 </body>
 </html>
