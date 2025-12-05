@@ -12,8 +12,7 @@
       <a href="index.html" class="brand">
         <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
         <div class="brand-copy">
-          <span class="brand-name">Gimerr</span>
-          <span class="brand-tagline">Players no comando</span>
+          <span class="brand-tagline">Play to earn</span>
         </div>
       </a>
       <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
@@ -21,7 +20,11 @@
 
     <main>
       <section class="hero">
-        <div class="hero-grid">
+        <video class="hero-video" autoplay muted loop playsinline>
+          <source src="videos/bg.webm" type="video/webm" />
+        </video>
+        <div class="hero-overlay"></div>
+        <div class="hero-grid single">
           <div class="hero-copy">
             <h1>Encontre freelancers, itens e contas do seu game favorito.</h1>
             <p class="lede">Gamers freelancers publicam gigs, entregam itens raros e vendem contas verificadas. Cada game tem seu próprio marketplace operado 100% por players.</p>
@@ -33,37 +36,14 @@
               <div class="suggestions">
                 <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
               </div>
-              <p id="search-feedback" class="search-feedback">Digite o nome de um game e veja se já temos um marketplace ativo.</p>
+              <p id="search-feedback" class="search-feedback">Não encontrou um game que procurava? <a id="anchor-cadastro-game" href="game-submit.html" style="text-decoration: underline;">Cadastre aqui</a>.</p>
             </form>
-            <div class="cta-inline">
-              não encontrou um game que procurava?
-              <button type="button" class="link-ghost" id="cta-cadastrar-game">Cadastre ele clicando aqui</button>
-            </div>
+
             <div class="pill-trail">
               <span class="pill">Boost de rank</span>
               <span class="pill">Mercado de itens</span>
               <span class="pill">Contas verificadas</span>
               <span class="pill">Coaching</span>
-            </div>
-            <div class="session-pill" id="session-status">Você está navegando como convidado. Faça login para salvar favoritos e publicar gigs.</div>
-          </div>
-          <div class="hero-panel">
-            <div class="hero-card outline">
-              <div class="badge">Play to earn</div>
-              <ul class="hero-list">
-                <li>
-                  <span>Boosters verificam identidade</span>
-                  <span class="badge">Verificado</span>
-                </li>
-                <li>
-                  <span>Itens raros com prova de entrega</span>
-                  <span class="badge">Escrow</span>
-                </li>
-                <li>
-                  <span>Contas smurf prontas para jogar</span>
-                  <span class="badge">Seguro</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -110,14 +90,12 @@
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
     const authBtn = document.getElementById("auth-btn");
-    const sessionStatus = document.getElementById("session-status");
     const searchForm = document.getElementById("game-search");
     const searchInput = document.getElementById("game-search-input");
     const searchFeedback = document.getElementById("search-feedback");
     const searchSuggestions = document.getElementById("search-suggestions");
     const gamesGrid = document.getElementById("games-grid");
     const gamesEmpty = document.getElementById("games-empty");
-    const ctaCadastrarGame = document.getElementById("cta-cadastrar-game");
     const viewAllGamesBtn = document.getElementById("view-all-games");
 
     let supabase;
@@ -126,7 +104,7 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        sessionStatus.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        searchFeedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
         authBtn.disabled = true;
         throw new Error("Supabase não configurado");
       }
@@ -152,11 +130,9 @@
       authBtn.disabled = false;
       if (currentUser) {
         authBtn.textContent = "Sair";
-        sessionStatus.textContent = "Sessão ativa.";
         return;
       }
       authBtn.textContent = "Entrar com Google";
-      sessionStatus.textContent = "Você está navegando como convidado. Faça login para salvar favoritos e publicar gigs.";
     }
 
     async function handleAuthClick() {
@@ -178,7 +154,7 @@
         });
       } catch (err) {
         console.error(err);
-        sessionStatus.textContent = err?.message || "Erro ao autenticar.";
+        searchFeedback.textContent = err?.message || "Erro ao autenticar.";
         authBtn.disabled = false;
       }
     }
@@ -191,7 +167,7 @@
         updateAuthUI();
       } catch (err) {
         console.error(err);
-        sessionStatus.textContent = "Erro ao carregar sessão.";
+        searchFeedback.textContent = "Erro ao carregar sessão.";
       }
     }
 
@@ -336,23 +312,6 @@
     });
 
     searchSuggestions?.addEventListener("click", handleSuggestionClick);
-
-    ctaCadastrarGame?.addEventListener("click", async () => {
-      try {
-        ensureClient();
-        if (!currentUser) {
-          await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: new URL("game-submit.html", window.location.href).href }
-          });
-          return;
-        }
-        window.location.href = "game-submit.html";
-      } catch (err) {
-        console.error(err);
-        sessionStatus.textContent = err?.message || "Erro ao redirecionar.";
-      }
-    });
 
     viewAllGamesBtn?.addEventListener("click", () => {
       if (!games || games.length === 0) {

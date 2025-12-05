@@ -4,68 +4,200 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gimerr - Admin</title>
-  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --muted: #5f6f8c;
+      --text: #0f2557;
+      --accent: #1b4fd3;
+      --accent-2: #4e7dff;
+      --danger: #e2526d;
+      --border: rgba(15,37,87,0.08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255,255,255,0.92);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo img { width: 110px; height: auto; }
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(27,79,211,0.1);
+      color: var(--accent-2);
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+    .header-actions { display: flex; gap: 14px; align-items: center; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 20px 60px; display: grid; gap: 20px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(15,37,87,0.08);
+    }
+    h1 { margin: 0 0 12px; font-size: 28px; color: #0d1b3b; }
+    p { color: var(--muted); margin: 6px 0 12px; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
+    input, textarea {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15,37,87,0.02);
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    input:focus, textarea:focus {
+      border-color: rgba(27,79,211,0.35);
+      box-shadow: 0 0 0 3px rgba(27,79,211,0.12);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    button, .btn-link {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 999px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s;
+      color: #f8fbff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 24px rgba(27,79,211,0.25);
+      width: 100%;
+      margin-top: 12px;
+    }
+    button.secondary, .btn-link.secondary {
+      background: transparent;
+      color: var(--text);
+      box-shadow: none;
+      border: 1px solid var(--border);
+    }
+    button:active, .btn-link:active { transform: translateY(1px); }
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: #f6d87c; }
+    .dot.ok { background: var(--accent); }
+    .muted { color: var(--muted); font-size: 13px; }
+    .notice { padding: 10px 12px; border-radius: 10px; background: rgba(118,168,255,0.08); border: 1px solid var(--border); font-size: 13px; }
+    .error { color: var(--danger); font-size: 13px; min-height: 18px; }
+    .success { color: var(--accent); font-size: 13px; min-height: 18px; }
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+    form .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; }
+    .list { display: grid; gap: 12px; }
+    .chip-btn {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      width: auto;
+      margin-top: 0;
+      box-shadow: none;
+    }
+    #logo-preview-wrapper {
+      display: none;
+      margin-top: 10px;
+      background: rgba(15,37,87,0.02);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    #logo-preview-wrapper img {
+      width: 100%;
+      max-height: 200px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-name">Gimerr</span>
-          <span class="brand-tagline">Painel Admin</span>
-        </div>
-      </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-    </header>
-
-    <main class="section">
-      <div class="form-card">
-        <div class="inline-actions" style="justify-content: space-between;">
-          <div>
-            <h2>Cadastro manual de game</h2>
-            <p class="helper">Use esta área para criar ou atualizar games oficiais do marketplace.</p>
-          </div>
-          <span id="session-status" class="pill-status">Sessão não verificada.</span>
-        </div>
-        <form id="manual-form" class="form-grid">
-          <div class="field">
-            <label for="manual-name">Nome do game *</label>
-            <input id="manual-name" class="input" placeholder="Ex: Miracle 7.4" required />
-          </div>
-          <div class="field">
-            <label for="manual-website">Website oficial *</label>
-            <input id="manual-website" class="input" placeholder="https://miracle74.com" required />
-            <span class="helper">Formato obrigatório: https://dominio.com (sem barra final ou caminhos).</span>
-          </div>
-          <div class="field">
-            <label for="manual-cover">Imagem de capa (URL)</label>
-            <input id="manual-cover" class="input" placeholder="https://.../capa.jpg" />
-          </div>
-          <div class="field" style="grid-column: 1 / -1;">
-            <label for="manual-description">Descrição</label>
-            <textarea id="manual-description" class="textarea" placeholder="Resumo do game"></textarea>
-          </div>
-          <div class="field" style="grid-column: 1 / -1;">
-            <button type="submit" class="btn btn-ghost" id="manual-submit">Salvar game</button>
-            <div id="manual-feedback" class="helper"></div>
-          </div>
-        </form>
+  <header>
+    <div class="logo">
+      <a href="index.html"><img src="img/logo.png" alt="Gimerr" /></a>
+      <span class="pill">Admin</span>
+    </div>
+    <div class="header-actions">
+      <div class="status">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">Desconectado</span>
       </div>
+      <button id="header-auth-btn" class="secondary">Entrar</button>
+    </div>
+  </header>
 
-      <div class="form-card">
-        <div class="inline-actions" style="justify-content: space-between;">
-          <div>
-            <h2>Solicitações de games dos usuários</h2>
-            <p class="helper">Aprove ou recuse as solicitações enviadas. Uma decisão dispara e-mail automaticamente.</p>
-          </div>
-          <span id="requests-status" class="pill-status">Carregando...</span>
+  <main>
+    <section class="card">
+      <h1>Criar novo servidor</h1>
+      <p>Somente administradores podem criar servidores. Nome, site oficial e logo são obrigatórios.</p>
+      <div class="notice" id="session-status">Faça login em login.html para continuar.</div>
+      <div class="notice" id="edit-request-banner" style="display:none; gap:10px; align-items:center; justify-content:space-between;">
+        <div>
+          Editando solicitação de usuário:
+          <strong id="edit-request-title"></strong>
         </div>
-        <div id="requests-empty" class="helper" style="display:none;">Nenhuma solicitação pendente.</div>
-        <div id="requests-list" class="list"></div>
+        <button type="button" class="chip-btn" id="clear-edit-btn">Limpar</button>
       </div>
-    </main>
-  </div>
+      <div class="divider"></div>
+
+      <form id="server-form">
+        <label for="server-name">Nome do servidor *</label>
+        <input id="server-name" placeholder="Ex: Tibia OT Ultra" required />
+
+        <label for="server-site">Site oficial *</label>
+        <input id="server-site" placeholder="https://seuservidor.com" required />
+
+        <label for="server-description">Descrição (opcional)</label>
+        <textarea id="server-description" placeholder="Resumo do servidor..."></textarea>
+
+        <label for="server-logo">Logo do servidor (png/jpg/webp) *</label>
+        <input id="server-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
+        <div id="logo-preview-wrapper">
+          <label>Pré-visualização</label>
+          <img id="server-logo-preview" alt="Pré-visualização da logo" />
+        </div>
+
+        <button type="submit">Salvar servidor</button>
+        <div class="error" id="form-error"></div>
+        <div class="success" id="form-success"></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h1>Solicitações de games</h1>
+      <p>Revise e aprove/reprove os envios de usuários. Cada decisão atualiza o status e dispara e-mail.</p>
+      <div class="notice" id="requests-status">Carregando...</div>
+      <div id="requests-empty" class="muted" style="display:none;">Nenhuma solicitação pendente.</div>
+      <div id="requests-list" class="list"></div>
+    </section>
+  </main>
 
   <script src="env.js"></script>
   <script type="module">
@@ -75,216 +207,403 @@
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
-    const authBtn = document.getElementById("auth-btn");
+    const statusDot = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
     const sessionStatus = document.getElementById("session-status");
-    const manualForm = document.getElementById("manual-form");
-    const manualFeedback = document.getElementById("manual-feedback");
-    const manualSubmit = document.getElementById("manual-submit");
-
+    const headerAuthBtn = document.getElementById("header-auth-btn");
+    const serverForm = document.getElementById("server-form");
+    const formError = document.getElementById("form-error");
+    const formSuccess = document.getElementById("form-success");
+    const serverNameInput = document.getElementById("server-name");
+    const serverSiteInput = document.getElementById("server-site");
+    const serverDescriptionInput = document.getElementById("server-description");
+    const serverLogoInput = document.getElementById("server-logo");
+    const logoPreviewWrapper = document.getElementById("logo-preview-wrapper");
+    const logoPreview = document.getElementById("server-logo-preview");
+    const editBanner = document.getElementById("edit-request-banner");
+    const editBannerTitle = document.getElementById("edit-request-title");
+    const clearEditBtn = document.getElementById("clear-edit-btn");
+    const MAX_LOGO_BYTES = 3 * 1024 * 1024; // 3MB
     const requestsList = document.getElementById("requests-list");
     const requestsEmpty = document.getElementById("requests-empty");
     const requestsStatus = document.getElementById("requests-status");
 
+    const SESSION_STORAGE_KEY = "gimerr-auth-session";
     let supabase;
-    let currentUser = null;
+    let authListenerAttached = false;
     let profile = null;
-    let channel = null;
     let requestCache = [];
+    let editingRequest = null;
 
-    manualSubmit.disabled = true;
+    function setStatus(ok, text) {
+      statusDot.classList.toggle("ok", ok);
+      statusText.textContent = text;
+    }
+
+    function persistLocalSession(session) {
+      if (session) {
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        );
+      } else {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+      }
+    }
+
+    async function restoreSessionFromStorage() {
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!raw) return null;
+      try {
+        const saved = JSON.parse(raw);
+        if (!saved.access_token || !saved.refresh_token) return null;
+        const { data, error } = await supabase.auth.setSession({
+          access_token: saved.access_token,
+          refresh_token: saved.refresh_token,
+        });
+        if (error) {
+          console.error(error);
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          return null;
+        }
+        return data.session;
+      } catch (err) {
+        console.error(err);
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        return null;
+      }
+    }
+
+    function configureHeaderButton(userPresent) {
+      if (!headerAuthBtn) return;
+      headerAuthBtn.disabled = false;
+      if (userPresent) {
+        headerAuthBtn.textContent = "Sair";
+        headerAuthBtn.onclick = async () => {
+          try {
+            ensureClient();
+            headerAuthBtn.disabled = true;
+            await supabase.auth.signOut();
+            setStatus(false, "Sessão encerrada");
+            await refreshSession();
+          } catch (err) {
+            console.error(err);
+            headerAuthBtn.disabled = false;
+          }
+        };
+      } else {
+        headerAuthBtn.textContent = "Entrar";
+        headerAuthBtn.onclick = () => window.location.href = "login.html";
+      }
+    }
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        sessionStatus.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
-        authBtn.disabled = true;
-        manualSubmit.disabled = true;
-        throw new Error("Supabase não configurado");
+        setStatus(false, "Defina SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js");
+        throw new Error("Supabase URL/key não configurados");
       }
-      if (!supabase) {
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-            storageKey: "gimerr-auth-token",
-          },
-        });
+      supabase = supabase || createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storageKey: "gimerr-auth-token",
+        },
+      });
+      if (!authListenerAttached) {
         supabase.auth.onAuthStateChange((_event, session) => {
-          currentUser = session?.user || null;
-          updateAuthUI();
-          if (currentUser) loadProfile();
+          persistLocalSession(session);
+          refreshSession();
         });
+        authListenerAttached = true;
       }
       return supabase;
     }
 
-    function updateAuthUI() {
-      if (!authBtn) return;
-      authBtn.disabled = false;
-      if (currentUser) {
-        authBtn.textContent = "Sair";
+    function setLogoPreview(src) {
+      if (!logoPreviewWrapper || !logoPreview) return;
+      if (src) {
+        logoPreview.src = src;
+        logoPreviewWrapper.style.display = "block";
+      } else {
+        logoPreviewWrapper.style.display = "none";
+        logoPreview.removeAttribute("src");
+      }
+    }
+
+    function enterEditMode(req) {
+      editingRequest = req || null;
+      formError.textContent = "";
+      formSuccess.textContent = "";
+      if (!req) {
+        if (serverLogoInput) {
+          serverLogoInput.required = true;
+          serverLogoInput.setAttribute("required", "true");
+        }
+        setLogoPreview("");
+        if (editBanner) editBanner.style.display = "none";
         return;
       }
-      authBtn.textContent = "Entrar com Google";
-      sessionStatus.textContent = "Sessão não verificada.";
-    }
-
-    async function handleAuthClick() {
-      try {
-        ensureClient();
-        authBtn.disabled = true;
-        if (currentUser) {
-          await supabase.auth.signOut();
-          currentUser = null;
-          profile = null;
-          requestCache = [];
-          teardownRealtime();
-          updateAuthUI();
-          requestsList.innerHTML = "";
-          requestsStatus.textContent = "Faça login";
-          manualSubmit.disabled = true;
-          requestsEmpty.style.display = "block";
-          requestsEmpty.textContent = "Faça login para ver solicitações.";
-          return;
-        }
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: window.location.href.split("#")[0] }
-        });
-      } catch (err) {
-        console.error(err);
-        manualFeedback.textContent = err?.message || "Erro ao autenticar.";
-        authBtn.disabled = false;
+      if (serverNameInput) serverNameInput.value = req.name || "";
+      if (serverSiteInput) serverSiteInput.value = req.website || "";
+      if (serverDescriptionInput) serverDescriptionInput.value = req.description || "";
+      if (serverLogoInput) {
+        serverLogoInput.value = "";
+        serverLogoInput.required = false;
+        serverLogoInput.removeAttribute("required");
       }
-    }
-
-    async function loadProfile() {
-      try {
-        const { data, error } = await supabase.from("users").select("id, username, is_admin").eq("id", currentUser.id).single();
-        if (error && error.code !== "PGRST116") throw error;
-        profile = data;
-        if (!profile?.is_admin) {
-          sessionStatus.textContent = "Sem permissão de admin.";
-          manualSubmit.disabled = true;
-          requestsStatus.textContent = "Restrito";
-          requestsList.innerHTML = "";
-          requestsEmpty.style.display = "block";
-          requestsEmpty.textContent = "Apenas admins podem ver solicitações.";
-          return;
+      const previewSrc = req.displayCoverUrl || req.cover_url || "";
+      setLogoPreview(previewSrc);
+      if (editBanner) {
+        editBanner.style.display = "flex";
+        editBanner.style.flexWrap = "wrap";
+        if (editBannerTitle) {
+          editBannerTitle.textContent = `${req.name || "Solicitação"} (${req.website || "-"})`;
         }
-        sessionStatus.textContent = "Admin ativo.";
-        manualSubmit.disabled = false;
-        await fetchRequests();
-        setupRealtime();
-      } catch (err) {
-        console.error(err);
-        sessionStatus.textContent = "Erro ao carregar perfil.";
       }
+      serverForm?.scrollIntoView({ behavior: "smooth", block: "start" });
+      formError.textContent = "Revise os dados antes de salvar.";
     }
 
-    function normalizeWebsite(raw) {
-      if (!raw) return null;
+    function handleLogoChange() {
+      const file = serverLogoInput?.files?.[0];
+      if (!file) {
+        if (editingRequest?.cover_url) {
+          setLogoPreview(editingRequest.displayCoverUrl || editingRequest.cover_url);
+        } else {
+          setLogoPreview("");
+        }
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setLogoPreview(event.target?.result || "");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function extractStoragePath(urlString) {
+      if (!urlString) return null;
       try {
-        const url = new URL(raw.trim());
-        if (url.protocol !== "https:") return null;
-        if (url.pathname && url.pathname !== "/") return null;
-        if (url.search || url.hash) return null;
-        return url.origin;
+        const parsed = new URL(urlString);
+        const marker = "/server_logos/";
+        const idx = parsed.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        return parsed.pathname.substring(idx + marker.length);
       } catch (_err) {
         return null;
       }
     }
 
-    async function checkWebsiteExists(website, ignoreRequestId) {
-      const { data: inGames, error: gamesErr } = await supabase.from("games").select("id").eq("website", website).limit(1);
-      if (gamesErr) throw gamesErr;
-      if (inGames && inGames.length > 0) return true;
-
-      const { data: inRequests, error: reqErr } = await supabase.from("game_requests").select("id").eq("website", website).limit(1);
-      if (reqErr) throw reqErr;
-      if (!inRequests || inRequests.length === 0) return false;
-      if (ignoreRequestId) {
-        return inRequests.some((r) => String(r.id) !== String(ignoreRequestId));
-      }
-      return true;
+    async function enhanceRequestsWithSignedUrls(list) {
+      if (!list || list.length === 0) return [];
+      return Promise.all(list.map(async (req) => {
+        const path = extractStoragePath(req.cover_url);
+        if (!path) return { ...req, displayCoverUrl: req.cover_url };
+        try {
+          ensureClient();
+          const { data, error } = await supabase.storage
+            .from("server_logos")
+            .createSignedUrl(path, 60 * 60);
+          if (error) throw error;
+          return { ...req, displayCoverUrl: data?.signedUrl || req.cover_url };
+        } catch (err) {
+          console.warn("Erro ao gerar URL assinada", err);
+          return { ...req, displayCoverUrl: req.cover_url };
+        }
+      }));
     }
 
-    async function handleManualSubmit(event) {
-      event.preventDefault();
-      manualFeedback.textContent = "";
-      manualSubmit.disabled = true;
+    async function upsertProfile(user) {
+      const payload = {
+        id: user.id,
+        username: user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
+        email: user.email,
+        avatar_url: user.user_metadata?.avatar_url ?? null
+      };
+      const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
+      if (error) throw error;
+    }
+
+    async function fetchProfile(userId) {
+      const { data, error } = await supabase.from("users").select("id, username, is_admin").eq("id", userId).single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data;
+    }
+
+    async function refreshSession() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        let session = data.session;
+        if (!session) {
+          session = await restoreSessionFromStorage();
+        }
+        if (session?.user) {
+          const user = session.user;
+          await upsertProfile(user);
+          profile = await fetchProfile(user.id);
+          setStatus(true, "Sessão ativa");
+          sessionStatus.textContent = profile?.is_admin
+            ? `Logado como ${profile.username} (admin)`
+            : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
+          if (profile?.is_admin) {
+            await fetchRequests();
+          } else {
+            requestsStatus.textContent = "Restrito aos admins.";
+          }
+        } else {
+          profile = null;
+          setStatus(false, "Sem sessão");
+          sessionStatus.textContent = "Faça login em login.html para continuar.";
+          requestsList.innerHTML = "";
+          requestsEmpty.style.display = "block";
+          requestsEmpty.textContent = "Faça login para ver solicitações.";
+        }
+        configureHeaderButton(session?.user || null);
+      } catch (err) {
+        console.error(err);
+        setStatus(false, "Erro");
+        sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
+        requestsStatus.textContent = "Erro ao checar sessão.";
+      }
+    }
+
+    async function uploadLogo(file, userId) {
+      const ext = file.name.split(".").pop();
+      const path = `${userId}/server-logo-${crypto.randomUUID()}.${ext}`;
+      const bucket = supabase.storage.from("server_logos");
+      const { error, data } = await bucket.upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+      if (error) throw error;
+      const { data: publicData, error: publicErr } = bucket.getPublicUrl(path);
+      if (publicErr) throw publicErr;
+      return { path: data.path, publicUrl: publicData.publicUrl };
+    }
+
+    serverForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formError.textContent = "";
+      formSuccess.textContent = "";
+      requestsStatus.textContent = "";
 
       try {
         ensureClient();
-        if (!currentUser) {
-          manualFeedback.textContent = "Faça login para salvar.";
-          manualSubmit.disabled = false;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user;
+        if (!user) {
+          formError.textContent = "Faça login com Google.";
           return;
         }
         if (!profile?.is_admin) {
-          manualFeedback.textContent = "Apenas admins podem salvar games.";
-          manualSubmit.disabled = false;
+          formError.textContent = "Apenas administradores podem criar servidores.";
           return;
         }
 
-        const name = document.getElementById("manual-name").value.trim();
-        const websiteRaw = document.getElementById("manual-website").value.trim();
-        const cover_url = document.getElementById("manual-cover").value.trim() || null;
-        const description = document.getElementById("manual-description").value.trim() || null;
-        const website = normalizeWebsite(websiteRaw);
+        const name = serverNameInput?.value.trim();
+        const site = serverSiteInput?.value.trim();
+        const description = serverDescriptionInput?.value.trim() || null;
+        const file = serverLogoInput?.files?.[0];
 
-        if (!name || !website) {
-          manualFeedback.textContent = "Preencha nome e website válido (https://dominio.com).";
-          manualSubmit.disabled = false;
+        if (!name || !site) {
+          formError.textContent = "Preencha nome e site.";
           return;
         }
 
-        const duplicate = await checkWebsiteExists(website);
-        if (duplicate) {
-          manualFeedback.textContent = "Website já existe no sistema.";
-          manualSubmit.disabled = false;
+        if (file && file.size > MAX_LOGO_BYTES) {
+          formError.textContent = "Logo deve ter no máximo 3MB.";
           return;
         }
 
-        const { error } = await supabase.from("games").insert({
+        const logoSummary = file
+          ? `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`
+          : editingRequest
+            ? "Logo enviada pelo usuário (mantida)"
+            : "Nenhuma logo selecionada";
+
+        const summary = [
+          `Servidor: ${name}`,
+          `Site: ${site}`,
+          `Descrição: ${description || '-'}`,
+          `Logo: ${logoSummary}`,
+          `Status: ativo`
+        ].join("\n");
+        const confirmCreate = window.confirm(`${summary}\n\nDeseja continuar?`);
+        if (!confirmCreate) {
+          formError.textContent = "Envio cancelado pelo usuário.";
+          return;
+        }
+
+        requestsStatus.textContent = "Salvando servidor...";
+        let bannerUrl = editingRequest?.cover_url || editingRequest?.displayCoverUrl || null;
+        if (file) {
+          const { publicUrl } = await uploadLogo(file, user.id);
+          bannerUrl = publicUrl;
+        }
+        if (!bannerUrl) {
+          formError.textContent = "Adicione ou mantenha uma logo para continuar.";
+          return;
+        }
+
+        const { error: insertErr } = await supabase.from("servers").insert({
           name,
-          website,
-          cover_url,
-          description
+          game_type: "general",
+          official_site: site,
+          description,
+          banner_url: bannerUrl,
+          owner_id: user.id,
+          status: "active"
         });
-        if (error) throw error;
+        if (insertErr) throw insertErr;
 
-        manualFeedback.textContent = "Game salvo.";
-        manualForm.reset();
+        const editedName = editingRequest?.name;
+        formSuccess.textContent = editedName
+          ? "Servidor salvo com os ajustes. Agora finalize aprovando ou reprovando a solicitação."
+          : "Servidor criado com sucesso!";
+        serverForm.reset();
+        setLogoPreview("");
+        enterEditMode(null);
+        if (editedName) {
+          requestsStatus.textContent = `Servidor ajustado para "${editedName}". Aprove ou recuse na lista.`;
+        }
+        requestsStatus.textContent ||= "Servidor salvo.";
       } catch (err) {
         console.error(err);
-        manualFeedback.textContent = err?.message || "Erro ao salvar.";
-      } finally {
-        manualSubmit.disabled = false;
+        formError.textContent = err?.message || "Erro ao criar servidor.";
+        if (!formError.textContent && typeof err === "object") {
+          formError.textContent = JSON.stringify(err);
+        }
+        requestsStatus.textContent = "Erro ao salvar servidor.";
       }
-    }
+    });
 
     async function fetchRequests() {
       try {
         requestsStatus.textContent = "Carregando...";
         const { data, error } = await supabase
           .from("game_requests")
-          .select("id,name,website,description,cover_url,user_email,status")
+          .select("id,name,website,description,cover_url,user_email,status,created_at")
           .eq("status", "pending")
           .order("created_at", { ascending: true });
         if (error) throw error;
-        renderRequests(data || []);
+        requestCache = await enhanceRequestsWithSignedUrls(data || []);
+        renderRequests(requestCache);
         requestsStatus.textContent = "Pronto";
       } catch (err) {
         console.error(err);
-        requestsStatus.textContent = "Erro";
+        requestsStatus.textContent = err?.message || "Erro ao carregar solicitações.";
         requestsEmpty.style.display = "block";
-        requestsEmpty.textContent = err?.message || "Erro ao carregar solicitações.";
+        requestsEmpty.textContent = "Erro ao carregar solicitações.";
       }
     }
 
     function renderRequests(list) {
-      requestCache = list || [];
       requestsList.innerHTML = "";
       if (!list || list.length === 0) {
         requestsEmpty.style.display = "block";
@@ -293,128 +612,83 @@
       requestsEmpty.style.display = "none";
       list.forEach((req) => {
         const card = document.createElement("div");
-        card.className = "request-card";
+        card.className = "notice";
+        card.style.display = "grid";
+        card.style.gap = "8px";
         card.innerHTML = `
-          <div class="inline-actions" style="justify-content: space-between;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
             <div>
               <strong>${req.name}</strong>
-              <div class="helper">${req.website}</div>
+              <div class="muted">${req.website}</div>
             </div>
-            <span class="pill-status">Pendente</span>
+            <span class="pill">${req.status}</span>
           </div>
-          <p class="helper">${req.description || "Sem descrição."}</p>
-          ${req.cover_url ? `<img src="${req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
-          <div class="helper">Usuário: ${req.user_email || "-"}</div>
-          <div class="request-actions">
-            <button class="btn btn-primary" data-action="approve" data-id="${req.id}">Aprovar</button>
-            <button class="btn btn-danger" data-action="reject" data-id="${req.id}">Recusar</button>
+          <div class="muted">${req.description || "Sem descrição."}</div>
+          ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
+          <div class="muted">Usuário: ${req.user_email || "-"}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
+            <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;">Aprovar</button>
+            <button class="btn secondary" data-action="reject" data-id="${req.id}" style="flex:1;">Recusar</button>
           </div>
         `;
         requestsList.appendChild(card);
       });
     }
 
-    async function handleDecision(event) {
-      const actionBtn = event.target.closest("button[data-action]");
-      if (!actionBtn) return;
-      const action = actionBtn.getAttribute("data-action");
-      const reqId = actionBtn.getAttribute("data-id");
-      const req = requestCache.find((r) => String(r.id) === String(reqId));
-      if (!req) return;
+    requestsList?.addEventListener("click", async (event) => {
+      const btn = event.target.closest("button[data-action]");
+      if (!btn) return;
+      if (!profile?.is_admin) {
+        requestsStatus.textContent = "Apenas admins podem decidir.";
+        return;
+      }
+      const id = btn.getAttribute("data-id");
+      const action = btn.getAttribute("data-action");
+      if (action === "prefill") {
+        const req = requestCache.find((r) => String(r.id) === String(id));
+        if (req) {
+          enterEditMode(req);
+          requestsStatus.textContent = "Formulário carregado para edição.";
+        }
+        return;
+      }
       const approved = action === "approve";
       let note = "";
       if (!approved) {
         note = window.prompt("Motivo da recusa? (opcional)", "") || "";
       }
-      await processDecision(req, approved, note);
-    }
-
-    async function processDecision(req, approved, note) {
-      if (!currentUser || !profile?.is_admin) {
-        manualFeedback.textContent = "Apenas admins podem decidir.";
-        return;
-      }
       try {
-        const website = normalizeWebsite(req.website);
-        if (!website) {
-          requestsStatus.textContent = "Website inválido nesta solicitação.";
-          return;
-        }
-        if (approved) {
-          const duplicate = await checkWebsiteExists(website, req.id);
-          if (duplicate) {
-            requestsStatus.textContent = "Website já cadastrado.";
-            return;
-          }
-          const { error: insertErr } = await supabase.from("games").insert({
-            name: req.name,
-            website,
-            cover_url: req.cover_url,
-            description: req.description
-          });
-          if (insertErr) throw insertErr;
-        }
-
-        const { error: updateErr } = await supabase
-          .from("game_requests")
-          .update({ status: approved ? "approved" : "rejected" })
-          .eq("id", req.id);
-        if (updateErr) throw updateErr;
-
-        await sendDecisionEmail({
-          to: req.user_email,
-          gameName: req.name,
-          approved,
-          note,
+        requestsStatus.textContent = "Processando...";
+        await supabase.functions.invoke("game_approve", {
+          body: { requestId: id, approved, note }
         });
-
+        const req = requestCache.find((r) => String(r.id) === String(id));
+        if (req?.user_email) {
+          await supabase.functions.invoke("game_approve_email", {
+            body: { to: req.user_email, gameName: req.name, approved, note }
+          });
+        }
         await fetchRequests();
       } catch (err) {
         console.error(err);
         requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";
       }
+    });
+
+    serverLogoInput?.addEventListener("change", handleLogoChange);
+    clearEditBtn?.addEventListener("click", () => {
+      serverForm?.reset();
+      enterEditMode(null);
+    });
+
+    // Inicializa
+    try {
+      ensureClient();
+      refreshSession();
+    } catch (err) {
+      console.warn(err.message);
     }
-
-    async function sendDecisionEmail(payload) {
-      if (!payload.to) return;
-      try {
-        await supabase.functions.invoke("index", { body: payload });
-      } catch (err) {
-        console.error("Erro ao enviar e-mail", err);
-      }
-    }
-
-    function setupRealtime() {
-      teardownRealtime();
-      channel = supabase.channel("game-requests-channel")
-        .on("postgres_changes", { event: "INSERT", schema: "public", table: "game_requests" }, fetchRequests)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "game_requests" }, fetchRequests)
-        .subscribe();
-    }
-
-    function teardownRealtime() {
-      if (channel) {
-        supabase.removeChannel(channel);
-        channel = null;
-      }
-    }
-
-    authBtn?.addEventListener("click", handleAuthClick);
-    manualForm?.addEventListener("submit", handleManualSubmit);
-    requestsList?.addEventListener("click", handleDecision);
-
-    (async function init() {
-      try {
-        ensureClient();
-        const { data } = await supabase.auth.getSession();
-        currentUser = data.session?.user || null;
-        updateAuthUI();
-        if (currentUser) await loadProfile();
-      } catch (err) {
-        console.error(err);
-        sessionStatus.textContent = "Erro ao iniciar.";
-      }
-    })();
   </script>
 </body>
 </html>

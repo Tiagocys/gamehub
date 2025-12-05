@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Cadastrar game</title>
+  <link rel="stylesheet" href="css/global.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Novo game</span>
+        </div>
+      </a>
+      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+    </header>
+
+    <main class="section">
+      <div class="form-card">
+        <div>
+          <h2>Cadastre um novo game</h2>
+          <p class="helper">Envie uma solicitação por vez. O admin aprova ou recusa, e você recebe e-mail com o status.</p>
+        </div>
+        <div id="pending-info" class="pill-status" style="display:none;"></div>
+        <form id="game-request-form" class="form-vertical">
+          <div class="field">
+            <label for="game-name">Nome do servidor *</label>
+            <input id="game-name" class="input" placeholder="Ex: Miracle 7.4" required />
+          </div>
+          <div class="field">
+            <label for="game-website">Site oficial *</label>
+            <input id="game-website" class="input" placeholder="https://miracle74.com" required />
+            <span id="website-helper" class="helper"></span>
+          </div>
+          <div class="field">
+            <label for="game-description">Descrição *</label>
+            <textarea id="game-description" class="textarea" placeholder="Dê informações sobre o servidor, como o rate, versão e versão oficial do jogo." required></textarea>
+          </div>
+          <div class="field">
+            <label for="game-logo">Logo do servidor (png/jpg/webp) *</label>
+            <input id="game-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Enviar solicitação</button>
+            <div id="form-feedback" class="helper"></div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const form = document.getElementById("game-request-form");
+    const pendingInfo = document.getElementById("pending-info");
+    const feedback = document.getElementById("form-feedback");
+    const submitBtn = document.getElementById("submit-btn");
+    const websiteInput = document.getElementById("game-website");
+    const websiteHelper = document.getElementById("website-helper");
+    const logoInput = document.getElementById("game-logo");
+    const MAX_LOGO_BYTES = 3 * 1024 * 1024;
+    const MAX_WIDTH = 512;
+    const WEBSITE_PREFIX_REGEX = /^https:\/\/.+/i;
+
+    let supabase;
+    let currentUser = null;
+    let hasPending = null;
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        feedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        authBtn.disabled = true;
+        submitBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+          if (currentUser) fetchPendingForUser();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        if (currentUser) {
+          await supabase.auth.signOut();
+          currentUser = null;
+          hasPending = null;
+          renderPending();
+          updateAuthUI();
+          return;
+        }
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.href.split("#")[0] }
+        });
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao autenticar.";
+        authBtn.disabled = false;
+      }
+    }
+
+    function ensureHttpsPrefix(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return "";
+      const withoutProtocol = trimmed.replace(/^https?:\/\//i, "");
+      const withoutWww = withoutProtocol.replace(/^www\./i, "");
+      return `https://${withoutWww}`;
+    }
+
+    function normalizeWebsite(raw) {
+      const withProtocol = ensureHttpsPrefix(raw);
+      if (!withProtocol || !WEBSITE_PREFIX_REGEX.test(withProtocol)) return null;
+      try {
+        const url = new URL(withProtocol);
+        url.protocol = "https:";
+        url.hash = "";
+        const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
+        const search = url.search || "";
+        return `${url.origin}${pathname}${search}`;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function extractDomainKey(raw) {
+      try {
+        const url = new URL(ensureHttpsPrefix(raw));
+        return url.hostname.toLowerCase();
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function setWebsiteHelper(message) {
+      if (!websiteHelper) return;
+      websiteHelper.textContent = message || "";
+    }
+
+    function handleWebsiteInput() {
+      if (!websiteInput) return;
+      const value = websiteInput.value.trim();
+      if (!value) {
+        setWebsiteHelper("");
+        return;
+      }
+      setWebsiteHelper(WEBSITE_PREFIX_REGEX.test(value) ? "" : "Adicione https:// no início do site.");
+    }
+
+    function handleWebsiteBlur() {
+      if (!websiteInput) return;
+      const formatted = ensureHttpsPrefix(websiteInput.value);
+      if (formatted !== websiteInput.value) {
+        websiteInput.value = formatted;
+      }
+      handleWebsiteInput();
+    }
+
+    async function fetchPendingForUser() {
+      if (!currentUser) return;
+      try {
+        ensureClient();
+        const { data, error } = await supabase
+          .from("game_requests")
+          .select("id,name,website,status")
+          .eq("user_id", currentUser.id)
+          .in("status", ["pending", "under_review"])
+          .limit(1);
+        if (error) throw error;
+        hasPending = data?.[0] || null;
+        renderPending();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao checar solicitações.";
+      }
+    }
+
+    function renderPending() {
+      if (!pendingInfo) return;
+      if (!hasPending) {
+        pendingInfo.style.display = "none";
+        submitBtn.disabled = false;
+        return;
+      }
+      pendingInfo.style.display = "inline-flex";
+      pendingInfo.textContent = `Você já tem uma solicitação pendente: ${hasPending.name}`;
+      submitBtn.disabled = true;
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      feedback.textContent = "";
+      submitBtn.disabled = true;
+
+      try {
+        ensureClient();
+        if (!currentUser) {
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: window.location.href.split("#")[0] }
+          });
+          return;
+        }
+        if (hasPending) {
+          feedback.textContent = "Você já possui uma solicitação pendente.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const name = document.getElementById("game-name").value.trim();
+        const websiteRaw = document.getElementById("game-website").value.trim();
+        const description = document.getElementById("game-description").value.trim();
+        const logoFile = logoInput.files[0];
+
+        const website = normalizeWebsite(websiteRaw);
+        const domainKey = extractDomainKey(website || websiteRaw);
+        if (website && websiteInput && websiteInput.value !== website) {
+          websiteInput.value = website;
+        }
+        if (!name || !website || !description || !logoFile) {
+          setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
+          feedback.textContent = "Preencha o nome, site com https://, descrição e selecione a logo (png/jpg/webp até 3MB).";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (!domainKey) {
+          feedback.textContent = "Não foi possível ler o domínio do site. Verifique o formato.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (logoFile.size > MAX_LOGO_BYTES) {
+          feedback.textContent = "Logo deve ter no máximo 3MB.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const duplicateExists = await checkWebsiteExists(website, domainKey);
+        if (duplicateExists) {
+          feedback.textContent = "Este jogo já está cadastrado ou em análise.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const compressed = await compressImage(logoFile, MAX_WIDTH);
+        const logoUrl = await uploadLogo(compressed, currentUser.id);
+
+        const { error } = await supabase.from("game_requests").insert({
+          name,
+          website,
+          cover_url: logoUrl,
+          description,
+          status: "pending",
+          user_id: currentUser.id,
+          user_email: currentUser.email
+        });
+        if (error) throw error;
+
+        feedback.textContent = "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.";
+        hasPending = { name, website, status: "pending" };
+        renderPending();
+        form.reset();
+        setWebsiteHelper("");
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao enviar solicitação.";
+        submitBtn.disabled = false;
+      }
+    }
+
+    async function uploadLogo(file, userId) {
+      const path = `${userId}/game-logo-${crypto.randomUUID()}.webp`;
+      const bucket = supabase.storage.from("server_logos");
+      const { error, data } = await bucket.upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "image/webp"
+      });
+      if (error) throw error;
+      const { data: publicData, error: publicErr } = bucket.getPublicUrl(path);
+      if (publicErr) throw publicErr;
+      return publicData.publicUrl;
+    }
+
+    async function compressImage(file, maxWidth) {
+      const imageBitmap = await createImageBitmap(file);
+      const ratio = Math.min(1, maxWidth / imageBitmap.width);
+      const width = Math.round(imageBitmap.width * ratio);
+      const height = Math.round(imageBitmap.height * ratio);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(imageBitmap, 0, 0, width, height);
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error("Falha ao comprimir a imagem."));
+            return;
+          }
+          resolve(blob);
+        }, "image/webp", 0.82);
+      });
+    }
+
+    async function checkWebsiteExists(website, domainKey) {
+      const domainPattern = `%${domainKey}%`;
+      const { data: inServers, error: srvErr } = await supabase
+        .from("servers")
+        .select("id")
+        .or(`official_site.eq.${website},official_site.ilike.${domainPattern}`)
+        .limit(1);
+      if (srvErr) throw srvErr;
+      if (inServers && inServers.length > 0) return true;
+
+      const { data: inRequests, error: reqErr } = await supabase
+        .from("game_requests")
+        .select("id,status")
+        .or(`website.eq.${website},website.ilike.${domainPattern}`)
+        .in("status", ["pending", "under_review", "approved"])
+        .limit(1);
+      if (reqErr) throw reqErr;
+      return Boolean(inRequests && inRequests.length > 0);
+    }
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    form?.addEventListener("submit", handleSubmit);
+    websiteInput?.addEventListener("input", handleWebsiteInput);
+    websiteInput?.addEventListener("blur", handleWebsiteBlur);
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (currentUser) fetchPendingForUser();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = "Erro ao iniciar página.";
+      }
+    })();
+  </script>
+</body>
+</html>
