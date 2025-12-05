@@ -3,289 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gamehub - Marketplace seguro</title>
-  <style>
-    :root {
-      --bg: #0b1220;
-      --card: #101a2e;
-      --muted: #8ea0bf;
-      --text: #e8eefc;
-      --accent: #7cf6c4;
-      --accent-2: #76a8ff;
-      --danger: #f58ea8;
-      --border: rgba(255,255,255,0.08);
-      --radius: 12px;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: radial-gradient(circle at 20% 20%, rgba(118,168,255,0.15), transparent 40%),
-                  radial-gradient(circle at 80% 10%, rgba(124,246,196,0.15), transparent 35%),
-                  var(--bg);
-      color: var(--text);
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-    }
-    header {
-      padding: 18px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(6px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(11, 18, 32, 0.9);
-    }
-    .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.5px; }
-    .pill {
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: rgba(118,168,255,0.12);
-      color: var(--accent-2);
-      font-size: 12px;
-      border: 1px solid var(--border);
-    }
-    main { max-width: 1140px; margin: 0 auto; padding: 28px 20px 60px; display: grid; gap: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-    h1 { margin: 0 0 12px; font-size: 30px; }
-    h2 { margin: 0 0 12px; font-size: 20px; }
-    h3 { margin: 10px 0 8px; }
-    p { color: var(--muted); margin: 6px 0 12px; }
-    ul { padding-left: 18px; color: var(--muted); margin-top: 6px; }
-    label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
-    input, select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(255,255,255,0.02);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border 0.2s, box-shadow 0.2s;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: rgba(118,168,255,0.4);
-      box-shadow: 0 0 0 3px rgba(118,168,255,0.12);
-    }
-    textarea { resize: vertical; min-height: 90px; }
-    button {
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.2s;
-      color: #081019;
-      background: linear-gradient(135deg, var(--accent), #5ce0ff);
-      box-shadow: 0 12px 30px rgba(124,246,196,0.25);
-    }
-    button.secondary {
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      box-shadow: none;
-      border: 1px solid var(--border);
-    }
-    button:active { transform: translateY(1px); }
-    .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
-    .status { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-    .dot { width: 10px; height: 10px; border-radius: 999px; background: #f6d87c; }
-    .dot.ok { background: var(--accent); }
-    .muted { color: var(--muted); font-size: 13px; }
-    .notice { padding: 10px 12px; border-radius: 10px; background: rgba(118,168,255,0.08); border: 1px solid var(--border); font-size: 13px; }
-    .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-    .hide { display: none; }
-    .tag {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 8px;
-      background: rgba(124,246,196,0.12);
-      color: var(--accent);
-      font-size: 12px;
-      margin-left: 8px;
-    }
-    .error { color: var(--danger); font-size: 13px; min-height: 18px; }
-    .success { color: var(--accent); font-size: 13px; min-height: 18px; }
-    .hero {
-      position: relative;
-      overflow: hidden;
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 60% 20%, rgba(124,246,196,0.12), transparent 45%),
-                  radial-gradient(circle at 20% 80%, rgba(118,168,255,0.08), transparent 40%);
-      pointer-events: none;
-    }
-    .hero-content { position: relative; z-index: 1; display: grid; gap: 12px; }
-    .mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 10px; }
-    .pill-strong {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: rgba(124,246,196,0.2);
-      color: var(--text);
-      border: 1px solid rgba(124,246,196,0.35);
-      font-weight: 700;
-      font-size: 12px;
-    }
-    .list-inline { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-    .list-inline span {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-  </style>
+  <title>Gimerr - Marketplace gamer</title>
+  <link rel="stylesheet" href="css/global.css" />
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <span style="font-size:20px;">🎮</span>
-      Gamehub (beta)
-      <span class="pill">Supabase + Cloudflare</span>
-    </div>
-    <div class="status">
-      <div class="dot" id="status-dot"></div>
-      <span id="status-text">Desconectado</span>
-    </div>
-  </header>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-name">Gimerr</span>
+          <span class="brand-tagline">Players no comando</span>
+        </div>
+      </a>
+      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+    </header>
 
-  <main>
-    <section class="card hero">
-      <div class="hero-content">
-        <span class="pill-strong">Marketplace seguro para servidores alternativos</span>
-        <h1>Venda e compre itens com escrow, chat privado e disputas moderadas.</h1>
-        <p>Login só com Google para simplificar. Dados ficam no Supabase; automações e webhooks rodam em Cloudflare Workers.</p>
-        <div class="actions">
-          <button id="google-btn">Entrar com Google</button>
-          <button class="secondary" id="signout-btn">Sair</button>
-          <span class="muted" id="session-status">Sem sessão.</span>
-        </div>
-        <div class="mini-grid">
-          <div class="notice">
-            <strong>Fluxo:</strong> anúncios → compra → pagamento via Stripe → entrega no chat → liberação → avaliações.
+    <main>
+      <section class="hero">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <h1>Encontre freelancers, itens e contas do seu game favorito.</h1>
+            <p class="lede">Gamers freelancers publicam gigs, entregam itens raros e vendem contas verificadas. Cada game tem seu próprio marketplace operado 100% por players.</p>
+            <form class="search" id="game-search">
+              <div class="search-bar">
+                <input id="game-search-input" class="search-input" type="search" placeholder="Pesquise aqui um game" aria-label="Pesquise aqui um game" autocomplete="off" />
+                <button type="submit" class="btn btn-ghost">Buscar</button>
+              </div>
+              <div class="suggestions">
+                <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
+              </div>
+              <p id="search-feedback" class="search-feedback">Digite o nome de um game e veja se já temos um marketplace ativo.</p>
+            </form>
+            <div class="cta-inline">
+              não encontrou um game que procurava?
+              <button type="button" class="link-ghost" id="cta-cadastrar-game">Cadastre ele clicando aqui</button>
+            </div>
+            <div class="pill-trail">
+              <span class="pill">Boost de rank</span>
+              <span class="pill">Mercado de itens</span>
+              <span class="pill">Contas verificadas</span>
+              <span class="pill">Coaching</span>
+            </div>
+            <div class="session-pill" id="session-status">Você está navegando como convidado. Faça login para salvar favoritos e publicar gigs.</div>
           </div>
-          <div class="notice">
-            <strong>Segurança:</strong> JWT do Supabase, RLS ligada, logs de eventos na transação, e limite de quem cria servidores (somente admins).
+          <div class="hero-panel">
+            <div class="hero-card outline">
+              <div class="badge">Play to earn</div>
+              <ul class="hero-list">
+                <li>
+                  <span>Boosters verificam identidade</span>
+                  <span class="badge">Verificado</span>
+                </li>
+                <li>
+                  <span>Itens raros com prova de entrega</span>
+                  <span class="badge">Escrow</span>
+                </li>
+                <li>
+                  <span>Contas smurf prontas para jogar</span>
+                  <span class="badge">Seguro</span>
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="grid">
-      <section class="card">
-        <h2>Painel rápido</h2>
-        <p id="profile-info">Faça login para ver seu perfil.</p>
-        <div class="list-inline">
-          <span>Auth: Google</span>
-          <span>Banco: Supabase</span>
-          <span>Storage: listing_media</span>
-          <span>Webhook: Cloudflare Worker</span>
-        </div>
-        <div class="notice">
-          Apenas administradores podem criar novos servidores. Para marcar alguém como admin, use a service key e atualize <code>public.users.is_admin</code>.
         </div>
       </section>
 
-      <section class="card">
-        <h2>Criar anúncio <span class="tag">Requer login</span></h2>
-        <p>Escolha um servidor já aprovado ou, se for admin, crie um novo.</p>
-        <form id="listing-form">
-          <div class="row">
-            <div>
-              <label for="server-select">Servidor existente</label>
-              <select id="server-select">
-                <option value="">Selecione um servidor</option>
-              </select>
-            </div>
-            <div id="server-create-fields">
-              <label for="server-name">Criar servidor (admins)</label>
-              <input id="server-name" placeholder="Nome do servidor" />
-            </div>
+      <section class="section popular">
+        <div class="section-header">
+          <div>
+            <span class="eyebrow">Primeira sessão</span>
+            <h2>Games mais populares agora</h2>
+            <p class="section-sub">Escolha um título e navegue no marketplace alimentado pela própria comunidade.</p>
           </div>
-          <label for="server-site">Site oficial (opcional)</label>
-          <input id="server-site" placeholder="https://..." />
-
-          <label for="server-description">Descrição do servidor (opcional)</label>
-          <textarea id="server-description" placeholder="Breve resumo do servidor..."></textarea>
-
-          <div class="divider" style="height:1px;background:var(--border);margin:16px 0;"></div>
-
-          <label for="title">Título do anúncio</label>
-          <input id="title" placeholder="Conta premium, set, coins..." />
-
-          <label for="description">Descrição</label>
-          <textarea id="description" placeholder="Detalhes do item/conta/serviço..."></textarea>
-
-          <div class="row">
-            <div>
-              <label for="category">Categoria</label>
-              <select id="category">
-                <option value="account">Conta</option>
-                <option value="item">Item</option>
-                <option value="currency">Moeda</option>
-                <option value="service">Serviço</option>
-                <option value="other">Outro</option>
-              </select>
-            </div>
-            <div>
-              <label for="price">Preço</label>
-              <input id="price" type="number" step="0.01" min="0" placeholder="0,00" />
-            </div>
-            <div>
-              <label for="currency">Moeda</label>
-              <select id="currency">
-                <option value="BRL">BRL</option>
-                <option value="USD">USD</option>
-              </select>
-            </div>
-          </div>
-
-          <label for="images">Imagens (URLs separadas por vírgula)</label>
-          <input id="images" placeholder="https://... , https://..." />
-
-          <button type="submit" style="margin-top:16px;">Salvar anúncio</button>
-          <div class="error" id="listing-error"></div>
-          <div class="success" id="listing-success"></div>
-        </form>
+          <button class="btn btn-ghost" type="button" id="view-all-games">Ver todos os games</button>
+        </div>
+        <div id="games-grid" class="games-grid"></div>
+        <p id="games-empty" class="search-feedback" style="display:none;">Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.</p>
       </section>
-    </div>
 
-    <section class="card">
-      <h2>Como funciona na prática</h2>
-      <div class="mini-grid">
-        <div>
-          <h3>Escrow + webhooks</h3>
-          <p>Stripe captura → Worker valida → atualiza transação para paid/delivered/completed.</p>
+      <section class="section">
+        <div class="hero-card">
+          <h3>Escrow e entregas seguras</h3>
+          <p>Pagamentos ficam protegidos até a entrega no chat. Cada novo usuário aprende o fluxo de pagamento antes de negociar.</p>
+          <div class="stat-row">
+            <div class="stat">
+              <strong>Stripe</strong>
+              <span>Checkout e proteção</span>
+            </div>
+            <div class="stat">
+              <strong>Timeline</strong>
+              <span>Entrega → liberação</span>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3>Chat privado</h3>
-          <p>Cria chat vinculado à transação; mensagens filtradas; anexo só imagem.</p>
-        </div>
-        <div>
-          <h3>Disputas e auditoria</h3>
-          <p>Eventos ficam em <code>transactions.events</code>; admins revisam e decidem.</p>
-        </div>
-        <div>
-          <h3>RLS ativa</h3>
-          <p>Listings visíveis a todos; transações e mensagens só para participantes; servers apenas admins criam.</p>
-        </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script src="env.js"></script>
   <script type="module">
@@ -295,214 +109,262 @@
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
-    const statusDot = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
+    const authBtn = document.getElementById("auth-btn");
     const sessionStatus = document.getElementById("session-status");
-    const profileInfo = document.getElementById("profile-info");
-    const googleBtn = document.getElementById("google-btn");
-    const signoutBtn = document.getElementById("signout-btn");
-    const listingForm = document.getElementById("listing-form");
-    const listingError = document.getElementById("listing-error");
-    const listingSuccess = document.getElementById("listing-success");
-    const serverSelect = document.getElementById("server-select");
-    const serverCreateFields = document.getElementById("server-create-fields");
+    const searchForm = document.getElementById("game-search");
+    const searchInput = document.getElementById("game-search-input");
+    const searchFeedback = document.getElementById("search-feedback");
+    const searchSuggestions = document.getElementById("search-suggestions");
+    const gamesGrid = document.getElementById("games-grid");
+    const gamesEmpty = document.getElementById("games-empty");
+    const ctaCadastrarGame = document.getElementById("cta-cadastrar-game");
+    const viewAllGamesBtn = document.getElementById("view-all-games");
 
     let supabase;
-    let profile = null;
-
-    function setStatus(ok, text) {
-      statusDot.classList.toggle("ok", ok);
-      statusText.textContent = text;
-    }
+    let currentUser = null;
+    let games = [];
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        setStatus(false, "Defina SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js");
-        throw new Error("Supabase URL/key não configurados");
+        sessionStatus.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        authBtn.disabled = true;
+        throw new Error("Supabase não configurado");
       }
-      supabase = supabase || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      setStatus(true, "Conectado");
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
       return supabase;
     }
 
-    async function upsertProfile(user) {
-      const payload = {
-        id: user.id,
-        username: user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
-        email: user.email,
-        avatar_url: user.user_metadata?.avatar_url ?? null
-      };
-      const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
-      if (error) throw error;
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.textContent = "Sair";
+        sessionStatus.textContent = "Sessão ativa.";
+        return;
+      }
+      authBtn.textContent = "Entrar com Google";
+      sessionStatus.textContent = "Você está navegando como convidado. Faça login para salvar favoritos e publicar gigs.";
     }
 
-    async function fetchProfile(userId) {
-      const { data, error } = await supabase.from("users").select("id, username, is_admin").eq("id", userId).single();
-      if (error && error.code !== "PGRST116") throw error;
-      return data;
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        if (currentUser) {
+          await supabase.auth.signOut();
+          currentUser = null;
+          updateAuthUI();
+          return;
+        }
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: window.location.href.split("#")[0],
+            queryParams: { prompt: "select_account" }
+          }
+        });
+      } catch (err) {
+        console.error(err);
+        sessionStatus.textContent = err?.message || "Erro ao autenticar.";
+        authBtn.disabled = false;
+      }
     }
 
-    async function refreshSession() {
+    async function bootstrapAuth() {
       try {
         ensureClient();
         const { data } = await supabase.auth.getSession();
-        const session = data.session;
-        if (session?.user) {
-          const user = session.user;
-          await upsertProfile(user);
-          profile = await fetchProfile(user.id);
-          sessionStatus.textContent = `Logado como ${user.email}`;
-          profileInfo.textContent = profile
-            ? `Perfil: ${profile.username} ${profile.is_admin ? "(admin)" : ""}`
-            : "Perfil não encontrado.";
-          serverCreateFields.classList.toggle("hide", !profile?.is_admin);
-          await loadServers();
-        } else {
-          profile = null;
-          sessionStatus.textContent = "Sem sessão.";
-          profileInfo.textContent = "Faça login para ver seu perfil.";
-          serverCreateFields.classList.add("hide");
-          serverSelect.innerHTML = '<option value=\"\">Selecione um servidor</option>';
-        }
+        currentUser = data.session?.user || null;
+        updateAuthUI();
       } catch (err) {
         console.error(err);
-        sessionStatus.textContent = "Erro ao checar sessão.";
+        sessionStatus.textContent = "Erro ao carregar sessão.";
       }
     }
 
-    async function loadServers() {
+    async function fetchGames() {
+      try {
+        ensureClient();
+        const primary = await loadGamesFromTable("games");
+        games = primary;
+        renderGames(games);
+      } catch (primaryErr) {
+        console.warn("Falha ao ler tabela games, tentando servers.", primaryErr);
+        try {
+          const fallback = await loadGamesFromTable(
+            "servers",
+            (row) => ({
+              id: row.id,
+              name: row.name,
+              description: row.description,
+              cover_url: row.cover_url,
+              website: row.official_site,
+              category: row.game_type || "Game",
+            })
+          );
+          games = fallback;
+          renderGames(games);
+        } catch (err) {
+          console.error(err);
+          gamesGrid.innerHTML = "";
+          gamesEmpty.style.display = "block";
+          gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
+        }
+      }
+    }
+
+    async function loadGamesFromTable(table, mapFn) {
       const { data, error } = await supabase
-        .from("servers")
-        .select("id,name,status")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) {
-        console.error(error);
+        .from(table)
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return (data || []).map(mapFn || ((row) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        cover_url: row.cover_url || row.image || row.image_url || row.photo,
+        website: row.website || row.site || row.official_site,
+        category: row.category || row.type || row.game_type || "Game",
+      })));
+    }
+
+    function renderGames(list) {
+      gamesGrid.innerHTML = "";
+      if (!list || list.length === 0) {
+        gamesEmpty.style.display = "block";
         return;
       }
-      serverSelect.innerHTML = '<option value=\"\">Selecione um servidor</option>';
-      data?.forEach((srv) => {
-        const opt = document.createElement("option");
-        opt.value = srv.id;
-        opt.textContent = `${srv.name} · ${srv.status}`;
-        serverSelect.appendChild(opt);
+      gamesEmpty.style.display = "none";
+      list.forEach((game) => {
+        const card = document.createElement("article");
+        card.className = "game-card";
+        card.dataset.gameId = game.id;
+
+        const cover = game.cover_url
+          ? `<div style=\"width:100%;height:150px;border-radius:12px;background:url('${game.cover_url}') center/cover no-repeat;border:1px solid var(--border);\"></div>`
+          : "";
+
+        card.innerHTML = `
+          <div class=\"game-meta\">
+            <span class=\"tag\">${game.category || "Game"}</span>
+            <span class=\"pill\">Marketplace ativo</span>
+          </div>
+          <h3>${game.name}</h3>
+          <p>${game.description || "Marketplace operado pela comunidade."}</p>
+          ${cover}
+          <div class=\"game-tags\">
+            ${game.website ? `<a href=\"${game.website}\" target=\"_blank\" rel=\"noopener\" class=\"pill\">Site oficial</a>` : "<span>Site indisponível</span>"}
+          </div>
+        `;
+        gamesGrid.appendChild(card);
       });
     }
 
-    googleBtn.addEventListener("click", async () => {
-      try {
-        ensureClient();
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: window.location.origin }
-        });
-        if (error) throw error;
-      } catch (err) {
-        console.error(err);
-        alert(err?.message || "Falha no OAuth.");
+    function renderSuggestions(term) {
+      if (!searchSuggestions) return;
+      if (!term || term.length < 2) {
+        searchSuggestions.style.display = "none";
+        searchSuggestions.innerHTML = "";
+        return;
       }
-    });
-
-    signoutBtn.addEventListener("click", async () => {
-      try {
-        ensureClient();
-        await supabase.auth.signOut();
-        await refreshSession();
-      } catch (err) {
-        console.error(err);
+      const matches = games.filter((g) => g.name.toLowerCase().includes(term.toLowerCase()));
+      if (matches.length === 0) {
+        searchSuggestions.style.display = "none";
+        searchSuggestions.innerHTML = "";
+        return;
       }
-    });
-
-    listingForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      listingError.textContent = "";
-      listingSuccess.textContent = "";
-
-      try {
-        ensureClient();
-        const { data: sessionData } = await supabase.auth.getSession();
-        const user = sessionData.session?.user;
-        if (!user) {
-          listingError.textContent = "Faça login para criar anúncios.";
-          return;
-        }
-
-        const isAdmin = profile?.is_admin === true;
-        const formValues = {
-          serverId: document.getElementById("server-select").value || null,
-          serverName: document.getElementById("server-name").value.trim(),
-          serverSite: document.getElementById("server-site").value.trim() || null,
-          serverDescription: document.getElementById("server-description").value.trim() || null,
-          title: document.getElementById("title").value.trim(),
-          description: document.getElementById("description").value.trim(),
-          category: document.getElementById("category").value,
-          price: parseFloat(document.getElementById("price").value || "0"),
-          currency: document.getElementById("currency").value,
-          images: document.getElementById("images").value.split(",").map((s) => s.trim()).filter(Boolean)
-        };
-
-        if (!formValues.title || !formValues.category) {
-          listingError.textContent = "Preencha título e categoria.";
-          return;
-        }
-
-        let serverId = formValues.serverId;
-        if (!serverId) {
-          if (!isAdmin) {
-            listingError.textContent = "Somente admins podem criar servidores. Selecione um existente.";
-            return;
-          }
-          if (!formValues.serverName) {
-            listingError.textContent = "Informe o nome do servidor para criar.";
-            return;
-          }
-          const { data: newServer, error: serverErr } = await supabase
-            .from("servers")
-            .insert({
-              name: formValues.serverName,
-              game_type: "general",
-              official_site: formValues.serverSite,
-              description: formValues.serverDescription,
-              owner_id: user.id
-            })
-            .select("id")
-            .single();
-          if (serverErr) throw serverErr;
-          serverId = newServer.id;
-          await loadServers();
-          serverSelect.value = serverId;
-        }
-
-        const { error: listingErr } = await supabase.from("listings").insert({
-          server_id: serverId,
-          user_id: user.id,
-          category: formValues.category,
-          title: formValues.title,
-          description: formValues.description,
-          price: formValues.price || 0,
-          currency: formValues.currency,
-          images: formValues.images,
-          status: "active"
-        });
-        if (listingErr) throw listingErr;
-
-        listingSuccess.textContent = "Anúncio criado!";
-        listingForm.reset();
-        document.getElementById("currency").value = "BRL";
-      } catch (err) {
-        console.error(err);
-        listingError.textContent = err?.message || "Erro ao salvar anúncio.";
-      }
-    });
-
-    // Inicializa
-    try {
-      ensureClient();
-      refreshSession();
-      supabase.auth.onAuthStateChange(() => refreshSession());
-    } catch (err) {
-      console.warn(err.message);
+      searchSuggestions.innerHTML = matches
+        .map((g) => `<div class=\"suggestion-item\" data-game-id=\"${g.id}\" data-game-name=\"${g.name}\">${g.name}<span class=\"badge\">Ver</span></div>`)
+        .join("");
+      searchSuggestions.style.display = "block";
     }
+
+    function handleSuggestionClick(event) {
+      const item = event.target.closest(".suggestion-item");
+      if (!item) return;
+      const gameId = item.getAttribute("data-game-id");
+      const gameName = item.getAttribute("data-game-name");
+      if (gameName && searchInput) searchInput.value = gameName;
+      searchSuggestions.style.display = "none";
+      scrollToGameCard(gameId);
+    }
+
+    function scrollToGameCard(gameId) {
+      if (!gameId) return;
+      const el = document.querySelector(`[data-game-id=\"${gameId}\"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("pulse");
+        setTimeout(() => el.classList.remove("pulse"), 800);
+      }
+    }
+
+    searchForm?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const term = searchInput?.value.trim();
+      if (!term) {
+        searchFeedback.textContent = "Digite o nome de um game para começar.";
+        return;
+      }
+      const match = games.find((g) => g.name.toLowerCase() === term.toLowerCase());
+      if (match) {
+        searchFeedback.textContent = `Encontramos ${match.name}. Rolando até o marketplace.`;
+        scrollToGameCard(match.id);
+        searchSuggestions.style.display = "none";
+      } else {
+        searchFeedback.textContent = `Não encontramos \"${term}\". Cadastre ou sugira o game.`;
+      }
+    });
+
+    searchInput?.addEventListener("input", (event) => {
+      const term = event.target.value.trim();
+      renderSuggestions(term);
+    });
+
+    searchSuggestions?.addEventListener("click", handleSuggestionClick);
+
+    ctaCadastrarGame?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        if (!currentUser) {
+          await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: new URL("game-submit.html", window.location.href).href }
+          });
+          return;
+        }
+        window.location.href = "game-submit.html";
+      } catch (err) {
+        console.error(err);
+        sessionStatus.textContent = err?.message || "Erro ao redirecionar.";
+      }
+    });
+
+    viewAllGamesBtn?.addEventListener("click", () => {
+      if (!games || games.length === 0) {
+        searchFeedback.textContent = "Nenhum game cadastrado ainda.";
+        return;
+      }
+      scrollToGameCard(games[0].id);
+    });
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    bootstrapAuth();
+    fetchGames();
   </script>
 </body>
 </html>

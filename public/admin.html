@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Admin</title>
+  <link rel="stylesheet" href="css/global.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-name">Gimerr</span>
+          <span class="brand-tagline">Painel Admin</span>
+        </div>
+      </a>
+      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+    </header>
+
+    <main class="section">
+      <div class="form-card">
+        <div class="inline-actions" style="justify-content: space-between;">
+          <div>
+            <h2>Cadastro manual de game</h2>
+            <p class="helper">Use esta área para criar ou atualizar games oficiais do marketplace.</p>
+          </div>
+          <span id="session-status" class="pill-status">Sessão não verificada.</span>
+        </div>
+        <form id="manual-form" class="form-grid">
+          <div class="field">
+            <label for="manual-name">Nome do game *</label>
+            <input id="manual-name" class="input" placeholder="Ex: Miracle 7.4" required />
+          </div>
+          <div class="field">
+            <label for="manual-website">Website oficial *</label>
+            <input id="manual-website" class="input" placeholder="https://miracle74.com" required />
+            <span class="helper">Formato obrigatório: https://dominio.com (sem barra final ou caminhos).</span>
+          </div>
+          <div class="field">
+            <label for="manual-cover">Imagem de capa (URL)</label>
+            <input id="manual-cover" class="input" placeholder="https://.../capa.jpg" />
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label for="manual-description">Descrição</label>
+            <textarea id="manual-description" class="textarea" placeholder="Resumo do game"></textarea>
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-ghost" id="manual-submit">Salvar game</button>
+            <div id="manual-feedback" class="helper"></div>
+          </div>
+        </form>
+      </div>
+
+      <div class="form-card">
+        <div class="inline-actions" style="justify-content: space-between;">
+          <div>
+            <h2>Solicitações de games dos usuários</h2>
+            <p class="helper">Aprove ou recuse as solicitações enviadas. Uma decisão dispara e-mail automaticamente.</p>
+          </div>
+          <span id="requests-status" class="pill-status">Carregando...</span>
+        </div>
+        <div id="requests-empty" class="helper" style="display:none;">Nenhuma solicitação pendente.</div>
+        <div id="requests-list" class="list"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const sessionStatus = document.getElementById("session-status");
+    const manualForm = document.getElementById("manual-form");
+    const manualFeedback = document.getElementById("manual-feedback");
+    const manualSubmit = document.getElementById("manual-submit");
+
+    const requestsList = document.getElementById("requests-list");
+    const requestsEmpty = document.getElementById("requests-empty");
+    const requestsStatus = document.getElementById("requests-status");
+
+    let supabase;
+    let currentUser = null;
+    let profile = null;
+    let channel = null;
+    let requestCache = [];
+
+    manualSubmit.disabled = true;
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        sessionStatus.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        authBtn.disabled = true;
+        manualSubmit.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+          if (currentUser) loadProfile();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.textContent = "Sair";
+        return;
+      }
+      authBtn.textContent = "Entrar com Google";
+      sessionStatus.textContent = "Sessão não verificada.";
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        if (currentUser) {
+          await supabase.auth.signOut();
+          currentUser = null;
+          profile = null;
+          requestCache = [];
+          teardownRealtime();
+          updateAuthUI();
+          requestsList.innerHTML = "";
+          requestsStatus.textContent = "Faça login";
+          manualSubmit.disabled = true;
+          requestsEmpty.style.display = "block";
+          requestsEmpty.textContent = "Faça login para ver solicitações.";
+          return;
+        }
+        await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: window.location.href.split("#")[0] }
+        });
+      } catch (err) {
+        console.error(err);
+        manualFeedback.textContent = err?.message || "Erro ao autenticar.";
+        authBtn.disabled = false;
+      }
+    }
+
+    async function loadProfile() {
+      try {
+        const { data, error } = await supabase.from("users").select("id, username, is_admin").eq("id", currentUser.id).single();
+        if (error && error.code !== "PGRST116") throw error;
+        profile = data;
+        if (!profile?.is_admin) {
+          sessionStatus.textContent = "Sem permissão de admin.";
+          manualSubmit.disabled = true;
+          requestsStatus.textContent = "Restrito";
+          requestsList.innerHTML = "";
+          requestsEmpty.style.display = "block";
+          requestsEmpty.textContent = "Apenas admins podem ver solicitações.";
+          return;
+        }
+        sessionStatus.textContent = "Admin ativo.";
+        manualSubmit.disabled = false;
+        await fetchRequests();
+        setupRealtime();
+      } catch (err) {
+        console.error(err);
+        sessionStatus.textContent = "Erro ao carregar perfil.";
+      }
+    }
+
+    function normalizeWebsite(raw) {
+      if (!raw) return null;
+      try {
+        const url = new URL(raw.trim());
+        if (url.protocol !== "https:") return null;
+        if (url.pathname && url.pathname !== "/") return null;
+        if (url.search || url.hash) return null;
+        return url.origin;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function checkWebsiteExists(website, ignoreRequestId) {
+      const { data: inGames, error: gamesErr } = await supabase.from("games").select("id").eq("website", website).limit(1);
+      if (gamesErr) throw gamesErr;
+      if (inGames && inGames.length > 0) return true;
+
+      const { data: inRequests, error: reqErr } = await supabase.from("game_requests").select("id").eq("website", website).limit(1);
+      if (reqErr) throw reqErr;
+      if (!inRequests || inRequests.length === 0) return false;
+      if (ignoreRequestId) {
+        return inRequests.some((r) => String(r.id) !== String(ignoreRequestId));
+      }
+      return true;
+    }
+
+    async function handleManualSubmit(event) {
+      event.preventDefault();
+      manualFeedback.textContent = "";
+      manualSubmit.disabled = true;
+
+      try {
+        ensureClient();
+        if (!currentUser) {
+          manualFeedback.textContent = "Faça login para salvar.";
+          manualSubmit.disabled = false;
+          return;
+        }
+        if (!profile?.is_admin) {
+          manualFeedback.textContent = "Apenas admins podem salvar games.";
+          manualSubmit.disabled = false;
+          return;
+        }
+
+        const name = document.getElementById("manual-name").value.trim();
+        const websiteRaw = document.getElementById("manual-website").value.trim();
+        const cover_url = document.getElementById("manual-cover").value.trim() || null;
+        const description = document.getElementById("manual-description").value.trim() || null;
+        const website = normalizeWebsite(websiteRaw);
+
+        if (!name || !website) {
+          manualFeedback.textContent = "Preencha nome e website válido (https://dominio.com).";
+          manualSubmit.disabled = false;
+          return;
+        }
+
+        const duplicate = await checkWebsiteExists(website);
+        if (duplicate) {
+          manualFeedback.textContent = "Website já existe no sistema.";
+          manualSubmit.disabled = false;
+          return;
+        }
+
+        const { error } = await supabase.from("games").insert({
+          name,
+          website,
+          cover_url,
+          description
+        });
+        if (error) throw error;
+
+        manualFeedback.textContent = "Game salvo.";
+        manualForm.reset();
+      } catch (err) {
+        console.error(err);
+        manualFeedback.textContent = err?.message || "Erro ao salvar.";
+      } finally {
+        manualSubmit.disabled = false;
+      }
+    }
+
+    async function fetchRequests() {
+      try {
+        requestsStatus.textContent = "Carregando...";
+        const { data, error } = await supabase
+          .from("game_requests")
+          .select("id,name,website,description,cover_url,user_email,status")
+          .eq("status", "pending")
+          .order("created_at", { ascending: true });
+        if (error) throw error;
+        renderRequests(data || []);
+        requestsStatus.textContent = "Pronto";
+      } catch (err) {
+        console.error(err);
+        requestsStatus.textContent = "Erro";
+        requestsEmpty.style.display = "block";
+        requestsEmpty.textContent = err?.message || "Erro ao carregar solicitações.";
+      }
+    }
+
+    function renderRequests(list) {
+      requestCache = list || [];
+      requestsList.innerHTML = "";
+      if (!list || list.length === 0) {
+        requestsEmpty.style.display = "block";
+        return;
+      }
+      requestsEmpty.style.display = "none";
+      list.forEach((req) => {
+        const card = document.createElement("div");
+        card.className = "request-card";
+        card.innerHTML = `
+          <div class="inline-actions" style="justify-content: space-between;">
+            <div>
+              <strong>${req.name}</strong>
+              <div class="helper">${req.website}</div>
+            </div>
+            <span class="pill-status">Pendente</span>
+          </div>
+          <p class="helper">${req.description || "Sem descrição."}</p>
+          ${req.cover_url ? `<img src="${req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
+          <div class="helper">Usuário: ${req.user_email || "-"}</div>
+          <div class="request-actions">
+            <button class="btn btn-primary" data-action="approve" data-id="${req.id}">Aprovar</button>
+            <button class="btn btn-danger" data-action="reject" data-id="${req.id}">Recusar</button>
+          </div>
+        `;
+        requestsList.appendChild(card);
+      });
+    }
+
+    async function handleDecision(event) {
+      const actionBtn = event.target.closest("button[data-action]");
+      if (!actionBtn) return;
+      const action = actionBtn.getAttribute("data-action");
+      const reqId = actionBtn.getAttribute("data-id");
+      const req = requestCache.find((r) => String(r.id) === String(reqId));
+      if (!req) return;
+      const approved = action === "approve";
+      let note = "";
+      if (!approved) {
+        note = window.prompt("Motivo da recusa? (opcional)", "") || "";
+      }
+      await processDecision(req, approved, note);
+    }
+
+    async function processDecision(req, approved, note) {
+      if (!currentUser || !profile?.is_admin) {
+        manualFeedback.textContent = "Apenas admins podem decidir.";
+        return;
+      }
+      try {
+        const website = normalizeWebsite(req.website);
+        if (!website) {
+          requestsStatus.textContent = "Website inválido nesta solicitação.";
+          return;
+        }
+        if (approved) {
+          const duplicate = await checkWebsiteExists(website, req.id);
+          if (duplicate) {
+            requestsStatus.textContent = "Website já cadastrado.";
+            return;
+          }
+          const { error: insertErr } = await supabase.from("games").insert({
+            name: req.name,
+            website,
+            cover_url: req.cover_url,
+            description: req.description
+          });
+          if (insertErr) throw insertErr;
+        }
+
+        const { error: updateErr } = await supabase
+          .from("game_requests")
+          .update({ status: approved ? "approved" : "rejected" })
+          .eq("id", req.id);
+        if (updateErr) throw updateErr;
+
+        await sendDecisionEmail({
+          to: req.user_email,
+          gameName: req.name,
+          approved,
+          note,
+        });
+
+        await fetchRequests();
+      } catch (err) {
+        console.error(err);
+        requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";
+      }
+    }
+
+    async function sendDecisionEmail(payload) {
+      if (!payload.to) return;
+      try {
+        await supabase.functions.invoke("index", { body: payload });
+      } catch (err) {
+        console.error("Erro ao enviar e-mail", err);
+      }
+    }
+
+    function setupRealtime() {
+      teardownRealtime();
+      channel = supabase.channel("game-requests-channel")
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "game_requests" }, fetchRequests)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "game_requests" }, fetchRequests)
+        .subscribe();
+    }
+
+    function teardownRealtime() {
+      if (channel) {
+        supabase.removeChannel(channel);
+        channel = null;
+      }
+    }
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    manualForm?.addEventListener("submit", handleManualSubmit);
+    requestsList?.addEventListener("click", handleDecision);
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (currentUser) await loadProfile();
+      } catch (err) {
+        console.error(err);
+        sessionStatus.textContent = "Erro ao iniciar.";
+      }
+    })();
+  </script>
+</body>
+</html>
