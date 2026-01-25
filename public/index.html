@@ -26,8 +26,9 @@
         <div class="hero-overlay"></div>
         <div class="hero-grid single">
           <div class="hero-copy">
-            <h1>Encontre freelancers, itens e contas do seu game favorito.</h1>
-            <p class="lede">Gamers freelancers publicam gigs, entregam itens raros e vendem contas verificadas. Cada game tem seu próprio marketplace operado 100% por players.</p>
+            <h1 style="font-size: 100px; text-align: center;">Play to Earn</h1>
+            <h1>Encontre freelancers, itens e contas do seu game favorito à venda.</h1>
+            <p class="lede">Cada game tem seu próprio marketplace operado 100% por players.</p>
             <form class="search" id="game-search">
               <div class="search-bar">
                 <input id="game-search-input" class="search-input" type="search" placeholder="Pesquise aqui um game" aria-label="Pesquise aqui um game" autocomplete="off" />
@@ -36,14 +37,16 @@
               <div class="suggestions">
                 <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
               </div>
-              <p id="search-feedback" class="search-feedback">Não encontrou um game que procurava? <a id="anchor-cadastro-game" href="game-submit.html" style="text-decoration: underline;">Cadastre aqui</a>.</p>
+              <p id="search-feedback" class="search-feedback">Não encontrou um game que procurava? <a id="anchor-cadastro-game" class="link-ghost" href="#" data-action="game-submit">Clique aqui</a> para cadastrá-lo.</p>
             </form>
+            <div class="inline-actions">
+              <button id="create-listing-btn" class="btn btn-primary" type="button" style="display:none;">Criar anúncio</button>
+            </div>
 
             <div class="pill-trail">
-              <span class="pill">Boost de rank</span>
-              <span class="pill">Mercado de itens</span>
+              <span class="pill">Itens</span>
+              <span class="pill">Serviços</span>
               <span class="pill">Contas verificadas</span>
-              <span class="pill">Coaching</span>
             </div>
           </div>
         </div>
@@ -60,23 +63,6 @@
         </div>
         <div id="games-grid" class="games-grid"></div>
         <p id="games-empty" class="search-feedback" style="display:none;">Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.</p>
-      </section>
-
-      <section class="section">
-        <div class="hero-card">
-          <h3>Escrow e entregas seguras</h3>
-          <p>Pagamentos ficam protegidos até a entrega no chat. Cada novo usuário aprende o fluxo de pagamento antes de negociar.</p>
-          <div class="stat-row">
-            <div class="stat">
-              <strong>Stripe</strong>
-              <span>Checkout e proteção</span>
-            </div>
-            <div class="stat">
-              <strong>Timeline</strong>
-              <span>Entrega → liberação</span>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
   </div>
@@ -97,6 +83,7 @@
     const gamesGrid = document.getElementById("games-grid");
     const gamesEmpty = document.getElementById("games-empty");
     const viewAllGamesBtn = document.getElementById("view-all-games");
+    const createListingBtn = document.getElementById("create-listing-btn");
 
     let supabase;
     let currentUser = null;
@@ -130,9 +117,11 @@
       authBtn.disabled = false;
       if (currentUser) {
         authBtn.textContent = "Sair";
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
         return;
       }
       authBtn.textContent = "Entrar com Google";
+      if (createListingBtn) createListingBtn.style.display = "none";
     }
 
     async function handleAuthClick() {
@@ -145,13 +134,7 @@
           updateAuthUI();
           return;
         }
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: window.location.href.split("#")[0],
-            queryParams: { prompt: "select_account" }
-          }
-        });
+        window.location.href = "login.html";
       } catch (err) {
         console.error(err);
         searchFeedback.textContent = err?.message || "Erro ao autenticar.";
@@ -174,32 +157,51 @@
     async function fetchGames() {
       try {
         ensureClient();
-        const primary = await loadGamesFromTable("games");
-        games = primary;
-        renderGames(games);
-      } catch (primaryErr) {
-        console.warn("Falha ao ler tabela games, tentando servers.", primaryErr);
+        // Primeiro tenta "servers", depois "games" como fallback silencioso.
         try {
-          const fallback = await loadGamesFromTable(
+          const servers = await loadGamesFromTable(
             "servers",
             (row) => ({
               id: row.id,
               name: row.name,
               description: row.description,
-              cover_url: row.cover_url,
+              cover_url: row.banner_url || row.cover_url,
               website: row.official_site,
               category: row.game_type || "Game",
             })
           );
-          games = fallback;
-          renderGames(games);
-        } catch (err) {
-          console.error(err);
-          gamesGrid.innerHTML = "";
-          gamesEmpty.style.display = "block";
-          gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
+          if (servers && servers.length > 0) {
+            games = await enhanceCovers(servers);
+            renderGames(games);
+            return;
+          }
+        } catch (serverErr) {
+          console.warn("Falha ao ler tabela servers, tentando games.", serverErr);
         }
+        try {
+          const primary = await loadGamesFromTable("games");
+          games = await enhanceCovers(primary);
+          renderGames(games);
+        } catch (gameErr) {
+          if (isMissingTableError(gameErr)) {
+            games = [];
+            renderGames(games);
+            gamesEmpty.textContent = "Nenhum game cadastrado ainda.";
+            return;
+          }
+          throw gameErr;
+        }
+      } catch (err) {
+        console.error(err);
+        gamesGrid.innerHTML = "";
+        gamesEmpty.style.display = "block";
+        gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
       }
+    }
+
+    function isMissingTableError(err) {
+      const message = err?.message || "";
+      return message.includes("Could not find the table") || message.includes("schema cache");
     }
 
     async function loadGamesFromTable(table, mapFn) {
@@ -212,10 +214,49 @@
         id: row.id,
         name: row.name,
         description: row.description,
-        cover_url: row.cover_url || row.image || row.image_url || row.photo,
+        cover_url: row.banner_url || row.cover_url || row.image || row.image_url || row.photo,
         website: row.website || row.site || row.official_site,
         category: row.category || row.type || row.game_type || "Game",
       })));
+    }
+
+    async function enhanceCovers(list) {
+      if (!list || list.length === 0) return [];
+      return Promise.all(list.map(async (game) => {
+        if (!game.cover_url) return game;
+        const signed = await getSignedCoverUrl(game.cover_url);
+        return { ...game, cover_url: signed || game.cover_url };
+      }));
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/public/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const [bucket, ...pathParts] = rest.split("/");
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function getSignedCoverUrl(urlString) {
+      const parsed = parseStoragePath(urlString);
+      if (!parsed) return urlString;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60 * 6);
+        if (error) throw error;
+        return data?.signedUrl || urlString;
+      } catch (err) {
+        console.warn("Falha ao assinar cover", err);
+        return urlString;
+      }
     }
 
     function renderGames(list) {
@@ -231,20 +272,16 @@
         card.dataset.gameId = game.id;
 
         const cover = game.cover_url
-          ? `<div style=\"width:100%;height:150px;border-radius:12px;background:url('${game.cover_url}') center/cover no-repeat;border:1px solid var(--border);\"></div>`
+          ? `<div class="game-cover"><img src="${encodeURI(game.cover_url)}" alt="${game.name}" loading="lazy" /></div>`
           : "";
 
         card.innerHTML = `
           <div class=\"game-meta\">
-            <span class=\"tag\">${game.category || "Game"}</span>
+            ${game.website ? `<a href="${game.website}" target="_blank" rel="noopener" class="pill pill-link">Site oficial</a>` : `<span class="pill">Site indisponível</span>`}
             <span class=\"pill\">Marketplace ativo</span>
           </div>
-          <h3>${game.name}</h3>
-          <p>${game.description || "Marketplace operado pela comunidade."}</p>
           ${cover}
-          <div class=\"game-tags\">
-            ${game.website ? `<a href=\"${game.website}\" target=\"_blank\" rel=\"noopener\" class=\"pill\">Site oficial</a>` : "<span>Site indisponível</span>"}
-          </div>
+          <h3>${game.name}</h3>
         `;
         gamesGrid.appendChild(card);
       });
@@ -276,7 +313,9 @@
       const gameName = item.getAttribute("data-game-name");
       if (gameName && searchInput) searchInput.value = gameName;
       searchSuggestions.style.display = "none";
-      scrollToGameCard(gameId);
+      if (gameId) {
+        window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+      }
     }
 
     function scrollToGameCard(gameId) {
@@ -298,11 +337,11 @@
       }
       const match = games.find((g) => g.name.toLowerCase() === term.toLowerCase());
       if (match) {
-        searchFeedback.textContent = `Encontramos ${match.name}. Rolando até o marketplace.`;
-        scrollToGameCard(match.id);
+        searchFeedback.textContent = `Encontramos ${match.name}. Abrindo a página do game.`;
+        window.location.href = `game.html?id=${encodeURIComponent(match.id)}`;
         searchSuggestions.style.display = "none";
       } else {
-        searchFeedback.textContent = `Não encontramos \"${term}\". Cadastre ou sugira o game.`;
+        searchFeedback.innerHTML = `Não encontramos \"${term}\". <a href="#" class="link-ghost" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.`;
       }
     });
 
@@ -313,6 +352,27 @@
 
     searchSuggestions?.addEventListener("click", handleSuggestionClick);
 
+    gamesGrid?.addEventListener("click", (event) => {
+      const link = event.target.closest("a");
+      if (link) return;
+      const card = event.target.closest(".game-card");
+      if (!card) return;
+      const gameId = card.dataset.gameId;
+      if (!gameId) return;
+      window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+    });
+
+    searchFeedback?.addEventListener("click", (event) => {
+      const link = event.target.closest('a[data-action="game-submit"]');
+      if (!link) return;
+      event.preventDefault();
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "game-submit.html";
+    });
+
     viewAllGamesBtn?.addEventListener("click", () => {
       if (!games || games.length === 0) {
         searchFeedback.textContent = "Nenhum game cadastrado ainda.";
@@ -322,6 +382,21 @@
     });
 
     authBtn?.addEventListener("click", handleAuthClick);
+    createListingBtn?.addEventListener("click", () => {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    });
+    document.getElementById("anchor-cadastro-game")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "game-submit.html";
+    });
     bootstrapAuth();
     fetchGames();
   </script>

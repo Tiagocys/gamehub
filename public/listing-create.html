@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Criar anúncio</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="listing-guard-style">html{visibility:hidden;}</style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("login.html");
+        }
+      } catch (_err) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Criar anúncio</span>
+        </div>
+      </a>
+      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+    </header>
+
+    <main class="section">
+      <div class="form-card">
+        <div>
+          <h2>Novo anúncio</h2>
+          <p class="helper">Escolha um game existente e publique seu anúncio em minutos.</p>
+        </div>
+        <form id="listing-form" class="form-vertical">
+          <div class="field">
+            <label for="listing-title">Título do anúncio *</label>
+            <input id="listing-title" class="input" placeholder="Ex: 1kk gold + itens raros" required />
+          </div>
+
+          <div class="field">
+            <label for="listing-game">Nome do game *</label>
+            <div class="suggestions">
+              <input id="listing-game" class="input" placeholder="Digite para buscar um game" autocomplete="off" required />
+              <div id="game-suggestions" class="suggestions-panel" style="display:none;"></div>
+            </div>
+            <span id="game-helper" class="helper">Selecione um game existente da lista.</span>
+          </div>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="listing-type">Tipo de anúncio *</label>
+              <select id="listing-type" class="input" required>
+                <option value="">Selecione</option>
+                <option value="item">Moeda ou item do game</option>
+                <option value="account">Conta ou personagem do game</option>
+                <option value="service">Serviço no game</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="listing-price">Valor do anúncio (R$) *</label>
+              <input id="listing-price" class="input" type="number" min="1" step="0.01" placeholder="Ex: 49,90" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="listing-images">Imagens do anúncio (até 8) *</label>
+            <input id="listing-images" type="file" accept="image/png,image/jpeg,image/webp" multiple required />
+            <span class="helper">Você pode enviar até 8 imagens.</span>
+          </div>
+
+          <div class="field">
+            <label for="listing-description">Descrição (opcional)</label>
+            <textarea id="listing-description" class="textarea" maxlength="300" placeholder="Detalhe o que está incluso no anúncio (até 300 caracteres)."></textarea>
+            <span id="desc-counter" class="helper">0/300</span>
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" id="submit-btn">Publicar anúncio</button>
+            <div id="form-feedback" class="helper"></div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const form = document.getElementById("listing-form");
+    const feedback = document.getElementById("form-feedback");
+    const submitBtn = document.getElementById("submit-btn");
+    const gameInput = document.getElementById("listing-game");
+    const gameHelper = document.getElementById("game-helper");
+    const suggestionsPanel = document.getElementById("game-suggestions");
+    const descInput = document.getElementById("listing-description");
+    const descCounter = document.getElementById("desc-counter");
+    const imagesInput = document.getElementById("listing-images");
+
+    const MAX_IMAGES = 8;
+    const MAX_DESC = 300;
+    const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    const MAX_IMAGE_DIMENSION = 1600;
+    const WEBP_QUALITY = 0.8;
+
+    let supabase;
+    let currentUser = null;
+    let games = [];
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("listing-guard-style");
+      if (guard) guard.remove();
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        feedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        authBtn.disabled = true;
+        submitBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+    }
+
+    function decodeJwtPayload(token) {
+      try {
+        const payload = token.split(".")[1];
+        if (!payload) return null;
+        const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+        const json = atob(padded);
+        return JSON.parse(json);
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function ensureValidSession() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) {
+        try {
+          await supabase.auth.signOut();
+        } catch (_err) {
+          // Ignore sign-out errors, just clear storage.
+        }
+        localStorage.removeItem("gimerr-auth-token");
+        localStorage.removeItem("gimerr-auth-session");
+        window.location.replace("login.html");
+        throw new Error("Sessão inválida. Faça login novamente.");
+      }
+      currentUser = data.user;
+      return data.user;
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        if (currentUser) {
+          await supabase.auth.signOut();
+          currentUser = null;
+          updateAuthUI();
+          window.location.href = "login.html";
+          return;
+        }
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao autenticar.";
+        authBtn.disabled = false;
+      }
+    }
+
+    async function fetchGames() {
+      try {
+        ensureClient();
+        const { data, error } = await supabase
+          .from("servers")
+          .select("id,name")
+          .order("name", { ascending: true });
+        if (error) throw error;
+        games = data || [];
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao carregar games.";
+      }
+    }
+
+    function renderSuggestions(term) {
+      if (!suggestionsPanel) return;
+      if (!term || term.length < 2) {
+        suggestionsPanel.style.display = "none";
+        suggestionsPanel.innerHTML = "";
+        return;
+      }
+      const matches = games.filter((g) => g.name.toLowerCase().includes(term.toLowerCase()));
+      if (matches.length === 0) {
+        suggestionsPanel.style.display = "none";
+        suggestionsPanel.innerHTML = "";
+        return;
+      }
+      suggestionsPanel.innerHTML = matches
+        .map((g) => `<div class="suggestion-item" data-game-id="${g.id}" data-game-name="${g.name}">${g.name}<span class="badge">Selecionar</span></div>`)
+        .join("");
+      suggestionsPanel.style.display = "block";
+    }
+
+    function handleSuggestionClick(event) {
+      const item = event.target.closest(".suggestion-item");
+      if (!item) return;
+      const gameId = item.getAttribute("data-game-id");
+      const gameName = item.getAttribute("data-game-name");
+      if (gameName && gameInput) {
+        gameInput.value = gameName;
+        gameInput.dataset.gameId = gameId;
+      }
+      suggestionsPanel.style.display = "none";
+      gameHelper.textContent = "Game selecionado.";
+    }
+
+    function updateDescCounter() {
+      if (!descCounter || !descInput) return;
+      const count = descInput.value.length;
+      descCounter.textContent = `${count}/${MAX_DESC}`;
+    }
+
+    async function requestSignedUpload(file) {
+      const contentType = file.type || "application/octet-stream";
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      await ensureValidSession();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      const payload = decodeJwtPayload(token);
+      const expectedIss = `${SUPABASE_URL}/auth/v1`;
+      if (!payload?.iss || payload.iss !== expectedIss) {
+        localStorage.removeItem("gimerr-auth-token");
+        localStorage.removeItem("gimerr-auth-session");
+        window.location.replace("login.html");
+        throw new Error("Sessão inválida para este projeto.");
+      }
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType,
+          extension,
+          userToken: token,
+        }),
+      });
+      if (!response.ok) {
+        let message = "Erro ao solicitar upload.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      return response.json();
+    }
+
+    async function convertToWebp(file) {
+      if (file.type === "image/webp") return file;
+      const bitmap = await createImageBitmap(file);
+      const maxSide = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, MAX_IMAGE_DIMENSION / maxSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
+      if (!blob) {
+        throw new Error(`Falha ao converter ${file.name} para WebP.`);
+      }
+      const baseName = file.name.replace(/\.[^.]+$/, "");
+      return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    }
+
+    async function uploadListingImages(files) {
+      const uploads = [];
+      for (let i = 0; i < files.length; i += 1) {
+        const originalFile = files[i];
+        if (originalFile.size > MAX_IMAGE_BYTES) {
+          throw new Error(`Imagem ${originalFile.name} excede 5MB.`);
+        }
+        const file = await convertToWebp(originalFile);
+        if (file.size > MAX_IMAGE_BYTES) {
+          throw new Error(`Imagem ${originalFile.name} excede 5MB após compressão.`);
+        }
+        const signed = await requestSignedUpload(file);
+        const uploadRes = await fetch(signed.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type || "application/octet-stream"
+          },
+          body: file
+        });
+        if (!uploadRes.ok) {
+          throw new Error(`Falha ao enviar ${file.name} para o storage.`);
+        }
+        uploads.push(signed.publicUrl);
+      }
+      return uploads;
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      feedback.textContent = "";
+      submitBtn.disabled = true;
+
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const title = document.getElementById("listing-title").value.trim();
+        const gameName = gameInput.value.trim();
+        const gameId = gameInput.dataset.gameId;
+        const listingType = document.getElementById("listing-type").value;
+        const priceRaw = document.getElementById("listing-price").value.trim();
+        const description = descInput.value.trim() || null;
+        const files = Array.from(imagesInput.files || []);
+
+        if (!title || !gameName || !listingType || !priceRaw) {
+          feedback.textContent = "Preencha título, game, tipo e valor.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (!gameId) {
+          feedback.textContent = "Selecione um game existente na lista.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (files.length === 0) {
+          feedback.textContent = "Envie pelo menos uma imagem.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        if (files.length > MAX_IMAGES) {
+          feedback.textContent = `Você pode enviar no máximo ${MAX_IMAGES} imagens.`;
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const price = Number(priceRaw.replace(",", "."));
+        if (Number.isNaN(price) || price <= 0) {
+          feedback.textContent = "Informe um valor válido em reais.";
+          submitBtn.disabled = false;
+          return;
+        }
+
+        const imageUrls = await uploadListingImages(files);
+
+        const { error } = await supabase.from("listings").insert({
+          server_id: gameId,
+          user_id: currentUser.id,
+          category: listingType,
+          title,
+          description,
+          price,
+          currency: "BRL",
+          images: imageUrls,
+          status: "active"
+        });
+        if (error) throw error;
+
+        feedback.textContent = "Anúncio publicado com sucesso!";
+        form.reset();
+        gameInput.dataset.gameId = "";
+        gameHelper.textContent = "Selecione um game existente da lista.";
+        updateDescCounter();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao publicar anúncio.";
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    gameInput?.addEventListener("input", (event) => {
+      gameInput.dataset.gameId = "";
+      gameHelper.textContent = "Selecione um game existente da lista.";
+      renderSuggestions(event.target.value.trim());
+    });
+    suggestionsPanel?.addEventListener("click", handleSuggestionClick);
+    descInput?.addEventListener("input", updateDescCounter);
+    authBtn?.addEventListener("click", handleAuthClick);
+    form?.addEventListener("submit", handleSubmit);
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
+        await ensureValidSession();
+        await fetchGames();
+        updateDescCounter();
+        revealPage();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao iniciar página.";
+        revealPage();
+      }
+    })();
+  </script>
+</body>
+</html>

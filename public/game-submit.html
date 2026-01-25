@@ -36,8 +36,8 @@
             <span id="website-helper" class="helper"></span>
           </div>
           <div class="field">
-            <label for="game-description">Descrição *</label>
-            <textarea id="game-description" class="textarea" placeholder="Dê informações sobre o servidor, como o rate, versão e versão oficial do jogo." required></textarea>
+            <label for="game-currency">Moeda do game *</label>
+            <input id="game-currency" class="input" placeholder="Ex: gold, silver" required />
           </div>
           <div class="field">
             <label for="game-logo">Logo do servidor (png/jpg/webp) *</label>
@@ -239,7 +239,7 @@
 
         const name = document.getElementById("game-name").value.trim();
         const websiteRaw = document.getElementById("game-website").value.trim();
-        const description = document.getElementById("game-description").value.trim();
+        const currencyName = document.getElementById("game-currency").value.trim();
         const logoFile = logoInput.files[0];
 
         const website = normalizeWebsite(websiteRaw);
@@ -247,9 +247,9 @@
         if (website && websiteInput && websiteInput.value !== website) {
           websiteInput.value = website;
         }
-        if (!name || !website || !description || !logoFile) {
+        if (!name || !website || !currencyName || !logoFile) {
           setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
-          feedback.textContent = "Preencha o nome, site com https://, descrição e selecione a logo (png/jpg/webp até 3MB).";
+          feedback.textContent = "Preencha o nome, site com https://, moeda do game e selecione a logo (png/jpg/webp até 3MB).";
           submitBtn.disabled = false;
           return;
         }
@@ -266,8 +266,13 @@
           return;
         }
 
-        const duplicateExists = await checkWebsiteExists(website, domainKey);
-        if (duplicateExists) {
+        const websiteRecord = await findWebsiteRecord(website, domainKey);
+        if (websiteRecord.inServers) {
+          feedback.textContent = "Este jogo já está cadastrado ou em análise.";
+          submitBtn.disabled = false;
+          return;
+        }
+        if (websiteRecord.request && ["pending", "under_review", "approved"].includes(websiteRecord.request.status)) {
           feedback.textContent = "Este jogo já está cadastrado ou em análise.";
           submitBtn.disabled = false;
           return;
@@ -276,15 +281,19 @@
         const compressed = await compressImage(logoFile, MAX_WIDTH);
         const logoUrl = await uploadLogo(compressed, currentUser.id);
 
-        const { error } = await supabase.from("game_requests").insert({
+        const requestPayload = {
           name,
           website,
           cover_url: logoUrl,
-          description,
+          currency_name: currencyName,
           status: "pending",
           user_id: currentUser.id,
           user_email: currentUser.email
-        });
+        };
+        if (websiteRecord.request?.id && websiteRecord.request.website === website) {
+          requestPayload.id = websiteRecord.request.id;
+        }
+        const { error } = await supabase.from("game_requests").upsert(requestPayload, { onConflict: "website" });
         if (error) throw error;
 
         feedback.textContent = "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.";
@@ -334,24 +343,26 @@
       });
     }
 
-    async function checkWebsiteExists(website, domainKey) {
+    async function findWebsiteRecord(website, domainKey) {
       const domainPattern = `%${domainKey}%`;
       const { data: inServers, error: srvErr } = await supabase
         .from("servers")
-        .select("id")
+        .select("id,official_site")
         .or(`official_site.eq.${website},official_site.ilike.${domainPattern}`)
         .limit(1);
       if (srvErr) throw srvErr;
-      if (inServers && inServers.length > 0) return true;
 
       const { data: inRequests, error: reqErr } = await supabase
         .from("game_requests")
-        .select("id,status")
+        .select("id,status,website")
         .or(`website.eq.${website},website.ilike.${domainPattern}`)
-        .in("status", ["pending", "under_review", "approved"])
         .limit(1);
       if (reqErr) throw reqErr;
-      return Boolean(inRequests && inRequests.length > 0);
+
+      return {
+        inServers: Boolean(inServers && inServers.length > 0),
+        request: inRequests?.[0] || null
+      };
     }
 
     authBtn?.addEventListener("click", handleAuthClick);

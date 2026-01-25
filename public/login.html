@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gimerr - Login</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Kanit:wght@500;600;700&display=swap');
+
     :root {
       --bg: #f4f6fb;
       --card: #ffffff;
@@ -19,9 +21,12 @@
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 15% 20%, rgba(27, 79, 211, 0.08), transparent 45%),
+        radial-gradient(circle at 80% 0%, rgba(78, 125, 255, 0.08), transparent 40%),
+        linear-gradient(140deg, #f8faff 0%, #eef2fb 55%, #f9fbff 100%);
       color: var(--text);
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      font-family: "Space Grotesk", "Kanit", sans-serif;
       min-height: 100vh;
     }
     header {
@@ -48,7 +53,15 @@
     }
     .header-actions { display: flex; align-items: center; gap: 14px; }
     .header-actions { display: flex; align-items: center; gap: 14px; }
-    main { max-width: 960px; margin: 0 auto; padding: 32px 20px 60px; display: grid; gap: 18px; }
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      align-items: stretch;
+    }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -56,8 +69,8 @@
       padding: 24px;
       box-shadow: 0 12px 30px rgba(15,37,87,0.08);
     }
-    h1 { margin: 0 0 12px; font-size: 32px; color: #0d1b3b; }
-    h2 { margin: 0 0 12px; font-size: 20px; }
+    h1 { margin: 0 0 12px; font-size: 30px; color: #0d1b3b; font-family: "Kanit", "Space Grotesk", sans-serif; }
+    h2 { margin: 0 0 12px; font-size: 20px; font-family: "Kanit", "Space Grotesk", sans-serif; }
     p { color: var(--muted); margin: 6px 0 14px; }
     button {
       padding: 14px 20px;
@@ -69,6 +82,18 @@
       color: #f8fbff;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       box-shadow: 0 12px 24px rgba(27,79,211,0.25);
+    }
+    .google-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .google-btn img {
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      padding: 3px;
     }
     button.secondary {
       background: transparent;
@@ -91,6 +116,31 @@
       font-size: 12px;
       color: var(--muted);
     }
+    .role-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .role-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(27,79,211,0.12), transparent 55%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .role-card > * { position: relative; z-index: 1; }
+    .login-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      justify-content: center;
+    }
+    .login-card .actions { margin-top: 4px; }
+    .helper-link {
+      text-decoration: underline;
+      color: var(--accent);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -109,26 +159,28 @@
   </header>
 
   <main>
-    <section class="card">
-      <h1>Entre com Google para começar</h1>
-      <p>Use sua conta Google para acessar o <strong>Gimerr</strong>, onde gamers compram e vendem contas, itens e serviços com segurança.</p>
-      <div class="actions">
-        <button id="google-btn">Entrar com Google</button>
-        <a href="index.html" class="secondary" style="text-decoration:none; padding:12px 18px; border-radius:999px; border:1px solid var(--border);">Ir para Home</a>
-      </div>
-      <div class="notice" id="session-status">Sem sessão.</div>
+    <section class="card role-card">
+      <h1>Sou vendedor!</h1>
+      <p>Crie ou faça login na sua conta para anunciar itens rapidamente!</p>
+      <p>Você também pode oferecer serviços para outros usuários que procurarem pelo que você faz.</p>
     </section>
 
-    <section class="card">
-      <h2>Como funciona</h2>
-      <div class="list-inline">
-        <span>Home: anúncios</span>
-        <span>Admin: servidores</span>
-        <span>Escrow com Stripe</span>
-        <span>Chats & disputas</span>
+    <section class="card role-card">
+      <h1>Sou comprador!</h1>
+      <p>Encontre ofertas de itens raros para seu personagem ou personagens de nível mais alto à venda.</p>
+      <p>Você também pode contratar outros players para completar tasks e avançar o nível do seu personagem.</p>
+    </section>
+
+    <section class="card login-card">
+      <h2>Entrar com Google</h2>
+      <p>Use sua conta Google para acessar o Gimerr com segurança.</p>
+      <div class="actions">
+        <button id="google-btn" class="google-btn">
+          <img src="img/google.svg" alt="" />
+          Entrar com Google
+        </button>
+        <a href="index.html" class="secondary helper-link">Ir para Home</a>
       </div>
-      <p>Assim que o login for confirmado nós te levamos automaticamente para a área certa: compradores e vendedores caem na Home; administradores seguem para a central de servidores.</p>
-      <div class="notice" id="profile-info">Faça login para carregar seu perfil.</div>
     </section>
   </main>
 
@@ -240,7 +292,7 @@
       const current = window.location.pathname.split("/").pop();
       if (current === destination) return;
       redirectTriggered = true;
-      sessionStatus.textContent = "Redirecionando...";
+      if (sessionStatus) sessionStatus.textContent = "Redirecionando...";
       window.location.href = destination;
     }
 
@@ -255,8 +307,8 @@
             headerAuthBtn.disabled = true;
             await supabase.auth.signOut();
             setStatus(false, "Sessão encerrada");
-            sessionStatus.textContent = "Sessão encerrada.";
-            profileInfo.textContent = "Faça login para carregar seu perfil.";
+            if (sessionStatus) sessionStatus.textContent = "Sessão encerrada.";
+            if (profileInfo) profileInfo.textContent = "Faça login para carregar seu perfil.";
             redirectTriggered = false;
             await refreshSession();
           } catch (err) {
@@ -283,22 +335,24 @@
           await upsertProfile(user);
           const profile = await fetchProfile(user.id);
           setStatus(true, "Sessão ativa");
-          sessionStatus.textContent = `Logado como ${user.email}`;
-          profileInfo.textContent = profile
-            ? `Perfil carregado: ${profile.username} ${profile.is_admin ? "(admin)" : ""}`
-            : "Perfil não encontrado.";
+          if (sessionStatus) sessionStatus.textContent = `Logado como ${user.email}`;
+          if (profileInfo) {
+            profileInfo.textContent = profile
+              ? `Perfil carregado: ${profile.username} ${profile.is_admin ? "(admin)" : ""}`
+              : "Perfil não encontrado.";
+          }
           configureHeaderButton(true);
           redirectAfterLogin(profile);
         } else {
           setStatus(false, "Sem sessão");
-          sessionStatus.textContent = "Sem sessão.";
-          profileInfo.textContent = "Faça login para carregar seu perfil.";
+          if (sessionStatus) sessionStatus.textContent = "Sem sessão.";
+          if (profileInfo) profileInfo.textContent = "Faça login para carregar seu perfil.";
           configureHeaderButton(false);
         }
       } catch (err) {
         console.error(err);
         setStatus(false, "Erro");
-        sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
+        if (sessionStatus) sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
       }
     }
 

@@ -2,6 +2,12 @@
 // Use supabase functions deploy index
 
 import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import { writeAll } from "https://deno.land/std@0.201.0/streams/write_all.ts";
+
+// Patch edge runtime missing writeAll expected by smtp@0.7.0
+if (!(Deno as any).writeAll) {
+  (Deno as any).writeAll = writeAll;
+}
 
 interface Payload {
   to: string;

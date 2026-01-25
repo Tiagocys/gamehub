@@ -4,6 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gimerr - Admin</title>
+  <style id="admin-guard-style">html{visibility:hidden;}</style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("index.html");
+        }
+      } catch (_err) {
+        window.location.replace("index.html");
+      }
+    })();
+  </script>
   <style>
     :root {
       --bg: #f4f6fb;
@@ -156,7 +169,7 @@
   <main>
     <section class="card">
       <h1>Criar novo servidor</h1>
-      <p>Somente administradores podem criar servidores. Nome, site oficial e logo são obrigatórios.</p>
+      <p>Somente administradores podem criar servidores. Nome, site oficial, moeda do game e logo são obrigatórios.</p>
       <div class="notice" id="session-status">Faça login em login.html para continuar.</div>
       <div class="notice" id="edit-request-banner" style="display:none; gap:10px; align-items:center; justify-content:space-between;">
         <div>
@@ -174,8 +187,8 @@
         <label for="server-site">Site oficial *</label>
         <input id="server-site" placeholder="https://seuservidor.com" required />
 
-        <label for="server-description">Descrição (opcional)</label>
-        <textarea id="server-description" placeholder="Resumo do servidor..."></textarea>
+        <label for="server-currency">Moeda do game *</label>
+        <input id="server-currency" placeholder="Ex: gold, silver" required />
 
         <label for="server-logo">Logo do servidor (png/jpg/webp) *</label>
         <input id="server-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
@@ -216,7 +229,7 @@
     const formSuccess = document.getElementById("form-success");
     const serverNameInput = document.getElementById("server-name");
     const serverSiteInput = document.getElementById("server-site");
-    const serverDescriptionInput = document.getElementById("server-description");
+    const serverCurrencyInput = document.getElementById("server-currency");
     const serverLogoInput = document.getElementById("server-logo");
     const logoPreviewWrapper = document.getElementById("logo-preview-wrapper");
     const logoPreview = document.getElementById("server-logo-preview");
@@ -234,6 +247,58 @@
     let profile = null;
     let requestCache = [];
     let editingRequest = null;
+
+    function getProjectRef() {
+      try {
+        return new URL(SUPABASE_URL).hostname.split(".")[0];
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function decodeJwtPart(token, index) {
+      if (!token) return null;
+      const parts = token.split(".");
+      if (parts.length <= index) return null;
+      const base64 = parts[index].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "===".slice((base64.length + 3) % 4);
+      try {
+        return JSON.parse(atob(padded));
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function decodeJwtPayload(token) {
+      return decodeJwtPart(token, 1);
+    }
+
+    function decodeJwtHeader(token) {
+      return decodeJwtPart(token, 0);
+    }
+
+    function isTokenForProject(token) {
+      const payload = decodeJwtPayload(token);
+      const projectRef = getProjectRef();
+      if (!payload?.iss || !projectRef) return false;
+      return String(payload.iss).includes(projectRef);
+    }
+
+    function checkAnonKey() {
+      const payload = decodeJwtPayload(SUPABASE_ANON_KEY);
+      const projectRef = getProjectRef();
+      if (!payload || !projectRef) return;
+      if (payload.ref !== projectRef || payload.role !== "anon") {
+        console.warn("SUPABASE_ANON_KEY parece inválida para este projeto.", payload);
+        requestsStatus.textContent = "Chave anon incorreta em public/env.js.";
+      }
+    }
+
+    function revealAdminPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("admin-guard-style");
+      if (guard) guard.remove();
+    }
 
     function setStatus(ok, text) {
       statusDot.classList.toggle("ok", ok);
@@ -305,6 +370,7 @@
         setStatus(false, "Defina SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js");
         throw new Error("Supabase URL/key não configurados");
       }
+      checkAnonKey();
       supabase = supabase || createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           persistSession: true,
@@ -349,7 +415,7 @@
       }
       if (serverNameInput) serverNameInput.value = req.name || "";
       if (serverSiteInput) serverSiteInput.value = req.website || "";
-      if (serverDescriptionInput) serverDescriptionInput.value = req.description || "";
+      if (serverCurrencyInput) serverCurrencyInput.value = req.currency_name || "";
       if (serverLogoInput) {
         serverLogoInput.value = "";
         serverLogoInput.required = false;
@@ -443,6 +509,14 @@
           session = await restoreSessionFromStorage();
         }
         if (session?.user) {
+          if (!isTokenForProject(session.access_token)) {
+            console.warn("Sessão não corresponde ao projeto atual. Limpando login.");
+            localStorage.removeItem("gimerr-auth-token");
+            localStorage.removeItem("gimerr-auth-session");
+            await supabase.auth.signOut();
+            window.location.href = "index.html";
+            return;
+          }
           const user = session.user;
           await upsertProfile(user);
           profile = await fetchProfile(user.id);
@@ -451,9 +525,11 @@
             ? `Logado como ${profile.username} (admin)`
             : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
           if (profile?.is_admin) {
+            revealAdminPage();
             await fetchRequests();
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
+            window.location.href = "index.html";
           }
         } else {
           profile = null;
@@ -462,6 +538,8 @@
           requestsList.innerHTML = "";
           requestsEmpty.style.display = "block";
           requestsEmpty.textContent = "Faça login para ver solicitações.";
+          window.location.href = "index.html";
+          return;
         }
         configureHeaderButton(session?.user || null);
       } catch (err) {
@@ -469,6 +547,7 @@
         setStatus(false, "Erro");
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
+        revealAdminPage();
       }
     }
 
@@ -497,6 +576,7 @@
         ensureClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const user = sessionData.session?.user;
+        const accessToken = sessionData.session?.access_token || "";
         if (!user) {
           formError.textContent = "Faça login com Google.";
           return;
@@ -508,11 +588,11 @@
 
         const name = serverNameInput?.value.trim();
         const site = serverSiteInput?.value.trim();
-        const description = serverDescriptionInput?.value.trim() || null;
+        const currencyName = serverCurrencyInput?.value.trim();
         const file = serverLogoInput?.files?.[0];
 
-        if (!name || !site) {
-          formError.textContent = "Preencha nome e site.";
+        if (!name || !site || !currencyName) {
+          formError.textContent = "Preencha nome, site e moeda do game.";
           return;
         }
 
@@ -530,7 +610,7 @@
         const summary = [
           `Servidor: ${name}`,
           `Site: ${site}`,
-          `Descrição: ${description || '-'}`,
+          `Moeda do game: ${currencyName}`,
           `Logo: ${logoSummary}`,
           `Status: ativo`
         ].join("\n");
@@ -555,12 +635,39 @@
           name,
           game_type: "general",
           official_site: site,
-          description,
+          currency_name: currencyName,
           banner_url: bannerUrl,
           owner_id: user.id,
           status: "active"
         });
         if (insertErr) throw insertErr;
+
+        if (editingRequest?.id) {
+          const { data: approveData, error: approveErr } = await supabase.functions.invoke("game_approve", {
+            body: {
+              requestId: editingRequest.id,
+              approved: true,
+              note: "Aprovado com ajustes pelo admin.",
+              skipServerInsert: true,
+              override: {
+                name,
+                website: site,
+                currency_name: currencyName,
+                cover_url: bannerUrl
+              }
+            },
+            headers: accessToken
+              ? {
+                  Authorization: `Bearer ${accessToken}`,
+                  apikey: SUPABASE_ANON_KEY
+                }
+              : {}
+          });
+          if (approveErr || !approveData?.ok) {
+            throw new Error(approveErr?.message || approveData?.error || "Erro ao atualizar status da solicitação.");
+          }
+          await fetchRequests();
+        }
 
         const editedName = editingRequest?.name;
         formSuccess.textContent = editedName
@@ -588,7 +695,7 @@
         requestsStatus.textContent = "Carregando...";
         const { data, error } = await supabase
           .from("game_requests")
-          .select("id,name,website,description,cover_url,user_email,status,created_at")
+          .select("id,name,website,currency_name,cover_url,user_email,status,created_at")
           .eq("status", "pending")
           .order("created_at", { ascending: true });
         if (error) throw error;
@@ -623,7 +730,7 @@
             </div>
             <span class="pill">${req.status}</span>
           </div>
-          <div class="muted">${req.description || "Sem descrição."}</div>
+          <div class="muted">Moeda do game: ${req.currency_name || "não informada"}</div>
           ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
           <div class="muted">Usuário: ${req.user_email || "-"}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -660,16 +767,36 @@
       }
       try {
         requestsStatus.textContent = "Processando...";
-        await supabase.functions.invoke("game_approve", {
-          body: { requestId: id, approved, note }
-        });
-        const req = requestCache.find((r) => String(r.id) === String(id));
-        if (req?.user_email) {
-          await supabase.functions.invoke("game_approve_email", {
-            body: { to: req.user_email, gameName: req.name, approved, note }
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        if (!token) {
+          console.warn("Sem access_token na sessão para chamar game_approve.");
+        } else {
+          const header = decodeJwtHeader(token);
+          const payload = decodeJwtPayload(token);
+          console.warn("Access token (parcial):", `${token.slice(0, 12)}...${token.slice(-8)}`);
+          console.warn("Access token header:", header);
+          console.warn("Access token payload:", {
+            iss: payload?.iss,
+            role: payload?.role,
+            exp: payload?.exp
           });
         }
+        const { data: approveData, error: approveErr } = await supabase.functions.invoke("game_approve", {
+          body: { requestId: id, approved, note },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY
+              }
+            : {}
+        });
+        if (approveErr || !approveData?.ok) {
+          const errMsg = approveErr?.context?.response?.error ?? approveData?.error ?? approveErr?.message;
+          throw new Error(errMsg || "Erro ao processar solicitação.");
+        }
         await fetchRequests();
+        requestsStatus.textContent = approved ? "Solicitação aprovada." : "Solicitação recusada.";
       } catch (err) {
         console.error(err);
         requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";

@@ -1,0 +1,5762 @@
+[
+  {
+    "id": "10kswap-starknet-alpha",
+    "name": "10KSwap"
+  },
+  {
+    "id": "9inch",
+    "name": "9inch"
+  },
+  {
+    "id": "9mm-v3",
+    "name": "9mm V3 (Pulsechain)"
+  },
+  {
+    "id": "9mm-v3-base",
+    "name": "9mm V3 (Base)"
+  },
+  {
+    "id": "9mm-v3-sonic",
+    "name": "9mm V3 (Sonic)"
+  },
+  {
+    "id": "aborean-finance-v2",
+    "name": "Aborean Finance V2"
+  },
+  {
+    "id": "aborean-finance-v3",
+    "name": "Aborean Finance V3"
+  },
+  {
+    "id": "abstradex",
+    "name": "AbstraDEX"
+  },
+  {
+    "id": "acala_swap",
+    "name": "Acala Swap"
+  },
+  {
+    "id": "aerodrome-base",
+    "name": "Aerodrome (Base)"
+  },
+  {
+    "id": "aerodrome-slipstream",
+    "name": "Aerodrome SlipStream"
+  },
+  {
+    "id": "aerodrome-slipstream-2",
+    "name": "Aerodrome Slipstream 2"
+  },
+  {
+    "id": "aethonswap",
+    "name": "Aethonswap"
+  },
+  {
+    "id": "aevo",
+    "name": "Aevo"
+  },
+  {
+    "id": "aftermath_finance",
+    "name": "Aftermath Finance"
+  },
+  {
+    "id": "agni-finance",
+    "name": "Agni Finance"
+  },
+  {
+    "id": "alcor",
+    "name": "Alcor"
+  },
+  {
+    "id": "alexgo",
+    "name": "ALEX"
+  },
+  {
+    "id": "alien-base",
+    "name": "Alien Base"
+  },
+  {
+    "id": "alien-base-v3",
+    "name": "Alien Base V3"
+  },
+  {
+    "id": "allinxswap-opbnb",
+    "name": "AllInXSwap (opBnb)"
+  },
+  {
+    "id": "altcointrader",
+    "name": "AltcoinTrader"
+  },
+  {
+    "id": "amaterasu",
+    "name": "Amaterasu Finance"
+  },
+  {
+    "id": "animeswap",
+    "name": "Animeswap"
+  },
+  {
+    "id": "antfarm-avalanche",
+    "name": "Antfarm (Avalanche)"
+  },
+  {
+    "id": "antfarm-ethereum",
+    "name": "Antfarm (Ethereum) "
+  },
+  {
+    "id": "apertureswap",
+    "name": "ApertureSwap"
+  },
+  {
+    "id": "apeswap-arbitrum",
+    "name": "Apeswap (Arbitrum)"
+  },
+  {
+    "id": "apeswap_bsc",
+    "name": "ApeSwap"
+  },
+  {
+    "id": "apeswap_polygon",
+    "name": "ApeSwap (Polygon)"
+  },
+  {
+    "id": "apeswap_telos",
+    "name": "Apeswap (Telos)"
+  },
+  {
+    "id": "apex-omni",
+    "name": "ApeX Omni"
+  },
+  {
+    "id": "apex_pro",
+    "name": "ApeX Pro"
+  },
+  {
+    "id": "aquarius",
+    "name": "Aquarius"
+  },
+  {
+    "id": "aquaspace",
+    "name": "AquaSpace"
+  },
+  {
+    "id": "aqx",
+    "name": "AQX"
+  },
+  {
+    "id": "aqx_derivatives",
+    "name": "Flipster"
+  },
+  {
+    "id": "arbidex",
+    "name": "Arbidex"
+  },
+  {
+    "id": "arbswap_arbitrum_one",
+    "name": "Arbswap"
+  },
+  {
+    "id": "archerswap",
+    "name": "Archerswap"
+  },
+  {
+    "id": "arch-swap",
+    "name": "Arch Swap"
+  },
+  {
+    "id": "arena-dex",
+    "name": "Arena DEX"
+  },
+  {
+    "id": "arkham",
+    "name": "Arkham"
+  },
+  {
+    "id": "arkham_futures",
+    "name": "Arkham (Futures)"
+  },
+  {
+    "id": "artexswap",
+    "name": "ArtexSwap"
+  },
+  {
+    "id": "arthswap",
+    "name": "ArthSwap"
+  },
+  {
+    "id": "arthswap-astar-zkevm",
+    "name": "ArthSwap (Astar zkEVM)"
+  },
+  {
+    "id": "ashswap",
+    "name": "Ashswap"
+  },
+  {
+    "id": "aster",
+    "name": "Aster (Futures)"
+  },
+  {
+    "id": "aster-spot",
+    "name": "Aster"
+  },
+  {
+    "id": "astra",
+    "name": "Astra"
+  },
+  {
+    "id": "astroport_neutron",
+    "name": "Astroport (Neutron)"
+  },
+  {
+    "id": "astroport_v2",
+    "name": "Astroport (Terra)"
+  },
+  {
+    "id": "astrovault",
+    "name": "Astrovault"
+  },
+  {
+    "id": "atlantis",
+    "name": "Atlantis"
+  },
+  {
+    "id": "atlantis-monad",
+    "name": "Atlantis (Monad)"
+  },
+  {
+    "id": "auriswap",
+    "name": "Auriswap"
+  },
+  {
+    "id": "auroraswap",
+    "name": "AuroraSwap"
+  },
+  {
+    "id": "autoshark_finance",
+    "name": "AutoShark Finance"
+  },
+  {
+    "id": "aux",
+    "name": "AUX Exchange"
+  },
+  {
+    "id": "ayin",
+    "name": "AYIN"
+  },
+  {
+    "id": "azbit",
+    "name": "Azbit"
+  },
+  {
+    "id": "azomi",
+    "name": "Azomi"
+  },
+  {
+    "id": "babydogeswap",
+    "name": "BabyDogeSwap"
+  },
+  {
+    "id": "babyswap",
+    "name": "BabySwap"
+  },
+  {
+    "id": "backpack_exchange",
+    "name": "Backpack Exchange "
+  },
+  {
+    "id": "backpack-futures",
+    "name": "Backpack (Futures)"
+  },
+  {
+    "id": "baguette",
+    "name": "Baguette"
+  },
+  {
+    "id": "bakeryswap",
+    "name": "Bakeryswap"
+  },
+  {
+    "id": "bakeryswap-base",
+    "name": "BakerySwap (Base)"
+  },
+  {
+    "id": "balanced_network",
+    "name": "Balanced"
+  },
+  {
+    "id": "balancer",
+    "name": "Balancer V2"
+  },
+  {
+    "id": "balancer_arbitrum",
+    "name": "Balancer V2 (Arbitrum)"
+  },
+  {
+    "id": "balancer-gnosis",
+    "name": "Balancer V2 (Gnosis)"
+  },
+  {
+    "id": "balancer_polygon",
+    "name": "Balancer V2 (Polygon)"
+  },
+  {
+    "id": "balancer-v2-avalanche",
+    "name": "Balancer V2 (Avalanche)"
+  },
+  {
+    "id": "balancer-v2-base",
+    "name": "Balancer V2 (Base)"
+  },
+  {
+    "id": "balancer-v2-fraxtal",
+    "name": "Balancer V2 (Fraxtal)"
+  },
+  {
+    "id": "balancer-v2-mode",
+    "name": "Balancer V2 (Mode)"
+  },
+  {
+    "id": "balancer-v2-polygon-zkevm",
+    "name": "Balancer V2 (Polygon zkEVM) "
+  },
+  {
+    "id": "balancer-v3-arbitrum",
+    "name": "Balancer V3 (Arbitrum)"
+  },
+  {
+    "id": "balancer-v3-avalanche",
+    "name": "Balancer V3 (Avalanche)"
+  },
+  {
+    "id": "balancer-v3-base",
+    "name": "Balancer V3 (Base)"
+  },
+  {
+    "id": "balancer-v3-ethereum",
+    "name": "Balancer V3 (Ethereum)"
+  },
+  {
+    "id": "balancer-v3-gnosis",
+    "name": "Balancer V3 (Gnosis)"
+  },
+  {
+    "id": "balancer-v3-hyperevm",
+    "name": "Balancer V3 (HyperEVM)"
+  },
+  {
+    "id": "balancer-v3-optimism",
+    "name": "Balancer V3 (Optimism)"
+  },
+  {
+    "id": "balancer-v3-plasma",
+    "name": "Balancer V3 (Plasma)"
+  },
+  {
+    "id": "bancor",
+    "name": "Bancor (V2)"
+  },
+  {
+    "id": "bancor_v3",
+    "name": "Bancor (V3)"
+  },
+  {
+    "id": "baptswap",
+    "name": "BAPTSwap"
+  },
+  {
+    "id": "baryon_network",
+    "name": "Baryon Network"
+  },
+  {
+    "id": "baryon-network-viction",
+    "name": "BaryonSwap (Viction)"
+  },
+  {
+    "id": "baseswap",
+    "name": "BaseSwap"
+  },
+  {
+    "id": "baseswap-v3",
+    "name": "BaseSwap V3"
+  },
+  {
+    "id": "basex",
+    "name": "BaseX"
+  },
+  {
+    "id": "basin-arbitrum-one",
+    "name": "Basin"
+  },
+  {
+    "id": "bcex",
+    "name": "BCEX"
+  },
+  {
+    "id": "beamswap",
+    "name": "Beamswap"
+  },
+  {
+    "id": "beam-swap",
+    "name": "Beam Swap"
+  },
+  {
+    "id": "beam-zetachain",
+    "name": "Beam (ZetaChain)"
+  },
+  {
+    "id": "beethovenx",
+    "name": "Beethoven X"
+  },
+  {
+    "id": "beethoven_x_optimism",
+    "name": "Beethoven X (Optimism)"
+  },
+  {
+    "id": "beets-sonic",
+    "name": "Beets (Sonic)"
+  },
+  {
+    "id": "beets-v3-sonic",
+    "name": "Beets V3 (Sonic)"
+  },
+  {
+    "id": "beezee-dex",
+    "name": "BeeZee DEX"
+  },
+  {
+    "id": "befilabs",
+    "name": "BeFi Labs"
+  },
+  {
+    "id": "bevmswap",
+    "name": "BEVMSwap"
+  },
+  {
+    "id": "bex",
+    "name": "BEX"
+  },
+  {
+    "id": "bibox_futures",
+    "name": "Bibox (Futures)"
+  },
+  {
+    "id": "biconomy",
+    "name": "Biconomy.com"
+  },
+  {
+    "id": "biconomy-futures",
+    "name": "Biconomy (Futures)"
+  },
+  {
+    "id": "bifrost_swap",
+    "name": "Bifrost Swap"
+  },
+  {
+    "id": "bigone",
+    "name": "BigONE"
+  },
+  {
+    "id": "bigone_futures",
+    "name": "BigONE Futures"
+  },
+  {
+    "id": "bilaxy",
+    "name": "Bilaxy"
+  },
+  {
+    "id": "binance",
+    "name": "Binance"
+  },
+  {
+    "id": "binance_futures",
+    "name": "Binance (Futures)"
+  },
+  {
+    "id": "binance_us",
+    "name": "Binance US"
+  },
+  {
+    "id": "bingx",
+    "name": "BingX"
+  },
+  {
+    "id": "bingx_futures",
+    "name": "BingX (Futures)"
+  },
+  {
+    "id": "biswap",
+    "name": "Biswap"
+  },
+  {
+    "id": "biswap-v3-1",
+    "name": "Biswap V3"
+  },
+  {
+    "id": "bit2c",
+    "name": "Bit2c"
+  },
+  {
+    "id": "bit2me",
+    "name": "Bit2Me"
+  },
+  {
+    "id": "bitazza",
+    "name": "Bitazza"
+  },
+  {
+    "id": "bitbank",
+    "name": "Bitbank"
+  },
+  {
+    "id": "bitbay",
+    "name": "zondacrypto"
+  },
+  {
+    "id": "bitbegin",
+    "name": "Bitbegin"
+  },
+  {
+    "id": "bitbns",
+    "name": "BitBNS"
+  },
+  {
+    "id": "bitcastle",
+    "name": "bitcastle"
+  },
+  {
+    "id": "bitci",
+    "name": "SAFEbit"
+  },
+  {
+    "id": "bitcoin_com",
+    "name": "FMFW.io"
+  },
+  {
+    "id": "bitcointry_exchange",
+    "name": "Bitcointry"
+  },
+  {
+    "id": "bit_com",
+    "name": "BIT"
+  },
+  {
+    "id": "bitdelta",
+    "name": "BitDelta"
+  },
+  {
+    "id": "bitdrome-finance",
+    "name": "Bitdrome Finance"
+  },
+  {
+    "id": "bitexen",
+    "name": "Bitexen"
+  },
+  {
+    "id": "bitexlive",
+    "name": "Bitexlive"
+  },
+  {
+    "id": "bitfinex",
+    "name": "Bitfinex"
+  },
+  {
+    "id": "bitfinex_futures",
+    "name": "Bitfinex (Futures)"
+  },
+  {
+    "id": "bitflow",
+    "name": "Bitflow"
+  },
+  {
+    "id": "bitflyer",
+    "name": "bitFlyer"
+  },
+  {
+    "id": "bitflyer_futures",
+    "name": "Bitflyer (Futures)"
+  },
+  {
+    "id": "bitgenie-merlin-chain",
+    "name": "BitGenie"
+  },
+  {
+    "id": "bitget",
+    "name": "Bitget"
+  },
+  {
+    "id": "bitget_futures",
+    "name": "Bitget Futures"
+  },
+  {
+    "id": "bithumb",
+    "name": "Bithumb"
+  },
+  {
+    "id": "bitkan",
+    "name": "BitKan"
+  },
+  {
+    "id": "bitkub",
+    "name": "Bitkub"
+  },
+  {
+    "id": "bitlo",
+    "name": "Bitlo"
+  },
+  {
+    "id": "bitmart",
+    "name": "BitMart"
+  },
+  {
+    "id": "bitmart_futures",
+    "name": "Bitmart Futures"
+  },
+  {
+    "id": "bitmax",
+    "name": "AscendEX (BitMax)"
+  },
+  {
+    "id": "bitmax_futures",
+    "name": "AscendEX  (BitMax) (Futures)"
+  },
+  {
+    "id": "bitmex",
+    "name": "BitMEX (Derivative)"
+  },
+  {
+    "id": "bitmex_spot",
+    "name": "BitMEX"
+  },
+  {
+    "id": "bitopro",
+    "name": "BitoPro"
+  },
+  {
+    "id": "bitpanda",
+    "name": "One Trading"
+  },
+  {
+    "id": "bitrue",
+    "name": "Bitrue"
+  },
+  {
+    "id": "bitrue_futures",
+    "name": "Bitrue (Futures)"
+  },
+  {
+    "id": "bitso",
+    "name": "Bitso"
+  },
+  {
+    "id": "bitstamp",
+    "name": "Bitstamp by Robinhood"
+  },
+  {
+    "id": "bitsten",
+    "name": "Bitsten"
+  },
+  {
+    "id": "bitstorage",
+    "name": "BitStorage"
+  },
+  {
+    "id": "bitswap",
+    "name": "BitSwap"
+  },
+  {
+    "id": "bitswap-v2-bouncebit",
+    "name": "BounceBit Swap V2"
+  },
+  {
+    "id": "bitswap-v3-bouncebit",
+    "name": "BounceBit Swap V3"
+  },
+  {
+    "id": "bittime",
+    "name": "Bittime"
+  },
+  {
+    "id": "bitunix",
+    "name": "Bitunix"
+  },
+  {
+    "id": "bitunix_futures",
+    "name": "Bitunix Futures"
+  },
+  {
+    "id": "bitvavo",
+    "name": "Bitvavo"
+  },
+  {
+    "id": "bitvenus",
+    "name": "BVOX (Futures)"
+  },
+  {
+    "id": "bitvenus_spot",
+    "name": "BVOX"
+  },
+  {
+    "id": "bitzy",
+    "name": "Bitzy"
+  },
+  {
+    "id": "blackhole-v2",
+    "name": "Blackhole V2"
+  },
+  {
+    "id": "blackhole-v3",
+    "name": "Blackhole V3"
+  },
+  {
+    "id": "bladeswap",
+    "name": "BladeSwap"
+  },
+  {
+    "id": "blasterswap",
+    "name": "BlasterSwap"
+  },
+  {
+    "id": "blasterswap-v3",
+    "name": "Blasterswap V3"
+  },
+  {
+    "id": "blazeswap",
+    "name": "Blazeswap (Songbird)"
+  },
+  {
+    "id": "blazeswap-flare",
+    "name": "BlazeSwap (Flare) "
+  },
+  {
+    "id": "blitz",
+    "name": "Blitz"
+  },
+  {
+    "id": "blockchain_com",
+    "name": "Blockchain.com"
+  },
+  {
+    "id": "blofin",
+    "name": "BloFin (Futures)"
+  },
+  {
+    "id": "blofin_spot",
+    "name": "BloFin"
+  },
+  {
+    "id": "bluefin",
+    "name": "Bluefin"
+  },
+  {
+    "id": "bluefin_futures",
+    "name": "Bluefin (Futures)"
+  },
+  {
+    "id": "bluelotusdao",
+    "name": "BlueLotusDAO"
+  },
+  {
+    "id": "bluemove",
+    "name": "BlueMove"
+  },
+  {
+    "id": "blueprint",
+    "name": "Blueprint"
+  },
+  {
+    "id": "btc_alpha",
+    "name": "ALP.COM"
+  },
+  {
+    "id": "btcbox",
+    "name": "BTCBOX"
+  },
+  {
+    "id": "btcc",
+    "name": "BTCC"
+  },
+  {
+    "id": "btcmarkets",
+    "name": "BTCMarkets"
+  },
+  {
+    "id": "btc_trade_ua",
+    "name": "BTC Trade UA"
+  },
+  {
+    "id": "btcturk",
+    "name": "BtcTurk | Kripto"
+  },
+  {
+    "id": "btse",
+    "name": "BTSE"
+  },
+  {
+    "id": "btse_futures",
+    "name": "BTSE (Futures)"
+  },
+  {
+    "id": "bulbaswap-v2",
+    "name": "Bulbaswap V2"
+  },
+  {
+    "id": "bulla",
+    "name": "Bulla"
+  },
+  {
+    "id": "bullish_com",
+    "name": "Bullish"
+  },
+  {
+    "id": "bullish-futures",
+    "name": "Bullish (Futures)"
+  },
+  {
+    "id": "bunni-arbitrum",
+    "name": "Bunni (Arbitrum) "
+  },
+  {
+    "id": "bunni-base",
+    "name": "Bunni (Base)"
+  },
+  {
+    "id": "bunni-ethereum",
+    "name": "Bunni (Ethereum)"
+  },
+  {
+    "id": "bunni-unichain",
+    "name": "Bunni (Unichain)"
+  },
+  {
+    "id": "bunnyswap",
+    "name": "BunnySwap"
+  },
+  {
+    "id": "burrbear",
+    "name": "Burrbear"
+  },
+  {
+    "id": "butter-xyz",
+    "name": "Butter.xyz"
+  },
+  {
+    "id": "bybit",
+    "name": "Bybit (Futures)"
+  },
+  {
+    "id": "bybit-eu",
+    "name": "Bybit EU"
+  },
+  {
+    "id": "bybit_spot",
+    "name": "Bybit"
+  },
+  {
+    "id": "bydfi",
+    "name": "BYDFi"
+  },
+  {
+    "id": "bydfi-futures",
+    "name": "BYDFi (Futures)"
+  },
+  {
+    "id": "byreal",
+    "name": "Byreal"
+  },
+  {
+    "id": "byte-exchange",
+    "name": "Byte Exchange"
+  },
+  {
+    "id": "camelot",
+    "name": "Camelot"
+  },
+  {
+    "id": "camelot-sanko",
+    "name": "Camelot V3 (Sanko)"
+  },
+  {
+    "id": "camelot-v2-apechain",
+    "name": "Camelot V2 (ApeChain)"
+  },
+  {
+    "id": "camelot-v2-educhain",
+    "name": "Camelot V2 (EDU Chain)"
+  },
+  {
+    "id": "camelot-v2-superposition",
+    "name": "Camelot V2 (Superposition)"
+  },
+  {
+    "id": "camelot-v3",
+    "name": "Camelot V3"
+  },
+  {
+    "id": "camelot-v3-corn",
+    "name": "Camelot V3 (Corn)"
+  },
+  {
+    "id": "camelot-v3-edu-chain",
+    "name": "Camelot V3 (EDU Chain)"
+  },
+  {
+    "id": "camelot-v3-gravity",
+    "name": "Camelot V3 (Gravity)"
+  },
+  {
+    "id": "camelot-v3-superposition",
+    "name": "Camelot V3 (Superposition)"
+  },
+  {
+    "id": "canto_dex",
+    "name": "Canto Dex"
+  },
+  {
+    "id": "capricorn-monad",
+    "name": "Capricorn"
+  },
+  {
+    "id": "capybaradex-v2",
+    "name": "CapybaraDEX V2"
+  },
+  {
+    "id": "capybaradex-v3",
+    "name": "CapybaraDEX V3"
+  },
+  {
+    "id": "carbon",
+    "name": "Carbon Defi (Ethereum)"
+  },
+  {
+    "id": "carbon-defi-celo",
+    "name": "Carbon DeFi (Celo)"
+  },
+  {
+    "id": "carbon-defi-seiv2",
+    "name": "Carbon DeFi (Sei V2)"
+  },
+  {
+    "id": "catex",
+    "name": "Catex"
+  },
+  {
+    "id": "caviarnine",
+    "name": "CaviarNine"
+  },
+  {
+    "id": "cellana-finance",
+    "name": "Cellana Finance"
+  },
+  {
+    "id": "cetoswap",
+    "name": "Cetoswap (Manta Pacific)"
+  },
+  {
+    "id": "cetus",
+    "name": "Cetus"
+  },
+  {
+    "id": "cex",
+    "name": "CEX.IO"
+  },
+  {
+    "id": "chainex",
+    "name": "ChainEX"
+  },
+  {
+    "id": "chainflip",
+    "name": "Chainflip"
+  },
+  {
+    "id": "changelly",
+    "name": "Changelly PRO"
+  },
+  {
+    "id": "changenow",
+    "name": "ChangeNOW"
+  },
+  {
+    "id": "cherryswap",
+    "name": "CherrySwap"
+  },
+  {
+    "id": "choice",
+    "name": "Choice"
+  },
+  {
+    "id": "chronos",
+    "name": "Chronos"
+  },
+  {
+    "id": "claimswap",
+    "name": "Claimswap"
+  },
+  {
+    "id": "cleopatra-exchange",
+    "name": "Cleopatra Exchange"
+  },
+  {
+    "id": "clipper-arbitrum",
+    "name": "Clipper (Arbitrum)"
+  },
+  {
+    "id": "clipper_ethereum",
+    "name": "Clipper (Ethereum)"
+  },
+  {
+    "id": "clipper_optimism",
+    "name": "Clipper (Optimism)"
+  },
+  {
+    "id": "clipper_polygon",
+    "name": "Clipper (Polygon)"
+  },
+  {
+    "id": "coinbase_international",
+    "name": "Coinbase International Exchange"
+  },
+  {
+    "id": "coinbase_international_derivatives",
+    "name": "Coinbase International Exchange (Derivatives)"
+  },
+  {
+    "id": "coincall",
+    "name": "Coincall"
+  },
+  {
+    "id": "coincatch",
+    "name": "CoinCatch"
+  },
+  {
+    "id": "coincatch_derivatives",
+    "name": "CoinCatch Derivatives"
+  },
+  {
+    "id": "coincheck",
+    "name": "Coincheck"
+  },
+  {
+    "id": "coindcx",
+    "name": "CoinDCX"
+  },
+  {
+    "id": "coinex",
+    "name": "CoinEx"
+  },
+  {
+    "id": "coinex_futures",
+    "name": "CoinEx (Futures)"
+  },
+  {
+    "id": "coinjar",
+    "name": "CoinJar Exchange"
+  },
+  {
+    "id": "coin_metro",
+    "name": "Coinmetro"
+  },
+  {
+    "id": "coinone",
+    "name": "Coinone"
+  },
+  {
+    "id": "coinspro",
+    "name": "Coins.ph"
+  },
+  {
+    "id": "coinstore",
+    "name": "Coinstore"
+  },
+  {
+    "id": "coinswap",
+    "name": "CoinSwap"
+  },
+  {
+    "id": "cointr",
+    "name": "CoinTR"
+  },
+  {
+    "id": "coinup",
+    "name": "CoinUp.io"
+  },
+  {
+    "id": "coinup-futures",
+    "name": "CoinUp.io (Futures)"
+  },
+  {
+    "id": "coinw",
+    "name": "CoinW"
+  },
+  {
+    "id": "coinw_futures",
+    "name": "CoinW (Futures)"
+  },
+  {
+    "id": "coinzoom",
+    "name": "Coinzoom"
+  },
+  {
+    "id": "comethswap",
+    "name": "ComethSwap"
+  },
+  {
+    "id": "common",
+    "name": "Common"
+  },
+  {
+    "id": "concave",
+    "name": "Concave"
+  },
+  {
+    "id": "convergence-finance-v2",
+    "name": "Convergence Finance"
+  },
+  {
+    "id": "corex",
+    "name": "COREx"
+  },
+  {
+    "id": "crema_finance",
+    "name": "Crema Finance"
+  },
+  {
+    "id": "crescent",
+    "name": "Crescent"
+  },
+  {
+    "id": "crodex",
+    "name": "Crodex"
+  },
+  {
+    "id": "cronaswap",
+    "name": "Cronaswap"
+  },
+  {
+    "id": "cronus_finance",
+    "name": "Cronus Finance"
+  },
+  {
+    "id": "croswap",
+    "name": "CroSwap"
+  },
+  {
+    "id": "crowdswap-polygon",
+    "name": "CrowdSwap (Polygon)"
+  },
+  {
+    "id": "cryptal",
+    "name": "Cryptal"
+  },
+  {
+    "id": "crypto_com",
+    "name": "Crypto.com Exchange"
+  },
+  {
+    "id": "crypto_com_futures",
+    "name": "Crypto.com Exchange (Futures)"
+  },
+  {
+    "id": "cryptology",
+    "name": "Tothemoon"
+  },
+  {
+    "id": "cswapdex",
+    "name": "CSWAP DEX"
+  },
+  {
+    "id": "cube",
+    "name": "Cube"
+  },
+  {
+    "id": "cubiswap",
+    "name": "CUBISwap"
+  },
+  {
+    "id": "curve_arbitrum",
+    "name": "Curve (Arbitrum)"
+  },
+  {
+    "id": "curve_avalanche",
+    "name": "Curve (Avalanche)"
+  },
+  {
+    "id": "curve-base",
+    "name": "Curve (Base)"
+  },
+  {
+    "id": "curve-bsc",
+    "name": "Curve (BSC)"
+  },
+  {
+    "id": "curve-celo",
+    "name": "Curve (Celo)"
+  },
+  {
+    "id": "curve_ethereum",
+    "name": "Curve (Ethereum)"
+  },
+  {
+    "id": "curve-etherlink",
+    "name": "Curve (Etherlink)"
+  },
+  {
+    "id": "curve_fantom",
+    "name": "Curve (Fantom)"
+  },
+  {
+    "id": "curve-fraxtal",
+    "name": "Curve (Fraxtal)"
+  },
+  {
+    "id": "curve-gnosis",
+    "name": "Curve (Gnosis)"
+  },
+  {
+    "id": "curve-hyperevm",
+    "name": "Curve (HyperEVM)"
+  },
+  {
+    "id": "curve-monad",
+    "name": "Curve (Monad)"
+  },
+  {
+    "id": "curve_moonbeam",
+    "name": "Curve (Moonbeam)"
+  },
+  {
+    "id": "curve_optimism",
+    "name": "Curve (Optimism)"
+  },
+  {
+    "id": "curve-plasma",
+    "name": "Curve (Plasma)"
+  },
+  {
+    "id": "curve-plume",
+    "name": "Curve (Plume)"
+  },
+  {
+    "id": "curve_polygon",
+    "name": "Curve (Polygon)"
+  },
+  {
+    "id": "curve-sonic",
+    "name": "Curve (Sonic)"
+  },
+  {
+    "id": "curve-tac",
+    "name": "Curve (TAC)"
+  },
+  {
+    "id": "curve-taiko",
+    "name": "Curve (Taiko)"
+  },
+  {
+    "id": "curve-xdc",
+    "name": "Curve (XDC)"
+  },
+  {
+    "id": "cyberblast-v2",
+    "name": "Cyberblast V2"
+  },
+  {
+    "id": "cyberblast-v3",
+    "name": "Cyberblast V3"
+  },
+  {
+    "id": "cyberperp",
+    "name": "Cyberperp"
+  },
+  {
+    "id": "cytoswap",
+    "name": "Cytoswap"
+  },
+  {
+    "id": "d8x-futures",
+    "name": "D8X (Berachain)"
+  },
+  {
+    "id": "dackieswap",
+    "name": "DackieSwap V3"
+  },
+  {
+    "id": "dackieswap-v2",
+    "name": "DackieSwap V2"
+  },
+  {
+    "id": "dackieswap-v3-mode",
+    "name": "DackieSwap V3 (Mode)"
+  },
+  {
+    "id": "daos-fun",
+    "name": "Daos.fun"
+  },
+  {
+    "id": "darkknight",
+    "name": "Dark KnightSwap"
+  },
+  {
+    "id": "datadex",
+    "name": "DataDex"
+  },
+  {
+    "id": "dedust",
+    "name": "DeDust"
+  },
+  {
+    "id": "deepcoin",
+    "name": "Deepcoin"
+  },
+  {
+    "id": "deepcoin_derivatives",
+    "name": "Deepcoin (Derivatives)"
+  },
+  {
+    "id": "defichain",
+    "name": "DeFiChain DEX"
+  },
+  {
+    "id": "defi_kingdoms",
+    "name": "Defi Kingdoms"
+  },
+  {
+    "id": "defi_kingdoms_crystalvale",
+    "name": "Defi Kingdoms (Crystalvale)"
+  },
+  {
+    "id": "defiplaza_radix",
+    "name": "DefiPlaza (Radix)"
+  },
+  {
+    "id": "defi_swap",
+    "name": "DeFi Swap"
+  },
+  {
+    "id": "defive",
+    "name": "DeFive"
+  },
+  {
+    "id": "defx",
+    "name": "Defx"
+  },
+  {
+    "id": "degate",
+    "name": "DeGate"
+  },
+  {
+    "id": "degenswap-degenchain",
+    "name": "DegenSwap"
+  },
+  {
+    "id": "delta_futures",
+    "name": "Delta Exchange (Futures)"
+  },
+  {
+    "id": "delta_spot",
+    "name": "Delta Exchange"
+  },
+  {
+    "id": "deltaswap",
+    "name": "DeltaSwap (Arbitrum)"
+  },
+  {
+    "id": "deltaswap-base",
+    "name": "Deltaswap (Base)"
+  },
+  {
+    "id": "dem_exchange",
+    "name": "Demex"
+  },
+  {
+    "id": "demex_derivatives",
+    "name": "Demex (Derivatives)"
+  },
+  {
+    "id": "deribit",
+    "name": "Deribit"
+  },
+  {
+    "id": "deribit_spot",
+    "name": "Deribit Spot"
+  },
+  {
+    "id": "derive-futures",
+    "name": "Derive (Futures)"
+  },
+  {
+    "id": "derive-spot",
+    "name": "Derive (Spot)"
+  },
+  {
+    "id": "deriw",
+    "name": "DeriW"
+  },
+  {
+    "id": "derpdex",
+    "name": "DerpDEX (zkSync)"
+  },
+  {
+    "id": "derpdex-base",
+    "name": "DerpDEX (Base)"
+  },
+  {
+    "id": "derpdex-opbnb",
+    "name": "DerpDEX (opBnb)"
+  },
+  {
+    "id": "dexalot",
+    "name": "Dexalot"
+  },
+  {
+    "id": "dexie",
+    "name": "dexie"
+  },
+  {
+    "id": "dexlab",
+    "name": "Dexlab"
+  },
+  {
+    "id": "dexonic",
+    "name": "Dexonic"
+  },
+  {
+    "id": "dexter",
+    "name": "Persistence DEX"
+  },
+  {
+    "id": "dextrade",
+    "name": "Dex-Trade"
+  },
+  {
+    "id": "dezswap",
+    "name": "Dezswap"
+  },
+  {
+    "id": "dfyn",
+    "name": "Dfyn"
+  },
+  {
+    "id": "difx",
+    "name": "DIFX"
+  },
+  {
+    "id": "digifinex",
+    "name": "DigiFinex"
+  },
+  {
+    "id": "digitalexchange_id",
+    "name": "Digitalexchange.id"
+  },
+  {
+    "id": "diviswap",
+    "name": "Diviswap"
+  },
+  {
+    "id": "dodo",
+    "name": "DODO (Ethereum)"
+  },
+  {
+    "id": "dodo_arbitrum",
+    "name": "DODO (Arbitrum)"
+  },
+  {
+    "id": "dodo-avalanche",
+    "name": "DODO (Avalanche)"
+  },
+  {
+    "id": "dodo_bsc",
+    "name": "DODO (BSC)"
+  },
+  {
+    "id": "dodo-mantle",
+    "name": "DODO (Mantle)"
+  },
+  {
+    "id": "dodo_polygon",
+    "name": "DODO (Polygon)"
+  },
+  {
+    "id": "dodo_zircuit",
+    "name": "DODO (Zircuit)"
+  },
+  {
+    "id": "dogeshrek",
+    "name": "Dogeshrek"
+  },
+  {
+    "id": "dogeswap",
+    "name": "DogeSwap"
+  },
+  {
+    "id": "dooar_bsc",
+    "name": "DOOAR (BSC)"
+  },
+  {
+    "id": "dooar_ethereum",
+    "name": "DOOAR (Ethereum)"
+  },
+  {
+    "id": "dooar-polygon",
+    "name": "DOOAR (Polygon)"
+  },
+  {
+    "id": "dotswap",
+    "name": "DotSwap"
+  },
+  {
+    "id": "doveswap-v3",
+    "name": "DoveSwap V3"
+  },
+  {
+    "id": "dracula-finance",
+    "name": "Dracula Finance"
+  },
+  {
+    "id": "dragonswap",
+    "name": "DragonSwap"
+  },
+  {
+    "id": "dragonswap-v2",
+    "name": "DragonSwap V2"
+  },
+  {
+    "id": "dragonswap-v3",
+    "name": "DragonSwap V3 (Kaia)"
+  },
+  {
+    "id": "drift_protocol",
+    "name": "Drift Protocol"
+  },
+  {
+    "id": "dtxswap-taiko",
+    "name": "DTXSwap (Taiko)"
+  },
+  {
+    "id": "duckswap",
+    "name": "DuckSwap"
+  },
+  {
+    "id": "duckydefi",
+    "name": "DuckyDeFi"
+  },
+  {
+    "id": "dusa",
+    "name": "Dusa"
+  },
+  {
+    "id": "dydx_chain",
+    "name": "dYdX Chain"
+  },
+  {
+    "id": "dyorswap-berachain",
+    "name": "DYORSwap (Berachain)"
+  },
+  {
+    "id": "dyorswap-blast",
+    "name": "DYORSwap (Blast)"
+  },
+  {
+    "id": "dyorswap-degenchain",
+    "name": "DYORSwap (Degen Chain)"
+  },
+  {
+    "id": "dyorswap-ink",
+    "name": "DYORSwap (Ink)"
+  },
+  {
+    "id": "dyorswap-monad",
+    "name": "DYORSwap (Monad)"
+  },
+  {
+    "id": "dyorswap-plasma",
+    "name": "DYORSwap (Plasma)"
+  },
+  {
+    "id": "dyorswap-sonic",
+    "name": "DYORSwap (Sonic)"
+  },
+  {
+    "id": "dyorswap-world-chain",
+    "name": "DYORSwap (World Chain)"
+  },
+  {
+    "id": "dyorswap-x-layer",
+    "name": "DYORSwap (X Layer)"
+  },
+  {
+    "id": "dystopia",
+    "name": "Dystopia"
+  },
+  {
+    "id": "eaglefi",
+    "name": "EagleFi"
+  },
+  {
+    "id": "earnbit",
+    "name": "EarnBIT"
+  },
+  {
+    "id": "earnium",
+    "name": "Earnium"
+  },
+  {
+    "id": "ebisus-bay",
+    "name": "Ebisu's Bay"
+  },
+  {
+    "id": "ebisus-bay-cronos-zkevm",
+    "name": "Ebisu's Bay (Cronos zkEVM)"
+  },
+  {
+    "id": "echodex",
+    "name": "EchoDEX"
+  },
+  {
+    "id": "econia",
+    "name": "Econia"
+  },
+  {
+    "id": "ecxx",
+    "name": "Ecxx"
+  },
+  {
+    "id": "eddyfinance",
+    "name": "EddyFinance"
+  },
+  {
+    "id": "edgex",
+    "name": "edgeX"
+  },
+  {
+    "id": "ekubo",
+    "name": "Ekubo (Starknet)"
+  },
+  {
+    "id": "electroswap%20v3",
+    "name": "ElectroSwap V3"
+  },
+  {
+    "id": "electroswap-v2",
+    "name": "ElectroSwap V2"
+  },
+  {
+    "id": "elexium-finance",
+    "name": "Elexium Finance"
+  },
+  {
+    "id": "elk_finance_avax",
+    "name": "Elk Finance (Avalanche)"
+  },
+  {
+    "id": "elk_finance_bsc",
+    "name": "Elk Finance (BSC)"
+  },
+  {
+    "id": "elk_finance_ethereum",
+    "name": "Elk Finance (Ethereum)"
+  },
+  {
+    "id": "elk_finance_polygon",
+    "name": "Elk Finance (Polygon)"
+  },
+  {
+    "id": "elk-finance-q-mainnet",
+    "name": "Elk Finance (Q Mainnet)"
+  },
+  {
+    "id": "elk_finance_telos",
+    "name": "Elk Finance (Telos)"
+  },
+  {
+    "id": "ellipsis_finance",
+    "name": "Ellipsis Finance"
+  },
+  {
+    "id": "emirex",
+    "name": "Emirex"
+  },
+  {
+    "id": "enclave-markets",
+    "name": "EnclaveX"
+  },
+  {
+    "id": "energiswap",
+    "name": "Energiswap"
+  },
+  {
+    "id": "enosys-flare",
+    "name": "Enosys (Flare)"
+  },
+  {
+    "id": "enosys-v3-flare",
+    "name": "Enosys V3 (Flare)"
+  },
+  {
+    "id": "equalizer",
+    "name": "Equalizer"
+  },
+  {
+    "id": "equalizer-base",
+    "name": "Equalizer (Base)"
+  },
+  {
+    "id": "equalizer-sonic",
+    "name": "Equalizer (Sonic)"
+  },
+  {
+    "id": "equilibre",
+    "name": "Équilibre"
+  },
+  {
+    "id": "etcmc",
+    "name": "ETCMC"
+  },
+  {
+    "id": "etcswap-v2",
+    "name": "ETCswap V2"
+  },
+  {
+    "id": "etcswap-v3",
+    "name": "ETCswap V3"
+  },
+  {
+    "id": "etherex",
+    "name": "Etherex"
+  },
+  {
+    "id": "etherex-legacy",
+    "name": "Etherex Legacy "
+  },
+  {
+    "id": "ethervista",
+    "name": "Ethervista"
+  },
+  {
+    "id": "evedex",
+    "name": "EVEDEX"
+  },
+  {
+    "id": "everdex",
+    "name": "Everdex"
+  },
+  {
+    "id": "everyswap",
+    "name": "EverySwap"
+  },
+  {
+    "id": "evmoswap",
+    "name": "EvmoSwap"
+  },
+  {
+    "id": "evo-exchange",
+    "name": "Evo Exchange"
+  },
+  {
+    "id": "excalibur",
+    "name": "Excalibur"
+  },
+  {
+    "id": "exmo",
+    "name": "EXMO"
+  },
+  {
+    "id": "extended",
+    "name": "Extended"
+  },
+  {
+    "id": "fairyswap",
+    "name": "Fairyswap"
+  },
+  {
+    "id": "fameex",
+    "name": "FameEX"
+  },
+  {
+    "id": "fastex",
+    "name": "Fastex"
+  },
+  {
+    "id": "fathom-dex",
+    "name": "Fathom DEX"
+  },
+  {
+    "id": "fenix-finance",
+    "name": "Fenix Finance"
+  },
+  {
+    "id": "ferro_protocol",
+    "name": "Ferro Protocol"
+  },
+  {
+    "id": "figure_markets",
+    "name": "Figure Markets"
+  },
+  {
+    "id": "firefly",
+    "name": "Firefly"
+  },
+  {
+    "id": "first-ledger",
+    "name": "First Ledger"
+  },
+  {
+    "id": "flatqube",
+    "name": "FlatQube"
+  },
+  {
+    "id": "flowswap",
+    "name": "FlowSwap"
+  },
+  {
+    "id": "flow-x",
+    "name": "FlowX Finance"
+  },
+  {
+    "id": "flowx-clmm",
+    "name": "FlowX CLMM"
+  },
+  {
+    "id": "fluid",
+    "name": "Fluid (Ethereum)"
+  },
+  {
+    "id": "fluid-arbitrum",
+    "name": "Fluid (Arbitrum)"
+  },
+  {
+    "id": "fluid-base",
+    "name": "Fluid (Base)"
+  },
+  {
+    "id": "fluid-plasma",
+    "name": "Fluid (Plasma)"
+  },
+  {
+    "id": "fluid-polygon",
+    "name": "Fluid (Polygon)"
+  },
+  {
+    "id": "fluxbeam",
+    "name": "FluxBeam"
+  },
+  {
+    "id": "fmcpay",
+    "name": "FMCPAY"
+  },
+  {
+    "id": "forge",
+    "name": "Forge"
+  },
+  {
+    "id": "forteswap",
+    "name": "Forteswap"
+  },
+  {
+    "id": "foxbit",
+    "name": "Foxbit"
+  },
+  {
+    "id": "fraxswap_ethereum",
+    "name": "Fraxswap (Ethereum)"
+  },
+  {
+    "id": "fraxswap-fraxtal",
+    "name": "Fraxswap (Fraxtal)"
+  },
+  {
+    "id": "freiexchange",
+    "name": "Freiexchange"
+  },
+  {
+    "id": "friendly_market",
+    "name": "Friendly Market"
+  },
+  {
+    "id": "fullsail-finance",
+    "name": "Full Sail"
+  },
+  {
+    "id": "funki",
+    "name": "Funki DEX"
+  },
+  {
+    "id": "funnel",
+    "name": "Funnel"
+  },
+  {
+    "id": "fusion-amm",
+    "name": "DefiTuna"
+  },
+  {
+    "id": "fusionx-v2",
+    "name": "FusionX V2"
+  },
+  {
+    "id": "fusionx-v3",
+    "name": "FusionX V3"
+  },
+  {
+    "id": "fwx",
+    "name": "FWX"
+  },
+  {
+    "id": "fwx-base",
+    "name": "FWX (Base)"
+  },
+  {
+    "id": "fwx-futures",
+    "name": "FWX (Futures) (Avalanche)"
+  },
+  {
+    "id": "fwx-futures-base",
+    "name": "FWX (Futures) (Base)"
+  },
+  {
+    "id": "gaming-dex-defiverse",
+    "name": "Gaming Dex (DeFiVerse)"
+  },
+  {
+    "id": "gaming-dex-oasys",
+    "name": "Gaming DEX (Oasys)"
+  },
+  {
+    "id": "garuda_defi",
+    "name": "Garuda DeFi"
+  },
+  {
+    "id": "gasx",
+    "name": "GasX"
+  },
+  {
+    "id": "gate",
+    "name": "Gate"
+  },
+  {
+    "id": "gate_futures",
+    "name": "Gate (Futures)"
+  },
+  {
+    "id": "gate_us",
+    "name": "Gate US"
+  },
+  {
+    "id": "gdax",
+    "name": "Coinbase Exchange"
+  },
+  {
+    "id": "gemini",
+    "name": "Gemini"
+  },
+  {
+    "id": "gemini_derivatives",
+    "name": "Gemini Derivatives"
+  },
+  {
+    "id": "giottus",
+    "name": "Giottus"
+  },
+  {
+    "id": "glide_finance",
+    "name": "Glide Finance"
+  },
+  {
+    "id": "gliquid",
+    "name": "Gliquid"
+  },
+  {
+    "id": "globe_exchange",
+    "name": "Globe"
+  },
+  {
+    "id": "globe_exchange_derivatives",
+    "name": "Globe (Derivatives)"
+  },
+  {
+    "id": "globiance",
+    "name": "Globiance"
+  },
+  {
+    "id": "glue",
+    "name": "Glue Hub"
+  },
+  {
+    "id": "gmo_japan",
+    "name": "GMO Japan"
+  },
+  {
+    "id": "gmo_japan_futures",
+    "name": "GMO Japan (Futures)"
+  },
+  {
+    "id": "gmx-perpetuals-v2-arbitrum",
+    "name": "GMX Perpetuals V2 (Arbitrum)"
+  },
+  {
+    "id": "gmx-perpetuals-v2-avalanche",
+    "name": "GMX Perpetuals V2 (Avalanche)"
+  },
+  {
+    "id": "gmx-perpetuals-v2-botanix",
+    "name": "GMX Perpetuals V2 (Botanix)"
+  },
+  {
+    "id": "goosefx",
+    "name": "GooseFX"
+  },
+  {
+    "id": "gopax",
+    "name": "GoPax"
+  },
+  {
+    "id": "graphlinq-hub",
+    "name": "GraphLinq Hub"
+  },
+  {
+    "id": "gravity_finance",
+    "name": "Gravity Finance"
+  },
+  {
+    "id": "greenhouse_dex",
+    "name": "Greenhouse"
+  },
+  {
+    "id": "grovex",
+    "name": "GroveX"
+  },
+  {
+    "id": "grvt_futures",
+    "name": "GRVT"
+  },
+  {
+    "id": "gt3",
+    "name": "GT3"
+  },
+  {
+    "id": "gtrade-arbitrum",
+    "name": "gTrade (Arbitrum)"
+  },
+  {
+    "id": "gtrade-base",
+    "name": "gTrade (Base)"
+  },
+  {
+    "id": "gtrade-polygon",
+    "name": "gTrade (Polygon)"
+  },
+  {
+    "id": "gull-network",
+    "name": "Gull Network"
+  },
+  {
+    "id": "h2-finance",
+    "name": "H2 Finance"
+  },
+  {
+    "id": "halo_trade",
+    "name": "AuraSwap"
+  },
+  {
+    "id": "hashkey_exchange",
+    "name": "HashKey Exchange"
+  },
+  {
+    "id": "hashkey-global",
+    "name": "HashKey Global"
+  },
+  {
+    "id": "hashkey-global-futures",
+    "name": "HashKey Global (Futures)"
+  },
+  {
+    "id": "hata",
+    "name": "Hata"
+  },
+  {
+    "id": "hbarsuite-dex",
+    "name": "Silk Suite"
+  },
+  {
+    "id": "heaven",
+    "name": "Heaven"
+  },
+  {
+    "id": "hebeswap",
+    "name": "Hebeswap"
+  },
+  {
+    "id": "henjin",
+    "name": "Henjin (Base)"
+  },
+  {
+    "id": "henjindex",
+    "name": "HenjinDEX"
+  },
+  {
+    "id": "hercules-v2",
+    "name": "Hercules V2"
+  },
+  {
+    "id": "hercules-v3",
+    "name": "Hercules V3"
+  },
+  {
+    "id": "hermes_protocol",
+    "name": "Hermes Protocol"
+  },
+  {
+    "id": "hibt",
+    "name": "Hibt"
+  },
+  {
+    "id": "hitbtc",
+    "name": "HitBTC"
+  },
+  {
+    "id": "hitbtc_derivatives",
+    "name": "HitBTC (Derivatives)"
+  },
+  {
+    "id": "hiveswap-v3",
+    "name": "HiveSwap V3"
+  },
+  {
+    "id": "holdstation",
+    "name": "Holdstation"
+  },
+  {
+    "id": "holdstation-berachain",
+    "name": "Holdstation (Berachain)"
+  },
+  {
+    "id": "holdstation-defutures",
+    "name": "Holdstation DeFutures"
+  },
+  {
+    "id": "honeypop-dex",
+    "name": "Honeypop DEX"
+  },
+  {
+    "id": "honeyswap",
+    "name": "Honeyswap"
+  },
+  {
+    "id": "honeyswap_polygon",
+    "name": "Honeyswap (Polygon)"
+  },
+  {
+    "id": "honorswap",
+    "name": "HonorSwap"
+  },
+  {
+    "id": "hopeswap",
+    "name": "HopeSwap"
+  },
+  {
+    "id": "horizondex",
+    "name": "HorizonDEX"
+  },
+  {
+    "id": "hotcoin_global",
+    "name": "Hotcoin"
+  },
+  {
+    "id": "howswap",
+    "name": "HowSwap"
+  },
+  {
+    "id": "hswap",
+    "name": "hSWAP"
+  },
+  {
+    "id": "huckleberry",
+    "name": "Huckleberry"
+  },
+  {
+    "id": "humbleswap",
+    "name": "HumbleSwap"
+  },
+  {
+    "id": "huobi",
+    "name": "HTX"
+  },
+  {
+    "id": "huobi_dm",
+    "name": "HTX Futures"
+  },
+  {
+    "id": "huobi_japan",
+    "name": "BitTrade"
+  },
+  {
+    "id": "hx-finance",
+    "name": "HX Finance"
+  },
+  {
+    "id": "hybra-finance",
+    "name": "Hybra Finance"
+  },
+  {
+    "id": "hybra-finance-v3",
+    "name": "Hybra Finance V3"
+  },
+  {
+    "id": "hybra-finance-v4",
+    "name": "Hybra Finance V4"
+  },
+  {
+    "id": "hydra",
+    "name": "Hydra DEX"
+  },
+  {
+    "id": "hydradx",
+    "name": "Hydration"
+  },
+  {
+    "id": "hydrex-integral",
+    "name": "Hydrex Integral"
+  },
+  {
+    "id": "hyperblast",
+    "name": "HyperBlast"
+  },
+  {
+    "id": "hyperbrick",
+    "name": "HyperBrick"
+  },
+  {
+    "id": "hypercat",
+    "name": "Hypercat"
+  },
+  {
+    "id": "hyperindex",
+    "name": "HyperIndex"
+  },
+  {
+    "id": "hyperion",
+    "name": "Hyperion"
+  },
+  {
+    "id": "hyperliquid",
+    "name": "Hyperliquid (Futures)"
+  },
+  {
+    "id": "hyperliquid-spot",
+    "name": "Hyperliquid"
+  },
+  {
+    "id": "hyperswap-areon-network",
+    "name": "HyperSwap"
+  },
+  {
+    "id": "hyperswap-v2",
+    "name": "HyperSwap V2"
+  },
+  {
+    "id": "hyperswap-v3",
+    "name": "HyperSwap V3"
+  },
+  {
+    "id": "icdex",
+    "name": "ICDex"
+  },
+  {
+    "id": "icecreamswap-core",
+    "name": "IcecreamSwap (Core)"
+  },
+  {
+    "id": "icecreamswap-v3-core",
+    "name": "IceCreamSwap V3 (CORE) "
+  },
+  {
+    "id": "icpex",
+    "name": "ICPEx"
+  },
+  {
+    "id": "icpswap",
+    "name": "ICPSwap"
+  },
+  {
+    "id": "icrypex",
+    "name": "Icrypex"
+  },
+  {
+    "id": "iguanadex",
+    "name": "IguanaDEX"
+  },
+  {
+    "id": "illuminex",
+    "name": "illumineX"
+  },
+  {
+    "id": "impossible_finance",
+    "name": "Impossible Finance"
+  },
+  {
+    "id": "impossible-finance-humanode",
+    "name": "Impossible Finance (Humanode)"
+  },
+  {
+    "id": "impossible_finance_v3",
+    "name": "Impossible Finance (v3)"
+  },
+  {
+    "id": "increment_swap",
+    "name": "Increment Swap"
+  },
+  {
+    "id": "independent_reserve",
+    "name": "Independent Reserve"
+  },
+  {
+    "id": "indodax",
+    "name": "Indodax"
+  },
+  {
+    "id": "inex",
+    "name": "INEX"
+  },
+  {
+    "id": "infusion",
+    "name": "Infusion"
+  },
+  {
+    "id": "initia-dex",
+    "name": "Initia DEX"
+  },
+  {
+    "id": "injective",
+    "name": "Helix"
+  },
+  {
+    "id": "injective_futures",
+    "name": "Helix (Futures)"
+  },
+  {
+    "id": "inkyswap",
+    "name": "InkySwap"
+  },
+  {
+    "id": "interest-dex",
+    "name": "Interest DEX"
+  },
+  {
+    "id": "invariant",
+    "name": "Invariant"
+  },
+  {
+    "id": "invariant_eclipse",
+    "name": "Invariant (Eclipse)"
+  },
+  {
+    "id": "inx_one",
+    "name": "INX One"
+  },
+  {
+    "id": "ionex",
+    "name": "Ionex"
+  },
+  {
+    "id": "iotabee-shimmerevm",
+    "name": "Iotabee (ShimmerEVM)"
+  },
+  {
+    "id": "itbit",
+    "name": "itBit"
+  },
+  {
+    "id": "iziswap",
+    "name": "iZiSwap (BSC)"
+  },
+  {
+    "id": "iziswap-hemi",
+    "name": "iZiSwap (Hemi)"
+  },
+  {
+    "id": "iziswap-kroma",
+    "name": "iZiSwap (Kroma)"
+  },
+  {
+    "id": "iziswap-linea",
+    "name": "iZiSwap (Linea)"
+  },
+  {
+    "id": "iziswap-manta-pacific",
+    "name": "iZiSwap (Manta Pacific)"
+  },
+  {
+    "id": "iziswap-mantle",
+    "name": "iZiSwap (Mantle)"
+  },
+  {
+    "id": "iziswap-mode",
+    "name": "iZiSwap (Mode)"
+  },
+  {
+    "id": "iziswap-scroll",
+    "name": "iZiSwap (Scroll)"
+  },
+  {
+    "id": "iziswap-taiko",
+    "name": "iZiSwap (Taiko)"
+  },
+  {
+    "id": "iziswap-x-layer",
+    "name": "iZiSwap (X Layer)"
+  },
+  {
+    "id": "iziswap-zetachain",
+    "name": "iZiSwap (Zetachain)"
+  },
+  {
+    "id": "iziswap-zkfair",
+    "name": "iZiSwap (ZKFair)"
+  },
+  {
+    "id": "iziswap-zklink-nova",
+    "name": "iZiSwap (zkLink Nova) "
+  },
+  {
+    "id": "iziswap_zksync",
+    "name": "iZiSwap (zkSync)"
+  },
+  {
+    "id": "jaceswap",
+    "name": "JaceSwap"
+  },
+  {
+    "id": "jaine",
+    "name": "Jaine"
+  },
+  {
+    "id": "jediswap-starknet-alpha",
+    "name": "JediSwap"
+  },
+  {
+    "id": "jellyswap",
+    "name": "Jellyverse"
+  },
+  {
+    "id": "jojo-exchange-futures",
+    "name": "JOJO Exchange"
+  },
+  {
+    "id": "jswap",
+    "name": "Jswap"
+  },
+  {
+    "id": "julswap",
+    "name": "Julswap"
+  },
+  {
+    "id": "justmoney_bttc",
+    "name": "Justmoney (Bittorent)"
+  },
+  {
+    "id": "justmoney-tron",
+    "name": "JustMoney (Tron)"
+  },
+  {
+    "id": "kaiaswap-klaytn",
+    "name": "KaiaSwap"
+  },
+  {
+    "id": "kaidex",
+    "name": "Kaidex"
+  },
+  {
+    "id": "kaidex_v3",
+    "name": "Kaidex V3"
+  },
+  {
+    "id": "kaleidoswap-arbitrum",
+    "name": "KaleidoSwap (Arbitrum)"
+  },
+  {
+    "id": "kanga",
+    "name": "Kanga"
+  },
+  {
+    "id": "karura_swap",
+    "name": "Karura Swap"
+  },
+  {
+    "id": "katana",
+    "name": "Katana"
+  },
+  {
+    "id": "katana-v3",
+    "name": "Katana V3"
+  },
+  {
+    "id": "kava",
+    "name": "Kava Swap"
+  },
+  {
+    "id": "kayen",
+    "name": "FanX Protocol"
+  },
+  {
+    "id": "kcex",
+    "name": "KCEX"
+  },
+  {
+    "id": "kcex-futures",
+    "name": "KCEX (Futures)"
+  },
+  {
+    "id": "kewlswap-chiliz-chain",
+    "name": "KEWLSwap (Chiliz Chain)"
+  },
+  {
+    "id": "kiloex-base",
+    "name": "KiloEx (Base)"
+  },
+  {
+    "id": "kiloex-bsc",
+    "name": "KiloEx (BSC)"
+  },
+  {
+    "id": "kiloex-manta-pacific",
+    "name": "KiloEx (Manta Pacific)"
+  },
+  {
+    "id": "kiloex-opbnb",
+    "name": "KiloEx (opBnb)"
+  },
+  {
+    "id": "kim",
+    "name": "Kim"
+  },
+  {
+    "id": "kim-v4",
+    "name": "Kim V4"
+  },
+  {
+    "id": "kinesis_money",
+    "name": "Kinesis Money"
+  },
+  {
+    "id": "kinetix-v3",
+    "name": "Kinetix V3"
+  },
+  {
+    "id": "kittenswap",
+    "name": "Kittenswap"
+  },
+  {
+    "id": "kittenswap-algebra",
+    "name": "Kittenswap Algebra"
+  },
+  {
+    "id": "kittenswap-v3",
+    "name": "Kittenswap V3"
+  },
+  {
+    "id": "klayswap",
+    "name": "KLAYSwap"
+  },
+  {
+    "id": "klayswap-v3",
+    "name": "Klayswap V3"
+  },
+  {
+    "id": "klever_exchange",
+    "name": "Bitcoin.me"
+  },
+  {
+    "id": "knightswap",
+    "name": "KnightSwap"
+  },
+  {
+    "id": "koalaswap",
+    "name": "KoalaSwap"
+  },
+  {
+    "id": "kodiak-v2",
+    "name": "Kodiak V2"
+  },
+  {
+    "id": "kodiak-v3",
+    "name": "Kodiak V3"
+  },
+  {
+    "id": "kodo-exchange",
+    "name": "Kodo Exchange"
+  },
+  {
+    "id": "koi-finance-v3",
+    "name": "Koi Finance V3"
+  },
+  {
+    "id": "koinbazar",
+    "name": "KoinBX"
+  },
+  {
+    "id": "koinpark",
+    "name": "Koinpark"
+  },
+  {
+    "id": "komodo_wallet",
+    "name": "Komodo Wallet"
+  },
+  {
+    "id": "kona-v2",
+    "name": "Kona V2"
+  },
+  {
+    "id": "kongswap",
+    "name": "KongSwap"
+  },
+  {
+    "id": "korbit",
+    "name": "Korbit"
+  },
+  {
+    "id": "kraken",
+    "name": "Kraken"
+  },
+  {
+    "id": "kraken_futures",
+    "name": "Kraken (Futures)"
+  },
+  {
+    "id": "kriya-dex",
+    "name": "Kriya"
+  },
+  {
+    "id": "kucoin",
+    "name": "KuCoin"
+  },
+  {
+    "id": "kumex",
+    "name": "KuCoin Futures"
+  },
+  {
+    "id": "kura-v2",
+    "name": "Kura V2"
+  },
+  {
+    "id": "kura-v3",
+    "name": "Kura V3"
+  },
+  {
+    "id": "kuswap",
+    "name": "Kuswap"
+  },
+  {
+    "id": "kyberswap_classic_arbitrum",
+    "name": "Kyberswap Classic (Arbitrum)"
+  },
+  {
+    "id": "kyberswap_classic_avalanche",
+    "name": "KyberSwap Classic (Avalanche)"
+  },
+  {
+    "id": "kyberswap_classic_bsc",
+    "name": "KyberSwap Classic (BSC)"
+  },
+  {
+    "id": "kyberswap_classic_bttc",
+    "name": "Kyberswap Classic (Bittorent)"
+  },
+  {
+    "id": "kyberswap_classic_ethereum",
+    "name": "KyberSwap Classic (Ethereum)"
+  },
+  {
+    "id": "kyberswap_classic_fantom",
+    "name": "KyberSwap Classic (Fantom)"
+  },
+  {
+    "id": "kyberswap_classic_optimism",
+    "name": "Kyberswap Classic (Optimism)"
+  },
+  {
+    "id": "kyberswap_classic_polygon",
+    "name": "KyberSwap Classic (Polygon)"
+  },
+  {
+    "id": "kyberswap_elastic",
+    "name": "KyberSwap Elastic (Ethereum)"
+  },
+  {
+    "id": "kyberswap_elastic_arbitrum",
+    "name": "Kyberswap Elastic (Arbitrum)"
+  },
+  {
+    "id": "kyberswap_elastic_avalanche",
+    "name": "Kyberswap Elastic (Avalanche)"
+  },
+  {
+    "id": "kyberswap_elastic_bsc",
+    "name": "Kyberswap Elastic (BSC)"
+  },
+  {
+    "id": "kyberswap_elastic_fantom",
+    "name": "Kyberswap Elastic (Fantom)"
+  },
+  {
+    "id": "kyberswap-elastic-linea",
+    "name": "Kyberswap Elastic (Linea)"
+  },
+  {
+    "id": "kyberswap_elastic_optimism",
+    "name": "Kyberswap Elastic (Optimism)"
+  },
+  {
+    "id": "kyberswap_elastic_polygon",
+    "name": "Kyberswap Elastic (Polygon)"
+  },
+  {
+    "id": "kyo-finance-v3",
+    "name": "Kyo Finance V3"
+  },
+  {
+    "id": "laminar",
+    "name": "Laminar"
+  },
+  {
+    "id": "larissa-swap",
+    "name": "Larissa Swap"
+  },
+  {
+    "id": "laserswap",
+    "name": "LaserSwap"
+  },
+  {
+    "id": "latoken",
+    "name": "LATOKEN"
+  },
+  {
+    "id": "lbank",
+    "name": "LBank"
+  },
+  {
+    "id": "lbank-futures",
+    "name": "LBank (Futures)"
+  },
+  {
+    "id": "lcx",
+    "name": "LCX Exchange"
+  },
+  {
+    "id": "leetswap-base",
+    "name": "LeetSwap (Base)"
+  },
+  {
+    "id": "leetswap-linea",
+    "name": "LeetSwap (Linea)"
+  },
+  {
+    "id": "levana-perps-osmosis",
+    "name": "Levana Perps (Osmosis)"
+  },
+  {
+    "id": "levex",
+    "name": "LeveX"
+  },
+  {
+    "id": "levex-futures",
+    "name": "LeveX (Futures)"
+  },
+  {
+    "id": "levinswap_xdai",
+    "name": "Levinswap (xDai)"
+  },
+  {
+    "id": "lfgswap",
+    "name": "LFGswap"
+  },
+  {
+    "id": "lfgswap-core",
+    "name": "LFGSwap (Core)"
+  },
+  {
+    "id": "lfgswap-x-layer",
+    "name": "LFGSwap (x Layer)"
+  },
+  {
+    "id": "libre_swap",
+    "name": "Libre Swap"
+  },
+  {
+    "id": "lif3",
+    "name": "LIF3 (Tombchain)"
+  },
+  {
+    "id": "lif3-bsc",
+    "name": "LIF3 (BSC)"
+  },
+  {
+    "id": "lif3-ethereum",
+    "name": "Lif3 (Ethereum)"
+  },
+  {
+    "id": "lif3-polygon",
+    "name": "LIF3 (Polygon)"
+  },
+  {
+    "id": "lif3-v3-bsc",
+    "name": "Lif3 V3 (BSC)"
+  },
+  {
+    "id": "lif3-v3-fantom",
+    "name": "Lif3 V3 (Fantom)"
+  },
+  {
+    "id": "lif3-v3-polygon",
+    "name": "Lif3 V3 (Polygon)"
+  },
+  {
+    "id": "lighter",
+    "name": "Lighter"
+  },
+  {
+    "id": "line-hub-v3",
+    "name": "Line Hub V3"
+  },
+  {
+    "id": "liquidswap",
+    "name": "Liquidswap"
+  },
+  {
+    "id": "liquidswap-v0-5",
+    "name": "LiquidSwap V0.5"
+  },
+  {
+    "id": "lithos",
+    "name": "Lithos"
+  },
+  {
+    "id": "localtrade",
+    "name": "LocalTrade"
+  },
+  {
+    "id": "loopring",
+    "name": "Loopring"
+  },
+  {
+    "id": "loopring_amm",
+    "name": "Loopring AMM"
+  },
+  {
+    "id": "luno",
+    "name": "Luno"
+  },
+  {
+    "id": "lydia_finance",
+    "name": "Lydia Finance"
+  },
+  {
+    "id": "lynex-linea",
+    "name": "Lynex"
+  },
+  {
+    "id": "lynex-v2-linea",
+    "name": "Lynex V2 (Linea)"
+  },
+  {
+    "id": "machinex",
+    "name": "MachineX"
+  },
+  {
+    "id": "madness-finance",
+    "name": "Madness Finance"
+  },
+  {
+    "id": "magic_eden_runes",
+    "name": "Magic Eden (Runes)"
+  },
+  {
+    "id": "magicsea-iota-evm",
+    "name": "MagicSea (Iota EVM)"
+  },
+  {
+    "id": "magicsea-v2-1-iota-evm",
+    "name": "MagicSea V2.1 (Iota EVM)"
+  },
+  {
+    "id": "magicswap",
+    "name": "Magicswap"
+  },
+  {
+    "id": "magma-finance",
+    "name": "Magma Finance"
+  },
+  {
+    "id": "maiar",
+    "name": "xExchange"
+  },
+  {
+    "id": "makiswap",
+    "name": "Makiswap"
+  },
+  {
+    "id": "mangata",
+    "name": "Mangata"
+  },
+  {
+    "id": "manifest",
+    "name": "Manifest"
+  },
+  {
+    "id": "mantra-swap",
+    "name": "MANTRA Swap"
+  },
+  {
+    "id": "marginx-pundi",
+    "name": "MarginX (Pundi)"
+  },
+  {
+    "id": "mars_ecosystem",
+    "name": "Mars Ecosystem"
+  },
+  {
+    "id": "marswap",
+    "name": "MARSWAP"
+  },
+  {
+    "id": "marswap-cronos-zkevm",
+    "name": "MarSwap (Cronos zkEVM)"
+  },
+  {
+    "id": "matcha_arbitrum_one",
+    "name": "Matcha (Arbitrum One)"
+  },
+  {
+    "id": "matcha_avalanche",
+    "name": "Matcha (Avalanche)"
+  },
+  {
+    "id": "matcha_base",
+    "name": "Matcha (Base)"
+  },
+  {
+    "id": "matcha_bsc",
+    "name": "Matcha (BSC)"
+  },
+  {
+    "id": "matcha_ethereum",
+    "name": "Matcha (Ethereum)"
+  },
+  {
+    "id": "matcha_optimism",
+    "name": "Matcha (Optimism)"
+  },
+  {
+    "id": "matcha_polygon",
+    "name": "Matcha (Polygon)"
+  },
+  {
+    "id": "maverick_protocol",
+    "name": "Maverick Protocol V1 (Ethereum)"
+  },
+  {
+    "id": "maverick_protocol_base",
+    "name": "Maverick Protocol V1 (Base)"
+  },
+  {
+    "id": "maverick_protocol_bsc",
+    "name": "Maverick Protocol V1 (BSC)"
+  },
+  {
+    "id": "maverick-protocol-scroll",
+    "name": "Maverick Protocol V2 (Scroll)"
+  },
+  {
+    "id": "maverick-protocol-v2-arbitrum",
+    "name": "Maverick Protocol V2 (Arbitrum)"
+  },
+  {
+    "id": "maverick-protocol-v2-base",
+    "name": "Maverick Protocol V2 (Base)"
+  },
+  {
+    "id": "maverick-protocol-v2-bsc",
+    "name": "Maverick Protocol V2 (BSC)"
+  },
+  {
+    "id": "maverick-protocol-v2-ethereum",
+    "name": "Maverick Protocol V2 (Ethereum)"
+  },
+  {
+    "id": "maverick-protocol-v2-zksync-era",
+    "name": "Maverick Protocol V2 (zkSync Era)"
+  },
+  {
+    "id": "maverick_protocol_zksync",
+    "name": "Maverick Protocol V1 (zkSync)"
+  },
+  {
+    "id": "max_maicoin",
+    "name": "Max Maicoin"
+  },
+  {
+    "id": "maya-protocol",
+    "name": "Maya Protocol"
+  },
+  {
+    "id": "mdex",
+    "name": "Mdex"
+  },
+  {
+    "id": "mdex_bsc",
+    "name": "Mdex BSC"
+  },
+  {
+    "id": "megaton-finance",
+    "name": "Megaton Finance"
+  },
+  {
+    "id": "melegaswap",
+    "name": "MelegaSwap"
+  },
+  {
+    "id": "mercado_bitcoin",
+    "name": "Mercado Bitcoin"
+  },
+  {
+    "id": "merchant-moe-liquidity-book-mantle",
+    "name": "Merchant Moe Liquidity Book (Mantle)"
+  },
+  {
+    "id": "merchant-moe-mantle",
+    "name": "Merchant Moe"
+  },
+  {
+    "id": "merkle_trade",
+    "name": "Merkle Trade"
+  },
+  {
+    "id": "merlinswap",
+    "name": "MerlinSwap"
+  },
+  {
+    "id": "meshswap",
+    "name": "Meshswap"
+  },
+  {
+    "id": "metalx",
+    "name": "Metal X"
+  },
+  {
+    "id": "meteora",
+    "name": "Meteora"
+  },
+  {
+    "id": "meteora-damm-v2",
+    "name": "Meteora DAMM V2"
+  },
+  {
+    "id": "methlab",
+    "name": "Methlab (Mantle)"
+  },
+  {
+    "id": "metropolis-dlmm-sonic",
+    "name": "Metropolis DLMM (Sonic)"
+  },
+  {
+    "id": "metropolis-sonic",
+    "name": "Metropolis Simple (Sonic)"
+  },
+  {
+    "id": "miaswap",
+    "name": "MiaSwap"
+  },
+  {
+    "id": "milkyswap-milkada",
+    "name": "MilkySwap"
+  },
+  {
+    "id": "mimo",
+    "name": "Mimo"
+  },
+  {
+    "id": "minswap",
+    "name": "Minswap"
+  },
+  {
+    "id": "mintswap",
+    "name": "MintSwap"
+  },
+  {
+    "id": "mm_finance",
+    "name": "MMFinance (Cronos)"
+  },
+  {
+    "id": "mm-finance-arbitrum",
+    "name": "MM Finance (Arbitrum)"
+  },
+  {
+    "id": "mojitoswap",
+    "name": "MojitoSwap"
+  },
+  {
+    "id": "molten-finance-v2",
+    "name": "Molten Finance V2"
+  },
+  {
+    "id": "molten-finance-v4",
+    "name": "Molten Finance V4"
+  },
+  {
+    "id": "momentum",
+    "name": "Momentum"
+  },
+  {
+    "id": "monday-trade",
+    "name": " Monday Trade Spot DEX"
+  },
+  {
+    "id": "monoswap-V2-blast",
+    "name": "MonoSwap V2 (Blast)"
+  },
+  {
+    "id": "monoswap-v3-blast",
+    "name": "MonoSwap V3 (Blast)"
+  },
+  {
+    "id": "moraswap-v2",
+    "name": "Moraswap V2"
+  },
+  {
+    "id": "mosaic",
+    "name": "Mosaic"
+  },
+  {
+    "id": "mudrex",
+    "name": "Mudrex"
+  },
+  {
+    "id": "muesliswap",
+    "name": "Muesliswap"
+  },
+  {
+    "id": "muesliswap-milkada",
+    "name": "Muesliswap (Milkada)"
+  },
+  {
+    "id": "mufex",
+    "name": "MUFEX"
+  },
+  {
+    "id": "mute",
+    "name": "Koi Finance"
+  },
+  {
+    "id": "mxc",
+    "name": "MEXC"
+  },
+  {
+    "id": "mxc_futures",
+    "name": "MEXC (Futures)"
+  },
+  {
+    "id": "myswap-cl",
+    "name": "mySwap-CL"
+  },
+  {
+    "id": "myx",
+    "name": "MYX"
+  },
+  {
+    "id": "myx-bsc",
+    "name": "MYX (BSC)"
+  },
+  {
+    "id": "myx-linea",
+    "name": "MYX (Linea)"
+  },
+  {
+    "id": "nachoswap",
+    "name": "NachoSwap"
+  },
+  {
+    "id": "namebase",
+    "name": "Namebase"
+  },
+  {
+    "id": "nami_exchange",
+    "name": "Nami Exchange"
+  },
+  {
+    "id": "nash",
+    "name": "Nash"
+  },
+  {
+    "id": "native",
+    "name": "Native"
+  },
+  {
+    "id": "native-arbitrum",
+    "name": "Native (Arbitrum)"
+  },
+  {
+    "id": "native-base",
+    "name": "Native (Base)"
+  },
+  {
+    "id": "native-bsc",
+    "name": "Native (BSC)"
+  },
+  {
+    "id": "navigator",
+    "name": "Navigator"
+  },
+  {
+    "id": "nbx",
+    "name": "NBX"
+  },
+  {
+    "id": "near-intents",
+    "name": "Near Intents"
+  },
+  {
+    "id": "nearpad",
+    "name": "NearPAD"
+  },
+  {
+    "id": "neptune",
+    "name": "Neptune"
+  },
+  {
+    "id": "nest",
+    "name": "Nest"
+  },
+  {
+    "id": "netswap",
+    "name": "Netswap"
+  },
+  {
+    "id": "neutroswap",
+    "name": "Neutroswap"
+  },
+  {
+    "id": "nile",
+    "name": "NILE"
+  },
+  {
+    "id": "nile-v1",
+    "name": "NILE V1"
+  },
+  {
+    "id": "niza-global",
+    "name": "Niza.io"
+  },
+  {
+    "id": "noble-swaps",
+    "name": "Noble Swaps"
+  },
+  {
+    "id": "nomiswap",
+    "name": "Nomiswap"
+  },
+  {
+    "id": "nomiswap_stable",
+    "name": "Nomiswap (Stable)"
+  },
+  {
+    "id": "nonkyc_io",
+    "name": "Nonkyc.io"
+  },
+  {
+    "id": "nostra",
+    "name": "Nostra "
+  },
+  {
+    "id": "novadax",
+    "name": "NovaDAX"
+  },
+  {
+    "id": "nuri-legacy",
+    "name": "Nuri (Legacy)"
+  },
+  {
+    "id": "nuri-v2",
+    "name": "Nuri V2"
+  },
+  {
+    "id": "obsidian-finance",
+    "name": "Obsidian Finance"
+  },
+  {
+    "id": "occamx",
+    "name": "OccamX"
+  },
+  {
+    "id": "ocelex-v3",
+    "name": "Ocelex V3"
+  },
+  {
+    "id": "ociswap",
+    "name": "Ociswap"
+  },
+  {
+    "id": "octoswap-cl",
+    "name": "OctoSwap CL"
+  },
+  {
+    "id": "octoswap-classic",
+    "name": "OctoSwap Classic"
+  },
+  {
+    "id": "okcoin-japan",
+    "name": "OKJ"
+  },
+  {
+    "id": "okex",
+    "name": "OKX"
+  },
+  {
+    "id": "okex_ordinals",
+    "name": "OKX Ordinals"
+  },
+  {
+    "id": "okex_swap",
+    "name": "OKX (Futures)"
+  },
+  {
+    "id": "okieswap-stableswap",
+    "name": "OkieSwap (Stableswap)"
+  },
+  {
+    "id": "oku-trade-bob-network",
+    "name": "Oku Trade (BOB Network)"
+  },
+  {
+    "id": "oku-trade-corn",
+    "name": "Oku Trade (Corn)"
+  },
+  {
+    "id": "oku-trade-etherlink",
+    "name": "Oku Trade (Etherlink)"
+  },
+  {
+    "id": "oku-trade-filecoin",
+    "name": "Oku Trade (Filecoin)"
+  },
+  {
+    "id": "oku-trade-gnosis",
+    "name": "Oku Trade (Gnosis)"
+  },
+  {
+    "id": "oku-trade-goat",
+    "name": "Oku Trade (Goat)"
+  },
+  {
+    "id": "oku-trade-hemi",
+    "name": "Oku Trade (Hemi)"
+  },
+  {
+    "id": "oku-trade-lens",
+    "name": "Oku Trade (Lens)"
+  },
+  {
+    "id": "oku-trade-linea",
+    "name": "Oku Trade (Linea)"
+  },
+  {
+    "id": "oku-trade-manta-pacific",
+    "name": "Oku Trade (Manta Pacific)"
+  },
+  {
+    "id": "oku-trade-mantle",
+    "name": "Oku Trade (Mantle)"
+  },
+  {
+    "id": "oku-trade-moonbeam",
+    "name": "Oku Trade (Moonbeam)"
+  },
+  {
+    "id": "oku-trade-nibiru",
+    "name": "Oku Trade (Nibiru)"
+  },
+  {
+    "id": "oku-trade-plasma",
+    "name": "Oku Trade (Plasma)"
+  },
+  {
+    "id": "oku-trade-rootstock",
+    "name": "Oku Trade (Rootstock)"
+  },
+  {
+    "id": "oku-trade-saga",
+    "name": "Oku Trade (Saga)"
+  },
+  {
+    "id": "oku-trade-scroll",
+    "name": "Oku Trade (Scroll)"
+  },
+  {
+    "id": "oku-trade-sei-v2",
+    "name": "Oku Trade (Sei V2)"
+  },
+  {
+    "id": "oku-trade-taiko",
+    "name": "Oku Trade (Taiko)"
+  },
+  {
+    "id": "oku-trade-telos",
+    "name": "Oku Trade (Telos)"
+  },
+  {
+    "id": "oku-trade-xdc",
+    "name": "Oku Trade (XDC)"
+  },
+  {
+    "id": "omax-swap",
+    "name": "Omax Swap"
+  },
+  {
+    "id": "omnidex",
+    "name": "OmniDex"
+  },
+  {
+    "id": "omni-exchange-v2-base",
+    "name": "Omni Exchange V2 (Base)"
+  },
+  {
+    "id": "omni-exchange-v2-optimism",
+    "name": "Omni Exchange V2 (Optimism)"
+  },
+  {
+    "id": "omni-exchange-v3-arbitrum",
+    "name": "Omni Exchange V3 (Abitrum)"
+  },
+  {
+    "id": "omni-exchange-v3-avalanche",
+    "name": "Omni Exchange V3 (Avalanche)"
+  },
+  {
+    "id": "omni-exchange-v3-base",
+    "name": "Omni Exchange V3 (Base)"
+  },
+  {
+    "id": "omni-exchange-v3-bsc",
+    "name": "Omni Exchange V3 (BSC)"
+  },
+  {
+    "id": "omni-exchange-v3-optimism",
+    "name": "Omni Exchange V3 (Optimism) "
+  },
+  {
+    "id": "omni-exchange-v3-sonic",
+    "name": "Omni Exchange V3 (Sonic)"
+  },
+  {
+    "id": "omni-exchange-v4-avalanche",
+    "name": "Omni Exchange V4 (Avalanche)"
+  },
+  {
+    "id": "omni-exchange-v4-base",
+    "name": "Omni Exchange V4 (Base)"
+  },
+  {
+    "id": "omni-exchange-v4-sonic",
+    "name": "Omni Exchange V4 (Sonic)"
+  },
+  {
+    "id": "ondo_global_markets",
+    "name": "Ondo Global Markets"
+  },
+  {
+    "id": "onedex",
+    "name": "OneDex"
+  },
+  {
+    "id": "one_dex",
+    "name": "1DEX"
+  },
+  {
+    "id": "oolongswap",
+    "name": "Oolongswap"
+  },
+  {
+    "id": "openbook",
+    "name": "OpenBook"
+  },
+  {
+    "id": "openleverage",
+    "name": "OpenLeverage"
+  },
+  {
+    "id": "openocean_finance",
+    "name": "OpenOcean"
+  },
+  {
+    "id": "openswap",
+    "name": "OpenSwap"
+  },
+  {
+    "id": "openswap-fi",
+    "name": "Openswap.fi"
+  },
+  {
+    "id": "oracleswap",
+    "name": "Oracleswap"
+  },
+  {
+    "id": "oraidex",
+    "name": "OraiDEX"
+  },
+  {
+    "id": "orangedx",
+    "name": "OrangeDX"
+  },
+  {
+    "id": "orangex",
+    "name": "OrangeX"
+  },
+  {
+    "id": "orangex_futures",
+    "name": "OrangeX Futures"
+  },
+  {
+    "id": "orca",
+    "name": "Orca"
+  },
+  {
+    "id": "orca-eclipse",
+    "name": "Orca (Eclipse)"
+  },
+  {
+    "id": "orderly_network_derivatives_evm",
+    "name": "Orderly (Derivatives)"
+  },
+  {
+    "id": "oreoswap",
+    "name": "OreoSwap"
+  },
+  {
+    "id": "origin-arm",
+    "name": "Origin ARM"
+  },
+  {
+    "id": "orion-bsc",
+    "name": "Orion (BSC)"
+  },
+  {
+    "id": "orion-ethereum",
+    "name": "Orion (Ethereum) "
+  },
+  {
+    "id": "osmosis",
+    "name": "Osmosis"
+  },
+  {
+    "id": "ostium",
+    "name": "Ostium"
+  },
+  {
+    "id": "ourbit",
+    "name": "Ourbit"
+  },
+  {
+    "id": "ourbit-futures",
+    "name": "Ourbit (Futures)"
+  },
+  {
+    "id": "ox-fun",
+    "name": "Quanto"
+  },
+  {
+    "id": "p2pb2b",
+    "name": "P2B"
+  },
+  {
+    "id": "pacifica",
+    "name": "Pacifica"
+  },
+  {
+    "id": "pacificswap",
+    "name": "PacificSwap"
+  },
+  {
+    "id": "paintswap",
+    "name": "Paintswap"
+  },
+  {
+    "id": "pancakeswap_aptos",
+    "name": "PancakeSwap (Aptos)"
+  },
+  {
+    "id": "pancakeswap_ethereum",
+    "name": "PancakeSwap (Ethereum)"
+  },
+  {
+    "id": "pancakeswap-infinity-clmm",
+    "name": "Pancakeswap Infinity CLMM (BSC)"
+  },
+  {
+    "id": "pancakeswap-infinity-clmm-base",
+    "name": "Pancakeswap Infinity CLMM (Base)"
+  },
+  {
+    "id": "pancakeswap_new",
+    "name": "PancakeSwap (v2)"
+  },
+  {
+    "id": "pancakeswap_stableswap",
+    "name": "PancakeSwap (Stableswap)"
+  },
+  {
+    "id": "pancakeswap-stableswap-arbitrum",
+    "name": "PancakeSwap Stableswap (Arbitrum)"
+  },
+  {
+    "id": "pancakeswap-stableswap-ethereum",
+    "name": "PancakeSwap Stableswap (Ethereum)"
+  },
+  {
+    "id": "pancakeswap-v1-bsc",
+    "name": "PancakeSwap V1 (BSC)"
+  },
+  {
+    "id": "pancakeswap-v2-arbitrum",
+    "name": "PancakeSwap V2 (Arbitrum)"
+  },
+  {
+    "id": "pancakeswap-v2-base",
+    "name": "PancakeSwap V2 (Base)"
+  },
+  {
+    "id": "pancakeswap-v2-monad",
+    "name": "Pancakeswap V2 (Monad)"
+  },
+  {
+    "id": "pancakeswap-v2-opbnb",
+    "name": "PancakeSwap V2 (opBnb)"
+  },
+  {
+    "id": "pancakeswap-v2-polygon-zkevm",
+    "name": "PancakeSwap V2 (Polygon zkEVM)"
+  },
+  {
+    "id": "pancakeswap-v2-zksync",
+    "name": "PancakeSwap (zkSync)"
+  },
+  {
+    "id": "pancakeswap-v3-arbitrum",
+    "name": "PancakeSwap V3 (Arbitrum)"
+  },
+  {
+    "id": "pancakeswap-v3-base",
+    "name": "PancakeSwap V3 (Base)"
+  },
+  {
+    "id": "pancakeswap-v3-bsc",
+    "name": "PancakeSwap V3 (BSC)"
+  },
+  {
+    "id": "pancakeswap-v3-ethereum",
+    "name": "PancakeSwap V3 (Ethereum)"
+  },
+  {
+    "id": "pancakeswap-v3-linea",
+    "name": "PancakeSwap V3 (Linea)"
+  },
+  {
+    "id": "pancakeswap-v3-monad",
+    "name": "Pancakeswap V3 (Monad)"
+  },
+  {
+    "id": "pancakeswap-v3-opbnb",
+    "name": "PancakeSwap V3 (opBnb)"
+  },
+  {
+    "id": "pancakeswap-v3-polygon-zkevm",
+    "name": "PancakeSwap V3 (Polygon zkEVM)"
+  },
+  {
+    "id": "pancakeswap-v3-solana",
+    "name": "Pancakeswap V3 (Solana)"
+  },
+  {
+    "id": "pancakeswap-v3-zksync",
+    "name": "PancakeSwap V3 (zkSync)"
+  },
+  {
+    "id": "pangolin",
+    "name": "Pangolin"
+  },
+  {
+    "id": "pangolin-flare",
+    "name": "Pangolin (Flare)"
+  },
+  {
+    "id": "pangolin-songbird",
+    "name": "Pangolin (Songbird)"
+  },
+  {
+    "id": "pangolin-v3",
+    "name": "Pangolin V3"
+  },
+  {
+    "id": "pangolin-v3-monad",
+    "name": "Pangolin V3 (Monad)"
+  },
+  {
+    "id": "paradex",
+    "name": "Paradex"
+  },
+  {
+    "id": "paribu",
+    "name": "Paribu"
+  },
+  {
+    "id": "paymium",
+    "name": "Paymium"
+  },
+  {
+    "id": "pdex-vision",
+    "name": "pDex.vision"
+  },
+  {
+    "id": "pearl-exchange",
+    "name": "PearlFi"
+  },
+  {
+    "id": "pearlfi-v1-5",
+    "name": "PearlFi V1.5"
+  },
+  {
+    "id": "pearlfi-v2-re-al",
+    "name": "PearlFi V2 (Re.al) "
+  },
+  {
+    "id": "pegasys",
+    "name": "Pegasys"
+  },
+  {
+    "id": "pegasys-v3-rollux",
+    "name": "Pegasys V3 (Rollux)"
+  },
+  {
+    "id": "perpetual_protocol",
+    "name": "Perpetual Protocol"
+  },
+  {
+    "id": "pharaoh-exchange",
+    "name": "Pharaoh Exchange V2"
+  },
+  {
+    "id": "pharaoh-exchange-legacy",
+    "name": "Pharaoh Exchange Legacy"
+  },
+  {
+    "id": "pharaoh-exchange-v1",
+    "name": "Pharaoh Exchange V1"
+  },
+  {
+    "id": "pharaoh-exchange-v3",
+    "name": "Pharaoh Exchange"
+  },
+  {
+    "id": "phemex",
+    "name": "Phemex"
+  },
+  {
+    "id": "phemex_futures",
+    "name": "Phemex (Futures)"
+  },
+  {
+    "id": "photonswap",
+    "name": "PhotonSwap (Cronos)"
+  },
+  {
+    "id": "photonswap_kava",
+    "name": "PhotonSwap (Kava)"
+  },
+  {
+    "id": "phux",
+    "name": "Phux"
+  },
+  {
+    "id": "pinkswap",
+    "name": "PinkSwap"
+  },
+  {
+    "id": "pinot",
+    "name": "Pinot Finance"
+  },
+  {
+    "id": "pinto-exchange",
+    "name": "Pinto Exchange"
+  },
+  {
+    "id": "pionex",
+    "name": "Pionex"
+  },
+  {
+    "id": "piperx-v3",
+    "name": "PiperX V3"
+  },
+  {
+    "id": "planet_finance",
+    "name": "Planet Finance"
+  },
+  {
+    "id": "plunderswap",
+    "name": "Plunderswap"
+  },
+  {
+    "id": "pnix-dex",
+    "name": "PNIX DEX"
+  },
+  {
+    "id": "pointpay",
+    "name": "PointPay"
+  },
+  {
+    "id": "polaris",
+    "name": "Polaris"
+  },
+  {
+    "id": "poloniex",
+    "name": "Poloniex"
+  },
+  {
+    "id": "poloniex_futures",
+    "name": "Poloniex Futures"
+  },
+  {
+    "id": "polycat_finance",
+    "name": "Polycat Finance"
+  },
+  {
+    "id": "polynomial-trade",
+    "name": "Polynomial Trade "
+  },
+  {
+    "id": "pomswap",
+    "name": "POMSwap"
+  },
+  {
+    "id": "poolshark",
+    "name": "Poolshark"
+  },
+  {
+    "id": "potatoswap-v3",
+    "name": "PotatoSwap V3"
+  },
+  {
+    "id": "potatoswap-x-layer",
+    "name": "PotatoSwap (X Layer) "
+  },
+  {
+    "id": "powertrade",
+    "name": "Powertrade"
+  },
+  {
+    "id": "powertrade_derivatives",
+    "name": "Powertrade (Derivatives)"
+  },
+  {
+    "id": "prime_xbt",
+    "name": "PrimeXBT"
+  },
+  {
+    "id": "project-x",
+    "name": "Project X"
+  },
+  {
+    "id": "pulsex",
+    "name": "PulseX"
+  },
+  {
+    "id": "pulsex-v2",
+    "name": "PulseX V2"
+  },
+  {
+    "id": "pumpswap",
+    "name": "PumpSwap"
+  },
+  {
+    "id": "punchswap",
+    "name": "PunchSwap"
+  },
+  {
+    "id": "punchswap-v3",
+    "name": "PunchSwap V3"
+  },
+  {
+    "id": "punkswap",
+    "name": "Punkswap"
+  },
+  {
+    "id": "purcow",
+    "name": "Purcow"
+  },
+  {
+    "id": "qmall",
+    "name": "QMall"
+  },
+  {
+    "id": "qomswap",
+    "name": "QomSwap"
+  },
+  {
+    "id": "quickswap",
+    "name": "Quickswap"
+  },
+  {
+    "id": "quickswap_dogechain",
+    "name": "Quickswap (Dogechain)"
+  },
+  {
+    "id": "quickswap-polygon-zkevm",
+    "name": "Quickswap (Polygon zkEVM)"
+  },
+  {
+    "id": "quickswap-somnia",
+    "name": "QuickSwap (Somnia)"
+  },
+  {
+    "id": "quickswap_v3",
+    "name": "Quickswap (v3)"
+  },
+  {
+    "id": "quickswap-v3-astar-zkevm",
+    "name": "QuickSwap V3 (Astar zkEVM)"
+  },
+  {
+    "id": "quickswap-v3-immutable-zkevm",
+    "name": "QuickSwap V3 (Immutable zkEVM)"
+  },
+  {
+    "id": "quickswap-v3-manta-pacific",
+    "name": "Quickswap V3 (Manta Pacific)"
+  },
+  {
+    "id": "quickswap-v3-soneium",
+    "name": "Quickswap V4 (Soneium)"
+  },
+  {
+    "id": "quickswap_v3_x_layer",
+    "name": "Quickswap V3 (X Layer)"
+  },
+  {
+    "id": "quickswap-v4-base",
+    "name": "Quickswap V4 (Base)"
+  },
+  {
+    "id": "quipuswap",
+    "name": "Quipuswap"
+  },
+  {
+    "id": "rabbitswap",
+    "name": "RabbitSwap"
+  },
+  {
+    "id": "rabbitx",
+    "name": "RabbitX"
+  },
+  {
+    "id": "raccoonswap",
+    "name": "RaccoonSwap"
+  },
+  {
+    "id": "radfi",
+    "name": "radFi"
+  },
+  {
+    "id": "radioshack_ethereum",
+    "name": "RadioShack (Ethereum)"
+  },
+  {
+    "id": "ra-exchange",
+    "name": "Ra Exchange"
+  },
+  {
+    "id": "ra-exchange-v1",
+    "name": "Ra Exchange V1"
+  },
+  {
+    "id": "ramses",
+    "name": "Ramses"
+  },
+  {
+    "id": "ramses-legacy-hyperevm",
+    "name": "Ramses Legacy (HyperEVM)"
+  },
+  {
+    "id": "ramses-v2",
+    "name": "Ramses V2"
+  },
+  {
+    "id": "ramses-v3-hyperevm",
+    "name": "Ramses V3 (HyperEVM)"
+  },
+  {
+    "id": "rawr-trade",
+    "name": "Rawr Trade"
+  },
+  {
+    "id": "raydium2",
+    "name": "Raydium"
+  },
+  {
+    "id": "raydium-clmm",
+    "name": "Raydium (CLMM)"
+  },
+  {
+    "id": "rcpswap",
+    "name": "RCP Swap"
+  },
+  {
+    "id": "reddex",
+    "name": "Reddex"
+  },
+  {
+    "id": "reddex-bsc",
+    "name": "Reddex (BSC)"
+  },
+  {
+    "id": "ref_finance",
+    "name": "Rhea Finance"
+  },
+  {
+    "id": "reservoir-v2",
+    "name": "Uniswap V2 (Reservoir on Zero)"
+  },
+  {
+    "id": "reservoir-v3",
+    "name": "Uniswap V3 (Reservoir on Zero)"
+  },
+  {
+    "id": "reservoir-v3-ink",
+    "name": "Uniswap V3 (Reservoir on Ink)"
+  },
+  {
+    "id": "retherswap",
+    "name": "Retherswap"
+  },
+  {
+    "id": "retro",
+    "name": "Retro"
+  },
+  {
+    "id": "revoswap-v2",
+    "name": "Revoswap V2"
+  },
+  {
+    "id": "ritsu",
+    "name": "Ritsu"
+  },
+  {
+    "id": "robots-farm-base",
+    "name": "Robots.Farm"
+  },
+  {
+    "id": "rockswap",
+    "name": "Rockswap"
+  },
+  {
+    "id": "roguex-protocol",
+    "name": "RogueX Protocol "
+  },
+  {
+    "id": "rooster-protocol",
+    "name": "Rooster Protocol"
+  },
+  {
+    "id": "rooster-protocol-v2",
+    "name": "Rooster Protocol V2"
+  },
+  {
+    "id": "rubicon-arbitrum-one",
+    "name": "Rubicon (Arbitrum One)"
+  },
+  {
+    "id": "rubicon-base",
+    "name": "Rubicon (Base)"
+  },
+  {
+    "id": "rubicon-optimism",
+    "name": "Rubicon (Optimism)"
+  },
+  {
+    "id": "ruji-trade",
+    "name": "RUJI Trade"
+  },
+  {
+    "id": "safe_trade",
+    "name": "SafeTrade"
+  },
+  {
+    "id": "sailfish",
+    "name": "SailFish"
+  },
+  {
+    "id": "sailor",
+    "name": "Sailor"
+  },
+  {
+    "id": "saitaswap-bsc",
+    "name": "SaitaSwap (BSC)"
+  },
+  {
+    "id": "saitaswap-ethereum",
+    "name": "SaitaSwap (Ethereum)"
+  },
+  {
+    "id": "sakeswap",
+    "name": "SakeSwap"
+  },
+  {
+    "id": "saros",
+    "name": "Saros AMM"
+  },
+  {
+    "id": "saros-dlmm",
+    "name": "Saros DLMM"
+  },
+  {
+    "id": "satori-base",
+    "name": "Satori (Base)"
+  },
+  {
+    "id": "satori-linea",
+    "name": "Satori (Linea)"
+  },
+  {
+    "id": "saturn-swap",
+    "name": "Saturn Swap"
+  },
+  {
+    "id": "saucerswap",
+    "name": "Saucerswap V1"
+  },
+  {
+    "id": "saucerswap-v2",
+    "name": "Saucerswap V2"
+  },
+  {
+    "id": "scribe",
+    "name": "Scribe"
+  },
+  {
+    "id": "secondbtc",
+    "name": "SecondBTC"
+  },
+  {
+    "id": "secta-finance-v2",
+    "name": "Secta Finance V2 (Linea)"
+  },
+  {
+    "id": "secta-finance-v3",
+    "name": "Secta Finance V3 (Linea)"
+  },
+  {
+    "id": "seedfi",
+    "name": "SeedFi"
+  },
+  {
+    "id": "sega",
+    "name": "Sega"
+  },
+  {
+    "id": "shade_protocol",
+    "name": "Shade Protocol"
+  },
+  {
+    "id": "shadow-exchange",
+    "name": "Shadow Exchange"
+  },
+  {
+    "id": "shadow-exchange-legacy",
+    "name": "Shadow Exchange (Legacy) "
+  },
+  {
+    "id": "shadowswap",
+    "name": "ShadowSwap"
+  },
+  {
+    "id": "sharkswap",
+    "name": "SharkSwap"
+  },
+  {
+    "id": "sharkswap-sx-rollup",
+    "name": "Sharkswap (SX Rollup)"
+  },
+  {
+    "id": "shibaswap",
+    "name": "Shibaswap (Ethereum)"
+  },
+  {
+    "id": "shibaswap-shibarium",
+    "name": "Shibaswap (Shibarium)"
+  },
+  {
+    "id": "shibswap",
+    "name": "ShibSwap"
+  },
+  {
+    "id": "shido-dex",
+    "name": "Shido Dex"
+  },
+  {
+    "id": "shimmersea",
+    "name": "MagicSea (ShimmerEVM)"
+  },
+  {
+    "id": "sideswap",
+    "name": "Sideswap"
+  },
+  {
+    "id": "silkswap",
+    "name": "SilkSwap"
+  },
+  {
+    "id": "silverswap",
+    "name": "Silverswap"
+  },
+  {
+    "id": "skydrome",
+    "name": "Skydrome"
+  },
+  {
+    "id": "skydrome-v2",
+    "name": "Skydrome V2"
+  },
+  {
+    "id": "slex",
+    "name": "Slex"
+  },
+  {
+    "id": "smardex-arbitrum",
+    "name": "SmarDex (Arbitrum)"
+  },
+  {
+    "id": "smardex-base",
+    "name": "SmarDex (Base)"
+  },
+  {
+    "id": "smardex-bsc",
+    "name": "SmarDex (BSC)"
+  },
+  {
+    "id": "smardex-ethereum",
+    "name": "SmarDex"
+  },
+  {
+    "id": "smardex-polygon",
+    "name": "SmarDex (Polygon)"
+  },
+  {
+    "id": "sobal",
+    "name": "Sobal (Neon EVM)"
+  },
+  {
+    "id": "solarbeam",
+    "name": "Solarbeam"
+  },
+  {
+    "id": "solarflare",
+    "name": "Solarflare"
+  },
+  {
+    "id": "solidex-v3",
+    "name": "Solidex V3"
+  },
+  {
+    "id": "solidlizard",
+    "name": "SolidLizard"
+  },
+  {
+    "id": "solidly",
+    "name": "Solidly V1 (Fantom)"
+  },
+  {
+    "id": "solidlydex",
+    "name": "Solidly V2 (Ethereum)"
+  },
+  {
+    "id": "solidly-v3",
+    "name": "Solidly V3 (Ethereum)"
+  },
+  {
+    "id": "solidly-v3-arbitrum",
+    "name": "Solidly V3 (Arbitrum)"
+  },
+  {
+    "id": "solidly-v3-base",
+    "name": "Solidly V3 (Base)"
+  },
+  {
+    "id": "solidly-v3-fantom",
+    "name": "Solidly V3 (Fantom)"
+  },
+  {
+    "id": "solidly-v3-optimism",
+    "name": "Solidly V3 (Optimism)"
+  },
+  {
+    "id": "solidly-v3-sonic",
+    "name": "Solidly V3 (Sonic)"
+  },
+  {
+    "id": "solisnek",
+    "name": "SoliSnek"
+  },
+  {
+    "id": "sologenic",
+    "name": "Sologenic"
+  },
+  {
+    "id": "somnex",
+    "name": "Somnex"
+  },
+  {
+    "id": "somnia-exchange-v2",
+    "name": "Somnia Exchange V2"
+  },
+  {
+    "id": "sonefi",
+    "name": "SoneFi"
+  },
+  {
+    "id": "sonex",
+    "name": "Sonex"
+  },
+  {
+    "id": "sonic",
+    "name": "Sonic"
+  },
+  {
+    "id": "sonus-v3",
+    "name": "Sonus V3"
+  },
+  {
+    "id": "soswap",
+    "name": "Soswap"
+  },
+  {
+    "id": "soulswap",
+    "name": "Soulswap"
+  },
+  {
+    "id": "sovryn",
+    "name": "Sovryn DEX (Rootstock)"
+  },
+  {
+    "id": "sovryn-dex-bob-network",
+    "name": "Sovryn DEX (Bob Network)"
+  },
+  {
+    "id": "spacefi",
+    "name": "SpaceFi"
+  },
+  {
+    "id": "spacefi_zksync",
+    "name": "SpaceFi (ZkSync)"
+  },
+  {
+    "id": "spacewhale",
+    "name": "SpaceWhale"
+  },
+  {
+    "id": "sparkdex-v3",
+    "name": "SparkDEX V3"
+  },
+  {
+    "id": "sparkdex-v3-1",
+    "name": "SparkDEX V3.1"
+  },
+  {
+    "id": "spartadex",
+    "name": "SpartaDEX"
+  },
+  {
+    "id": "spartan_protocol",
+    "name": "Spartan Protocol"
+  },
+  {
+    "id": "spectrum_finance",
+    "name": "Spectrum Finance"
+  },
+  {
+    "id": "sphynx_brise",
+    "name": "Sphynx (Brise)"
+  },
+  {
+    "id": "sphynx_swap",
+    "name": "Sphynx Swap (BSC)"
+  },
+  {
+    "id": "spice_trade_avalanche",
+    "name": "Spice Trade (Avalanche)"
+  },
+  {
+    "id": "spicyswap",
+    "name": "Spicyswap"
+  },
+  {
+    "id": "spinaqdex",
+    "name": "SpinaqDex"
+  },
+  {
+    "id": "spiritswap",
+    "name": "SpiritSwap"
+  },
+  {
+    "id": "spiritswap_v2",
+    "name": "SpiritSwap (V2)"
+  },
+  {
+    "id": "splash",
+    "name": "Splash"
+  },
+  {
+    "id": "spookyswap",
+    "name": "SpookySwap"
+  },
+  {
+    "id": "spookyswap-v2-sonic",
+    "name": "Spookyswap V2 (Sonic)"
+  },
+  {
+    "id": "spookyswap-v3",
+    "name": "SpookySwap V3 "
+  },
+  {
+    "id": "spookyswap-v3-sonic",
+    "name": "SpookySwap V3 (Sonic)"
+  },
+  {
+    "id": "squadswap-v2-bsc",
+    "name": "SquadSwap Dynamo (BSC)"
+  },
+  {
+    "id": "squadswap-v3-bsc",
+    "name": "SquadSwap WOW (BSC)"
+  },
+  {
+    "id": "squidswap",
+    "name": "Squidswap"
+  },
+  {
+    "id": "stabble",
+    "name": "stabble"
+  },
+  {
+    "id": "stake_cube",
+    "name": "StakeCube Exchange"
+  },
+  {
+    "id": "starkdefi",
+    "name": "StarkDefi"
+  },
+  {
+    "id": "stationdex-v3-x-layer",
+    "name": "StationDEX V3 (x Layer)"
+  },
+  {
+    "id": "steam-exchange-rails-network",
+    "name": "Rails Network Swap"
+  },
+  {
+    "id": "steamm",
+    "name": "STEAMM"
+  },
+  {
+    "id": "stellar_term",
+    "name": "StellarTerm"
+  },
+  {
+    "id": "stellaswap",
+    "name": "StellaSwap"
+  },
+  {
+    "id": "stellaswap-v3",
+    "name": "Stellaswap (V3)"
+  },
+  {
+    "id": "stellaswap-v4",
+    "name": "StellaSwap V4"
+  },
+  {
+    "id": "step-exchange",
+    "name": "Step Exchange"
+  },
+  {
+    "id": "ston_fi",
+    "name": "STON.fi"
+  },
+  {
+    "id": "stonfi-v2",
+    "name": "STON.fi (V2)"
+  },
+  {
+    "id": "story-hunt",
+    "name": "Story Hunt"
+  },
+  {
+    "id": "stratum-exchange",
+    "name": "Stratum Exchange"
+  },
+  {
+    "id": "strike-finance",
+    "name": "Strike Finance"
+  },
+  {
+    "id": "subnet-tokens",
+    "name": "Subnet Tokens"
+  },
+  {
+    "id": "suiswap",
+    "name": "Suiswap"
+  },
+  {
+    "id": "sundaeswap",
+    "name": "Sundaeswap"
+  },
+  {
+    "id": "sunswap_v1",
+    "name": "SUN.io"
+  },
+  {
+    "id": "sunswap-v2",
+    "name": "SunSwap V2"
+  },
+  {
+    "id": "sunswap-v3",
+    "name": "SunSwap V3"
+  },
+  {
+    "id": "supswap",
+    "name": "SupSwap"
+  },
+  {
+    "id": "surf-protocol",
+    "name": "Surf Protocol"
+  },
+  {
+    "id": "surfswap",
+    "name": "Surfswap"
+  },
+  {
+    "id": "sushiswap",
+    "name": "Sushiswap"
+  },
+  {
+    "id": "sushiswap-aptos",
+    "name": "SushiSwap (Aptos)"
+  },
+  {
+    "id": "sushiswap_arbitrum",
+    "name": "Sushiswap (Arbitrum One)"
+  },
+  {
+    "id": "sushiswap_arbitrum_nova",
+    "name": "Sushiswap (Arbitrum Nova)"
+  },
+  {
+    "id": "sushiswap_avalanche",
+    "name": "Sushiswap (Avalanche)"
+  },
+  {
+    "id": "sushiswap_bsc",
+    "name": "Sushiswap (BSC)"
+  },
+  {
+    "id": "sushiswap_celo",
+    "name": "Sushiswap Celo"
+  },
+  {
+    "id": "sushiswap_fantom",
+    "name": "Sushiswap (Fantom)"
+  },
+  {
+    "id": "sushiswap_harmony",
+    "name": "Sushiswap (Harmony)"
+  },
+  {
+    "id": "sushiswap_polygon_pos",
+    "name": "Sushiswap (Polygon POS)"
+  },
+  {
+    "id": "sushiswap-v2-base",
+    "name": "Sushiswap V2 (Base)"
+  },
+  {
+    "id": "sushiswap-v2-hemi",
+    "name": "Sushiswap V2 (Hemi)"
+  },
+  {
+    "id": "sushiswap-v3-arbitrum",
+    "name": "Sushiswap V3 (Arbitrum)"
+  },
+  {
+    "id": "sushiswap-v3-arbitrum-nova",
+    "name": "Sushiswap V3 (Arbitrum Nova)"
+  },
+  {
+    "id": "sushiswap-v3-base",
+    "name": "SushiSwap V3 (Base)"
+  },
+  {
+    "id": "sushiswap-v3-bsc",
+    "name": "Sushiswap V3 (BSC)"
+  },
+  {
+    "id": "sushiswap-v3-core",
+    "name": "Sushiswap V3 (Core)"
+  },
+  {
+    "id": "sushiswap-v3-ethereum",
+    "name": "Sushiswap V3 (Ethereum)"
+  },
+  {
+    "id": "sushiswap-v3-fantom",
+    "name": "Sushiswap V3 (Fantom)"
+  },
+  {
+    "id": "sushiswap-v3-filecoin",
+    "name": "SushiSwap V3 (Filecoin)"
+  },
+  {
+    "id": "sushiswap-v3-gnosis",
+    "name": "Sushiswap V3 (Gnosis)"
+  },
+  {
+    "id": "sushiswap-v3-hemi",
+    "name": "Sushiswap V3 (Hemi)"
+  },
+  {
+    "id": "sushiswap-v3-katana",
+    "name": "Sushiswap V3 (Katana)"
+  },
+  {
+    "id": "sushiswap-v3-linea",
+    "name": "Sushiswap V3 (Linea)"
+  },
+  {
+    "id": "sushiswap-v3-optimism",
+    "name": "Sushiswap V3 (Optimism)"
+  },
+  {
+    "id": "sushiswap-v3-polygon",
+    "name": "Sushiswap V3 (Polygon)"
+  },
+  {
+    "id": "sushiswap-v3-polygon-zkevm",
+    "name": "Sushiswap V3 (Polygon zkEVM)"
+  },
+  {
+    "id": "sushiswap-v3-rootstock",
+    "name": "Sushiswap V3 (Rootstock)"
+  },
+  {
+    "id": "sushiswap-v3-scroll",
+    "name": "SushiSwap V3 (Scroll)"
+  },
+  {
+    "id": "sushiswap-v3-skale",
+    "name": "SushiSwap V3 (SKALE)"
+  },
+  {
+    "id": "sushiswap-v3-sonic",
+    "name": "Sushiswap V3 (Sonic)"
+  },
+  {
+    "id": "sushiswap-v3-thundercore",
+    "name": "Sushiswap V3 (ThunderCore)"
+  },
+  {
+    "id": "sushiswap-v3-zetachain",
+    "name": "Sushiswap V3 (ZetaChain)"
+  },
+  {
+    "id": "sushiswap_xdai",
+    "name": "Sushiswap (xDai)"
+  },
+  {
+    "id": "swapbased",
+    "name": "SwapBased"
+  },
+  {
+    "id": "swapbased-v3",
+    "name": "SwapBased V3"
+  },
+  {
+    "id": "swapblast",
+    "name": "SwapBlast"
+  },
+  {
+    "id": "swap-country",
+    "name": "Swap"
+  },
+  {
+    "id": "swapline-shimmerevm",
+    "name": "Swapline (ShimmerEVM) "
+  },
+  {
+    "id": "swapmode",
+    "name": "SwapMode"
+  },
+  {
+    "id": "swappi",
+    "name": "Swappi"
+  },
+  {
+    "id": "swapr_arbitrum",
+    "name": "Swapr (Arbitrum)"
+  },
+  {
+    "id": "swapr_ethereum",
+    "name": "Swapr (Ethereum)"
+  },
+  {
+    "id": "swapr_xdai",
+    "name": "Swapr (Xdai)"
+  },
+  {
+    "id": "swapsicle",
+    "name": "Swapsicle"
+  },
+  {
+    "id": "swapsicle-telos",
+    "name": "Swapsicle (Telos)"
+  },
+  {
+    "id": "swapsicle-v2-mantle",
+    "name": "Swapsicle V2 (Mantle)"
+  },
+  {
+    "id": "swapsicle-v2-telos",
+    "name": "Swapsicle V2 (Telos)"
+  },
+  {
+    "id": "swapx-algebra",
+    "name": "SwapX Algebra"
+  },
+  {
+    "id": "swapx-v2",
+    "name": "SwapX V2"
+  },
+  {
+    "id": "swapx-v2-xone",
+    "name": "SwapX V2 (Xone)"
+  },
+  {
+    "id": "swopfi",
+    "name": "Swopfi (Units Network)"
+  },
+  {
+    "id": "swop_fi",
+    "name": "Swop.Fi"
+  },
+  {
+    "id": "swych",
+    "name": "SWYCH"
+  },
+  {
+    "id": "swyrl-cl",
+    "name": "Swyrl CL"
+  },
+  {
+    "id": "syncswap",
+    "name": "SyncSwap"
+  },
+  {
+    "id": "syncswap-linea",
+    "name": "SyncSwap (Linea)"
+  },
+  {
+    "id": "syncswap-scroll",
+    "name": "SyncSwap (Scroll)"
+  },
+  {
+    "id": "syncswap-v2-1-linea",
+    "name": "SyncSwap V2.1 (Linea)"
+  },
+  {
+    "id": "syncswap-v2-1-scroll",
+    "name": "SyncSwap V2.1 (Scroll)"
+  },
+  {
+    "id": "syncswap-v2-1-sophon",
+    "name": "SyncSwap V2.1 (Sophon)"
+  },
+  {
+    "id": "syncswap-v2-1-zksync",
+    "name": "SyncSwap V2.1 (zkSync)"
+  },
+  {
+    "id": "syncswap-v2-zksync",
+    "name": "SyncSwap (zkSync)"
+  },
+  {
+    "id": "syncswap-v3-sophon",
+    "name": "Syncswap V3 (Sophon)"
+  },
+  {
+    "id": "syncswap-v3-zksync",
+    "name": "SyncSwap V3 (zkSync)"
+  },
+  {
+    "id": "synfutures",
+    "name": "SynFutures"
+  },
+  {
+    "id": "synthswap",
+    "name": "Synthswap"
+  },
+  {
+    "id": "synthswap-v3",
+    "name": "Synthswap V3"
+  },
+  {
+    "id": "taikoswap",
+    "name": "TaikoSwap"
+  },
+  {
+    "id": "tangleswap-milkomeda-cardano",
+    "name": "TangleSwap (Milkomeda Cardano)"
+  },
+  {
+    "id": "tangoswap",
+    "name": "TangoSwap"
+  },
+  {
+    "id": "tanx",
+    "name": "tanX"
+  },
+  {
+    "id": "tapbit",
+    "name": "Tapbit"
+  },
+  {
+    "id": "tapp-exchange",
+    "name": "Tapp Exchange"
+  },
+  {
+    "id": "taraswap",
+    "name": "Taraswap"
+  },
+  {
+    "id": "tdax",
+    "name": "Orbix"
+  },
+  {
+    "id": "tealswap",
+    "name": "Tealswap"
+  },
+  {
+    "id": "templedao",
+    "name": "TempleDAO"
+  },
+  {
+    "id": "terraport",
+    "name": "Terraport"
+  },
+  {
+    "id": "terraswap",
+    "name": "Terraswap Classic"
+  },
+  {
+    "id": "tesseract-world",
+    "name": "Tesseract World"
+  },
+  {
+    "id": "tethys",
+    "name": "Tethys Finance"
+  },
+  {
+    "id": "tetuswap",
+    "name": "Tetuswap"
+  },
+  {
+    "id": "tfm",
+    "name": "Terraformer"
+  },
+  {
+    "id": "thala",
+    "name": "ThalaSwap V1"
+  },
+  {
+    "id": "thalaswap-v2",
+    "name": "ThalaSwap V2"
+  },
+  {
+    "id": "thena",
+    "name": "THENA"
+  },
+  {
+    "id": "thena-fusion",
+    "name": "THENA FUSION"
+  },
+  {
+    "id": "thena-opbnb",
+    "name": "THENA (opBnb)"
+  },
+  {
+    "id": "thena-v3",
+    "name": "THENA V3"
+  },
+  {
+    "id": "thirdfy",
+    "name": "Thirdfy"
+  },
+  {
+    "id": "thorswap",
+    "name": "THORChain"
+  },
+  {
+    "id": "thorwallet",
+    "name": "THORWallet DEX"
+  },
+  {
+    "id": "thruster-v2-0-3-fee-tier",
+    "name": "Thruster V2 (0.3% Fee Tier)"
+  },
+  {
+    "id": "thruster-v2-1-0-fee-tier",
+    "name": "Thruster V2 (1.0% Fee Tier)"
+  },
+  {
+    "id": "thruster-v3",
+    "name": "Thruster V3"
+  },
+  {
+    "id": "tigris",
+    "name": "Tigris"
+  },
+  {
+    "id": "tiktokfun",
+    "name": "TikTokFun"
+  },
+  {
+    "id": "tinyman",
+    "name": "Tinyman"
+  },
+  {
+    "id": "tokan-exchange",
+    "name": "Tokan Exchange"
+  },
+  {
+    "id": "tokenize",
+    "name": "Tokenize"
+  },
+  {
+    "id": "tokenlon",
+    "name": "Tokenlon"
+  },
+  {
+    "id": "toko_crypto",
+    "name": "TokoCrypto"
+  },
+  {
+    "id": "tokpie",
+    "name": "Tokpie"
+  },
+  {
+    "id": "tomb_swap_fantom",
+    "name": "Tomb Swap (Fantom)"
+  },
+  {
+    "id": "toobit",
+    "name": "Toobit"
+  },
+  {
+    "id": "toobit_derivatives",
+    "name": "Toobit Futures"
+  },
+  {
+    "id": "trade_ogre",
+    "name": "TradeOgre"
+  },
+  {
+    "id": "traderjoe",
+    "name": "LFJ"
+  },
+  {
+    "id": "traderjoe-v2-1-arbitrum",
+    "name": "LFJ V2.1 (Arbitrum)"
+  },
+  {
+    "id": "traderjoe-v2-1-avalanche",
+    "name": "LFJ V2.1 (Avalanche)"
+  },
+  {
+    "id": "traderjoe-v2-1-bsc",
+    "name": "LFJ V2.1 (BSC)"
+  },
+  {
+    "id": "traderjoe-v2-1-monad",
+    "name": "LFJ V2.1 (Monad)"
+  },
+  {
+    "id": "traderjoe-v2-2-arbitrum",
+    "name": "LFJ V2.2 (Arbitrum)"
+  },
+  {
+    "id": "traderjoe-v2-2-avalanche",
+    "name": "LFJ V2.2 (Avalanche)"
+  },
+  {
+    "id": "traderjoe-v2-2-monad",
+    "name": "LFJ V2.2 (Monad)"
+  },
+  {
+    "id": "traderjoe-v2-arbitrum",
+    "name": "LFJ V2 (Arbitrum)"
+  },
+  {
+    "id": "traderjoe-v2-avalanche",
+    "name": "LFJ V2"
+  },
+  {
+    "id": "trado",
+    "name": "Trado"
+  },
+  {
+    "id": "tranquil_finance",
+    "name": "Tranquil Finance"
+  },
+  {
+    "id": "treble-v4",
+    "name": "Treble V4"
+  },
+  {
+    "id": "trisolaris",
+    "name": "Trisolaris"
+  },
+  {
+    "id": "tropical_finance",
+    "name": "Tropical Finance"
+  },
+  {
+    "id": "trubit",
+    "name": "Trubit"
+  },
+  {
+    "id": "turbos-finance",
+    "name": "Turbos Finance"
+  },
+  {
+    "id": "ubeswap",
+    "name": "Ubeswap V2"
+  },
+  {
+    "id": "ubeswap-v3",
+    "name": "Ubeswap V3"
+  },
+  {
+    "id": "ultrasolid-v3",
+    "name": "UltraSolid V3"
+  },
+  {
+    "id": "unchain-x",
+    "name": "Unchain X"
+  },
+  {
+    "id": "unicly",
+    "name": "Unicly"
+  },
+  {
+    "id": "unisat",
+    "name": "UniSat"
+  },
+  {
+    "id": "unisat_runes",
+    "name": "UniSat (Runes)"
+  },
+  {
+    "id": "uniswap-bsc",
+    "name": "Uniswap V3 (BSC)"
+  },
+  {
+    "id": "uniswap_v2",
+    "name": "Uniswap V2 (Ethereum)"
+  },
+  {
+    "id": "uniswap-v2-abstract",
+    "name": "Uniswap V2 (Abstract)"
+  },
+  {
+    "id": "uniswap-v2-arbitrum",
+    "name": "Uniswap V2 (Arbitrum)"
+  },
+  {
+    "id": "uniswap-v2-avalanche",
+    "name": "Uniswap V2 (Avalanche)"
+  },
+  {
+    "id": "uniswap-v2-base",
+    "name": "Uniswap V2 (Base)"
+  },
+  {
+    "id": "uniswap-v2-blast",
+    "name": "Uniswap V2 (Blast)"
+  },
+  {
+    "id": "uniswap-v2-bsc",
+    "name": "Uniswap V2 (BSC) "
+  },
+  {
+    "id": "uniswap-v2-monad",
+    "name": "Uniswap V2 (Monad)"
+  },
+  {
+    "id": "uniswap-v2-optimism",
+    "name": "Uniswap V2 (Optimism)"
+  },
+  {
+    "id": "uniswap-v2-polygon",
+    "name": "Uniswap V2 (Polygon)"
+  },
+  {
+    "id": "uniswap-v2-unichain",
+    "name": "Uniswap V2 (Unichain)"
+  },
+  {
+    "id": "uniswap-v2-world-chain",
+    "name": "Uniswap V2 (World Chain)"
+  },
+  {
+    "id": "uniswap_v3",
+    "name": "Uniswap V3 (Ethereum)"
+  },
+  {
+    "id": "uniswap-v3-abstract",
+    "name": "Uniswap V3 (Abstract)"
+  },
+  {
+    "id": "uniswap_v3_arbitrum",
+    "name": "Uniswap V3 (Arbitrum One)"
+  },
+  {
+    "id": "uniswap-v3-avalanche",
+    "name": "Uniswap V3 (Avalanche)"
+  },
+  {
+    "id": "uniswap-v3-base",
+    "name": "Uniswap V3 (Base)"
+  },
+  {
+    "id": "uniswap-v3-blast",
+    "name": "Uniswap V3 (Blast)"
+  },
+  {
+    "id": "uniswap_v3_celo",
+    "name": "Uniswap V3 (Celo)"
+  },
+  {
+    "id": "uniswap-v3-monad",
+    "name": "Uniswap V3 (Monad)"
+  },
+  {
+    "id": "uniswap_v3_optimism",
+    "name": "Uniswap V3 (Optimism)"
+  },
+  {
+    "id": "uniswap_v3_polygon_pos",
+    "name": "Uniswap V3 (Polygon)"
+  },
+  {
+    "id": "uniswap-v3-unichain",
+    "name": "Uniswap V3 (Unichain)"
+  },
+  {
+    "id": "uniswap-v3-world-chain",
+    "name": "Uniswap V3 (World Chain)"
+  },
+  {
+    "id": "uniswap-v3-zksync",
+    "name": "Uniswap V3 (zkSync)"
+  },
+  {
+    "id": "uniswap-v3-zora",
+    "name": "Uniswap V3 (Zora)"
+  },
+  {
+    "id": "uniswap-v4-arbitrum",
+    "name": "Uniswap V4 (Arbitrum)"
+  },
+  {
+    "id": "uniswap-v4-avalanche",
+    "name": "Uniswap V4 (Avalanche)"
+  },
+  {
+    "id": "uniswap-v4-base",
+    "name": "Uniswap V4 (Base)"
+  },
+  {
+    "id": "uniswap-v4-bsc",
+    "name": "Uniswap V4 (BSC)"
+  },
+  {
+    "id": "uniswap-v4-ethereum",
+    "name": "Uniswap V4 (Ethereum)"
+  },
+  {
+    "id": "uniswap-v4-monad",
+    "name": "Uniswap V4 (Monad)"
+  },
+  {
+    "id": "uniswap-v4-optimism",
+    "name": "Uniswap V4 (Optimism)"
+  },
+  {
+    "id": "uniswap-v4-polygon",
+    "name": "Uniswap V4 (Polygon)"
+  },
+  {
+    "id": "uniswap-v4-soneium",
+    "name": "Uniswap V4 (Soneium)"
+  },
+  {
+    "id": "uniswap-v4-unichain",
+    "name": "Uniswap V4 (Unichain)"
+  },
+  {
+    "id": "uniswap-v4-world-chain",
+    "name": "Uniswap V4 (World Chain)"
+  },
+  {
+    "id": "universal-swaps",
+    "name": "UniversalSwaps"
+  },
+  {
+    "id": "upbit",
+    "name": "Upbit"
+  },
+  {
+    "id": "upbit_indonesia",
+    "name": "Upbit Indonesia "
+  },
+  {
+    "id": "upheaval-finance",
+    "name": "Upheaval Finance"
+  },
+  {
+    "id": "usdfi",
+    "name": "USDFI"
+  },
+  {
+    "id": "valr",
+    "name": "VALR"
+  },
+  {
+    "id": "valr-futures",
+    "name": "VALR Futures"
+  },
+  {
+    "id": "vanillaswap-v2-defimetachain",
+    "name": "VanillaSwap V2 (DefiMetaChain)"
+  },
+  {
+    "id": "vanillaswap-v3-defimetachain",
+    "name": "VanillaSwap V3 (DefiMetaChain)"
+  },
+  {
+    "id": "vapordex",
+    "name": "VaporDex"
+  },
+  {
+    "id": "vapordex-v2",
+    "name": "VaporDEX V2"
+  },
+  {
+    "id": "velar-stacks",
+    "name": "Velar (Stacks)"
+  },
+  {
+    "id": "velocimeter-base",
+    "name": "Velocimeter (Base)"
+  },
+  {
+    "id": "velocimeter-fantom",
+    "name": "Velocimeter (Fantom)"
+  },
+  {
+    "id": "velocimeter-iota-evm",
+    "name": "Velocimeter (Iota EVM)"
+  },
+  {
+    "id": "velocimeter_v2",
+    "name": "Velocimeter V2"
+  },
+  {
+    "id": "velocimeter-v3",
+    "name": "Velocimeter V3"
+  },
+  {
+    "id": "velocore",
+    "name": "Velocore"
+  },
+  {
+    "id": "velocore-v2-telos",
+    "name": "Velocore V2 (Telos)"
+  },
+  {
+    "id": "velocore-v2-zksync",
+    "name": "Velocore V2 (ZkSync)"
+  },
+  {
+    "id": "velodrome",
+    "name": "Velodrome Finance"
+  },
+  {
+    "id": "velodrome-finance-slipstream",
+    "name": "Velodrome SlipStream (Optimism)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-celo",
+    "name": "Velodrome Finance Slipstream (Celo)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-fraxtal",
+    "name": "Velodrome Finance Slipstream (Fraxtal)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-ink",
+    "name": "Velodrome Finance Slipstream (Ink)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-lisk",
+    "name": "Velodrome Finance Slipstream (Lisk)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-mode",
+    "name": "Velodrome Finance Slipstream (Mode)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-soneium",
+    "name": "Velodrome Finance Slipstream (Soneium)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-superseed",
+    "name": "Velodrome Finance Slipstream (Superseed)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-swellchain",
+    "name": "Velodrome Finance Slipstream (Swellchain)"
+  },
+  {
+    "id": "velodrome-finance-slipstream-unichain",
+    "name": "Velodrome Finance Slipstream (Unichain)"
+  },
+  {
+    "id": "velodrome-finance-v2",
+    "name": "Velodrome Finance V2 (Optimism)"
+  },
+  {
+    "id": "velodrome-finance-v2-fraxtal",
+    "name": "Velodrome Finance V2 (Fraxtal)"
+  },
+  {
+    "id": "velodrome-finance-v2-ink",
+    "name": "Velodrome Finance V2 (Ink)"
+  },
+  {
+    "id": "velodrome-finance-v2-mode",
+    "name": "Velodrome Finance V2 (Mode)"
+  },
+  {
+    "id": "velodrome-finance-v2-swellchain",
+    "name": "Velodrome Finance V2 (Swellchain)"
+  },
+  {
+    "id": "velodrome-finance-v2-unichain",
+    "name": "Velodrome Finance V2 (Unichain)"
+  },
+  {
+    "id": "verse",
+    "name": "Verse"
+  },
+  {
+    "id": "vertex-edge-abstract",
+    "name": "Vertex Edge (Abstract)"
+  },
+  {
+    "id": "vertex-edge-base",
+    "name": "Vertex Edge (Base)"
+  },
+  {
+    "id": "vertex-edge-mantle",
+    "name": "Vertex Edge (Mantle)"
+  },
+  {
+    "id": "vertex-edge-sei",
+    "name": "Vertex Edge (Sei)"
+  },
+  {
+    "id": "vertex-edge-sonic",
+    "name": "Vertex Edge (Sonic)"
+  },
+  {
+    "id": "vertex_protocol_derivatives",
+    "name": "Vertex Edge (Arbitrum)"
+  },
+  {
+    "id": "vertex-protocol-spot",
+    "name": "Vertex (Spot)"
+  },
+  {
+    "id": "verylongswap",
+    "name": "VeryLongSwap"
+  },
+  {
+    "id": "vessel-finance",
+    "name": "Vessel Finance"
+  },
+  {
+    "id": "vest-exchange-futures",
+    "name": "Vest Exchange"
+  },
+  {
+    "id": "vindax",
+    "name": "Vindax"
+  },
+  {
+    "id": "viridian",
+    "name": "Viridian"
+  },
+  {
+    "id": "virtuswap",
+    "name": "VirtuSwap"
+  },
+  {
+    "id": "virtuswap-arbitrum-one",
+    "name": "VirtuSwap (Arbitrum One)"
+  },
+  {
+    "id": "voltage_finance",
+    "name": "Voltage Finance"
+  },
+  {
+    "id": "voltage-finance-v3",
+    "name": "Voltage Finance V3"
+  },
+  {
+    "id": "voltage-finance-v4",
+    "name": "Voltage Finance V4"
+  },
+  {
+    "id": "voltswap_meter",
+    "name": "Voltswap (Meter)"
+  },
+  {
+    "id": "vvs",
+    "name": "VVS Finance"
+  },
+  {
+    "id": "vvs-v3",
+    "name": "VVS V3 (Cronos)"
+  },
+  {
+    "id": "vvs-v3-ethereum",
+    "name": "VVS V3 (Ethereum)"
+  },
+  {
+    "id": "wagmi-ethereum",
+    "name": "WAGMI (Ethereum)"
+  },
+  {
+    "id": "wagmi-iota-evm",
+    "name": "WAGMI (Iota EVM)"
+  },
+  {
+    "id": "wagmi-kava",
+    "name": "WAGMI (Kava)"
+  },
+  {
+    "id": "wagmi-metis",
+    "name": "WAGMI (Metis)"
+  },
+  {
+    "id": "wagmi-sonic",
+    "name": "Wagmi (Sonic)"
+  },
+  {
+    "id": "wagmi-zklink-nova",
+    "name": "WAGMI (zkLink Nova)"
+  },
+  {
+    "id": "wagmi-zksync",
+    "name": "WAGMI (zkSync)"
+  },
+  {
+    "id": "wagyuswap",
+    "name": "WagyuSwap"
+  },
+  {
+    "id": "wannaswap",
+    "name": "Wannaswap"
+  },
+  {
+    "id": "wanswap",
+    "name": "WanSwap"
+  },
+  {
+    "id": "warpgate",
+    "name": "WarpGate"
+  },
+  {
+    "id": "wavelength",
+    "name": "Wavelength"
+  },
+  {
+    "id": "waves",
+    "name": "WX Network"
+  },
+  {
+    "id": "wazirx",
+    "name": "WazirX"
+  },
+  {
+    "id": "w-dex-polygon",
+    "name": "W-DEX (Polygon) "
+  },
+  {
+    "id": "web3_world",
+    "name": "Web3.World"
+  },
+  {
+    "id": "websea",
+    "name": "Websea"
+  },
+  {
+    "id": "weex",
+    "name": "WEEX"
+  },
+  {
+    "id": "weex-futures",
+    "name": "WEEX (Futures)"
+  },
+  {
+    "id": "wemix_fi",
+    "name": "WEMIX.Fi"
+  },
+  {
+    "id": "whitebit",
+    "name": "WhiteBIT"
+  },
+  {
+    "id": "whitebit_futures",
+    "name": "WhiteBIT Futures"
+  },
+  {
+    "id": "white-whale-chihuahua",
+    "name": "White Whale (Chihuahua)"
+  },
+  {
+    "id": "white-whale-juno",
+    "name": "White Whale (Juno)"
+  },
+  {
+    "id": "white-whale-migaloo",
+    "name": "White Whale (Migaloo)"
+  },
+  {
+    "id": "white_whale_osmosis",
+    "name": "White Whale (Osmosis)"
+  },
+  {
+    "id": "white_whale_terra",
+    "name": "White Whale (Terra)"
+  },
+  {
+    "id": "wigoswap",
+    "name": "Wigoswap"
+  },
+  {
+    "id": "wingriders",
+    "name": "WingRiders"
+  },
+  {
+    "id": "winnieswap",
+    "name": "WinnieSwap"
+  },
+  {
+    "id": "wombat",
+    "name": "Wombat Exchange (BNB)"
+  },
+  {
+    "id": "wombat_arbitrum",
+    "name": "Wombat (Arbitrum)"
+  },
+  {
+    "id": "woofi",
+    "name": "WOOFi"
+  },
+  {
+    "id": "woofswap",
+    "name": "WoofSwap"
+  },
+  {
+    "id": "woo_network_futures",
+    "name": "WOO X (Futures)"
+  },
+  {
+    "id": "wootrade",
+    "name": "WOO X"
+  },
+  {
+    "id": "wufiswap",
+    "name": "Wufiswap"
+  },
+  {
+    "id": "x7-finance-base",
+    "name": "X7 Finance (Base)"
+  },
+  {
+    "id": "x7-finance-ethereum",
+    "name": "X7 Finance (Ethereum)"
+  },
+  {
+    "id": "xave",
+    "name": "Xave Finance"
+  },
+  {
+    "id": "xbo_com",
+    "name": "XBO.com"
+  },
+  {
+    "id": "xdx",
+    "name": "XDX"
+  },
+  {
+    "id": "xeggex",
+    "name": "XeggeX"
+  },
+  {
+    "id": "xflows",
+    "name": "Xflows"
+  },
+  {
+    "id": "xswap",
+    "name": "XSwap"
+  },
+  {
+    "id": "xswap-v3",
+    "name": "XSwap Protocol V3"
+  },
+  {
+    "id": "xt",
+    "name": "XT.COM"
+  },
+  {
+    "id": "xt_derivatives",
+    "name": "XT.COM (Derivatives)"
+  },
+  {
+    "id": "yaka-finance",
+    "name": "Yaka Finance"
+  },
+  {
+    "id": "yaka-finance-v3",
+    "name": "Yaka Finance V3"
+  },
+  {
+    "id": "yodeswap",
+    "name": "Yodeswap"
+  },
+  {
+    "id": "yokaiswap",
+    "name": "Yokaiswap"
+  },
+  {
+    "id": "yoshi_exchange_bsc",
+    "name": "Yoshi.exchange (BSC)"
+  },
+  {
+    "id": "yoshi_exchange_ftm",
+    "name": "Yoshi.exchange (Fantom)"
+  },
+  {
+    "id": "young-platform",
+    "name": "Young Platform"
+  },
+  {
+    "id": "yuzu",
+    "name": "Yuzu"
+  },
+  {
+    "id": "zaif",
+    "name": "Zaif"
+  },
+  {
+    "id": "zbx",
+    "name": "ZBX"
+  },
+  {
+    "id": "zebpay",
+    "name": "ZebPay"
+  },
+  {
+    "id": "zeddex",
+    "name": "ZedDex"
+  },
+  {
+    "id": "zenlink_astar",
+    "name": "Zenlink (Astar)"
+  },
+  {
+    "id": "zenlink_bitfrost_kusama",
+    "name": "Zenlink (Bifrost Kusama)"
+  },
+  {
+    "id": "zenlink_moonbeam",
+    "name": "Zenlink (Moonbeam)"
+  },
+  {
+    "id": "zenlink_moonriver",
+    "name": "Zenlink (Moonriver)"
+  },
+  {
+    "id": "zipswap",
+    "name": "ZipSwap"
+  },
+  {
+    "id": "zkera_finance",
+    "name": "zkEra Finance"
+  },
+  {
+    "id": "zkera-finance-metis",
+    "name": "zkEra Finance (Metis)"
+  },
+  {
+    "id": "zkera-finance-telos",
+    "name": "zkEra Finance (Telos)"
+  },
+  {
+    "id": "zkswap-finance",
+    "name": "zkSwap Finance"
+  },
+  {
+    "id": "zkswap-finance-stableswap",
+    "name": "zkSwap Finance StableSwap"
+  },
+  {
+    "id": "zkswap-finance-v3-monad",
+    "name": "zkSwap Finance V3 (Monad)"
+  },
+  {
+    "id": "zkswap-finance-v3-sonic",
+    "name": "zkSwap Finance V3 (Sonic)"
+  },
+  {
+    "id": "zkswap-v3",
+    "name": "zkSwap Finance V3"
+  },
+  {
+    "id": "zoomex",
+    "name": "Zoomex"
+  },
+  {
+    "id": "zoomex-futures",
+    "name": "Zoomex (Futures)"
+  },
+  {
+    "id": "zora-energy-swap",
+    "name": "Zora Energy Swap"
+  },
+  {
+    "id": "zyberswap",
+    "name": "Zyberswap"
+  }
+]

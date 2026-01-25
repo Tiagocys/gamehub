@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Game</title>
+  <link rel="stylesheet" href="css/global.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Marketplace do game</span>
+        </div>
+      </a>
+      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+    </header>
+
+    <main class="section game-page">
+      <div class="game-hero-card">
+        <div class="game-hero-copy">
+          <span class="eyebrow">Game</span>
+          <h1 id="game-title">Carregando...</h1>
+          <p id="game-subtitle" class="section-sub">Marketplace do game.</p>
+          <div id="game-actions" class="game-actions"></div>
+        </div>
+        <div class="game-logo-frame">
+          <img id="game-logo" alt="Logo do game" />
+        </div>
+      </div>
+
+      <section class="card hero-card">
+        <h3>Marketplace do game</h3>
+        <p id="game-marketplace">Encontre itens, serviços e contas disponíveis para este jogo.</p>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <div>
+            <span class="eyebrow">Anúncios</span>
+            <h2>Marketplace deste game</h2>
+            <p class="section-sub">Anúncios ativos criados pela comunidade.</p>
+          </div>
+        </div>
+        <div id="listing-grid" class="listing-grid"></div>
+        <p id="listing-empty" class="search-feedback" style="display:none;">Nenhum anúncio para este game ainda.</p>
+      </section>
+    </main>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
+    const R2_BUCKET = env.R2_BUCKET || "";
+
+    const authBtn = document.getElementById("auth-btn");
+    const titleEl = document.getElementById("game-title");
+    const subtitleEl = document.getElementById("game-subtitle");
+    const logoEl = document.getElementById("game-logo");
+    const actionsEl = document.getElementById("game-actions");
+    const marketplaceEl = document.getElementById("game-marketplace");
+    const listingGrid = document.getElementById("listing-grid");
+    const listingEmpty = document.getElementById("listing-empty");
+
+    let supabase;
+    let currentUser = null;
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        titleEl.textContent = "Supabase não configurado.";
+        authBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        if (currentUser) {
+          await supabase.auth.signOut();
+          currentUser = null;
+          updateAuthUI();
+          return;
+        }
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const parts = rest.split("/");
+        if (parts.length === 0) return null;
+        let bucket = parts[0];
+        let pathParts = parts.slice(1);
+        if (bucket === "public" || bucket === "authenticated" || bucket === "sign") {
+          bucket = parts[1];
+          pathParts = parts.slice(2);
+        }
+        if (!bucket || pathParts.length === 0) return null;
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function normalizeR2PublicUrl(urlString) {
+      try {
+        const url = new URL(urlString);
+        if (R2_PUBLIC_URL) {
+          const publicHost = new URL(R2_PUBLIC_URL).host;
+          if (url.hostname.endsWith(".r2.dev") && url.hostname !== publicHost) {
+            return `${R2_PUBLIC_URL.replace(/\/$/, "")}${url.pathname}`;
+          }
+        }
+        if (!url.hostname.endsWith(".r2.cloudflarestorage.com")) return urlString;
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts.length === 0) return urlString;
+        const accountId = url.hostname.split(".")[0];
+        let bucket = R2_BUCKET;
+        let keyParts = parts;
+        if (bucket) {
+          if (parts[0] === bucket) {
+            keyParts = parts.slice(1);
+          }
+        } else {
+          bucket = parts[0];
+          keyParts = parts.slice(1);
+        }
+        if (!bucket || keyParts.length === 0) return urlString;
+        const base = R2_PUBLIC_URL ? R2_PUBLIC_URL.replace(/\/$/, "") : `https://${bucket}.${accountId}.r2.dev`;
+        return `${base}/${keyParts.join("/")}`;
+      } catch (_err) {
+        return urlString;
+      }
+    }
+
+    async function resolveImageUrl(urlString) {
+      if (!urlString) return urlString;
+      const normalized = normalizeR2PublicUrl(urlString);
+      if (!normalized.includes(SUPABASE_URL) || !normalized.includes("/storage/v1/object/")) {
+        return normalized;
+      }
+      const parsed = parseStoragePath(normalized);
+      if (!parsed) return normalized;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60 * 6);
+        if (error) throw error;
+        return data?.signedUrl || normalized;
+      } catch (err) {
+        console.warn("Falha ao assinar imagem do anuncio", err);
+        return normalized;
+      }
+    }
+
+    async function getSignedCoverUrl(urlString) {
+      const parsed = parseStoragePath(urlString);
+      if (!parsed) return urlString;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60 * 6);
+        if (error) throw error;
+        return data?.signedUrl || urlString;
+      } catch (err) {
+        console.warn("Falha ao assinar cover", err);
+        return urlString;
+      }
+    }
+
+    async function fetchGameById(id) {
+      try {
+        ensureClient();
+        const { data, error } = await supabase
+          .from("servers")
+          .select("id,name,official_site,banner_url,currency_name")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        return data ? {
+          id: data.id,
+          name: data.name,
+          website: data.official_site,
+          cover_url: data.banner_url,
+          currency_name: data.currency_name
+        } : null;
+      } catch (err) {
+        console.warn("Falha ao buscar em servers, tentando games.", err);
+        const { data, error } = await supabase
+          .from("games")
+          .select("id,name,website,cover_url,currency_name")
+          .eq("id", id)
+          .single();
+        if (error) throw error;
+        return data ? {
+          id: data.id,
+          name: data.name,
+          website: data.website,
+          cover_url: data.cover_url,
+          currency_name: data.currency_name
+        } : null;
+      }
+    }
+
+    function renderGame(game) {
+      if (!game) {
+        titleEl.textContent = "Game não encontrado.";
+        subtitleEl.textContent = "Confira se o link está correto.";
+        logoEl.style.display = "none";
+        return;
+      }
+      titleEl.textContent = game.name;
+      subtitleEl.textContent = "Marketplace do game.";
+      if (game.cover_url) {
+        logoEl.src = game.cover_url;
+        logoEl.style.display = "block";
+      } else {
+        logoEl.style.display = "none";
+      }
+      actionsEl.innerHTML = game.website
+        ? `<a class="pill pill-link" href="${game.website}" target="_blank" rel="noopener">Site oficial</a>`
+        : `<span class="pill">Site indisponível</span>`;
+      if (game.currency_name) {
+        marketplaceEl.textContent = `Marketplace do game. Moeda principal: ${game.currency_name}.`;
+      }
+    }
+
+    function formatPrice(value, currency) {
+      if (typeof value !== "number") return "-";
+      const formatted = value.toFixed(2).replace(".", ",");
+      return currency === "BRL" ? `R$ ${formatted}` : `${formatted} ${currency}`;
+    }
+
+    function renderListings(list) {
+      if (!listingGrid) return;
+      listingGrid.innerHTML = "";
+      if (!list || list.length === 0) {
+        if (listingEmpty) listingEmpty.style.display = "block";
+        return;
+      }
+      if (listingEmpty) listingEmpty.style.display = "none";
+      list.forEach((listing) => {
+        const card = document.createElement("article");
+        card.className = "listing-card";
+        card.dataset.listingId = listing.id;
+
+        const imageUrl = listing.imageUrl || listing.images?.[0];
+        const image = imageUrl
+          ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${listing.title}" loading="lazy" /></div>`
+          : `<div class="listing-media empty">Sem imagem</div>`;
+
+        card.innerHTML = `
+          ${image}
+          <div class="listing-body">
+            <div class="listing-meta">
+              <span class="pill">${listing.category || "Anúncio"}</span>
+              <span class="pill">${formatPrice(listing.price, listing.currency)}</span>
+            </div>
+            <h3>${listing.title}</h3>
+            <p>${listing.description || "Sem descrição."}</p>
+            <a class="pill pill-link" href="listing.html?id=${encodeURIComponent(listing.id)}">Ver anúncio</a>
+          </div>
+        `;
+        listingGrid.appendChild(card);
+      });
+    }
+
+    async function fetchListings(gameId) {
+      try {
+        ensureClient();
+        const { data, error } = await supabase
+          .from("listings")
+          .select("id,title,description,price,currency,images,category,status,server_id")
+          .eq("server_id", gameId)
+          .eq("status", "active")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        const list = data || [];
+        const resolved = await Promise.all(
+          list.map(async (item) => ({
+            ...item,
+            imageUrl: item.images?.[0] ? await resolveImageUrl(item.images[0]) : null,
+          }))
+        );
+        renderListings(resolved);
+      } catch (err) {
+        console.error(err);
+        if (listingEmpty) {
+          listingEmpty.style.display = "block";
+          listingEmpty.textContent = err?.message || "Erro ao carregar anúncios.";
+        }
+      }
+    }
+
+    async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        const params = new URLSearchParams(window.location.search);
+        const gameId = params.get("id");
+        if (!gameId) {
+          titleEl.textContent = "Game não encontrado.";
+          subtitleEl.textContent = "Nenhum ID informado.";
+          logoEl.style.display = "none";
+          return;
+        }
+        const game = await fetchGameById(gameId);
+        if (game?.cover_url) {
+          game.cover_url = await getSignedCoverUrl(game.cover_url);
+        }
+        renderGame(game);
+        await fetchListings(gameId);
+      } catch (err) {
+        console.error(err);
+        titleEl.textContent = "Erro ao carregar game.";
+        subtitleEl.textContent = err?.message || "Tente novamente.";
+      }
+    }
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    init();
+  </script>
+</body>
+</html>
