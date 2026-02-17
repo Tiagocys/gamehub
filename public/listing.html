@@ -5,6 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gimerr - Anúncio</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .seller-profile-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .seller-profile-link:hover {
+      text-decoration: underline;
+    }
+
+    .seller-profile-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: #fff;
+      display: block;
+    }
+
+    .seller-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .seller-discord {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .seller-discord-icon {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
+    }
+  </style>
 </head>
 <body>
   <div id="page-loader" class="page-loader">
@@ -39,6 +87,10 @@
       <div class="listing-hero-card">
         <div class="listing-hero-copy">
           <h1 id="listing-title">Carregando...</h1>
+          <div class="seller-meta-row">
+            <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
+            <span id="seller-discord" class="seller-discord" style="display:none;"></span>
+          </div>
           <div id="listing-meta" class="pill-trail"></div>
         </div>
         <div class="listing-gallery">
@@ -83,6 +135,8 @@
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
     const titleEl = document.getElementById("listing-title");
+    const sellerProfileLink = document.getElementById("seller-profile-link");
+    const sellerDiscord = document.getElementById("seller-discord");
     const descriptionEl = document.getElementById("listing-description");
     const metaEl = document.getElementById("listing-meta");
     const telegramChat = document.getElementById("telegram-chat");
@@ -421,6 +475,8 @@
       currentGalleryImages = [];
       if (telegramChat) telegramChat.style.display = "none";
       if (whatsappChat) whatsappChat.style.display = "none";
+      if (sellerProfileLink) sellerProfileLink.style.display = "none";
+      if (sellerDiscord) sellerDiscord.style.display = "none";
       if (metaEl) metaEl.innerHTML = "";
       if (mainMedia) mainMedia.textContent = "Sem imagem";
       if (thumbGrid) {
@@ -479,8 +535,11 @@
         setNotFound();
         return;
       }
-      const firstName = (listing.user_first_name || "anunciante").trim();
-      const safeFirstName = escapeHtml(firstName);
+      const firstName = (listing.user_first_name || "").trim();
+      const lastName = (listing.user_last_name || "").trim();
+      const fullName = `${firstName} ${lastName}`.trim() || "Anunciante";
+      const displayFirstName = firstName || "anunciante";
+      const discordUsername = String(listing.user_discord_username || "").trim();
 
       titleEl.textContent = listing.title;
       descriptionEl.textContent = listing.description || "Sem descrição informada.";
@@ -492,11 +551,51 @@
         metaEl.innerHTML = categoriesHtml || '<span class="pill">Sem categoria</span>';
       }
 
+      if (sellerProfileLink) {
+        if (listing.user_profile_id) {
+          sellerProfileLink.href = `user.html?id=${encodeURIComponent(listing.user_profile_id)}`;
+          sellerProfileLink.innerHTML = "";
+          const avatar = document.createElement("img");
+          avatar.className = "seller-profile-avatar";
+          avatar.src = listing.user_avatar_url || "img/avatar.svg";
+          avatar.alt = `Avatar de ${fullName}`;
+          avatar.referrerPolicy = "no-referrer";
+          avatar.loading = "lazy";
+          avatar.addEventListener("error", () => {
+            avatar.src = "img/avatar.svg";
+          });
+          const name = document.createElement("span");
+          name.textContent = fullName;
+          sellerProfileLink.appendChild(avatar);
+          sellerProfileLink.appendChild(name);
+          sellerProfileLink.style.display = "inline-flex";
+        } else {
+          sellerProfileLink.style.display = "none";
+        }
+      }
+
+      if (sellerDiscord) {
+        if (discordUsername) {
+          sellerDiscord.innerHTML = "";
+          const icon = document.createElement("img");
+          icon.src = "img/discord.svg";
+          icon.alt = "";
+          icon.className = "seller-discord-icon";
+          const name = document.createElement("span");
+          name.textContent = discordUsername;
+          sellerDiscord.appendChild(icon);
+          sellerDiscord.appendChild(name);
+          sellerDiscord.style.display = "inline-flex";
+        } else {
+          sellerDiscord.style.display = "none";
+        }
+      }
+
       if (telegramChat) {
         if (listing.user_phone) {
           const phone = String(listing.user_phone).replace(/\D/g, "");
           telegramChat.href = `https://t.me/+${phone}`;
-          telegramChat.innerHTML = `Conversar com ${safeFirstName} no telegram <img src="img/telegram.webp" alt="" class="btn-icon" />`;
+          telegramChat.innerHTML = `Conversar com ${escapeHtml(displayFirstName)} no telegram <img src="img/telegram.webp" alt="" class="btn-icon" />`;
           telegramChat.style.display = "inline-flex";
         } else {
           telegramChat.style.display = "none";
@@ -507,7 +606,7 @@
         const digits = listing.user_phone ? String(listing.user_phone).replace(/\D/g, "") : "";
         if (listing.user_show_whatsapp && digits) {
           whatsappChat.href = `https://wa.me/${digits}`;
-          whatsappChat.innerHTML = `Conversar com ${safeFirstName} no whatsapp <img src="img/wtsp.png" alt="" class="btn-icon" />`;
+          whatsappChat.innerHTML = `Conversar com ${escapeHtml(displayFirstName)} no whatsapp <img src="img/wtsp.png" alt="" class="btn-icon" />`;
           whatsappChat.style.display = "inline-flex";
         } else {
           whatsappChat.style.display = "none";
@@ -522,17 +621,35 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,category,categories,status,server_id,created_at,users(phone,show_whatsapp_button,first_name)")
+          .select("id,title,description,images,category,categories,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,first_name,last_name,avatar_url,discord_username)")
           .eq("id", listingId)
           .single();
         if (error) throw error;
         if (data?.images) {
           data.images = await resolveImageUrls(data.images);
         }
+        const resolvedAvatarUrl = data?.users?.avatar_url
+          ? await resolveImageUrl(data.users.avatar_url)
+          : "";
         const phone = data?.users?.phone || null;
         const userShowWhatsapp = !!data?.users?.show_whatsapp_button;
         const userFirstName = data?.users?.first_name || "anunciante";
-        return { listing: { ...data, user_phone: phone, user_show_whatsapp: userShowWhatsapp, user_first_name: userFirstName } };
+        const userLastName = data?.users?.last_name || "";
+        const userAvatarUrl = resolvedAvatarUrl || "";
+        const userDiscordUsername = data?.users?.discord_username || "";
+        const userProfileId = data?.users?.id || data?.user_id || null;
+        return {
+          listing: {
+            ...data,
+            user_phone: phone,
+            user_show_whatsapp: userShowWhatsapp,
+            user_first_name: userFirstName,
+            user_last_name: userLastName,
+            user_avatar_url: userAvatarUrl,
+            user_discord_username: userDiscordUsername,
+            user_profile_id: userProfileId,
+          },
+        };
       } catch (err) {
         console.warn("Falha ao buscar anuncio com join, tentando separado.", err);
         const { data, error } = await supabase
@@ -547,17 +664,38 @@
         let userPhone = null;
         let userShowWhatsapp = false;
         let userFirstName = "anunciante";
+        let userLastName = "";
+        let userAvatarUrl = "";
+        let userDiscordUsername = "";
+        let userProfileId = data?.user_id || null;
         if (data?.user_id) {
           const { data: userData } = await supabase
             .from("users")
-            .select("phone,show_whatsapp_button,first_name")
+            .select("id,phone,show_whatsapp_button,first_name,last_name,avatar_url,discord_username")
             .eq("id", data.user_id)
             .single();
+          userProfileId = userData?.id || userProfileId;
           userPhone = userData?.phone || null;
           userShowWhatsapp = !!userData?.show_whatsapp_button;
           userFirstName = userData?.first_name || "anunciante";
+          userLastName = userData?.last_name || "";
+          userAvatarUrl = userData?.avatar_url
+            ? await resolveImageUrl(userData.avatar_url)
+            : "";
+          userDiscordUsername = userData?.discord_username || "";
         }
-        return { listing: { ...data, user_phone: userPhone, user_show_whatsapp: userShowWhatsapp, user_first_name: userFirstName } };
+        return {
+          listing: {
+            ...data,
+            user_phone: userPhone,
+            user_show_whatsapp: userShowWhatsapp,
+            user_first_name: userFirstName,
+            user_last_name: userLastName,
+            user_avatar_url: userAvatarUrl,
+            user_discord_username: userDiscordUsername || "",
+            user_profile_id: userProfileId,
+          },
+        };
       }
     }
 

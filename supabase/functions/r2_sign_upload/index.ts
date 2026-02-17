@@ -8,6 +8,7 @@ type Payload = {
   key?: string;
   keys?: string[];
   userToken?: string;
+  assetType?: "listing" | "avatar";
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
@@ -18,6 +19,8 @@ const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID");
 const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY");
 const R2_BUCKET = Deno.env.get("R2_BUCKET");
 const R2_PUBLIC_URL = Deno.env.get("R2_PUBLIC_URL");
+const R2_PROFILE_BUCKET = Deno.env.get("R2_PROFILE_BUCKET") || R2_BUCKET;
+const R2_PROFILE_PUBLIC_URL = Deno.env.get("R2_PROFILE_PUBLIC_URL") || R2_PUBLIC_URL;
 const R2_ENDPOINT = Deno.env.get("R2_ENDPOINT");
 
 const corsHeaders = {
@@ -137,14 +140,14 @@ function parseR2Key(raw: string): string | null {
   return null;
 }
 
-async function buildDeleteUrl(key: string) {
-  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
+async function buildDeleteUrl(key: string, bucket: string) {
+  if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !bucket) {
     throw new Error("Variáveis R2 não configuradas");
   }
   const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
   const endpointUrl = new URL(endpoint);
   const host = endpointUrl.host;
-  const canonicalUri = `/${R2_BUCKET}/${key.split("/").map(encodeRFC3986).join("/")}`;
+  const canonicalUri = `/${bucket}/${key.split("/").map(encodeRFC3986).join("/")}`;
 
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
@@ -189,7 +192,10 @@ async function buildDeleteUrl(key: string) {
 }
 
 async function deleteR2Object(key: string) {
-  const url = await buildDeleteUrl(key);
+  if (!R2_BUCKET) {
+    throw new Error("R2_BUCKET não configurado para deleção");
+  }
+  const url = await buildDeleteUrl(key, R2_BUCKET);
   const response = await fetch(url, { method: "DELETE" });
   if (!response.ok && response.status !== 404) {
     const body = await response.text().catch(() => "");
@@ -206,11 +212,8 @@ Deno.serve(async (req) => {
     if (!SUPABASE_URL || !SERVICE_KEY) {
       return errorResponse("Variáveis PROJECT_URL ou SERVICE_ROLE_KEY ausentes", 500);
     }
-    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
+    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
       return errorResponse("Variáveis R2 não configuradas", 500);
-    }
-    if (!R2_PUBLIC_URL && (!R2_BUCKET || !R2_ACCOUNT_ID)) {
-      return errorResponse("R2_PUBLIC_URL não configurada", 500);
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -230,6 +233,9 @@ Deno.serve(async (req) => {
     const mode = payload.mode || "put";
 
     if (mode === "delete") {
+      if (!R2_BUCKET) {
+        return errorResponse("R2_BUCKET não configurado para deleção", 500);
+      }
       const rawItems = [
         ...(Array.isArray(payload.keys) ? payload.keys : []),
         ...(payload.key ? [payload.key] : []),
@@ -278,11 +284,20 @@ Deno.serve(async (req) => {
       return errorResponse("Extensão inválida", 400);
     }
 
-    const key = `listings/${authData.user.id}/${crypto.randomUUID()}.${ext}`;
+    const assetType = payload.assetType === "avatar" ? "avatar" : "listing";
+    const bucket = assetType === "avatar" ? R2_PROFILE_BUCKET : R2_BUCKET;
+    if (!bucket) {
+      return errorResponse("Bucket R2 não configurado", 500);
+    }
+
+    const keyPrefix = assetType === "avatar"
+      ? `avatars/${authData.user.id}`
+      : `listings/${authData.user.id}`;
+    const key = `${keyPrefix}/${crypto.randomUUID()}.${ext}`;
     const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
     const endpointUrl = new URL(endpoint);
     const host = endpointUrl.host;
-    const canonicalUri = `/${R2_BUCKET}/${key.split("/").map(encodeRFC3986).join("/")}`;
+    const canonicalUri = `/${bucket}/${key.split("/").map(encodeRFC3986).join("/")}`;
 
     const now = new Date();
     const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
@@ -325,12 +340,14 @@ Deno.serve(async (req) => {
     const signature = toHex(signatureBytes.buffer);
 
     const uploadUrl = `${endpointUrl.origin}${canonicalUri}?${canonicalQuery}&X-Amz-Signature=${signature}`;
-    let publicBase = (R2_PUBLIC_URL || "").replace(/\/$/, "");
+    let publicBase = (
+      assetType === "avatar" ? (R2_PROFILE_PUBLIC_URL || "") : (R2_PUBLIC_URL || "")
+    ).replace(/\/$/, "");
     if (publicBase.includes("r2.cloudflarestorage.com")) {
-      publicBase = `https://${R2_BUCKET}.${R2_ACCOUNT_ID}.r2.dev`;
+      publicBase = `https://${bucket}.${R2_ACCOUNT_ID}.r2.dev`;
     }
     if (!publicBase) {
-      publicBase = `https://${R2_BUCKET}.${R2_ACCOUNT_ID}.r2.dev`;
+      publicBase = `https://${bucket}.${R2_ACCOUNT_ID}.r2.dev`;
     }
     const publicUrl = `${publicBase}/${key}`;
 

@@ -6,6 +6,32 @@
   <title>Gimerr - Perfil</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
+    .avatar-upload-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.02);
+    }
+
+    .avatar-upload-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .avatar-upload-preview {
+      width: 68px;
+      height: 68px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: #fff;
+      display: block;
+    }
+
     .whatsapp-pref-card {
       margin-top: 12px;
       padding: 12px;
@@ -33,6 +59,26 @@
 
     .whatsapp-show-wrap {
       display: none;
+    }
+
+    .discord-input-wrap {
+      position: relative;
+    }
+
+    .discord-input-wrap .input {
+      padding-left: 42px;
+    }
+
+    .discord-input-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      opacity: 0.92;
+      pointer-events: none;
     }
   </style>
   <style id="profile-guard-style">html{visibility:hidden;}</style>
@@ -85,6 +131,14 @@
           <p class="helper">Complete suas informações para aparecer no marketplace.</p>
         </div>
         <form id="profile-form" class="form-vertical">
+          <div class="avatar-upload-card">
+            <label for="avatar-upload">Foto de perfil</label>
+            <div class="avatar-upload-row">
+              <img id="profile-avatar-preview" class="avatar-upload-preview" src="img/avatar.svg" alt="Pré-visualização do avatar" />
+              <input id="avatar-upload" class="input" type="file" accept="image/*" />
+            </div>
+            <div class="helper">Envie uma imagem JPG, PNG ou WEBP (máx. 5MB).</div>
+          </div>
           <div class="form-grid">
             <div class="field">
               <label for="first-name">Nome *</label>
@@ -97,13 +151,17 @@
           </div>
 
           <div class="field">
-            <label for="email">Email *</label>
-            <input id="email" class="input" type="email" placeholder="seu@email.com" required />
+            <label for="discord-username">Discord</label>
+            <div class="discord-input-wrap">
+              <img src="img/discord.svg" alt="" class="discord-input-icon" />
+              <input id="discord-username" class="input" placeholder="ex: diorgenis6969" minlength="2" maxlength="32" />
+            </div>
+            <div id="discord-help" class="helper"></div>
           </div>
           <div class="field">
-            <label for="discord-username">Discord</label>
-            <input id="discord-username" class="input" placeholder="ex: diorgenis6969" minlength="2" maxlength="32" />
-            <div id="discord-help" class="helper"></div>
+            <label for="about-me">Sobre mim</label>
+            <textarea id="about-me" class="textarea" maxlength="1000" placeholder="Conte um pouco sobre você, seus horários ou sua experiência no game."></textarea>
+            <div class="helper">Opcional. Até 1000 caracteres.</div>
           </div>
           <div class="field">
             <div class="field" id="phone-field" style="display:none;">
@@ -126,6 +184,19 @@
                 <input id="show-whatsapp-button" type="checkbox" />
                 Exibir botão para conversar no WhatsApp nos meus anúncios
               </label>
+            </div>
+            <div id="public-contact-pref-card" class="whatsapp-pref-card" style="display:grid;">
+              <p class="helper">Onde exibir as formas de contato (Telegram/WhatsApp)?</p>
+              <div class="whatsapp-pref-options">
+                <label class="whatsapp-pref-option" for="public-contact-yes">
+                  <input id="public-contact-yes" type="radio" name="public-contact-visibility" value="yes" checked />
+                  Exibir no perfil público e nos anúncios
+                </label>
+                <label class="whatsapp-pref-option" for="public-contact-no">
+                  <input id="public-contact-no" type="radio" name="public-contact-visibility" value="no" />
+                  Exibir apenas nos anúncios
+                </label>
+              </div>
             </div>
             <div class="verify-card">
               <div>
@@ -191,11 +262,13 @@
 
     const firstNameInput = document.getElementById("first-name");
     const lastNameInput = document.getElementById("last-name");
-    const emailInput = document.getElementById("email");
     const phoneField = document.getElementById("phone-field");
     const phoneInput = document.getElementById("phone");
     const discordInput = document.getElementById("discord-username");
     const discordHelp = document.getElementById("discord-help");
+    const aboutMeInput = document.getElementById("about-me");
+    const avatarUploadInput = document.getElementById("avatar-upload");
+    const profileAvatarPreview = document.getElementById("profile-avatar-preview");
     const telegramLink = document.getElementById("telegram-link");
     const verifySteps = document.getElementById("verify-steps");
     const verifyPhoneBtn = document.getElementById("verify-phone-btn");
@@ -207,6 +280,8 @@
     const whatsappSameNo = document.getElementById("whatsapp-same-no");
     const whatsappShowWrap = document.getElementById("whatsapp-show-wrap");
     const showWhatsappButtonInput = document.getElementById("show-whatsapp-button");
+    const publicContactYes = document.getElementById("public-contact-yes");
+    const publicContactNo = document.getElementById("public-contact-no");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -235,10 +310,16 @@
     let currentUser = null;
     let currentProfile = null;
     let avatarLoaded = false;
+    let pendingAvatarFile = null;
+    let pendingAvatarObjectUrl = null;
     let whatsappPrefSaving = false;
     let whatsappPrefPending = false;
     const DISCORD_USERNAME_REGEX = /^(?!.*\.\.)[a-z0-9._]{2,32}$/;
+    const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+    const MAX_AVATAR_DIMENSION = 1024;
+    const AVATAR_WEBP_QUALITY = 0.84;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+    if (profileAvatarPreview) profileAvatarPreview.referrerPolicy = "no-referrer";
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
@@ -393,11 +474,13 @@
       if (!profile) return;
       firstNameInput.value = profile.first_name || "";
       lastNameInput.value = profile.last_name || "";
-      emailInput.value = profile.email || currentUser?.email || "";
       phoneInput.value = profile.phone || "";
       if (discordInput) {
         discordInput.value = profile.discord_username || "";
         validateDiscordUsername(discordInput.value);
+      }
+      if (aboutMeInput) {
+        aboutMeInput.value = profile.about_me || "";
       }
       if (whatsappSameYes && whatsappSameNo) {
         const samePhone = !!profile.whatsapp_same_phone;
@@ -407,17 +490,123 @@
       if (showWhatsappButtonInput) {
         showWhatsappButtonInput.checked = !!profile.show_whatsapp_button;
       }
+      const showPublicContacts = profile.show_contacts_on_public_profile !== false;
+      if (publicContactYes) publicContactYes.checked = showPublicContacts;
+      if (publicContactNo) publicContactNo.checked = !showPublicContacts;
+      setProfileAvatarPreview(profile.avatar_url || null);
     }
 
     async function fetchProfile() {
       ensureClient();
       const { data, error } = await supabase
         .from("users")
-        .select("id,username,email,first_name,last_name,discord_username,phone,phone_verified,phone_verified_at,whatsapp_same_phone,show_whatsapp_button")
+        .select("id,username,email,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,phone_verified_at,whatsapp_same_phone,show_whatsapp_button,show_contacts_on_public_profile")
         .eq("id", currentUser.id)
         .single();
       if (error && error.code !== "PGRST116") throw error;
       return data || null;
+    }
+
+    function clearPendingAvatarPreviewUrl() {
+      if (pendingAvatarObjectUrl) {
+        URL.revokeObjectURL(pendingAvatarObjectUrl);
+        pendingAvatarObjectUrl = null;
+      }
+    }
+
+    function setProfileAvatarPreview(src) {
+      if (!profileAvatarPreview) return;
+      profileAvatarPreview.src = src || "img/avatar.svg";
+    }
+
+    async function requestAvatarSignedUpload(file) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "application/octet-stream",
+          extension,
+          userToken: token,
+          assetType: "avatar",
+        }),
+      });
+
+      if (!response.ok) {
+        let message = "Erro ao solicitar upload do avatar.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+
+      return response.json();
+    }
+
+    async function convertAvatarToWebp(file) {
+      if (!file.type || !file.type.startsWith("image/")) {
+        throw new Error("Selecione uma imagem válida para o avatar.");
+      }
+      const bitmap = await createImageBitmap(file);
+      const maxSide = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, MAX_AVATAR_DIMENSION / maxSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Não foi possível processar a imagem do avatar.");
+      }
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", AVATAR_WEBP_QUALITY));
+      if (!blob) {
+        throw new Error("Falha ao converter avatar para WebP.");
+      }
+      const baseName = file.name.replace(/\.[^.]+$/, "") || "avatar";
+      return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    }
+
+    async function uploadProfileAvatar(file) {
+      if (!file) return currentProfile?.avatar_url || null;
+      if (!file.type || !file.type.startsWith("image/")) {
+        throw new Error("Selecione uma imagem válida para o avatar.");
+      }
+      if (file.size > MAX_AVATAR_BYTES) {
+        throw new Error("A imagem do avatar deve ter no máximo 5MB.");
+      }
+
+      const webpFile = await convertAvatarToWebp(file);
+      if (webpFile.size > MAX_AVATAR_BYTES) {
+        throw new Error("A imagem do avatar excede 5MB após conversão.");
+      }
+
+      const signed = await requestAvatarSignedUpload(webpFile);
+      const uploadRes = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": webpFile.type || "application/octet-stream",
+        },
+        body: webpFile,
+      });
+      if (!uploadRes.ok) {
+        throw new Error("Falha ao enviar avatar para o storage.");
+      }
+      return signed.publicUrl || null;
     }
 
     function updateWhatsappPreferences(profile) {
@@ -553,6 +742,7 @@
           email: currentUser.email,
           whatsapp_same_phone: false,
           show_whatsapp_button: false,
+          show_contacts_on_public_profile: true,
         }, { onConflict: "id" }).select().single();
         if (!error) return data;
         if (error.code !== "23505") {
@@ -581,15 +771,23 @@
 
         const firstName = firstNameInput.value.trim();
         const lastName = lastNameInput.value.trim();
-        const email = emailInput.value.trim();
+        const email = (currentUser?.email || currentProfile?.email || "").trim();
         const discordUsername = normalizeDiscordUsername(discordInput?.value?.trim() || "");
+        const aboutMe = aboutMeInput?.value?.trim() || null;
+        let avatarUrl = currentProfile?.avatar_url || null;
         const phone = currentProfile?.phone || null;
         const phoneVerified = !!currentProfile?.phone_verified;
+        const showContactsOnPublicProfile = !!publicContactYes?.checked;
         let whatsappSamePhone = false;
         let showWhatsappButton = false;
 
-        if (!firstName || !lastName || !email) {
-          feedback.textContent = "Preencha nome, sobrenome e email.";
+        if (!firstName || !lastName) {
+          feedback.textContent = "Preencha nome e sobrenome.";
+          saveBtn.disabled = false;
+          return;
+        }
+        if (!email) {
+          feedback.textContent = "Não foi possível identificar o email da conta. Faça login novamente.";
           saveBtn.disabled = false;
           return;
         }
@@ -602,6 +800,9 @@
           whatsappSamePhone = !!whatsappSameYes?.checked;
           showWhatsappButton = whatsappSamePhone && !!showWhatsappButtonInput?.checked;
         }
+        if (pendingAvatarFile) {
+          avatarUrl = await uploadProfileAvatar(pendingAvatarFile);
+        }
 
         const username = currentProfile?.username || (currentUser.email || currentUser.id).split("@")[0];
         const phoneChanged = false;
@@ -612,11 +813,14 @@
           first_name: firstName,
           last_name: lastName,
           discord_username: discordUsername || null,
+          about_me: aboutMe,
+          avatar_url: avatarUrl,
           phone,
           phone_verified: phoneVerified,
           phone_verified_at: currentProfile?.phone_verified_at ?? null,
           whatsapp_same_phone: whatsappSamePhone,
           show_whatsapp_button: showWhatsappButton,
+          show_contacts_on_public_profile: showContactsOnPublicProfile,
         }, { onConflict: "id" });
         if (error) throw error;
 
@@ -624,12 +828,24 @@
         currentProfile = {
           ...(currentProfile || {}),
           discord_username: discordUsername || null,
+          about_me: aboutMe,
+          avatar_url: avatarUrl,
           phone,
           phone_verified: phoneVerified,
           phone_verified_at: currentProfile?.phone_verified_at ?? null,
           whatsapp_same_phone: whatsappSamePhone,
           show_whatsapp_button: showWhatsappButton,
+          show_contacts_on_public_profile: showContactsOnPublicProfile,
         };
+        if (avatarUrl) {
+          await setAvatarImage(avatarUrl);
+        } else {
+          await setAvatarImage("img/avatar.svg");
+        }
+        setProfileAvatarPreview(avatarUrl);
+        pendingAvatarFile = null;
+        clearPendingAvatarPreviewUrl();
+        if (avatarUploadInput) avatarUploadInput.value = "";
         updatePhoneStatus(currentProfile);
       } catch (err) {
         console.error(err);
@@ -699,6 +915,38 @@
           copyTelegramCode.textContent = "⧉";
         }, 1500);
       }
+    });
+
+    avatarUploadInput?.addEventListener("change", (event) => {
+      const file = event.target?.files?.[0];
+      if (!file) {
+        pendingAvatarFile = null;
+        clearPendingAvatarPreviewUrl();
+        setProfileAvatarPreview(currentProfile?.avatar_url || null);
+        return;
+      }
+      if (!file.type || !file.type.startsWith("image/")) {
+        feedback.textContent = "Selecione um arquivo de imagem válido.";
+        event.target.value = "";
+        pendingAvatarFile = null;
+        clearPendingAvatarPreviewUrl();
+        setProfileAvatarPreview(currentProfile?.avatar_url || null);
+        return;
+      }
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        feedback.textContent = "A imagem do avatar deve ter no máximo 5MB.";
+        event.target.value = "";
+        pendingAvatarFile = null;
+        clearPendingAvatarPreviewUrl();
+        setProfileAvatarPreview(currentProfile?.avatar_url || null);
+        return;
+      }
+      pendingAvatarFile = file;
+      clearPendingAvatarPreviewUrl();
+      pendingAvatarObjectUrl = URL.createObjectURL(file);
+      setProfileAvatarPreview(pendingAvatarObjectUrl);
+      feedback.textContent = "Avatar selecionado. Clique em salvar perfil para aplicar.";
     });
 
     (async function init() {

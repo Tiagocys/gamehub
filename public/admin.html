@@ -299,10 +299,6 @@
       return decodeJwtPart(token, 1);
     }
 
-    function decodeJwtHeader(token) {
-      return decodeJwtPart(token, 0);
-    }
-
     function isTokenForProject(token) {
       const payload = decodeJwtPayload(token);
       const projectRef = getProjectRef();
@@ -887,19 +883,6 @@
         requestsStatus.textContent = "Processando...";
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
-        if (!token) {
-          console.warn("Sem access_token na sessão para chamar game_approve.");
-        } else {
-          const header = decodeJwtHeader(token);
-          const payload = decodeJwtPayload(token);
-          console.warn("Access token (parcial):", `${token.slice(0, 12)}...${token.slice(-8)}`);
-          console.warn("Access token header:", header);
-          console.warn("Access token payload:", {
-            iss: payload?.iss,
-            role: payload?.role,
-            exp: payload?.exp
-          });
-        }
         const { data: approveData, error: approveErr } = await supabase.functions.invoke("game_approve", {
           body: { requestId: id, approved, note },
           headers: token
