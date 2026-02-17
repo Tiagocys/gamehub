@@ -9,7 +9,7 @@ type Payload = {
   override?: {
     name?: string;
     website?: string;
-    currency_name?: string | null;
+    discord_invite?: string | null;
     cover_url?: string | null;
   };
 };
@@ -28,6 +28,66 @@ function errorResponse(message: string, status = 400) {
     status,
     headers: { "content-type": "application/json", ...corsHeaders },
   });
+}
+
+function isMissingReviewedByColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  if (err.code === "42703") return true;
+  return String(err.message || "").includes("reviewed_by_admin_id");
+}
+
+function isMissingDiscordInviteColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  if (err.code === "42703") return true;
+  return String(err.message || "").includes("discord_invite");
+}
+
+function ensureHttpsPrefix(raw: string) {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  const withoutProtocol = trimmed.replace(/^https?:\/\//i, "");
+  const withoutWww = withoutProtocol.replace(/^www\./i, "");
+  return `https://${withoutWww}`;
+}
+
+function normalizeWebsite(raw: string) {
+  const withProtocol = ensureHttpsPrefix(raw);
+  if (!withProtocol) return null;
+  try {
+    const url = new URL(withProtocol);
+    url.protocol = "https:";
+    url.hash = "";
+    const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
+    const search = url.search || "";
+    return `${url.origin}${pathname}${search}`;
+  } catch (_err) {
+    return null;
+  }
+}
+
+function extractDomainKey(raw: string) {
+  try {
+    const url = new URL(ensureHttpsPrefix(raw));
+    return url.hostname.toLowerCase().replace(/^www\./, "");
+  } catch (_err) {
+    return null;
+  }
+}
+
+function normalizeOptionalUrl(raw: string | null | undefined) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) return null;
+  try {
+    const withProtocol = ensureHttpsPrefix(trimmed);
+    const url = new URL(withProtocol);
+    if (url.hostname.toLowerCase() !== "discord.gg") return null;
+    if (!url.pathname || url.pathname === "/") return null;
+    url.protocol = "https:";
+    url.hash = "";
+    return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+  } catch (_err) {
+    return null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -64,11 +124,20 @@ Deno.serve(async (req) => {
       return errorResponse("Acesso restrito a admins", 403);
     }
 
-    const { data: reqData, error: fetchErr } = await supabase
+    let { data: reqData, error: fetchErr } = await supabase
       .from("game_requests")
-      .select("id,name,website,currency_name,cover_url,user_email,status,created_at")
+      .select("id,name,website,discord_invite,cover_url,user_email,status,created_at")
       .eq("id", body.requestId)
       .single();
+    if (isMissingDiscordInviteColumnError(fetchErr)) {
+      const fallback = await supabase
+        .from("game_requests")
+        .select("id,name,website,cover_url,user_email,status,created_at")
+        .eq("id", body.requestId)
+        .single();
+      reqData = fallback.data ? { ...fallback.data, discord_invite: null } : null;
+      fetchErr = fallback.error;
+    }
     if (fetchErr || !reqData) {
       return errorResponse("Solicitação não encontrada", 404);
     }
@@ -78,44 +147,114 @@ Deno.serve(async (req) => {
     }
 
     const finalName = body.override?.name?.trim() || reqData.name;
-    const finalWebsite = body.override?.website?.trim() || reqData.website;
-    const finalCurrency = body.override?.currency_name ?? reqData.currency_name;
+    const finalWebsiteRaw = body.override?.website?.trim() || reqData.website;
+    const finalWebsite = normalizeWebsite(finalWebsiteRaw);
+    const finalDiscordInvite = normalizeOptionalUrl(body.override?.discord_invite ?? reqData.discord_invite);
     const finalCover = body.override?.cover_url ?? reqData.cover_url;
+    const finalDomain = extractDomainKey(finalWebsiteRaw);
+
+    if (!finalWebsite || !finalDomain) {
+      return errorResponse("Website inválido para aprovação", 400);
+    }
+    if (body.approved && !finalDiscordInvite) {
+      return errorResponse("Convite do Discord inválido. Use https://discord.gg/...", 400);
+    }
+
+    if (body.approved && body.skipServerInsert) {
+      return errorResponse("Fluxo de aprovação inválido. Reenvie sem skipServerInsert.", 400);
+    }
 
     if (body.approved && !body.skipServerInsert) {
-      // Checa duplicidade de website
+      // Checa duplicidade por domínio normalizado.
       const { data: dupServer, error: dupErr } = await supabase
         .from("servers")
-        .select("id")
-        .eq("official_site", finalWebsite)
+        .select("id,name,official_site")
+        .eq("status", "active")
+        .eq("website_domain", finalDomain)
         .limit(1);
       if (dupErr) throw dupErr;
       if (dupServer && dupServer.length > 0) {
-        return errorResponse("Website já cadastrado em servers", 409);
+        return errorResponse(`Servidor já cadastrado para o domínio ${finalDomain}`, 409);
       }
 
-      const { error: insertErr } = await supabase.from("servers").insert({
+      let { error: insertErr } = await supabase.from("servers").insert({
         name: finalName,
         official_site: finalWebsite,
+        discord_invite: finalDiscordInvite,
         banner_url: finalCover,
-        currency_name: finalCurrency,
         status: "active"
       });
-      if (insertErr) throw insertErr;
+      if (isMissingDiscordInviteColumnError(insertErr)) {
+        const fallback = await supabase.from("servers").insert({
+          name: finalName,
+          official_site: finalWebsite,
+          banner_url: finalCover,
+          status: "active"
+        });
+        insertErr = fallback.error;
+      }
+      if (insertErr) {
+        if (insertErr.code === "23505") {
+          return errorResponse(`Servidor já cadastrado para o domínio ${finalDomain}`, 409);
+        }
+        throw insertErr;
+      }
     }
 
-    const { error: updateErr } = await supabase
+    const approvedStatus = body.approved ? "approved" : "rejected";
+    const baseRequestUpdate = {
+      name: finalName,
+      website: finalWebsite,
+      discord_invite: finalDiscordInvite,
+      cover_url: finalCover,
+      status: approvedStatus,
+      note: body.note || null,
+    };
+
+    let { error: updateErr } = await supabase
       .from("game_requests")
-      .update({
-        name: finalName,
-        website: finalWebsite,
-        currency_name: finalCurrency,
-        cover_url: finalCover,
-        status: body.approved ? "approved" : "rejected",
-        note: body.note || null,
-      })
+      .update({ ...baseRequestUpdate, reviewed_by_admin_id: authData.user.id })
       .eq("id", reqData.id);
+    if (isMissingReviewedByColumnError(updateErr)) {
+      let fallbackPayload: Record<string, unknown> = { ...baseRequestUpdate };
+      if (isMissingDiscordInviteColumnError(updateErr)) {
+        const { discord_invite: _discordInvite, ...withoutDiscordInvite } = fallbackPayload;
+        fallbackPayload = withoutDiscordInvite;
+      }
+      const fallback = await supabase
+        .from("game_requests")
+        .update(fallbackPayload)
+        .eq("id", reqData.id);
+      updateErr = fallback.error;
+    }
     if (updateErr) throw updateErr;
+
+    if (body.approved) {
+      const autoRejectNote = "Solicitação duplicada: já existe um servidor ativo para este domínio.";
+      let { error: clearDupPendingErr } = await supabase
+        .from("game_requests")
+        .update({
+          status: "rejected",
+          note: autoRejectNote,
+          reviewed_by_admin_id: authData.user.id,
+        })
+        .eq("website_domain", finalDomain)
+        .neq("id", reqData.id)
+        .in("status", ["pending", "under_review"]);
+      if (isMissingReviewedByColumnError(clearDupPendingErr)) {
+        const fallback = await supabase
+          .from("game_requests")
+          .update({
+            status: "rejected",
+            note: autoRejectNote,
+          })
+          .eq("website_domain", finalDomain)
+          .neq("id", reqData.id)
+          .in("status", ["pending", "under_review"]);
+        clearDupPendingErr = fallback.error;
+      }
+      if (clearDupPendingErr) throw clearDupPendingErr;
+    }
 
     if (reqData.user_email && EMAIL_ENDPOINT) {
       try {

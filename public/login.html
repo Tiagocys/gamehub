@@ -8,17 +8,20 @@
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Kanit:wght@500;600;700&display=swap');
 
     :root {
-      --bg: #f4f6fb;
+      --bg: #f4f7ff;
       --card: #ffffff;
       --muted: #5f6f8c;
       --text: #0f2557;
       --accent: #1b4fd3;
       --accent-2: #4e7dff;
-      --danger: #e2526d;
       --border: rgba(15, 37, 87, 0.08);
-      --radius: 14px;
+      --radius: 16px;
+      --shadow: 0 20px 45px rgba(15, 37, 87, 0.12);
     }
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       background:
@@ -29,49 +32,116 @@
       font-family: "Space Grotesk", "Kanit", sans-serif;
       min-height: 100vh;
     }
-    header {
-      padding: 18px 24px;
+
+    .login-page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 24px 20px 56px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(255, 255, 255, 0.92);
+      gap: 12px;
     }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo img { width: 110px; height: auto; }
-    .pill {
-      padding: 4px 10px;
+
+    .brand a {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .brand img {
+      width: 132px;
+      height: auto;
+    }
+
+    .brand-tag {
+      padding: 5px 11px;
       border-radius: 999px;
       background: rgba(27,79,211,0.1);
       color: var(--accent-2);
-      font-size: 12px;
+      font-size: 13px;
       border: 1px solid var(--border);
     }
-    .header-actions { display: flex; align-items: center; gap: 14px; }
-    .header-actions { display: flex; align-items: center; gap: 14px; }
-    main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 32px 20px 60px;
-      display: grid;
-      gap: 18px;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      align-items: stretch;
-    }
-    .card {
+
+    .auth-top {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: 0 12px 30px rgba(15,37,87,0.08);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 16px;
     }
-    h1 { margin: 0 0 12px; font-size: 30px; color: #0d1b3b; font-family: "Kanit", "Space Grotesk", sans-serif; }
-    h2 { margin: 0 0 12px; font-size: 20px; font-family: "Kanit", "Space Grotesk", sans-serif; }
-    p { color: var(--muted); margin: 6px 0 14px; }
+
+    .auth-top h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 42px);
+      line-height: 1;
+      font-family: "Kanit", "Space Grotesk", sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-top p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .auth-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .cards-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(140deg, rgba(27,79,211,0.12), transparent 55%);
+      pointer-events: none;
+    }
+
+    .feature-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card h2 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      line-height: 1;
+      font-family: "Kanit", "Space Grotesk", sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    .feature-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
     button {
       padding: 14px 20px;
       border: none;
@@ -83,11 +153,13 @@
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       box-shadow: 0 12px 24px rgba(27,79,211,0.25);
     }
+
     .google-btn {
       display: inline-flex;
       align-items: center;
       gap: 10px;
     }
+
     .google-btn img {
       width: 20px;
       height: 20px;
@@ -95,6 +167,7 @@
       border-radius: 50%;
       padding: 3px;
     }
+
     button.secondary {
       background: transparent;
       color: var(--text);
@@ -102,85 +175,72 @@
       box-shadow: none;
     }
     button:active { transform: translateY(1px); }
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .status { display: flex; align-items: center; gap: 8px; font-size: 14px; }
-    .dot { width: 10px; height: 10px; border-radius: 999px; background: #f6d87c; }
-    .dot.ok { background: var(--accent); }
-    .notice { padding: 12px 14px; border-radius: 10px; background: rgba(118,168,255,0.08); border: 1px solid var(--border); font-size: 13px; }
-    .list-inline { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-    .list-inline span {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      border-radius: 10px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .role-card {
-      position: relative;
-      overflow: hidden;
-    }
-    .role-card::after {
-      content: "";
-      position: absolute;
+
+    .page-loader {
+      position: fixed;
       inset: 0;
-      background: linear-gradient(140deg, rgba(27,79,211,0.12), transparent 55%);
-      opacity: 0.8;
-      pointer-events: none;
+      background: #ffffff;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
     }
-    .role-card > * { position: relative; z-index: 1; }
-    .login-card {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      justify-content: center;
-    }
-    .login-card .actions { margin-top: 4px; }
-    .helper-link {
-      text-decoration: underline;
-      color: var(--accent);
-      font-weight: 600;
+    .page-loader.hidden { display: none; }
+    .page-loader img { width: 120px; height: auto; }
+
+    @media (max-width: 640px) {
+      .login-page {
+        padding-top: 18px;
+      }
+      .auth-top {
+        padding: 18px;
+      }
+      .auth-top h1 {
+        font-size: 30px;
+      }
+      .feature-card h2 {
+        font-size: 26px;
+      }
+      button {
+        width: 100%;
+      }
+      .auth-row {
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="logo">
-      <img src="img/logo.png" alt="Gimerr" />
-      <span class="pill">Login</span>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
+  <main class="login-page">
+    <div class="brand">
+      <a href="index.html" aria-label="Ir para a página inicial">
+        <img src="img/logo.png" alt="Gimerr" />
+      </a>
+      <span class="brand-tag">Login</span>
     </div>
-    <div class="header-actions">
-      <div class="status">
-        <div class="dot" id="status-dot"></div>
-        <span id="status-text">Desconectado</span>
-      </div>
-      <button id="header-auth-btn" class="secondary">Entrar</button>
-    </div>
-  </header>
 
-  <main>
-    <section class="card role-card">
-      <h1>Sou vendedor!</h1>
-      <p>Crie ou faça login na sua conta para anunciar itens rapidamente!</p>
-      <p>Você também pode oferecer serviços para outros usuários que procurarem pelo que você faz.</p>
-    </section>
-
-    <section class="card role-card">
-      <h1>Sou comprador!</h1>
-      <p>Encontre ofertas de itens raros para seu personagem ou personagens de nível mais alto à venda.</p>
-      <p>Você também pode contratar outros players para completar tasks e avançar o nível do seu personagem.</p>
-    </section>
-
-    <section class="card login-card">
-      <h2>Entrar com Google</h2>
-      <p>Use sua conta Google para acessar o Gimerr com segurança.</p>
-      <div class="actions">
+    <section class="auth-top">
+      <h1>Entre na sua conta</h1>
+      <p>Use sua conta Google para começar a anunciar.</p>
+      <div class="auth-row">
         <button id="google-btn" class="google-btn">
           <img src="img/google.svg" alt="" />
           Entrar com Google
         </button>
-        <a href="index.html" class="secondary helper-link">Ir para Home</a>
       </div>
+    </section>
+
+    <section class="cards-grid">
+      <article class="feature-card">
+        <h2>Play to earn</h2>
+        <p>Anuncie itens, contas e personagens do seu game favorito! Ofereça serviços no maior marketplace para gamers que já existiu!</p>
+      </article>
+      <article class="feature-card">
+        <h2>Pay to win</h2>
+        <p>Encontre tudo que você precisa para ser o top server do seu game favorito!</p>
+      </article>
     </section>
   </main>
 
@@ -192,22 +252,37 @@
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
-    const statusDot = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
-    const sessionStatus = document.getElementById("session-status");
-    const profileInfo = document.getElementById("profile-info");
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
     const googleBtn = document.getElementById("google-btn");
-    const headerAuthBtn = document.getElementById("header-auth-btn");
 
     const SESSION_STORAGE_KEY = "gimerr-auth-session";
     let supabase;
     let authListenerAttached = false;
     let redirectTriggered = false;
 
-    function setStatus(ok, text) {
-      statusDot.classList.toggle("ok", ok);
-      statusText.textContent = text;
-    }
+    function setStatus(_ok, _text) {}
 
     function persistLocalSession(session) {
       if (session) {
@@ -269,15 +344,53 @@
       return supabase;
     }
 
+    function parseUserName(user) {
+      const meta = user.user_metadata || {};
+      const given = meta.given_name || meta.first_name || null;
+      const family = meta.family_name || meta.last_name || null;
+      if (given || family) {
+        return { firstName: given || "", lastName: family || "" };
+      }
+      const full = meta.full_name || meta.name || "";
+      if (!full) return { firstName: "", lastName: "" };
+      const parts = full.trim().split(/\s+/);
+      if (parts.length === 1) return { firstName: parts[0], lastName: "" };
+      return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+    }
+
+    function baseUsernameFromUser(user) {
+      const fromName = user.user_metadata?.full_name?.split(" ")?.[0];
+      if (fromName) return fromName.toLowerCase();
+      return user.email.split("@")[0].toLowerCase();
+    }
+
     async function upsertProfile(user) {
-      const payload = {
-        id: user.id,
-        username: user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
-        email: user.email,
-        avatar_url: user.user_metadata?.avatar_url ?? null
-      };
-      const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
-      if (error) throw error;
+      const names = parseUserName(user);
+      const baseUsername = baseUsernameFromUser(user);
+      const candidates = [
+        baseUsername,
+        `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
+        `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
+      ];
+
+      let lastError = null;
+      for (const candidate of candidates) {
+        const payload = {
+          id: user.id,
+          username: candidate,
+          email: user.email,
+          avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+          first_name: names.firstName || null,
+          last_name: names.lastName || null,
+        };
+        const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
+        if (!error) return;
+        if (error.code !== "23505") {
+          throw error;
+        }
+        lastError = error;
+      }
+      if (lastError) throw lastError;
     }
 
     async function fetchProfile(userId) {
@@ -292,34 +405,7 @@
       const current = window.location.pathname.split("/").pop();
       if (current === destination) return;
       redirectTriggered = true;
-      if (sessionStatus) sessionStatus.textContent = "Redirecionando...";
       window.location.href = destination;
-    }
-
-    function configureHeaderButton(isLogged) {
-      if (!headerAuthBtn) return;
-      headerAuthBtn.disabled = false;
-      if (isLogged) {
-        headerAuthBtn.textContent = "Sair";
-        headerAuthBtn.onclick = async () => {
-          try {
-            ensureClient();
-            headerAuthBtn.disabled = true;
-            await supabase.auth.signOut();
-            setStatus(false, "Sessão encerrada");
-            if (sessionStatus) sessionStatus.textContent = "Sessão encerrada.";
-            if (profileInfo) profileInfo.textContent = "Faça login para carregar seu perfil.";
-            redirectTriggered = false;
-            await refreshSession();
-          } catch (err) {
-            console.error(err);
-            headerAuthBtn.disabled = false;
-          }
-        };
-      } else {
-      headerAuthBtn.textContent = "Entrar";
-      headerAuthBtn.onclick = () => googleBtn.click();
-      }
     }
 
     async function refreshSession() {
@@ -335,24 +421,15 @@
           await upsertProfile(user);
           const profile = await fetchProfile(user.id);
           setStatus(true, "Sessão ativa");
-          if (sessionStatus) sessionStatus.textContent = `Logado como ${user.email}`;
-          if (profileInfo) {
-            profileInfo.textContent = profile
-              ? `Perfil carregado: ${profile.username} ${profile.is_admin ? "(admin)" : ""}`
-              : "Perfil não encontrado.";
-          }
-          configureHeaderButton(true);
           redirectAfterLogin(profile);
         } else {
           setStatus(false, "Sem sessão");
-          if (sessionStatus) sessionStatus.textContent = "Sem sessão.";
-          if (profileInfo) profileInfo.textContent = "Faça login para carregar seu perfil.";
-          configureHeaderButton(false);
         }
       } catch (err) {
         console.error(err);
         setStatus(false, "Erro");
-        if (sessionStatus) sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
+      } finally {
+        markAvatarReady();
       }
     }
 

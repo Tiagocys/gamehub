@@ -2,17 +2,13 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
 type Payload = {
-  mode?: "put" | "delete";
-  contentType?: string;
-  extension?: string;
-  key?: string;
-  keys?: string[];
+  listingId?: string;
   userToken?: string;
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
-
+const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET");
 const R2_ACCOUNT_ID = Deno.env.get("R2_ACCOUNT_ID");
 const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID");
 const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY");
@@ -27,13 +23,9 @@ const corsHeaders = {
 };
 
 const textEncoder = new TextEncoder();
-
-const allowedTypes: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/jpg": "jpg",
-  "image/webp": "webp",
-};
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HIGHLIGHT_BASE_DAY_PRICE = 10;
+const HIGHLIGHT_DAY_DISCOUNT = 0.1;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -66,7 +58,7 @@ async function hmacSha256(key: Uint8Array, data: string) {
     normalizedKey,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, textEncoder.encode(data));
   return new Uint8Array(signature);
@@ -85,11 +77,6 @@ function buildCanonicalQuery(params: Record<string, string>) {
     .sort()
     .map((key) => `${encodeRFC3986(key)}=${encodeRFC3986(params[key])}`)
     .join("&");
-}
-
-function sanitizeExtension(value?: string) {
-  if (!value) return "";
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function parseR2Key(raw: string): string | null {
@@ -191,10 +178,86 @@ async function buildDeleteUrl(key: string) {
 async function deleteR2Object(key: string) {
   const url = await buildDeleteUrl(key);
   const response = await fetch(url, { method: "DELETE" });
+  // 204 is expected; 404 also means "already gone" for our flow.
   if (!response.ok && response.status !== 404) {
     const body = await response.text().catch(() => "");
     throw new Error(`Falha ao excluir objeto R2 (${response.status}): ${body}`);
   }
+}
+
+function normalizeDays(value: unknown) {
+  const parsed = Number(value || 0);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.floor(parsed));
+}
+
+function calculateSingleDayCents(dayIndex: number) {
+  const dayPrice = HIGHLIGHT_BASE_DAY_PRICE * ((1 - HIGHLIGHT_DAY_DISCOUNT) ** dayIndex);
+  return Math.round((Math.round(dayPrice * 100) / 100) * 100);
+}
+
+function calculateRefundableHighlightDays(
+  totalDays: number,
+  startedAtRaw: string | null | undefined,
+  expiresAtRaw: string | null | undefined,
+  now = new Date(),
+) {
+  if (totalDays <= 0) return 0;
+  let startedAt: Date | null = startedAtRaw ? new Date(startedAtRaw) : null;
+  const expiresAt = expiresAtRaw ? new Date(expiresAtRaw) : null;
+  if (!startedAt || Number.isNaN(startedAt.getTime())) {
+    if (expiresAt && !Number.isNaN(expiresAt.getTime())) {
+      startedAt = new Date(expiresAt.getTime() - (totalDays * DAY_MS));
+    }
+  }
+  if (!startedAt || Number.isNaN(startedAt.getTime())) return 0;
+  if (now <= startedAt) return Math.max(totalDays - 1, 0);
+  const elapsedDays = Math.floor((now.getTime() - startedAt.getTime()) / DAY_MS);
+  return Math.max(totalDays - (elapsedDays + 1), 0);
+}
+
+function calculateRefundCents(totalDays: number, refundableDays: number) {
+  if (refundableDays <= 0 || totalDays <= 0) return 0;
+  const refundedStartDay = totalDays - refundableDays;
+  let refundCents = 0;
+  for (let dayIndex = refundedStartDay; dayIndex < totalDays; dayIndex += 1) {
+    refundCents += calculateSingleDayCents(dayIndex);
+  }
+  return Math.max(0, refundCents);
+}
+
+async function requestStripeRefund(
+  paymentIntentId: string,
+  amountCents: number,
+  listingId: string,
+  userId: string,
+) {
+  if (!STRIPE_SECRET) {
+    throw new Error("STRIPE_SECRET ausente para efetuar reembolso");
+  }
+  if (amountCents <= 0) return null;
+
+  const body = new URLSearchParams();
+  body.set("payment_intent", paymentIntentId);
+  body.set("amount", String(amountCents));
+  body.set("metadata[listing_id]", listingId);
+  body.set("metadata[user_id]", userId);
+  body.set("metadata[reason]", "listing_deleted_partial_highlight_refund");
+
+  const response = await fetch("https://api.stripe.com/v1/refunds", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: body.toString(),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = data?.error?.message || `Falha ao solicitar reembolso (${response.status})`;
+    throw new Error(message);
+  }
+  return data;
 }
 
 Deno.serve(async (req) => {
@@ -206,12 +269,6 @@ Deno.serve(async (req) => {
     if (!SUPABASE_URL || !SERVICE_KEY) {
       return errorResponse("Variáveis PROJECT_URL ou SERVICE_ROLE_KEY ausentes", 500);
     }
-    if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET) {
-      return errorResponse("Variáveis R2 não configuradas", 500);
-    }
-    if (!R2_PUBLIC_URL && (!R2_BUCKET || !R2_ACCOUNT_ID)) {
-      return errorResponse("R2_PUBLIC_URL não configurada", 500);
-    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const authHeader = req.headers.get("authorization") || req.headers.get("Authorization") || "";
@@ -222,132 +279,94 @@ Deno.serve(async (req) => {
     if (!token) {
       return errorResponse("Não autorizado", 401);
     }
+
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !authData?.user) {
       return errorResponse("Sessão inválida", 401);
     }
 
-    const mode = payload.mode || "put";
+    if (!payload.listingId) {
+      return errorResponse("listingId é obrigatório", 400);
+    }
 
-    if (mode === "delete") {
-      const rawItems = [
-        ...(Array.isArray(payload.keys) ? payload.keys : []),
-        ...(payload.key ? [payload.key] : []),
-      ];
-      const keys = Array.from(
-        new Set(
-          rawItems
-            .map((item) => parseR2Key(String(item)))
-            .filter((key): key is string => Boolean(key && key.startsWith(`listings/${authData.user.id}/`))),
-        ),
+    const { data: listing, error: listingErr } = await supabase
+      .from("listings")
+      .select("id,user_id,images,highlight_status,highlight_days,highlight_started_at,highlight_expires_at,highlight_paid_amount,highlight_payment_intent_id")
+      .eq("id", payload.listingId)
+      .eq("user_id", authData.user.id)
+      .single();
+    if (listingErr || !listing) {
+      return errorResponse("Anúncio não encontrado", 404);
+    }
+
+    const imageList = Array.isArray(listing.images) ? listing.images : [];
+    const keys = Array.from(new Set(
+      imageList
+        .map((item) => parseR2Key(String(item)))
+        .filter((key): key is string => Boolean(key && key.startsWith(`listings/${authData.user.id}/`))),
+    ));
+
+    let refundableDays = 0;
+    let refundedAmount = 0;
+    let stripeRefundId: string | null = null;
+    const highlightDays = normalizeDays(listing.highlight_days);
+    const paidAmountCents = Math.max(0, Math.round(Number(listing.highlight_paid_amount || 0) * 100));
+    if (
+      listing.highlight_status === "active" &&
+      highlightDays > 0 &&
+      listing.highlight_payment_intent_id
+    ) {
+      refundableDays = calculateRefundableHighlightDays(
+        highlightDays,
+        listing.highlight_started_at,
+        listing.highlight_expires_at,
       );
-
-      let deletedKeys = 0;
-      let failedKeys = 0;
-      for (const key of keys) {
-        try {
-          await deleteR2Object(key);
-          deletedKeys += 1;
-        } catch (err) {
-          failedKeys += 1;
-          console.error(`Falha ao excluir objeto R2 ${key}`, err);
-        }
+      const calculatedRefundCents = calculateRefundCents(highlightDays, refundableDays);
+      const refundCents = Math.min(calculatedRefundCents, paidAmountCents);
+      if (refundCents > 0) {
+        const stripeRefund = await requestStripeRefund(
+          listing.highlight_payment_intent_id,
+          refundCents,
+          listing.id,
+          authData.user.id,
+        );
+        refundedAmount = Number((refundCents / 100).toFixed(2));
+        stripeRefundId = typeof stripeRefund?.id === "string" ? stripeRefund.id : null;
       }
-
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          mode: "delete",
-          deletedKeys,
-          failedKeys,
-        }),
-        {
-          headers: { "content-type": "application/json", ...corsHeaders },
-        },
-      );
     }
 
-    const contentType = (payload.contentType || "").toLowerCase();
-    if (!allowedTypes[contentType]) {
-      return errorResponse("Tipo de arquivo não permitido", 415);
+    const { error: delErr } = await supabase
+      .from("listings")
+      .delete()
+      .eq("id", listing.id)
+      .eq("user_id", authData.user.id);
+    if (delErr) throw delErr;
+
+    let deletedKeys = 0;
+    let failedKeys = 0;
+    for (const key of keys) {
+      try {
+        await deleteR2Object(key);
+        deletedKeys += 1;
+      } catch (deleteErr) {
+        failedKeys += 1;
+        console.error(`Falha ao excluir objeto R2 ${key}`, deleteErr);
+      }
     }
-    const sanitizedExt = sanitizeExtension(payload.extension);
-    const allowedExts = new Set(Object.values(allowedTypes));
-    const ext = allowedExts.has(sanitizedExt) ? sanitizedExt : allowedTypes[contentType];
-    if (!ext) {
-      return errorResponse("Extensão inválida", 400);
-    }
-
-    const key = `listings/${authData.user.id}/${crypto.randomUUID()}.${ext}`;
-    const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
-    const endpointUrl = new URL(endpoint);
-    const host = endpointUrl.host;
-    const canonicalUri = `/${R2_BUCKET}/${key.split("/").map(encodeRFC3986).join("/")}`;
-
-    const now = new Date();
-    const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
-    const dateStamp = amzDate.slice(0, 8);
-    const region = "auto";
-    const service = "s3";
-    const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-    const signedHeaders = "content-type;host";
-
-    const queryParams: Record<string, string> = {
-      "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
-      "X-Amz-Credential": `${R2_ACCESS_KEY_ID}/${credentialScope}`,
-      "X-Amz-Date": amzDate,
-      "X-Amz-Expires": "600",
-      "X-Amz-SignedHeaders": signedHeaders,
-    };
-
-    const canonicalQuery = buildCanonicalQuery(queryParams);
-    const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
-    const payloadHash = "UNSIGNED-PAYLOAD";
-    const canonicalRequest = [
-      "PUT",
-      canonicalUri,
-      canonicalQuery,
-      canonicalHeaders,
-      signedHeaders,
-      payloadHash,
-    ].join("\n");
-
-    const hashedRequest = await sha256Hex(canonicalRequest);
-    const stringToSign = [
-      "AWS4-HMAC-SHA256",
-      amzDate,
-      credentialScope,
-      hashedRequest,
-    ].join("\n");
-
-    const signingKey = await getSignatureKey(R2_SECRET_ACCESS_KEY, dateStamp, region, service);
-    const signatureBytes = await hmacSha256(signingKey, stringToSign);
-    const signature = toHex(signatureBytes.buffer);
-
-    const uploadUrl = `${endpointUrl.origin}${canonicalUri}?${canonicalQuery}&X-Amz-Signature=${signature}`;
-    let publicBase = (R2_PUBLIC_URL || "").replace(/\/$/, "");
-    if (publicBase.includes("r2.cloudflarestorage.com")) {
-      publicBase = `https://${R2_BUCKET}.${R2_ACCOUNT_ID}.r2.dev`;
-    }
-    if (!publicBase) {
-      publicBase = `https://${R2_BUCKET}.${R2_ACCOUNT_ID}.r2.dev`;
-    }
-    const publicUrl = `${publicBase}/${key}`;
 
     return new Response(
       JSON.stringify({
         ok: true,
-        uploadUrl,
-        publicUrl,
-        key,
-        expiresIn: 600,
+        deletedKeys,
+        failedKeys,
+        refundableDays,
+        refundedAmount,
+        stripeRefundId,
       }),
-      {
-        headers: { "content-type": "application/json", ...corsHeaders },
-      }
+      { headers: { "content-type": "application/json", ...corsHeaders } },
     );
   } catch (err) {
     console.error(err);
-    return errorResponse("Erro ao gerar URL de upload", 500);
+    return errorResponse(err instanceof Error ? err.message : "Erro ao excluir anúncio", 500);
   }
 });

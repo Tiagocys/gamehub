@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Meus anúncios</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="my-listings-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .highlight-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 21, 51, 0.56);
+      display: grid;
+      place-items: center;
+      z-index: 120;
+      padding: 18px;
+    }
+
+    .highlight-modal {
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 24px 60px rgba(12, 21, 51, 0.18);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .highlight-price-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+
+    .highlight-price-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 10px 12px;
+      display: grid;
+      gap: 2px;
+    }
+
+    .highlight-price-card strong {
+      font-size: 16px;
+      color: var(--ink);
+    }
+
+    .highlight-modal [type="range"] {
+      width: 100%;
+      accent-color: var(--accent-2);
+    }
+
+    .listing-card--highlighted {
+      border-color: rgba(33, 123, 215, 0.45);
+      box-shadow: 0 18px 34px rgba(33, 123, 215, 0.16);
+    }
+
+    .highlight-details {
+      border: 1px solid rgba(33, 123, 215, 0.28);
+      background: rgba(33, 123, 215, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 3px;
+      font-size: 13px;
+    }
+
+    .highlight-details strong {
+      color: #1c4fa0;
+      font-size: 14px;
+    }
+
+    .policy-check-label {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--ink);
+    }
+
+    .policy-check-label input[type="checkbox"] {
+      margin-top: 2px;
+      accent-color: var(--accent-2);
+    }
+
+    .policy-check-label a {
+      color: var(--accent-2);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .policy-check-label a:hover {
+      text-decoration: underline;
+    }
+
+    #my-listings-grid .listing-media {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #my-listings-grid .listing-media img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center center;
+      background: #ffffff;
+      display: block;
+    }
+
+    #my-listings-grid .listing-description-preview {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+      line-clamp: 4;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: pre-line;
+    }
+
+    #my-listings-grid .listing-body {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #my-listings-grid .listing-body .inline-actions {
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      .highlight-modal {
+        padding: 14px;
+      }
+    }
+  </style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("login.html");
+        }
+      } catch (_err) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Gestao de anuncios</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="section game-page">
+      <section class="hero-card">
+        <h2>Meus anúncios</h2>
+        <p class="helper">Gerencie seus anúncios: publique, destaque ou exclua quando quiser.</p>
+      </section>
+      <section>
+        <div id="my-listings-grid" class="listing-grid"></div>
+        <p id="my-listings-empty" class="helper" style="display:none;">Você ainda não publicou anúncios.</p>
+      </section>
+    </main>
+  </div>
+
+  <div id="highlight-modal-backdrop" class="highlight-modal-backdrop" style="display:none;">
+    <div class="highlight-modal">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+        <div>
+          <h3>Destacar anúncio</h3>
+          <p class="helper" id="highlight-target">Escolha o tempo do destaque.</p>
+        </div>
+        <button id="highlight-close-btn" class="btn btn-ghost" type="button">Fechar</button>
+      </div>
+
+      <div class="field">
+        <label for="highlight-days">Tempo de destaque: <strong id="highlight-days-value">7 dias</strong></label>
+        <input id="highlight-days" type="range" min="1" max="30" step="1" value="7" />
+        <div class="helper">Modelo progressivo: dia 1 custa R$ 10,00; cada dia adicional recebe 10% de desconto sobre o dia anterior.</div>
+      </div>
+
+      <div class="highlight-price-grid">
+        <div class="highlight-price-card">
+          <span class="helper">Sem desconto</span>
+          <strong id="highlight-full-price">R$ 70,00</strong>
+        </div>
+        <div class="highlight-price-card">
+          <span class="helper">Desconto acumulado</span>
+          <strong id="highlight-savings">R$ 0,00</strong>
+        </div>
+        <div class="highlight-price-card">
+          <span class="helper">Total a pagar</span>
+          <strong id="highlight-total-price">R$ 70,00</strong>
+        </div>
+      </div>
+
+      <div class="helper" id="highlight-checkout-feedback"></div>
+
+      <div class="field">
+        <label class="policy-check-label" for="highlight-policy-accept">
+          <input id="highlight-policy-accept" type="checkbox" />
+          <span>
+            Li e estou de acordo com as
+            <a href="politica-anuncios.html" target="_blank" rel="noopener">políticas de anúncios</a>.
+          </span>
+        </label>
+        <p id="highlight-policy-error" class="helper" style="display:none;color:#b42318;">Você precisa aceitar as políticas de anúncios para continuar.</p>
+      </div>
+
+      <div class="inline-actions">
+        <button id="highlight-checkout-btn" class="btn btn-primary" type="button">Continuar para pagamento</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
+    const R2_BUCKET = env.R2_BUCKET || "";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const listingsGrid = document.getElementById("my-listings-grid");
+    const listingsEmpty = document.getElementById("my-listings-empty");
+    const highlightModalBackdrop = document.getElementById("highlight-modal-backdrop");
+    const highlightCloseBtn = document.getElementById("highlight-close-btn");
+    const highlightTarget = document.getElementById("highlight-target");
+    const highlightDaysInput = document.getElementById("highlight-days");
+    const highlightDaysValue = document.getElementById("highlight-days-value");
+    const highlightFullPrice = document.getElementById("highlight-full-price");
+    const highlightSavings = document.getElementById("highlight-savings");
+    const highlightTotalPrice = document.getElementById("highlight-total-price");
+    const highlightCheckoutFeedback = document.getElementById("highlight-checkout-feedback");
+    const highlightCheckoutBtn = document.getElementById("highlight-checkout-btn");
+    const highlightPolicyAccept = document.getElementById("highlight-policy-accept");
+    const highlightPolicyError = document.getElementById("highlight-policy-error");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
+    let supabase;
+    let currentUser = null;
+    let avatarLoaded = false;
+    let myListings = [];
+    let selectedHighlightListing = null;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    const HIGHLIGHT_BASE_DAY_PRICE = 10;
+    const HIGHLIGHT_DAY_DISCOUNT = 0.1;
+    const HIGHLIGHT_MAX_DAYS = 30;
+
+    const CATEGORY_LABELS = {
+      item: "Item ou itens",
+      currency: "Moeda do jogo",
+      account: "Conta ou personagem",
+      service: "Serviço",
+      other: "Outro"
+    };
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("my-listings-guard-style");
+      if (guard) guard.remove();
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        authBtn.disabled = true;
+        throw new Error("Supabase nao configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const parts = rest.split("/");
+        if (parts.length === 0) return null;
+        let bucket = parts[0];
+        let pathParts = parts.slice(1);
+        if (bucket === "public" || bucket === "authenticated" || bucket === "sign") {
+          bucket = parts[1];
+          pathParts = parts.slice(2);
+        }
+        if (!bucket || pathParts.length === 0) return null;
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function resolveImageUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== "string") return null;
+      if (rawUrl.startsWith("http")) {
+        if (R2_PUBLIC_URL && rawUrl.includes(".r2.cloudflarestorage.com/")) {
+          try {
+            const u = new URL(rawUrl);
+            const marker = `/${R2_BUCKET || "img-anuncios"}/`;
+            const idx = u.pathname.indexOf(marker);
+            if (idx >= 0) {
+              const path = u.pathname.substring(idx + marker.length);
+              return `${R2_PUBLIC_URL.replace(/\/$/, "")}/${path}`;
+            }
+          } catch (_e) {
+            // ignore and return original
+          }
+        }
+        return rawUrl;
+      }
+      try {
+        ensureClient();
+        const { data: signedData, error: signedErr } = await supabase.functions.invoke("r2_sign_upload", {
+          body: { mode: "get", key: rawUrl },
+        });
+        if (!signedErr && signedData?.publicUrl) {
+          return signedData.publicUrl;
+        }
+      } catch (_err) {
+        // ignore and fallback
+      }
+      const parsed = parseStoragePath(rawUrl);
+      if (!parsed) return rawUrl;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60);
+        if (error) throw error;
+        return data?.signedUrl || rawUrl;
+      } catch (_err) {
+        return rawUrl;
+      }
+    }
+
+    function formatCategory(category) {
+      return CATEGORY_LABELS[category] || "Anuncio";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getListingCategories(listing) {
+      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
+      const normalized = raw
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (normalized.length > 0) return normalized;
+      if (listing?.category) return [String(listing.category)];
+      return [];
+    }
+
+    function formatBRL(value) {
+      return `R$ ${Number(value || 0).toFixed(2).replace(".", ",")}`;
+    }
+
+    function isHighlightActive(listing) {
+      if (!listing || listing.highlight_status !== "active" || !listing.highlight_expires_at) return false;
+      const expiresAt = new Date(listing.highlight_expires_at);
+      if (Number.isNaN(expiresAt.getTime())) return false;
+      return expiresAt.getTime() > Date.now();
+    }
+
+    function formatRemainingTime(expiresAtRaw) {
+      if (!expiresAtRaw) return "expirando";
+      const expiresAt = new Date(expiresAtRaw);
+      if (Number.isNaN(expiresAt.getTime())) return "expirando";
+      const diffMs = expiresAt.getTime() - Date.now();
+      if (diffMs <= 0) return "expirado";
+      const totalHours = Math.ceil(diffMs / (60 * 60 * 1000));
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+      if (days > 0) return `${days}d ${hours}h restantes`;
+      return `${Math.max(hours, 1)}h restantes`;
+    }
+
+    function formatDateTimeBR(dateRaw) {
+      if (!dateRaw) return "-";
+      const parsed = new Date(dateRaw);
+      if (Number.isNaN(parsed.getTime())) return "-";
+      return parsed.toLocaleString("pt-BR");
+    }
+
+    function calculateHighlightPricing(days) {
+      const normalizedDays = Math.max(1, Math.min(HIGHLIGHT_MAX_DAYS, Number(days) || 1));
+      let dayPrice = HIGHLIGHT_BASE_DAY_PRICE;
+      let total = 0;
+      for (let i = 0; i < normalizedDays; i += 1) {
+        const roundedDayPrice = Math.round(dayPrice * 100) / 100;
+        total += roundedDayPrice;
+        dayPrice *= (1 - HIGHLIGHT_DAY_DISCOUNT);
+      }
+      total = Math.round(total * 100) / 100;
+      const fullPrice = Math.round((normalizedDays * HIGHLIGHT_BASE_DAY_PRICE) * 100) / 100;
+      const savings = Math.round((fullPrice - total) * 100) / 100;
+      return { days: normalizedDays, total, fullPrice, savings };
+    }
+
+    function updateHighlightPreview() {
+      if (!highlightDaysInput) return;
+      const pricing = calculateHighlightPricing(highlightDaysInput.value);
+      if (highlightDaysValue) {
+        highlightDaysValue.textContent = `${pricing.days} ${pricing.days === 1 ? "dia" : "dias"}`;
+      }
+      if (highlightFullPrice) highlightFullPrice.textContent = formatBRL(pricing.fullPrice);
+      if (highlightSavings) highlightSavings.textContent = formatBRL(pricing.savings);
+      if (highlightTotalPrice) highlightTotalPrice.textContent = formatBRL(pricing.total);
+      if (highlightCheckoutFeedback) highlightCheckoutFeedback.textContent = "";
+    }
+
+    function updateHighlightCheckoutButtonState() {
+      if (!highlightCheckoutBtn) return;
+      if (!selectedHighlightListing) {
+        highlightCheckoutBtn.disabled = true;
+        return;
+      }
+      highlightCheckoutBtn.disabled = !highlightPolicyAccept?.checked;
+    }
+
+    function openHighlightModal(listing) {
+      if (isHighlightActive(listing)) return;
+      selectedHighlightListing = listing;
+      if (highlightTarget) {
+        highlightTarget.textContent = `Anúncio: ${listing?.title || "Sem título"}`;
+      }
+      if (highlightDaysInput) {
+        highlightDaysInput.value = "7";
+      }
+      updateHighlightPreview();
+      if (highlightCheckoutBtn) {
+        highlightCheckoutBtn.disabled = true;
+        highlightCheckoutBtn.textContent = "Continuar para pagamento";
+      }
+      if (highlightPolicyAccept) {
+        highlightPolicyAccept.checked = false;
+      }
+      if (highlightPolicyError) {
+        highlightPolicyError.style.display = "none";
+      }
+      updateHighlightCheckoutButtonState();
+      if (highlightModalBackdrop) {
+        highlightModalBackdrop.style.display = "grid";
+      }
+    }
+
+    function closeHighlightModal() {
+      selectedHighlightListing = null;
+      if (highlightPolicyAccept) {
+        highlightPolicyAccept.checked = false;
+      }
+      if (highlightPolicyError) {
+        highlightPolicyError.style.display = "none";
+      }
+      updateHighlightCheckoutButtonState();
+      if (highlightModalBackdrop) {
+        highlightModalBackdrop.style.display = "none";
+      }
+    }
+
+    function renderListings(list) {
+      listingsGrid.innerHTML = "";
+      if (!list || list.length === 0) {
+        listingsEmpty.style.display = "block";
+        return;
+      }
+      listingsEmpty.style.display = "none";
+      list.forEach((listing) => {
+        const card = document.createElement("article");
+        const highlightActive = isHighlightActive(listing);
+        card.className = `listing-card${highlightActive ? " listing-card--highlighted" : ""}`;
+        const safeTitle = escapeHtml(listing.title || "Sem título");
+        const safeDescription = escapeHtml(listing.description || "Sem descrição.");
+        const safeServerName = escapeHtml(listing.server_name || "");
+        const imageUrl = listing.imageUrl || listing.images?.[0];
+        const image = imageUrl
+          ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${safeTitle}" loading="lazy" /></div>`
+          : `<div class="listing-media empty">Sem imagem</div>`;
+        const categoriesHtml = getListingCategories(listing)
+          .map((category) => `<span class="pill">${formatCategory(category)}</span>`)
+          .join("");
+        const highlightDetails = highlightActive
+          ? `
+            <div class="highlight-details">
+              <strong>Destaque ativo</strong>
+              <span>Tempo restante: ${formatRemainingTime(listing.highlight_expires_at)}</span>
+              <span>Expira em: ${formatDateTimeBR(listing.highlight_expires_at)}</span>
+            </div>
+          `
+          : "";
+        const promoteButton = highlightActive
+          ? ""
+          : `<button class="btn btn-primary" type="button" data-action="promote" data-id="${listing.id}">Destacar anúncio</button>`;
+        card.innerHTML = `
+          ${image}
+          <div class="listing-body">
+            <div class="listing-meta">
+              ${safeServerName ? `<span class="pill">Game: ${safeServerName}</span>` : '<span class="pill">Game: não informado</span>'}
+              ${categoriesHtml || '<span class="pill">Sem categoria</span>'}
+              ${highlightActive ? '<span class="pill">Destaque: ativo</span>' : ""}
+            </div>
+            <h3>${safeTitle}</h3>
+            <p class="listing-description-preserve listing-description-preview">${safeDescription}</p>
+            ${highlightDetails}
+            <div class="inline-actions">
+              <a class="btn btn-ghost" href="listing.html?id=${encodeURIComponent(listing.id)}">Ver anúncio</a>
+              <button class="btn btn-ghost" type="button" data-action="edit" data-id="${listing.id}">Editar</button>
+              ${promoteButton}
+              <button class="btn btn-ghost" type="button" data-action="delete" data-id="${listing.id}">Excluir</button>
+            </div>
+          </div>
+        `;
+        listingsGrid.appendChild(card);
+      });
+    }
+
+    async function fetchMyListings() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id,title,description,images,category,categories,status,server_id,user_id,created_at,highlight_status,highlight_expires_at,highlight_days")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const list = data || [];
+      const serverNameById = {};
+      const uniqueServerIds = [...new Set(list.map((item) => item.server_id).filter(Boolean))];
+      if (uniqueServerIds.length > 0) {
+        const { data: serverRows, error: serverError } = await supabase
+          .from("servers")
+          .select("id,name")
+          .in("id", uniqueServerIds);
+        if (!serverError && Array.isArray(serverRows)) {
+          serverRows.forEach((row) => {
+            if (row?.id) {
+              serverNameById[row.id] = row.name || "";
+            }
+          });
+        }
+      }
+      const resolved = await Promise.all(
+        list.map(async (item) => ({
+          ...item,
+          server_name: item.server_id ? (serverNameById[item.server_id] || "") : "",
+          imageUrl: item.images?.[0] ? await resolveImageUrl(item.images[0]) : null,
+        }))
+      );
+      myListings = resolved;
+      renderListings(myListings);
+    }
+
+    async function deleteListing(listingId) {
+      const confirmDelete = window.confirm("Deseja realmente excluir este anúncio?");
+      if (!confirmDelete) return;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      const { data, error } = await supabase.functions.invoke("listing_delete", {
+        body: { listingId },
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+              apikey: SUPABASE_ANON_KEY,
+            }
+          : {},
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        throw new Error(data?.error || "Erro ao excluir anúncio.");
+      }
+      if (Number(data?.refundedAmount || 0) > 0) {
+        alert(`Anúncio excluído. Reembolso solicitado: ${formatBRL(data.refundedAmount)}.`);
+      }
+      await fetchMyListings();
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        window.location.href = "login.html";
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    listingsGrid?.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const action = button.dataset.action;
+      const id = button.dataset.id;
+      if (!action || !id) return;
+      try {
+        button.disabled = true;
+        if (action === "promote") {
+          const listing = myListings.find((item) => String(item.id) === String(id));
+          if (listing) {
+            openHighlightModal(listing);
+          }
+        } else if (action === "edit") {
+          window.location.href = `listing-create.html?edit=${encodeURIComponent(id)}`;
+        } else if (action === "delete") {
+          await deleteListing(id);
+        }
+      } catch (err) {
+        console.error(err);
+        alert(err?.message || "Erro ao gerenciar anúncio.");
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    highlightDaysInput?.addEventListener("input", updateHighlightPreview);
+    highlightPolicyAccept?.addEventListener("change", () => {
+      if (highlightPolicyError) {
+        highlightPolicyError.style.display = "none";
+      }
+      updateHighlightCheckoutButtonState();
+    });
+    highlightCloseBtn?.addEventListener("click", closeHighlightModal);
+    highlightModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === highlightModalBackdrop) {
+        closeHighlightModal();
+      }
+    });
+    highlightCheckoutBtn?.addEventListener("click", () => {
+      (async () => {
+        if (!selectedHighlightListing || !highlightDaysInput) return;
+        if (!highlightPolicyAccept?.checked) {
+          if (highlightPolicyError) {
+            highlightPolicyError.style.display = "block";
+          }
+          return;
+        }
+        try {
+          ensureClient();
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData.session?.access_token || "";
+          if (!token) {
+            window.location.href = "login.html";
+            return;
+          }
+          const pricing = calculateHighlightPricing(highlightDaysInput.value);
+          highlightCheckoutBtn.disabled = true;
+          highlightCheckoutBtn.textContent = "Aguarde...";
+          if (highlightCheckoutFeedback) {
+            highlightCheckoutFeedback.textContent = "Criando checkout seguro...";
+          }
+          const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
+            body: {
+              listingId: selectedHighlightListing.id,
+              days: pricing.days,
+              returnBaseUrl: window.location.origin,
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+              apikey: SUPABASE_ANON_KEY,
+            },
+          });
+          if (error) throw error;
+          if (!data?.ok || !data?.checkoutUrl) {
+            throw new Error(data?.error || "Não foi possível iniciar o checkout.");
+          }
+          window.location.href = data.checkoutUrl;
+        } catch (err) {
+          console.error(err);
+          if (highlightCheckoutFeedback) {
+            highlightCheckoutFeedback.textContent = err?.message || "Erro ao iniciar checkout.";
+          }
+          if (highlightCheckoutBtn) {
+            highlightCheckoutBtn.disabled = false;
+            highlightCheckoutBtn.textContent = "Continuar para pagamento";
+          }
+        }
+      })();
+    });
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "login.html";
+      } catch (_err) {
+        // ignore
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
+        await fetchMyListings();
+      } catch (err) {
+        console.error(err);
+        listingsEmpty.style.display = "block";
+        listingsEmpty.textContent = err?.message || "Erro ao carregar seus anúncios.";
+      } finally {
+        revealPage();
+      }
+    })();
+  </script>
+</body>
+</html>

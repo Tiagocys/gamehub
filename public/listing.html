@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="css/global.css" />
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
   <div class="page">
     <header class="site-nav">
       <a href="index.html" class="brand">
@@ -15,20 +18,28 @@
           <span class="brand-tagline">Detalhes do anúncio</span>
         </div>
       </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="section listing-page">
       <div class="listing-hero-card">
         <div class="listing-hero-copy">
-          <span class="eyebrow">Anúncio</span>
           <h1 id="listing-title">Carregando...</h1>
-          <p id="listing-subtitle" class="section-sub">Marketplace do game.</p>
           <div id="listing-meta" class="pill-trail"></div>
-          <div class="inline-actions">
-            <a id="game-link" class="pill pill-link" href="#" style="display:none;">Ver game</a>
-            <a id="site-link" class="pill pill-link" href="#" target="_blank" rel="noopener" style="display:none;">Site oficial</a>
-          </div>
         </div>
         <div class="listing-gallery">
           <div id="listing-main" class="listing-gallery-main">Sem imagem</div>
@@ -36,9 +47,20 @@
         </div>
       </div>
 
+      <div class="inline-actions listing-contact-actions">
+        <a id="telegram-chat" class="btn btn-telegram btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
+          Conversar no Telegram
+          <img src="img/telegram.webp" alt="" class="btn-icon" />
+        </a>
+        <a id="whatsapp-chat" class="btn btn-whatsapp btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
+          Conversar no WhatsApp
+          <img src="img/wtsp.png" alt="" class="btn-icon" />
+        </a>
+      </div>
+
       <section class="hero-card">
         <h3>Descrição do anúncio</h3>
-        <p id="listing-description">Carregando descrição...</p>
+        <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
       </section>
     </main>
   </div>
@@ -54,23 +76,57 @@
     const R2_BUCKET = env.R2_BUCKET || "";
 
     const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
     const titleEl = document.getElementById("listing-title");
-    const subtitleEl = document.getElementById("listing-subtitle");
     const descriptionEl = document.getElementById("listing-description");
     const metaEl = document.getElementById("listing-meta");
-    const gameLink = document.getElementById("game-link");
-    const siteLink = document.getElementById("site-link");
+    const telegramChat = document.getElementById("telegram-chat");
+    const whatsappChat = document.getElementById("whatsapp-chat");
     const mainMedia = document.getElementById("listing-main");
     const thumbGrid = document.getElementById("listing-thumbs");
 
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
     let supabase;
     let currentUser = null;
+    let avatarLoaded = false;
+    let currentGalleryImages = [];
+    let lightboxImages = [];
+    let lightboxIndex = 0;
+    let lightboxRoot = null;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     const CATEGORY_LABELS = {
-      item: "Moeda ou item do game",
+      item: "Item ou itens",
       currency: "Moeda do game",
       account: "Conta ou personagem",
-      service: "Serviço no game",
+      service: "Serviço",
       other: "Outro"
     };
 
@@ -100,19 +156,76 @@
     function updateAuthUI() {
       if (!authBtn) return;
       authBtn.disabled = false;
-      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        loadUserAvatar();
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
     }
 
     async function handleAuthClick() {
       try {
         ensureClient();
         authBtn.disabled = true;
-        if (currentUser) {
-          await supabase.auth.signOut();
-          currentUser = null;
-          updateAuthUI();
-          return;
-        }
         window.location.href = "login.html";
       } catch (err) {
         console.error(err);
@@ -123,10 +236,23 @@
       return CATEGORY_LABELS[category] || "Anúncio";
     }
 
-    function formatPrice(value, currency) {
-      if (typeof value !== "number") return "-";
-      const formatted = value.toFixed(2).replace(".", ",");
-      return currency === "BRL" ? `R$ ${formatted}` : `${formatted} ${currency}`;
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getListingCategories(listing) {
+      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
+      const normalized = raw
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (normalized.length > 0) return normalized;
+      if (listing?.category) return [String(listing.category)];
+      return [];
     }
 
     function parseStoragePath(urlString) {
@@ -209,82 +335,182 @@
       return resolved.filter(Boolean);
     }
 
+    function ensureLightbox() {
+      if (lightboxRoot) return lightboxRoot;
+      lightboxRoot = document.createElement("div");
+      lightboxRoot.className = "image-lightbox";
+      lightboxRoot.innerHTML = `
+        <div class="image-lightbox-frame">
+          <button type="button" class="image-lightbox-btn image-lightbox-close" data-action="close" aria-label="Fechar">×</button>
+          <img class="image-lightbox-img" alt="Imagem ampliada" />
+          <div class="image-lightbox-controls">
+            <button type="button" class="image-lightbox-btn" data-action="prev" aria-label="Anterior">‹</button>
+            <span class="image-lightbox-count"></span>
+            <button type="button" class="image-lightbox-btn" data-action="next" aria-label="Próxima">›</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(lightboxRoot);
+      lightboxRoot.addEventListener("click", (event) => {
+        const action = event.target?.getAttribute("data-action");
+        if (event.target === lightboxRoot || action === "close") {
+          closeLightbox();
+          return;
+        }
+        if (action === "prev") {
+          lightboxIndex = Math.max(0, lightboxIndex - 1);
+          renderLightbox();
+          return;
+        }
+        if (action === "next") {
+          lightboxIndex = Math.min(lightboxImages.length - 1, lightboxIndex + 1);
+          renderLightbox();
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (!lightboxRoot?.classList.contains("open")) return;
+        if (event.key === "Escape") {
+          closeLightbox();
+          return;
+        }
+        if (event.key === "ArrowLeft") {
+          lightboxIndex = Math.max(0, lightboxIndex - 1);
+          renderLightbox();
+          return;
+        }
+        if (event.key === "ArrowRight") {
+          lightboxIndex = Math.min(lightboxImages.length - 1, lightboxIndex + 1);
+          renderLightbox();
+        }
+      });
+      return lightboxRoot;
+    }
+
+    function renderLightbox() {
+      if (!lightboxRoot) return;
+      const imageEl = lightboxRoot.querySelector(".image-lightbox-img");
+      const countEl = lightboxRoot.querySelector(".image-lightbox-count");
+      const prevBtn = lightboxRoot.querySelector('[data-action="prev"]');
+      const nextBtn = lightboxRoot.querySelector('[data-action="next"]');
+      const hasMany = lightboxImages.length > 1;
+      imageEl.src = lightboxImages[lightboxIndex] || "";
+      countEl.textContent = `${lightboxIndex + 1}/${Math.max(1, lightboxImages.length)}`;
+      prevBtn.disabled = !hasMany || lightboxIndex <= 0;
+      nextBtn.disabled = !hasMany || lightboxIndex >= lightboxImages.length - 1;
+    }
+
+    function openLightbox(images, index = 0) {
+      if (!Array.isArray(images) || images.length === 0) return;
+      ensureLightbox();
+      lightboxImages = images.slice();
+      lightboxIndex = Math.min(Math.max(index, 0), lightboxImages.length - 1);
+      renderLightbox();
+      lightboxRoot.classList.add("open");
+      document.body.classList.add("no-scroll");
+    }
+
+    function closeLightbox() {
+      if (!lightboxRoot) return;
+      lightboxRoot.classList.remove("open");
+      document.body.classList.remove("no-scroll");
+    }
+
     function setNotFound(message) {
       titleEl.textContent = message || "Anúncio não encontrado.";
-      subtitleEl.textContent = "Confira se o link está correto.";
       descriptionEl.textContent = "Sem dados para exibir.";
-      if (gameLink) gameLink.style.display = "none";
-      if (siteLink) siteLink.style.display = "none";
+      currentGalleryImages = [];
+      if (telegramChat) telegramChat.style.display = "none";
+      if (whatsappChat) whatsappChat.style.display = "none";
+      if (metaEl) metaEl.innerHTML = "";
       if (mainMedia) mainMedia.textContent = "Sem imagem";
-      if (thumbGrid) thumbGrid.innerHTML = "";
+      if (thumbGrid) {
+        thumbGrid.innerHTML = "";
+        thumbGrid.style.display = "none";
+      }
     }
 
     function renderGallery(images) {
       if (!mainMedia || !thumbGrid) return;
       const list = Array.isArray(images) ? images.filter(Boolean) : [];
+      currentGalleryImages = list.slice();
       if (list.length === 0) {
         mainMedia.textContent = "Sem imagem";
         thumbGrid.innerHTML = "";
+        thumbGrid.style.display = "none";
         return;
       }
 
-      function setMain(src, altText) {
-        const url = encodeURI(src);
-        mainMedia.innerHTML = `<img src="${url}" alt="${altText || "Imagem do anúncio"}" loading="lazy" />`;
+      const items = list.map((src, index) => ({ src, index }));
+      let mainItem = items[0];
+      let thumbItems = items.slice(1);
+
+      function renderState() {
+        const mainUrl = encodeURI(mainItem.src);
+        mainMedia.innerHTML = `<img src="${mainUrl}" alt="Imagem principal do anúncio" loading="lazy" data-image-index="${mainItem.index}" style="width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center center;display:block;background:#ffffff;" />`;
+
+        thumbGrid.innerHTML = "";
+        if (thumbItems.length === 0) {
+          thumbGrid.style.display = "none";
+          return;
+        }
+        thumbGrid.style.display = "grid";
+
+        thumbItems.forEach((item, thumbIndex) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "listing-thumb";
+          const thumbUrl = encodeURI(item.src);
+          button.innerHTML = `<img src="${thumbUrl}" alt="Miniatura ${thumbIndex + 1}" loading="lazy" />`;
+          button.addEventListener("click", () => {
+            const previousMain = mainItem;
+            mainItem = item;
+            thumbItems[thumbIndex] = previousMain;
+            renderState();
+          });
+          thumbGrid.appendChild(button);
+        });
       }
 
-      setMain(list[0], "Imagem principal do anúncio");
-      thumbGrid.innerHTML = "";
-      list.forEach((src, index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `listing-thumb${index === 0 ? " active" : ""}`;
-        const url = encodeURI(src);
-        button.innerHTML = `<img src="${url}" alt="Miniatura ${index + 1}" loading="lazy" />`;
-        button.addEventListener("click", () => {
-          document.querySelectorAll(".listing-thumb").forEach((el) => el.classList.remove("active"));
-          button.classList.add("active");
-          setMain(src, "Imagem do anúncio");
-        });
-        thumbGrid.appendChild(button);
-      });
+      renderState();
     }
 
-    function renderListing(listing, server) {
+    function renderListing(listing) {
       if (!listing) {
         setNotFound();
         return;
       }
-      const serverInfo = server || listing.servers || null;
-      const gameName = serverInfo?.name;
+      const firstName = (listing.user_first_name || "anunciante").trim();
+      const safeFirstName = escapeHtml(firstName);
 
       titleEl.textContent = listing.title;
-      subtitleEl.textContent = gameName ? `Oferta para ${gameName}.` : "Marketplace do game.";
       descriptionEl.textContent = listing.description || "Sem descrição informada.";
 
       if (metaEl) {
-        metaEl.innerHTML = `
-          <span class="pill">${formatCategory(listing.category)}</span>
-          <span class="pill">${formatPrice(listing.price, listing.currency)}</span>
-        `;
+        const categoriesHtml = getListingCategories(listing)
+          .map((category) => `<span class="pill">${formatCategory(category)}</span>`)
+          .join("");
+        metaEl.innerHTML = categoriesHtml || '<span class="pill">Sem categoria</span>';
       }
 
-      if (gameLink) {
-        if (listing.server_id) {
-          gameLink.href = `game.html?id=${listing.server_id}`;
-          gameLink.textContent = gameName ? `Ver ${gameName}` : "Ver game";
-          gameLink.style.display = "inline-flex";
+      if (telegramChat) {
+        if (listing.user_phone) {
+          const phone = String(listing.user_phone).replace(/\D/g, "");
+          telegramChat.href = `https://t.me/+${phone}`;
+          telegramChat.innerHTML = `Conversar com ${safeFirstName} no telegram <img src="img/telegram.webp" alt="" class="btn-icon" />`;
+          telegramChat.style.display = "inline-flex";
         } else {
-          gameLink.style.display = "none";
+          telegramChat.style.display = "none";
         }
       }
 
-      if (siteLink) {
-        if (serverInfo?.official_site) {
-          siteLink.href = serverInfo.official_site;
-          siteLink.style.display = "inline-flex";
+      if (whatsappChat) {
+        const digits = listing.user_phone ? String(listing.user_phone).replace(/\D/g, "") : "";
+        if (listing.user_show_whatsapp && digits) {
+          whatsappChat.href = `https://wa.me/${digits}`;
+          whatsappChat.innerHTML = `Conversar com ${safeFirstName} no whatsapp <img src="img/wtsp.png" alt="" class="btn-icon" />`;
+          whatsappChat.style.display = "inline-flex";
         } else {
-          siteLink.style.display = "none";
+          whatsappChat.style.display = "none";
         }
       }
 
@@ -296,35 +522,42 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,price,currency,images,category,status,server_id,created_at,servers(id,name,official_site,banner_url,currency_name)")
+          .select("id,title,description,images,category,categories,status,server_id,created_at,users(phone,show_whatsapp_button,first_name)")
           .eq("id", listingId)
           .single();
         if (error) throw error;
         if (data?.images) {
           data.images = await resolveImageUrls(data.images);
         }
-        return { listing: data, server: data?.servers || null };
+        const phone = data?.users?.phone || null;
+        const userShowWhatsapp = !!data?.users?.show_whatsapp_button;
+        const userFirstName = data?.users?.first_name || "anunciante";
+        return { listing: { ...data, user_phone: phone, user_show_whatsapp: userShowWhatsapp, user_first_name: userFirstName } };
       } catch (err) {
         console.warn("Falha ao buscar anuncio com join, tentando separado.", err);
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,price,currency,images,category,status,server_id,created_at")
+          .select("id,title,description,images,category,categories,status,server_id,created_at,user_id")
           .eq("id", listingId)
           .single();
         if (error) throw error;
-        let server = null;
         if (data?.images) {
           data.images = await resolveImageUrls(data.images);
         }
-        if (data?.server_id) {
-          const { data: serverData } = await supabase
-            .from("servers")
-            .select("id,name,official_site,banner_url,currency_name")
-            .eq("id", data.server_id)
+        let userPhone = null;
+        let userShowWhatsapp = false;
+        let userFirstName = "anunciante";
+        if (data?.user_id) {
+          const { data: userData } = await supabase
+            .from("users")
+            .select("phone,show_whatsapp_button,first_name")
+            .eq("id", data.user_id)
             .single();
-          server = serverData || null;
+          userPhone = userData?.phone || null;
+          userShowWhatsapp = !!userData?.show_whatsapp_button;
+          userFirstName = userData?.first_name || "anunciante";
         }
-        return { listing: data, server };
+        return { listing: { ...data, user_phone: userPhone, user_show_whatsapp: userShowWhatsapp, user_first_name: userFirstName } };
       }
     }
 
@@ -342,7 +575,7 @@
           return;
         }
         const result = await fetchListing(listingId);
-        renderListing(result.listing, result.server);
+        renderListing(result.listing);
       } catch (err) {
         console.error(err);
         setNotFound(err?.message || "Erro ao carregar anúncio.");
@@ -350,6 +583,45 @@
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    mainMedia?.addEventListener("click", (event) => {
+      const image = event.target.closest("img");
+      if (!image || currentGalleryImages.length === 0) return;
+      const imageIndex = Number(image.getAttribute("data-image-index") || "0");
+      openLightbox(currentGalleryImages, imageIndex);
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
+
     init();
   </script>
 </body>

@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="css/global.css" />
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
   <div class="page">
     <header class="site-nav">
       <a href="index.html" class="brand">
@@ -15,7 +18,21 @@
           <span class="brand-tagline">Play to earn</span>
         </div>
       </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main>
@@ -27,7 +44,7 @@
         <div class="hero-grid single">
           <div class="hero-copy">
             <h1 style="font-size: 100px; text-align: center;">Play to Earn</h1>
-            <h1>Encontre freelancers, itens e contas do seu game favorito à venda.</h1>
+            <h1>Encontre seu game favorito.</h1>
             <p class="lede">Cada game tem seu próprio marketplace operado 100% por players.</p>
             <form class="search" id="game-search">
               <div class="search-bar">
@@ -37,16 +54,11 @@
               <div class="suggestions">
                 <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
               </div>
-              <p id="search-feedback" class="search-feedback">Não encontrou um game que procurava? <a id="anchor-cadastro-game" class="link-ghost" href="#" data-action="game-submit">Clique aqui</a> para cadastrá-lo.</p>
             </form>
-            <div class="inline-actions">
-              <button id="create-listing-btn" class="btn btn-primary" type="button" style="display:none;">Criar anúncio</button>
-            </div>
-
             <div class="pill-trail">
               <span class="pill">Itens</span>
               <span class="pill">Serviços</span>
-              <span class="pill">Contas verificadas</span>
+              <span class="pill">Contas e personagens</span>
             </div>
           </div>
         </div>
@@ -55,11 +67,9 @@
       <section class="section popular">
         <div class="section-header">
           <div>
-            <span class="eyebrow">Primeira sessão</span>
             <h2>Games mais populares agora</h2>
             <p class="section-sub">Escolha um título e navegue no marketplace alimentado pela própria comunidade.</p>
           </div>
-          <button class="btn btn-ghost" type="button" id="view-all-games">Ver todos os games</button>
         </div>
         <div id="games-grid" class="games-grid"></div>
         <p id="games-empty" class="search-feedback" style="display:none;">Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.</p>
@@ -76,22 +86,33 @@
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
     const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
     const searchForm = document.getElementById("game-search");
     const searchInput = document.getElementById("game-search-input");
-    const searchFeedback = document.getElementById("search-feedback");
     const searchSuggestions = document.getElementById("search-suggestions");
     const gamesGrid = document.getElementById("games-grid");
     const gamesEmpty = document.getElementById("games-empty");
-    const viewAllGamesBtn = document.getElementById("view-all-games");
     const createListingBtn = document.getElementById("create-listing-btn");
 
     let supabase;
     let currentUser = null;
     let games = [];
+    let allSortedGames = [];
+    let loadedGameCards = [];
+    const GAMES_PAGE_SIZE = 10;
+    let gamesOffset = 0;
+    let gamesHasMore = true;
+    let gamesLoading = false;
+    let avatarLoaded = false;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        searchFeedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        showSuggestionMessage("Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.");
         authBtn.disabled = true;
         throw new Error("Supabase não configurado");
       }
@@ -116,28 +137,79 @@
       if (!authBtn) return;
       authBtn.disabled = false;
       if (currentUser) {
-        authBtn.textContent = "Sair";
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
         return;
       }
-      authBtn.textContent = "Entrar com Google";
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
       if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
     }
 
     async function handleAuthClick() {
       try {
         ensureClient();
         authBtn.disabled = true;
-        if (currentUser) {
-          await supabase.auth.signOut();
-          currentUser = null;
-          updateAuthUI();
-          return;
-        }
         window.location.href = "login.html";
       } catch (err) {
         console.error(err);
-        searchFeedback.textContent = err?.message || "Erro ao autenticar.";
+        showSuggestionMessage(err?.message || "Erro ao autenticar.");
         authBtn.disabled = false;
       }
     }
@@ -150,74 +222,106 @@
         updateAuthUI();
       } catch (err) {
         console.error(err);
-        searchFeedback.textContent = "Erro ao carregar sessão.";
+        showSuggestionMessage("Erro ao carregar sessão.");
       }
     }
 
-    async function fetchGames() {
-      try {
-        ensureClient();
-        // Primeiro tenta "servers", depois "games" como fallback silencioso.
-        try {
-          const servers = await loadGamesFromTable(
-            "servers",
-            (row) => ({
-              id: row.id,
-              name: row.name,
-              description: row.description,
-              cover_url: row.banner_url || row.cover_url,
-              website: row.official_site,
-              category: row.game_type || "Game",
-            })
-          );
-          if (servers && servers.length > 0) {
-            games = await enhanceCovers(servers);
-            renderGames(games);
-            return;
-          }
-        } catch (serverErr) {
-          console.warn("Falha ao ler tabela servers, tentando games.", serverErr);
-        }
-        try {
-          const primary = await loadGamesFromTable("games");
-          games = await enhanceCovers(primary);
-          renderGames(games);
-        } catch (gameErr) {
-          if (isMissingTableError(gameErr)) {
-            games = [];
-            renderGames(games);
-            gamesEmpty.textContent = "Nenhum game cadastrado ainda.";
-            return;
-          }
-          throw gameErr;
-        }
-      } catch (err) {
-        console.error(err);
-        gamesGrid.innerHTML = "";
-        gamesEmpty.style.display = "block";
-        gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
-      }
-    }
-
-    function isMissingTableError(err) {
-      const message = err?.message || "";
-      return message.includes("Could not find the table") || message.includes("schema cache");
-    }
-
-    async function loadGamesFromTable(table, mapFn) {
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order("name", { ascending: true });
-      if (error) throw error;
-      return (data || []).map(mapFn || ((row) => ({
+    function mapServerRow(row) {
+      return {
         id: row.id,
         name: row.name,
         description: row.description,
         cover_url: row.banner_url || row.cover_url || row.image || row.image_url || row.photo,
         website: row.website || row.site || row.official_site,
         category: row.category || row.type || row.game_type || "Game",
-      })));
+      };
+    }
+
+    function buildPopularityMap(listings) {
+      const map = new Map();
+      (listings || []).forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        map.set(key, (map.get(key) || 0) + 1);
+      });
+      return map;
+    }
+
+    function sortGamesByPopularity(servers, popularityMap) {
+      return [...(servers || [])].sort((a, b) => {
+        const countA = popularityMap.get(String(a.id)) || 0;
+        const countB = popularityMap.get(String(b.id)) || 0;
+        if (countB !== countA) return countB - countA;
+        return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR", { sensitivity: "base" });
+      });
+    }
+
+    async function fetchGamesCatalog() {
+      ensureClient();
+      const [{ data: serverData, error: serverError }, { data: listingData, error: listingError }] = await Promise.all([
+        supabase
+          .from("servers")
+          .select("*")
+          .eq("status", "active"),
+        supabase
+          .from("listings")
+          .select("server_id")
+          .eq("status", "active"),
+      ]);
+      if (serverError) throw serverError;
+      if (listingError) throw listingError;
+
+      const mappedServers = (serverData || []).map(mapServerRow);
+      const popularityMap = buildPopularityMap(listingData || []);
+      allSortedGames = sortGamesByPopularity(mappedServers, popularityMap);
+      games = allSortedGames.map((item) => ({ id: item.id, name: item.name }));
+    }
+
+    async function fetchGamesPage(reset = false) {
+      if (gamesLoading) return;
+      if (!gamesHasMore && !reset) return;
+
+      let shouldAutoloadNext = false;
+      try {
+        ensureClient();
+        gamesLoading = true;
+
+        if (reset) {
+          gamesGrid.innerHTML = "";
+          loadedGameCards = [];
+          allSortedGames = [];
+          games = [];
+          gamesOffset = 0;
+          gamesHasMore = true;
+          gamesEmpty.style.display = "none";
+          await fetchGamesCatalog();
+        }
+
+        const rows = allSortedGames.slice(gamesOffset, gamesOffset + GAMES_PAGE_SIZE);
+        const enhanced = await enhanceCovers(rows);
+        loadedGameCards = [...loadedGameCards, ...enhanced];
+        appendGames(enhanced);
+        gamesOffset += rows.length;
+        gamesHasMore = gamesOffset < allSortedGames.length;
+        gamesEmpty.style.display = loadedGameCards.length === 0 ? "block" : "none";
+        if (loadedGameCards.length === 0) {
+          gamesEmpty.textContent = "Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.";
+        }
+
+        shouldAutoloadNext = !!gamesGrid && gamesHasMore && gamesGrid.scrollWidth <= gamesGrid.clientWidth + 16;
+      } catch (err) {
+        console.error(err);
+        if (loadedGameCards.length === 0) {
+          gamesGrid.innerHTML = "";
+          gamesEmpty.style.display = "block";
+          gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
+        }
+      } finally {
+        gamesLoading = false;
+        if (shouldAutoloadNext) {
+          fetchGamesPage(false);
+        }
+      }
     }
 
     async function enhanceCovers(list) {
@@ -243,6 +347,14 @@
       }
     }
 
+    function showSuggestionMessage(message) {
+      if (!searchSuggestions) return;
+      searchSuggestions.innerHTML = `
+        <div class="suggestion-empty">${message}</div>
+      `;
+      searchSuggestions.style.display = "block";
+    }
+
     async function getSignedCoverUrl(urlString) {
       const parsed = parseStoragePath(urlString);
       if (!parsed) return urlString;
@@ -259,32 +371,47 @@
       }
     }
 
-    function renderGames(list) {
-      gamesGrid.innerHTML = "";
+    function appendGames(list) {
       if (!list || list.length === 0) {
-        gamesEmpty.style.display = "block";
+        if (loadedGameCards.length === 0) {
+          gamesEmpty.style.display = "block";
+        }
         return;
       }
       gamesEmpty.style.display = "none";
       list.forEach((game) => {
-        const card = document.createElement("article");
-        card.className = "game-card";
-        card.dataset.gameId = game.id;
-
-        const cover = game.cover_url
-          ? `<div class="game-cover"><img src="${encodeURI(game.cover_url)}" alt="${game.name}" loading="lazy" /></div>`
-          : "";
-
-        card.innerHTML = `
-          <div class=\"game-meta\">
-            ${game.website ? `<a href="${game.website}" target="_blank" rel="noopener" class="pill pill-link">Site oficial</a>` : `<span class="pill">Site indisponível</span>`}
-            <span class=\"pill\">Marketplace ativo</span>
-          </div>
-          ${cover}
-          <h3>${game.name}</h3>
-        `;
+        const card = createGameCard(game);
         gamesGrid.appendChild(card);
       });
+    }
+
+    function createGameCard(game) {
+      const card = document.createElement("article");
+      card.className = "game-card";
+      card.dataset.gameId = game.id;
+
+      const cover = game.cover_url
+        ? `<div class="game-cover"><img src="${encodeURI(game.cover_url)}" alt="${game.name}" loading="lazy" /></div>`
+        : "";
+
+      card.innerHTML = `
+        <div class=\"game-meta\">
+          <span class="pill game-name-pill" title="${game.name}">${game.name}</span>
+        </div>
+        ${cover}
+        <div class="game-footer">
+          ${game.website ? `<a href="${game.website}" target="_blank" rel="noopener" class="pill pill-link">Site oficial</a>` : `<span class="pill">Site indisponível</span>`}
+        </div>
+      `;
+      return card;
+    }
+
+    function handleGamesGridScroll() {
+      if (!gamesGrid || gamesLoading || !gamesHasMore) return;
+      const nearRightEdge = gamesGrid.scrollLeft + gamesGrid.clientWidth >= gamesGrid.scrollWidth - 140;
+      if (nearRightEdge) {
+        fetchGamesPage(false);
+      }
     }
 
     function renderSuggestions(term) {
@@ -296,13 +423,25 @@
       }
       const matches = games.filter((g) => g.name.toLowerCase().includes(term.toLowerCase()));
       if (matches.length === 0) {
-        searchSuggestions.style.display = "none";
-        searchSuggestions.innerHTML = "";
+        searchSuggestions.innerHTML = `
+          <div class="suggestion-empty">
+            Não encontrou o game que procurava?
+            <a class="link-ghost" href="game-submit.html" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
+          </div>
+        `;
+        searchSuggestions.style.display = "block";
         return;
       }
-      searchSuggestions.innerHTML = matches
+      const items = matches
         .map((g) => `<div class=\"suggestion-item\" data-game-id=\"${g.id}\" data-game-name=\"${g.name}\">${g.name}<span class=\"badge\">Ver</span></div>`)
         .join("");
+      const footer = `
+        <div class="suggestion-footer">
+          Não encontrou o game que procurava?
+          <a class="link-ghost" href="game-submit.html" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
+        </div>
+      `;
+      searchSuggestions.innerHTML = `${items}${footer}`;
       searchSuggestions.style.display = "block";
     }
 
@@ -318,30 +457,25 @@
       }
     }
 
-    function scrollToGameCard(gameId) {
-      if (!gameId) return;
-      const el = document.querySelector(`[data-game-id=\"${gameId}\"]`);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        el.classList.add("pulse");
-        setTimeout(() => el.classList.remove("pulse"), 800);
-      }
-    }
-
     searchForm?.addEventListener("submit", (event) => {
       event.preventDefault();
       const term = searchInput?.value.trim();
       if (!term) {
-        searchFeedback.textContent = "Digite o nome de um game para começar.";
+        showSuggestionMessage("Digite o nome de um game para começar.");
         return;
       }
       const match = games.find((g) => g.name.toLowerCase() === term.toLowerCase());
       if (match) {
-        searchFeedback.textContent = `Encontramos ${match.name}. Abrindo a página do game.`;
         window.location.href = `game.html?id=${encodeURIComponent(match.id)}`;
         searchSuggestions.style.display = "none";
       } else {
-        searchFeedback.innerHTML = `Não encontramos \"${term}\". <a href="#" class="link-ghost" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.`;
+        searchSuggestions.innerHTML = `
+          <div class="suggestion-empty">
+            Não encontramos "${term}".
+            <a href="game-submit.html" class="link-ghost" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
+          </div>
+        `;
+        searchSuggestions.style.display = "block";
       }
     });
 
@@ -351,18 +485,7 @@
     });
 
     searchSuggestions?.addEventListener("click", handleSuggestionClick);
-
-    gamesGrid?.addEventListener("click", (event) => {
-      const link = event.target.closest("a");
-      if (link) return;
-      const card = event.target.closest(".game-card");
-      if (!card) return;
-      const gameId = card.dataset.gameId;
-      if (!gameId) return;
-      window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
-    });
-
-    searchFeedback?.addEventListener("click", (event) => {
+    searchSuggestions?.addEventListener("click", (event) => {
       const link = event.target.closest('a[data-action="game-submit"]');
       if (!link) return;
       event.preventDefault();
@@ -373,32 +496,75 @@
       window.location.href = "game-submit.html";
     });
 
-    viewAllGamesBtn?.addEventListener("click", () => {
-      if (!games || games.length === 0) {
-        searchFeedback.textContent = "Nenhum game cadastrado ainda.";
-        return;
-      }
-      scrollToGameCard(games[0].id);
+    gamesGrid?.addEventListener("click", (event) => {
+      const link = event.target.closest("a");
+      if (link) return;
+      const card = event.target.closest(".game-card");
+      if (!card) return;
+      const gameId = card.dataset.gameId;
+      if (!gameId) return;
+      window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
     });
+    gamesGrid?.addEventListener("scroll", handleGamesGridScroll, { passive: true });
 
     authBtn?.addEventListener("click", handleAuthClick);
-    createListingBtn?.addEventListener("click", () => {
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    function goToCreateListing() {
       if (!currentUser) {
         window.location.href = "login.html";
         return;
       }
       window.location.href = "listing-create.html";
-    });
-    document.getElementById("anchor-cadastro-game")?.addEventListener("click", (event) => {
-      event.preventDefault();
-      if (!currentUser) {
-        window.location.href = "login.html";
-        return;
-      }
-      window.location.href = "game-submit.html";
+    }
+
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
     });
     bootstrapAuth();
-    fetchGames();
+    fetchGamesPage(true);
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
   </script>
 </body>
 </html>

@@ -5,8 +5,229 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gimerr - Game</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .game-hero-card {
+      padding: 16px 18px;
+      gap: 14px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+    }
+
+    .game-hero-copy {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+    }
+
+    .game-hero-copy h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1.05;
+    }
+
+    .game-logo-frame {
+      width: 92px;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+    }
+
+    .feed-toolbar {
+      margin-top: 10px;
+      display: grid;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .section-header {
+      display: block;
+    }
+
+    .section-header > div {
+      width: min(820px, 100%);
+      margin-inline: auto;
+    }
+
+    .feed-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(14, 165, 233, 0.35);
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
+      box-shadow: 0 12px 26px rgba(14, 165, 233, 0.14);
+      padding: 12px 14px;
+    }
+
+    .feed-search-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #1287bc;
+      flex: 0 0 auto;
+    }
+
+    .feed-search-icon svg {
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
+
+    .feed-search input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .feed-search-meta {
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 18px;
+      text-align: center;
+    }
+
+    .feed-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .feed-filter-btn {
+      border: 1px solid var(--border);
+      background: rgba(12, 21, 51, 0.04);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .feed-filter-btn.active {
+      border-color: rgba(27, 79, 211, 0.45);
+      background: rgba(27, 79, 211, 0.16);
+      color: #18408a;
+    }
+
+    .listing-feed {
+      margin-top: 18px;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .feed-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(12, 21, 51, 0.06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px;
+      height: 100%;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .feed-card.matched {
+      border-color: rgba(14, 165, 233, 0.48);
+      box-shadow: 0 16px 26px rgba(14, 165, 233, 0.14);
+    }
+
+    .feed-media {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at 20% 20%, rgba(27,79,211,0.08), rgba(15,37,87,0.02));
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .feed-highlight-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 2;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #0ea5e9, #1d4ed8);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 18px rgba(13, 79, 180, 0.3);
+    }
+
+    .feed-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .feed-title {
+      font-size: 13px;
+      color: var(--ink);
+      margin: 0;
+      line-height: 1.2;
+      font-weight: 700;
+      min-height: 30px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .feed-sentinel {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px;
+    }
+
+    @media (max-width: 860px) {
+      .game-hero-card {
+        grid-template-columns: 1fr;
+      }
+
+      .game-logo-frame {
+        width: 82px;
+        margin-left: 0;
+      }
+
+      .feed-search {
+        padding: 10px;
+      }
+
+      .listing-feed {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
   <div class="page">
     <header class="site-nav">
       <a href="index.html" class="brand">
@@ -15,15 +236,27 @@
           <span class="brand-tagline">Marketplace do game</span>
         </div>
       </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="section game-page">
       <div class="game-hero-card">
         <div class="game-hero-copy">
-          <span class="eyebrow">Game</span>
           <h1 id="game-title">Carregando...</h1>
-          <p id="game-subtitle" class="section-sub">Marketplace do game.</p>
           <div id="game-actions" class="game-actions"></div>
         </div>
         <div class="game-logo-frame">
@@ -31,20 +264,31 @@
         </div>
       </div>
 
-      <section class="card hero-card">
-        <h3>Marketplace do game</h3>
-        <p id="game-marketplace">Encontre itens, serviços e contas disponíveis para este jogo.</p>
-      </section>
-
       <section class="section">
         <div class="section-header">
           <div>
-            <span class="eyebrow">Anúncios</span>
-            <h2>Marketplace deste game</h2>
-            <p class="section-sub">Anúncios ativos criados pela comunidade.</p>
+            <div class="feed-toolbar">
+              <div class="feed-search">
+                <span class="feed-search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  </svg>
+                </span>
+                <input
+                  id="listing-search"
+                  type="search"
+                  placeholder="O que você está procurando?"
+                  autocomplete="off"
+                />
+              </div>
+              <div id="listing-search-meta" class="feed-search-meta"></div>
+              <div id="category-filters" class="feed-filters"></div>
+            </div>
           </div>
         </div>
-        <div id="listing-grid" class="listing-grid"></div>
+        <div id="listing-feed" class="listing-feed"></div>
+        <div id="feed-sentinel" class="feed-sentinel" style="display:none;">Role para carregar mais</div>
         <p id="listing-empty" class="search-feedback" style="display:none;">Nenhum anúncio para este game ainda.</p>
       </section>
     </main>
@@ -61,16 +305,90 @@
     const R2_BUCKET = env.R2_BUCKET || "";
 
     const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
     const titleEl = document.getElementById("game-title");
-    const subtitleEl = document.getElementById("game-subtitle");
     const logoEl = document.getElementById("game-logo");
     const actionsEl = document.getElementById("game-actions");
-    const marketplaceEl = document.getElementById("game-marketplace");
-    const listingGrid = document.getElementById("listing-grid");
+    const listingSearchInput = document.getElementById("listing-search");
+    const listingSearchMeta = document.getElementById("listing-search-meta");
+    const listingFeed = document.getElementById("listing-feed");
+    const categoryFilters = document.getElementById("category-filters");
+    const feedSentinel = document.getElementById("feed-sentinel");
     const listingEmpty = document.getElementById("listing-empty");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+    let contentReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady || !contentReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    function markContentReady() {
+      contentReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
 
     let supabase;
     let currentUser = null;
+    let avatarLoaded = false;
+    let allListings = [];
+    let orderedListings = [];
+    let visibleCount = 0;
+    let activeCategoryFilter = "all";
+    let searchQuery = "";
+    let feedObserver = null;
+    let isRenderingBatch = false;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    const CARD_MIN_WIDTH_DESKTOP = 180;
+    const CARD_ESTIMATED_HEIGHT = 238;
+    const FEED_MIN_BATCH_SIZE = 16;
+    const FEED_MAX_BATCH_SIZE = 84;
+    let feedPageSize = 24;
+    const FILTER_OPTIONS = [
+      { value: "all", label: "Todas" },
+      { value: "currency", label: "Moeda do jogo" },
+      { value: "item", label: "Item ou itens" },
+      { value: "account", label: "Conta ou personagem" },
+      { value: "service", label: "Serviço" },
+    ];
+
+    function computeFeedPageSize() {
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1024;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+      const feedWidth = listingFeed?.clientWidth || viewportWidth;
+      const columns = viewportWidth <= 860
+        ? 2
+        : Math.max(2, Math.floor(feedWidth / CARD_MIN_WIDTH_DESKTOP));
+      const reservedHeight = viewportWidth <= 860 ? 360 : 330;
+      const usableHeight = Math.max(320, viewportHeight - reservedHeight);
+      const visibleRows = Math.max(2, Math.ceil(usableHeight / CARD_ESTIMATED_HEIGHT));
+      const preloadRows = 2;
+      const computed = columns * (visibleRows + preloadRows);
+      return Math.max(FEED_MIN_BATCH_SIZE, Math.min(FEED_MAX_BATCH_SIZE, computed));
+    }
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
@@ -98,19 +416,76 @@
     function updateAuthUI() {
       if (!authBtn) return;
       authBtn.disabled = false;
-      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        loadUserAvatar();
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
     }
 
     async function handleAuthClick() {
       try {
         ensureClient();
         authBtn.disabled = true;
-        if (currentUser) {
-          await supabase.auth.signOut();
-          currentUser = null;
-          updateAuthUI();
-          return;
-        }
         window.location.href = "login.html";
       } catch (err) {
         console.error(err);
@@ -212,7 +587,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("servers")
-          .select("id,name,official_site,banner_url,currency_name")
+          .select("id,name,official_site,banner_url")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -221,13 +596,12 @@
           name: data.name,
           website: data.official_site,
           cover_url: data.banner_url,
-          currency_name: data.currency_name
         } : null;
       } catch (err) {
         console.warn("Falha ao buscar em servers, tentando games.", err);
         const { data, error } = await supabase
           .from("games")
-          .select("id,name,website,cover_url,currency_name")
+          .select("id,name,website,cover_url")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -236,7 +610,6 @@
           name: data.name,
           website: data.website,
           cover_url: data.cover_url,
-          currency_name: data.currency_name
         } : null;
       }
     }
@@ -244,12 +617,10 @@
     function renderGame(game) {
       if (!game) {
         titleEl.textContent = "Game não encontrado.";
-        subtitleEl.textContent = "Confira se o link está correto.";
         logoEl.style.display = "none";
         return;
       }
       titleEl.textContent = game.name;
-      subtitleEl.textContent = "Marketplace do game.";
       if (game.cover_url) {
         logoEl.src = game.cover_url;
         logoEl.style.display = "block";
@@ -259,49 +630,239 @@
       actionsEl.innerHTML = game.website
         ? `<a class="pill pill-link" href="${game.website}" target="_blank" rel="noopener">Site oficial</a>`
         : `<span class="pill">Site indisponível</span>`;
-      if (game.currency_name) {
-        marketplaceEl.textContent = `Marketplace do game. Moeda principal: ${game.currency_name}.`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getListingCategories(listing) {
+      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
+      const normalized = raw
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (normalized.length > 0) return normalized;
+      if (listing?.category) return [String(listing.category)];
+      return [];
+    }
+
+    function isHighlightActive(listing) {
+      if (!listing || listing.highlight_status !== "active" || !listing.highlight_expires_at) return false;
+      const expiresAt = new Date(listing.highlight_expires_at);
+      if (Number.isNaN(expiresAt.getTime())) return false;
+      return expiresAt.getTime() > Date.now();
+    }
+
+    function listingHasCategory(listing, category) {
+      if (category === "all") return true;
+      return getListingCategories(listing).includes(category);
+    }
+
+    function listingMatchesQuery(listing, query) {
+      const normalizedQuery = String(query || "").trim().toLowerCase();
+      if (!normalizedQuery) return true;
+      const haystack = `${listing?.title || ""} ${listing?.description || ""}`.toLowerCase();
+      return haystack.includes(normalizedQuery);
+    }
+
+    function getCardImageUrl(listing) {
+      const list = Array.isArray(listing?.images) ? listing.images : [];
+      return list.find(Boolean) || "";
+    }
+
+    function waitForImageElement(img) {
+      if (!img) return Promise.resolve();
+      const src = img.getAttribute("src");
+      if (!src) return Promise.resolve();
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        const finish = () => resolve();
+        img.addEventListener("load", finish, { once: true });
+        img.addEventListener("error", finish, { once: true });
+      });
+    }
+
+    async function waitForCriticalVisuals() {
+      const criticalImages = Array.from(
+        document.querySelectorAll("#game-logo, #listing-feed .feed-card:nth-child(-n+2) img"),
+      );
+      await Promise.all(criticalImages.map((img) => waitForImageElement(img)));
+    }
+
+    function buildOrderedFeed(list) {
+      if (!Array.isArray(list) || list.length === 0) return [];
+      const highlighted = [];
+      const normal = [];
+
+      list.forEach((item) => {
+        if (isHighlightActive(item)) {
+          highlighted.push(item);
+        } else {
+          normal.push(item);
+        }
+      });
+
+      for (let i = highlighted.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [highlighted[i], highlighted[j]] = [highlighted[j], highlighted[i]];
       }
+
+      normal.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      const merged = [];
+      const maxLen = Math.max(highlighted.length, normal.length);
+      for (let i = 0; i < maxLen; i += 1) {
+        if (highlighted[i]) merged.push(highlighted[i]);
+        if (normal[i]) merged.push(normal[i]);
+      }
+
+      return merged;
     }
 
-    function formatPrice(value, currency) {
-      if (typeof value !== "number") return "-";
-      const formatted = value.toFixed(2).replace(".", ",");
-      return currency === "BRL" ? `R$ ${formatted}` : `${formatted} ${currency}`;
+    function renderCategoryFilters() {
+      if (!categoryFilters) return;
+      categoryFilters.innerHTML = FILTER_OPTIONS
+        .map((option) => `
+          <button
+            type="button"
+            class="feed-filter-btn${activeCategoryFilter === option.value ? " active" : ""}"
+            data-category="${option.value}">
+            ${option.label}
+          </button>
+        `)
+        .join("");
     }
 
-    function renderListings(list) {
-      if (!listingGrid) return;
-      listingGrid.innerHTML = "";
-      if (!list || list.length === 0) {
-        if (listingEmpty) listingEmpty.style.display = "block";
+    async function prepareListingForCard(listing) {
+      const rawImage = getCardImageUrl(listing);
+      let resolvedImage = "";
+      if (rawImage) {
+        resolvedImage = await resolveImageUrl(rawImage);
+      }
+      return {
+        ...listing,
+        cardImage: resolvedImage || "",
+      };
+    }
+
+    function createListingCard(listing) {
+      const card = document.createElement("a");
+      card.className = "feed-card";
+      card.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
+      const matched = listingMatchesQuery(listing, searchQuery);
+      card.classList.toggle("matched", matched && String(searchQuery || "").trim().length > 0);
+      const highlightBadge = isHighlightActive(listing)
+        ? `<span class="feed-highlight-badge">Em destaque</span>`
+        : "";
+      const media = listing.cardImage
+        ? `<div class="feed-media">${highlightBadge}<img src="${encodeURI(listing.cardImage)}" alt="Imagem do anúncio ${escapeHtml(listing.title || "Anúncio")}" loading="lazy" /></div>`
+        : `<div class="feed-media empty">${highlightBadge}Sem imagem</div>`;
+      card.innerHTML = `
+        ${media}
+        <h3 class="feed-title">${escapeHtml(listing.title || "Anúncio")}</h3>
+      `;
+      return card;
+    }
+
+    function updateFeedState() {
+      if (!listingEmpty || !feedSentinel) return;
+      if (orderedListings.length === 0) {
+        listingEmpty.style.display = "block";
+        listingEmpty.textContent = String(searchQuery || "").trim()
+          ? `Nenhum anúncio encontrado para "${searchQuery.trim()}".`
+          : "Nenhum anúncio para este game ainda.";
+        feedSentinel.style.display = "none";
         return;
       }
-      if (listingEmpty) listingEmpty.style.display = "none";
-      list.forEach((listing) => {
-        const card = document.createElement("article");
-        card.className = "listing-card";
-        card.dataset.listingId = listing.id;
+      listingEmpty.style.display = "none";
+      feedSentinel.style.display = "block";
+      if (visibleCount >= orderedListings.length) {
+        feedSentinel.textContent = "Fim dos anúncios.";
+      } else {
+        feedSentinel.textContent = "Role para carregar mais";
+      }
+    }
 
-        const imageUrl = listing.imageUrl || listing.images?.[0];
-        const image = imageUrl
-          ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${listing.title}" loading="lazy" /></div>`
-          : `<div class="listing-media empty">Sem imagem</div>`;
+    function updateSearchMeta(total) {
+      if (!listingSearchMeta) return;
+      const normalizedQuery = String(searchQuery || "").trim();
+      if (!normalizedQuery) {
+        listingSearchMeta.textContent = `${total} anúncio(s) carregado(s).`;
+        return;
+      }
+      listingSearchMeta.textContent = `${total} resultado(s) para "${normalizedQuery}".`;
+    }
 
-        card.innerHTML = `
-          ${image}
-          <div class="listing-body">
-            <div class="listing-meta">
-              <span class="pill">${listing.category || "Anúncio"}</span>
-              <span class="pill">${formatPrice(listing.price, listing.currency)}</span>
-            </div>
-            <h3>${listing.title}</h3>
-            <p>${listing.description || "Sem descrição."}</p>
-            <a class="pill pill-link" href="listing.html?id=${encodeURIComponent(listing.id)}">Ver anúncio</a>
-          </div>
-        `;
-        listingGrid.appendChild(card);
+    async function renderNextBatch() {
+      if (isRenderingBatch || !listingFeed) return;
+      if (visibleCount >= orderedListings.length) {
+        updateFeedState();
+        return;
+      }
+
+      isRenderingBatch = true;
+      const batch = orderedListings.slice(visibleCount, visibleCount + feedPageSize);
+      const prepared = await Promise.all(batch.map((item) => prepareListingForCard(item)));
+      const fragment = document.createDocumentFragment();
+      prepared.forEach((item) => {
+        fragment.appendChild(createListingCard(item));
       });
+      listingFeed.appendChild(fragment);
+      visibleCount += prepared.length;
+      isRenderingBatch = false;
+      updateFeedState();
+    }
+
+    async function resetFeed() {
+      if (listingFeed) listingFeed.innerHTML = "";
+      visibleCount = 0;
+      updateFeedState();
+      if (orderedListings.length > 0) {
+        await renderNextBatch();
+        await fillFeedUntilTarget();
+      }
+    }
+
+    async function fillFeedUntilTarget() {
+      while (visibleCount < feedPageSize && visibleCount < orderedListings.length) {
+        await renderNextBatch();
+      }
+    }
+
+    function setupFeedObserver() {
+      if (!feedSentinel) return;
+      if (feedObserver) feedObserver.disconnect();
+      feedObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            renderNextBatch();
+          }
+        });
+      }, {
+        root: null,
+        rootMargin: "280px 0px 280px 0px",
+        threshold: 0.01,
+      });
+      feedObserver.observe(feedSentinel);
+    }
+
+    async function refreshFeed() {
+      feedPageSize = computeFeedPageSize();
+      const filteredByCategory = activeCategoryFilter === "all"
+        ? allListings
+        : allListings.filter((item) => listingHasCategory(item, activeCategoryFilter));
+      const filtered = String(searchQuery || "").trim()
+        ? filteredByCategory.filter((item) => listingMatchesQuery(item, searchQuery))
+        : filteredByCategory;
+      orderedListings = buildOrderedFeed(filtered);
+      updateSearchMeta(filtered.length);
+      renderCategoryFilters();
+      await resetFeed();
     }
 
     async function fetchListings(gameId) {
@@ -309,25 +870,23 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,price,currency,images,category,status,server_id")
+          .select("id,title,description,images,category,categories,status,server_id,created_at,highlight_status,highlight_expires_at")
           .eq("server_id", gameId)
           .eq("status", "active")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        const list = data || [];
-        const resolved = await Promise.all(
-          list.map(async (item) => ({
-            ...item,
-            imageUrl: item.images?.[0] ? await resolveImageUrl(item.images[0]) : null,
-          }))
-        );
-        renderListings(resolved);
+        allListings = data || [];
+        await refreshFeed();
       } catch (err) {
         console.error(err);
+        allListings = [];
+        orderedListings = [];
+        if (listingFeed) listingFeed.innerHTML = "";
         if (listingEmpty) {
           listingEmpty.style.display = "block";
           listingEmpty.textContent = err?.message || "Erro ao carregar anúncios.";
         }
+        if (feedSentinel) feedSentinel.style.display = "none";
       }
     }
 
@@ -341,7 +900,6 @@
         const gameId = params.get("id");
         if (!gameId) {
           titleEl.textContent = "Game não encontrado.";
-          subtitleEl.textContent = "Nenhum ID informado.";
           logoEl.style.display = "none";
           return;
         }
@@ -350,15 +908,78 @@
           game.cover_url = await getSignedCoverUrl(game.cover_url);
         }
         renderGame(game);
+        renderCategoryFilters();
+        setupFeedObserver();
         await fetchListings(gameId);
       } catch (err) {
         console.error(err);
         titleEl.textContent = "Erro ao carregar game.";
-        subtitleEl.textContent = err?.message || "Tente novamente.";
+        if (listingSearchMeta) {
+          listingSearchMeta.textContent = err?.message || "Tente novamente.";
+        }
+      } finally {
+        try {
+          await waitForCriticalVisuals();
+        } catch (_err) {
+          // ignore image wait errors
+        }
+        markContentReady();
       }
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    categoryFilters?.addEventListener("click", (event) => {
+      const button = event.target.closest(".feed-filter-btn");
+      if (!button) return;
+      const category = button.getAttribute("data-category") || "all";
+      if (category === activeCategoryFilter) return;
+      activeCategoryFilter = category;
+      refreshFeed();
+    });
+    listingSearchInput?.addEventListener("input", () => {
+      searchQuery = listingSearchInput.value || "";
+      refreshFeed();
+    });
+    window.addEventListener("resize", () => {
+      const nextSize = computeFeedPageSize();
+      if (nextSize === feedPageSize) return;
+      feedPageSize = nextSize;
+      if (visibleCount < feedPageSize && visibleCount < orderedListings.length) {
+        fillFeedUntilTarget();
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
     init();
   </script>
 </body>

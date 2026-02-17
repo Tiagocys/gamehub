@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Políticas de anúncios</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .policy-page {
+      max-width: 920px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .policy-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .policy-card h3 {
+      font-size: 18px;
+    }
+
+    .policy-card p,
+    .policy-card li {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .policy-card ul {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .policy-alert {
+      border: 1px solid rgba(33, 123, 215, 0.24);
+      background: rgba(33, 123, 215, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      color: #1c4fa0;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Políticas de anúncios</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="my-listings.html">Voltar</a>
+      </div>
+    </header>
+
+    <main class="section policy-page">
+      <section class="hero-card">
+        <h2>Políticas de destaque de anúncios</h2>
+        <p class="helper">Leia atentamente antes de contratar um destaque pago.</p>
+      </section>
+
+      <article class="policy-card">
+        <h3>1. Como funciona o destaque</h3>
+        <ul>
+          <li>O destaque é contratado por período, de 1 até 30 dias.</li>
+          <li>O valor é calculado por dia, com desconto progressivo nos dias adicionais.</li>
+          <li>O pagamento é processado via Stripe em ambiente seguro.</li>
+          <li>Após confirmação do pagamento, o destaque do anúncio é ativado automaticamente.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>2. Início, vigência e término</h3>
+        <ul>
+          <li>A contagem começa no momento da confirmação do pagamento.</li>
+          <li>O destaque permanece ativo até o fim do período contratado.</li>
+          <li>Ao expirar, o anúncio volta automaticamente para o estado normal.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>3. Reembolso ao excluir anúncio destacado</h3>
+        <ul>
+          <li>O dia em vigor no momento da exclusão não é reembolsável.</li>
+          <li>Somente os dias futuros restantes são elegíveis para reembolso.</li>
+          <li>Exemplo: compra de 1 dia e exclusão no mesmo dia: reembolso de R$ 0,00.</li>
+          <li>Exemplo: compra de 10 dias e exclusão no 5º dia: reembolso referente aos 5 dias restantes.</li>
+          <li>O cálculo de reembolso respeita o valor progressivo aplicado na contratação.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>4. Prazo de estorno</h3>
+        <p>
+          Após a aprovação do reembolso, o valor pode levar de <strong>5 a 10 dias úteis</strong> para aparecer na
+          fatura/extrato, conforme a operadora do cartão e o banco emissor.
+        </p>
+        <div class="policy-alert">
+          O prazo de compensação é definido pela rede de pagamento e pela instituição financeira do usuário.
+        </div>
+      </article>
+
+      <article class="policy-card">
+        <h3>5. Aceite das políticas</h3>
+        <p>
+          Para concluir a contratação do destaque, o usuário deve marcar que leu e está de acordo com estas políticas
+          antes de ser redirecionado ao checkout.
+        </p>
+      </article>
+    </main>
+  </div>
+</body>
+</html>

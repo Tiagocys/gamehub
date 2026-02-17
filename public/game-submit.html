@@ -36,8 +36,9 @@
             <span id="website-helper" class="helper"></span>
           </div>
           <div class="field">
-            <label for="game-currency">Moeda do game *</label>
-            <input id="game-currency" class="input" placeholder="Ex: gold, silver" required />
+            <label for="game-discord">Convite para o Discord oficial do game *</label>
+            <input id="game-discord" class="input" placeholder="https://discord.gg/seu-servidor" required />
+            <span id="discord-helper" class="helper"></span>
           </div>
           <div class="field">
             <label for="game-logo">Logo do servidor (png/jpg/webp) *</label>
@@ -66,11 +67,14 @@
     const feedback = document.getElementById("form-feedback");
     const submitBtn = document.getElementById("submit-btn");
     const websiteInput = document.getElementById("game-website");
+    const discordInput = document.getElementById("game-discord");
     const websiteHelper = document.getElementById("website-helper");
+    const discordHelper = document.getElementById("discord-helper");
     const logoInput = document.getElementById("game-logo");
     const MAX_LOGO_BYTES = 3 * 1024 * 1024;
     const MAX_WIDTH = 512;
     const WEBSITE_PREFIX_REGEX = /^https:\/\/.+/i;
+    const DISCORD_INVITE_PREFIX = "https://discord.gg/";
 
     let supabase;
     let currentUser = null;
@@ -153,6 +157,24 @@
       }
     }
 
+    function normalizeDiscordInvite(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return null;
+      try {
+        const withProtocol = ensureHttpsPrefix(trimmed);
+        const url = new URL(withProtocol);
+        if (url.hostname.toLowerCase() !== "discord.gg") return null;
+        if (!url.pathname || url.pathname === "/") return null;
+        url.protocol = "https:";
+        url.hash = "";
+        const normalizedPath = url.pathname.replace(/\/+$/, "");
+        const normalized = `${url.origin}${normalizedPath}`;
+        return normalized.startsWith(DISCORD_INVITE_PREFIX) ? normalized : null;
+      } catch (_err) {
+        return null;
+      }
+    }
+
     function extractDomainKey(raw) {
       try {
         const url = new URL(ensureHttpsPrefix(raw));
@@ -162,9 +184,19 @@
       }
     }
 
+    function isMissingDiscordInviteColumnError(error) {
+      if (!error) return false;
+      return error.code === "42703" || String(error.message || "").includes("discord_invite");
+    }
+
     function setWebsiteHelper(message) {
       if (!websiteHelper) return;
       websiteHelper.textContent = message || "";
+    }
+
+    function setDiscordHelper(message) {
+      if (!discordHelper) return;
+      discordHelper.textContent = message || "";
     }
 
     function handleWebsiteInput() {
@@ -184,6 +216,33 @@
         websiteInput.value = formatted;
       }
       handleWebsiteInput();
+    }
+
+    function handleDiscordInput() {
+      if (!discordInput) return;
+      const value = discordInput.value.trim();
+      if (!value) {
+        setDiscordHelper("");
+        return;
+      }
+      const normalized = normalizeDiscordInvite(value);
+      setDiscordHelper(normalized ? "" : "Use um convite que comece com https://discord.gg/");
+    }
+
+    function handleDiscordBlur() {
+      if (!discordInput) return;
+      const value = discordInput.value.trim();
+      if (!value) {
+        setDiscordHelper("");
+        return;
+      }
+      const normalized = normalizeDiscordInvite(value);
+      if (normalized) {
+        discordInput.value = normalized;
+        setDiscordHelper("");
+      } else {
+        setDiscordHelper("Use um convite que comece com https://discord.gg/");
+      }
     }
 
     async function fetchPendingForUser() {
@@ -239,7 +298,7 @@
 
         const name = document.getElementById("game-name").value.trim();
         const websiteRaw = document.getElementById("game-website").value.trim();
-        const currencyName = document.getElementById("game-currency").value.trim();
+        const discordRaw = discordInput?.value?.trim() || "";
         const logoFile = logoInput.files[0];
 
         const website = normalizeWebsite(websiteRaw);
@@ -247,9 +306,9 @@
         if (website && websiteInput && websiteInput.value !== website) {
           websiteInput.value = website;
         }
-        if (!name || !website || !currencyName || !logoFile) {
+        if (!name || !website || !logoFile) {
           setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
-          feedback.textContent = "Preencha o nome, site com https://, moeda do game e selecione a logo (png/jpg/webp até 3MB).";
+          feedback.textContent = "Preencha o nome, site com https:// e selecione a logo (png/jpg/webp até 3MB).";
           submitBtn.disabled = false;
           return;
         }
@@ -259,6 +318,15 @@
           submitBtn.disabled = false;
           return;
         }
+
+        const discordInvite = normalizeDiscordInvite(discordRaw);
+        if (!discordInvite) {
+          setDiscordHelper("Use um convite que comece com https://discord.gg/");
+          feedback.textContent = "Convite do Discord inválido.";
+          submitBtn.disabled = false;
+          return;
+        }
+        setDiscordHelper("");
 
         if (logoFile.size > MAX_LOGO_BYTES) {
           feedback.textContent = "Logo deve ter no máximo 3MB.";
@@ -284,8 +352,8 @@
         const requestPayload = {
           name,
           website,
+          discord_invite: discordInvite,
           cover_url: logoUrl,
-          currency_name: currencyName,
           status: "pending",
           user_id: currentUser.id,
           user_email: currentUser.email
@@ -293,7 +361,12 @@
         if (websiteRecord.request?.id && websiteRecord.request.website === website) {
           requestPayload.id = websiteRecord.request.id;
         }
-        const { error } = await supabase.from("game_requests").upsert(requestPayload, { onConflict: "website" });
+        let { error } = await supabase.from("game_requests").upsert(requestPayload, { onConflict: "website" });
+        if (isMissingDiscordInviteColumnError(error)) {
+          const { discord_invite: _discordInvite, ...fallbackPayload } = requestPayload;
+          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          error = fallback.error;
+        }
         if (error) throw error;
 
         feedback.textContent = "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.";
@@ -301,6 +374,7 @@
         renderPending();
         form.reset();
         setWebsiteHelper("");
+        setDiscordHelper("");
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao enviar solicitação.";
@@ -344,18 +418,18 @@
     }
 
     async function findWebsiteRecord(website, domainKey) {
-      const domainPattern = `%${domainKey}%`;
       const { data: inServers, error: srvErr } = await supabase
         .from("servers")
-        .select("id,official_site")
-        .or(`official_site.eq.${website},official_site.ilike.${domainPattern}`)
+        .select("id,official_site,website_domain")
+        .eq("website_domain", domainKey)
         .limit(1);
       if (srvErr) throw srvErr;
 
       const { data: inRequests, error: reqErr } = await supabase
         .from("game_requests")
-        .select("id,status,website")
-        .or(`website.eq.${website},website.ilike.${domainPattern}`)
+        .select("id,status,website,website_domain")
+        .eq("website_domain", domainKey)
+        .in("status", ["pending", "under_review", "approved"])
         .limit(1);
       if (reqErr) throw reqErr;
 
@@ -369,6 +443,8 @@
     form?.addEventListener("submit", handleSubmit);
     websiteInput?.addEventListener("input", handleWebsiteInput);
     websiteInput?.addEventListener("blur", handleWebsiteBlur);
+    discordInput?.addEventListener("input", handleDiscordInput);
+    discordInput?.addEventListener("blur", handleDiscordBlur);
 
     (async function init() {
       try {

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gimerr - Perfil</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .whatsapp-pref-card {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.02);
+      display: none;
+      gap: 10px;
+    }
+
+    .whatsapp-pref-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .whatsapp-pref-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .whatsapp-show-wrap {
+      display: none;
+    }
+  </style>
+  <style id="profile-guard-style">html{visibility:hidden;}</style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("index.html");
+        }
+      } catch (_err) {
+        window.location.replace("index.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Perfil do usuário</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="form-card">
+        <div>
+          <h2>Perfil</h2>
+          <p class="helper">Complete suas informações para aparecer no marketplace.</p>
+        </div>
+        <form id="profile-form" class="form-vertical">
+          <div class="form-grid">
+            <div class="field">
+              <label for="first-name">Nome *</label>
+              <input id="first-name" class="input" placeholder="Seu nome" required />
+            </div>
+            <div class="field">
+              <label for="last-name">Sobrenome *</label>
+              <input id="last-name" class="input" placeholder="Seu sobrenome" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="email">Email *</label>
+            <input id="email" class="input" type="email" placeholder="seu@email.com" required />
+          </div>
+          <div class="field">
+            <label for="discord-username">Discord</label>
+            <input id="discord-username" class="input" placeholder="ex: diorgenis6969" minlength="2" maxlength="32" />
+            <div id="discord-help" class="helper"></div>
+          </div>
+          <div class="field">
+            <div class="field" id="phone-field" style="display:none;">
+              <label for="phone">Telefone</label>
+              <input id="phone" class="input" type="tel" placeholder="Compartilhe via Telegram" readonly />
+            </div>
+            <div id="whatsapp-pref-card" class="whatsapp-pref-card">
+              <p class="helper">Esse número verificado via Telegram é o mesmo do WhatsApp?</p>
+              <div class="whatsapp-pref-options">
+                <label class="whatsapp-pref-option" for="whatsapp-same-yes">
+                  <input id="whatsapp-same-yes" type="radio" name="whatsapp-same-phone" value="yes" />
+                  Sim
+                </label>
+                <label class="whatsapp-pref-option" for="whatsapp-same-no">
+                  <input id="whatsapp-same-no" type="radio" name="whatsapp-same-phone" value="no" />
+                  Não
+                </label>
+              </div>
+              <label id="whatsapp-show-wrap" class="whatsapp-pref-option whatsapp-show-wrap" for="show-whatsapp-button">
+                <input id="show-whatsapp-button" type="checkbox" />
+                Exibir botão para conversar no WhatsApp nos meus anúncios
+              </label>
+            </div>
+            <div class="verify-card">
+              <div>
+                <div class="inline-actions" style="gap:8px; align-items:center;">
+                  <h3>Verificação do telefone via Telegram</h3>
+                  <span class="info-icon" aria-label="Informações sobre o Telegram" tabindex="0">i
+                    <span class="info-tooltip">Você precisará baixar o aplicativo do Telegram no seu dispositivo móvel ou o Telegram para desktop caso esteja acessando essa página a partir de um computador.</span>
+                  </span>
+                </div>
+                <p class="helper" id="phone-status">Você precisa antes verificar o seu número de telefone para poder anunciar.</p>
+              </div>
+              <div class="inline-actions">
+                <button id="verify-phone-btn" class="btn btn-telegram" type="button">
+                  Clique aqui para verificar seu número
+                  <img src="img/telegram.webp" alt="" class="btn-icon" />
+                </button>
+                <a id="telegram-link" class="btn btn-telegram" href="#" target="_blank" rel="noopener" style="display:none;">
+                  Abrir Telegram
+                  <img src="img/telegram.webp" alt="" class="btn-icon" />
+                </a>
+              </div>
+              <ol id="verify-steps" class="verify-steps" style="display:none;">
+                <li>Abra o Telegram usando o botão acima.</li>
+                <li>Clique em START BOT ou copie e cole o seguinte código na conversa com o bot gimerr:                
+                  <span class="code-wrap">
+                    <span id="telegram-code" class="code-pill">/start verify_GMR-XXXX</span>
+                    <button id="copy-telegram-code" class="copy-btn" type="button" aria-label="Copiar comando do Telegram">⧉</button>
+                  </span>
+                </li>
+                <li>No chat com o bot toque em “Compartilhar telefone” no canto inferior do chat.</li>
+                <li>Volte aqui e atualize a página.</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" id="save-btn">Salvar perfil</button>
+            <div id="profile-feedback" class="helper"></div>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="env.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const form = document.getElementById("profile-form");
+    const feedback = document.getElementById("profile-feedback");
+    const saveBtn = document.getElementById("save-btn");
+
+    const firstNameInput = document.getElementById("first-name");
+    const lastNameInput = document.getElementById("last-name");
+    const emailInput = document.getElementById("email");
+    const phoneField = document.getElementById("phone-field");
+    const phoneInput = document.getElementById("phone");
+    const discordInput = document.getElementById("discord-username");
+    const discordHelp = document.getElementById("discord-help");
+    const telegramLink = document.getElementById("telegram-link");
+    const verifySteps = document.getElementById("verify-steps");
+    const verifyPhoneBtn = document.getElementById("verify-phone-btn");
+    const phoneStatus = document.getElementById("phone-status");
+    const telegramCode = document.getElementById("telegram-code");
+    const copyTelegramCode = document.getElementById("copy-telegram-code");
+    const whatsappPrefCard = document.getElementById("whatsapp-pref-card");
+    const whatsappSameYes = document.getElementById("whatsapp-same-yes");
+    const whatsappSameNo = document.getElementById("whatsapp-same-no");
+    const whatsappShowWrap = document.getElementById("whatsapp-show-wrap");
+    const showWhatsappButtonInput = document.getElementById("show-whatsapp-button");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
+    let supabase;
+    let currentUser = null;
+    let currentProfile = null;
+    let avatarLoaded = false;
+    let whatsappPrefSaving = false;
+    let whatsappPrefPending = false;
+    const DISCORD_USERNAME_REGEX = /^(?!.*\.\.)[a-z0-9._]{2,32}$/;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("profile-guard-style");
+      if (guard) guard.remove();
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        feedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        authBtn.disabled = true;
+        saveBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        loadUserAvatar();
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao autenticar.";
+        authBtn.disabled = false;
+      }
+    }
+
+    function normalizeDiscordUsername(value) {
+      if (!value) return "";
+      let normalized = value.toLowerCase();
+      normalized = normalized.replace(/[^a-z0-9._]/g, "");
+      normalized = normalized.replace(/\.{2,}/g, ".");
+      return normalized.slice(0, 32);
+    }
+
+    function validateDiscordUsername(value) {
+      if (!value) {
+        if (discordHelp) discordHelp.textContent = "";
+        return true;
+      }
+      const ok = DISCORD_USERNAME_REGEX.test(value);
+      if (discordHelp) {
+        discordHelp.textContent = ok
+          ? ""
+          : "Use 2-32 caracteres: letras minúsculas, números, ponto e sublinhado (sem pontos consecutivos).";
+      }
+      return ok;
+    }
+
+    function extractTelegramCode(link) {
+      if (!link) return null;
+      try {
+        const url = new URL(link);
+        const start = url.searchParams.get("start");
+        if (!start) return null;
+        if (start.toLowerCase().startsWith("verify_")) {
+          return start.slice("verify_".length).toUpperCase();
+        }
+        return start.toUpperCase();
+      } catch (_err) {
+        const match = link.match(/verify_([A-Z0-9-]+)/i);
+        return match ? match[1].toUpperCase() : null;
+      }
+    }
+
+    function fillProfile(profile) {
+      if (!profile) return;
+      firstNameInput.value = profile.first_name || "";
+      lastNameInput.value = profile.last_name || "";
+      emailInput.value = profile.email || currentUser?.email || "";
+      phoneInput.value = profile.phone || "";
+      if (discordInput) {
+        discordInput.value = profile.discord_username || "";
+        validateDiscordUsername(discordInput.value);
+      }
+      if (whatsappSameYes && whatsappSameNo) {
+        const samePhone = !!profile.whatsapp_same_phone;
+        whatsappSameYes.checked = samePhone;
+        whatsappSameNo.checked = !samePhone;
+      }
+      if (showWhatsappButtonInput) {
+        showWhatsappButtonInput.checked = !!profile.show_whatsapp_button;
+      }
+    }
+
+    async function fetchProfile() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,username,email,first_name,last_name,discord_username,phone,phone_verified,phone_verified_at,whatsapp_same_phone,show_whatsapp_button")
+        .eq("id", currentUser.id)
+        .single();
+      if (error && error.code !== "PGRST116") throw error;
+      return data || null;
+    }
+
+    function updateWhatsappPreferences(profile) {
+      if (!whatsappPrefCard) return;
+      const verified = !!profile?.phone_verified && !!profile?.phone;
+      if (!verified) {
+        whatsappPrefCard.style.display = "none";
+        if (whatsappSameYes) whatsappSameYes.checked = false;
+        if (whatsappSameNo) whatsappSameNo.checked = true;
+        if (showWhatsappButtonInput) showWhatsappButtonInput.checked = false;
+        if (whatsappShowWrap) whatsappShowWrap.style.display = "none";
+        return;
+      }
+
+      whatsappPrefCard.style.display = "grid";
+      const samePhone = !!profile?.whatsapp_same_phone;
+      if (whatsappSameYes) whatsappSameYes.checked = samePhone;
+      if (whatsappSameNo) whatsappSameNo.checked = !samePhone;
+      if (showWhatsappButtonInput) {
+        showWhatsappButtonInput.checked = samePhone && !!profile?.show_whatsapp_button;
+      }
+      if (whatsappShowWrap) {
+        whatsappShowWrap.style.display = samePhone ? "inline-flex" : "none";
+      }
+    }
+
+    async function persistWhatsappPreferencesOnChange() {
+      if (!currentUser || !currentProfile) return;
+      const verified = !!currentProfile.phone_verified && !!currentProfile.phone;
+      if (!verified) return;
+
+      const nextSamePhone = !!whatsappSameYes?.checked;
+      const nextShowButton = nextSamePhone && !!showWhatsappButtonInput?.checked;
+      const currentSamePhone = !!currentProfile.whatsapp_same_phone;
+      const currentShowButton = !!currentProfile.show_whatsapp_button;
+
+      if (nextSamePhone === currentSamePhone && nextShowButton === currentShowButton) {
+        return;
+      }
+
+      if (whatsappPrefSaving) {
+        whatsappPrefPending = true;
+        return;
+      }
+
+      whatsappPrefSaving = true;
+      try {
+        ensureClient();
+        const { error } = await supabase
+          .from("users")
+          .update({
+            whatsapp_same_phone: nextSamePhone,
+            show_whatsapp_button: nextShowButton,
+          })
+          .eq("id", currentUser.id);
+        if (error) throw error;
+
+        currentProfile = {
+          ...(currentProfile || {}),
+          whatsapp_same_phone: nextSamePhone,
+          show_whatsapp_button: nextShowButton,
+        };
+        feedback.textContent = "Preferências de WhatsApp salvas.";
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao salvar preferências de WhatsApp.";
+        updateWhatsappPreferences(currentProfile);
+      } finally {
+        whatsappPrefSaving = false;
+        if (whatsappPrefPending) {
+          whatsappPrefPending = false;
+          persistWhatsappPreferencesOnChange();
+        }
+      }
+    }
+
+    function updatePhoneStatus(profile) {
+      if (!phoneStatus) return;
+      const verified = !!profile?.phone_verified;
+      const verifyLabel = verified
+        ? `Clique aqui para alterar o seu número <img src="img/telegram.webp" alt="" class="btn-icon" />`
+        : `Clique aqui para verificar seu número <img src="img/telegram.webp" alt="" class="btn-icon" />`;
+      if (!profile?.phone) {
+        phoneStatus.textContent = "Você precisa antes verificar o seu número de telefone para poder anunciar.";
+        if (verifyPhoneBtn) {
+          verifyPhoneBtn.disabled = false;
+          verifyPhoneBtn.style.display = "inline-flex";
+          verifyPhoneBtn.innerHTML = verifyLabel;
+        }
+        if (phoneField) phoneField.style.display = "none";
+        if (telegramLink) telegramLink.style.display = "none";
+        if (verifySteps) verifySteps.style.display = "none";
+        updateWhatsappPreferences(profile);
+        return;
+      }
+      if (profile.phone_verified) {
+        phoneStatus.textContent = "Telefone verificado ✔️";
+        if (verifyPhoneBtn) {
+          verifyPhoneBtn.disabled = false;
+          verifyPhoneBtn.style.display = "inline-flex";
+          verifyPhoneBtn.innerHTML = verifyLabel;
+        }
+        if (phoneField) phoneField.style.display = "block";
+        if (telegramLink) telegramLink.style.display = "none";
+        if (verifySteps) verifySteps.style.display = "none";
+        updateWhatsappPreferences(profile);
+      } else {
+        phoneStatus.textContent = "Telefone não verificado.";
+        if (verifyPhoneBtn) {
+          verifyPhoneBtn.disabled = false;
+          verifyPhoneBtn.style.display = "inline-flex";
+          verifyPhoneBtn.innerHTML = verifyLabel;
+        }
+        if (phoneField) phoneField.style.display = "block";
+        if (telegramLink) telegramLink.style.display = "none";
+        if (verifySteps) verifySteps.style.display = "none";
+        updateWhatsappPreferences(profile);
+      }
+    }
+
+    async function createProfileFallback() {
+      const baseUsername = (currentUser.email || currentUser.id).split("@")[0].toLowerCase();
+      const candidates = [
+        baseUsername,
+        `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
+        `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
+      ];
+      let lastError = null;
+      for (const candidate of candidates) {
+        const { data, error } = await supabase.from("users").upsert({
+          id: currentUser.id,
+          username: candidate,
+          email: currentUser.email,
+          whatsapp_same_phone: false,
+          show_whatsapp_button: false,
+        }, { onConflict: "id" }).select().single();
+        if (!error) return data;
+        if (error.code !== "23505") {
+          throw error;
+        }
+        lastError = error;
+      }
+      if (lastError) throw lastError;
+      return null;
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      feedback.textContent = "";
+      saveBtn.disabled = true;
+
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        const email = emailInput.value.trim();
+        const discordUsername = normalizeDiscordUsername(discordInput?.value?.trim() || "");
+        const phone = currentProfile?.phone || null;
+        const phoneVerified = !!currentProfile?.phone_verified;
+        let whatsappSamePhone = false;
+        let showWhatsappButton = false;
+
+        if (!firstName || !lastName || !email) {
+          feedback.textContent = "Preencha nome, sobrenome e email.";
+          saveBtn.disabled = false;
+          return;
+        }
+        if (discordUsername && !validateDiscordUsername(discordUsername)) {
+          feedback.textContent = "Corrija o usuário do Discord antes de salvar.";
+          saveBtn.disabled = false;
+          return;
+        }
+        if (phoneVerified && phone) {
+          whatsappSamePhone = !!whatsappSameYes?.checked;
+          showWhatsappButton = whatsappSamePhone && !!showWhatsappButtonInput?.checked;
+        }
+
+        const username = currentProfile?.username || (currentUser.email || currentUser.id).split("@")[0];
+        const phoneChanged = false;
+        const { error } = await supabase.from("users").upsert({
+          id: currentUser.id,
+          username,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          discord_username: discordUsername || null,
+          phone,
+          phone_verified: phoneVerified,
+          phone_verified_at: currentProfile?.phone_verified_at ?? null,
+          whatsapp_same_phone: whatsappSamePhone,
+          show_whatsapp_button: showWhatsappButton,
+        }, { onConflict: "id" });
+        if (error) throw error;
+
+        feedback.textContent = "Perfil salvo com sucesso!";
+        currentProfile = {
+          ...(currentProfile || {}),
+          discord_username: discordUsername || null,
+          phone,
+          phone_verified: phoneVerified,
+          phone_verified_at: currentProfile?.phone_verified_at ?? null,
+          whatsapp_same_phone: whatsappSamePhone,
+          show_whatsapp_button: showWhatsappButton,
+        };
+        updatePhoneStatus(currentProfile);
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao salvar perfil.";
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
+    discordInput?.addEventListener("input", (event) => {
+      const target = event.target;
+      const cleaned = normalizeDiscordUsername(target.value);
+      if (cleaned !== target.value) {
+        const cursor = target.selectionStart;
+        target.value = cleaned;
+        if (typeof cursor === "number") {
+          target.setSelectionRange(cursor, cursor);
+        }
+      }
+      validateDiscordUsername(target.value);
+    });
+
+    whatsappSameYes?.addEventListener("change", () => {
+      if (whatsappShowWrap) {
+        whatsappShowWrap.style.display = whatsappSameYes.checked ? "inline-flex" : "none";
+      }
+      if (!whatsappSameYes.checked && showWhatsappButtonInput) {
+        showWhatsappButtonInput.checked = false;
+      }
+      persistWhatsappPreferencesOnChange();
+    });
+
+    whatsappSameNo?.addEventListener("change", () => {
+      if (whatsappSameNo.checked) {
+        if (whatsappShowWrap) whatsappShowWrap.style.display = "none";
+        if (showWhatsappButtonInput) showWhatsappButtonInput.checked = false;
+      }
+      persistWhatsappPreferencesOnChange();
+    });
+
+    showWhatsappButtonInput?.addEventListener("change", () => {
+      persistWhatsappPreferencesOnChange();
+    });
+
+    copyTelegramCode?.addEventListener("click", async () => {
+      if (!telegramCode) return;
+      const text = telegramCode.textContent || "";
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        copyTelegramCode.textContent = "✓";
+        setTimeout(() => {
+          copyTelegramCode.textContent = "⧉";
+        }, 1500);
+      } catch (_err) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "true");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        copyTelegramCode.textContent = "✓";
+        setTimeout(() => {
+          copyTelegramCode.textContent = "⧉";
+        }, 1500);
+      }
+    });
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.replace("index.html");
+          return;
+        }
+        currentProfile = await fetchProfile();
+        if (!currentProfile) {
+          currentProfile = await createProfileFallback();
+        }
+        fillProfile(currentProfile);
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("phone_required") === "1" && phoneStatus) {
+          phoneStatus.classList.add("pulse");
+        }
+        updatePhoneStatus(currentProfile);
+        revealPage();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao carregar perfil.";
+        revealPage();
+      }
+    })();
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    verifyPhoneBtn?.addEventListener("click", async () => {
+      try {
+        feedback.textContent = "";
+        if (verifySteps) verifySteps.style.display = "none";
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
+        verifyPhoneBtn.disabled = true;
+        verifyPhoneBtn.textContent = "Aguarde...";
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/phone_verify_start`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            userToken: token,
+          }),
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          const hint = payload?.error || payload?.message;
+          throw new Error(hint || "Erro ao iniciar verificação.");
+        }
+        const payload = await response.json();
+        if (phoneStatus) {
+          phoneStatus.textContent = "Verificação iniciada. Siga os passos abaixo.";
+        }
+        if (payload.link) {
+          telegramLink.href = payload.link;
+          telegramLink.style.display = "inline-flex";
+          const code = extractTelegramCode(payload.link);
+          if (telegramCode && code) {
+            telegramCode.textContent = `/start verify_${code}`;
+          }
+        }
+        if (verifyPhoneBtn) {
+          verifyPhoneBtn.style.display = "none";
+        }
+        if (verifySteps) verifySteps.style.display = "grid";
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao iniciar verificação.";
+        if (verifyPhoneBtn) {
+          verifyPhoneBtn.disabled = false;
+          updatePhoneStatus(currentProfile);
+        }
+      } finally {
+        // mantém bloqueado após o primeiro clique
+      }
+    });
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
+    form?.addEventListener("submit", handleSubmit);
+  </script>
+</body>
+</html>

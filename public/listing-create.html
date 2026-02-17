@@ -6,6 +6,51 @@
   <title>Gimerr - Criar anúncio</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="listing-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .category-picker {
+      display: grid;
+      gap: 10px;
+    }
+
+    .category-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .category-pill {
+      border: 1px solid var(--border);
+      background: rgba(12, 21, 51, 0.04);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .category-pill:hover {
+      border-color: rgba(27, 79, 211, 0.35);
+      background: rgba(27, 79, 211, 0.08);
+    }
+
+    .category-pill.active {
+      border-color: rgba(27, 79, 211, 0.45);
+      background: rgba(27, 79, 211, 0.16);
+      color: #18408a;
+    }
+
+    .feedback-link {
+      color: var(--accent-2);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .feedback-link:hover {
+      text-decoration: underline;
+    }
+  </style>
   <script>
     (() => {
       try {
@@ -20,6 +65,9 @@
   </script>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
   <div class="page">
     <header class="site-nav">
       <a href="index.html" class="brand">
@@ -28,19 +76,33 @@
           <span class="brand-tagline">Criar anúncio</span>
         </div>
       </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+      <div class="nav-actions">
+        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
+        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
+        <div id="user-menu" class="nav-user">
+          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
+            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
+          </button>
+          <div class="user-dropdown">
+            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
+            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
+            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
+            <button id="logout-btn" class="menu-item" type="button">Sair</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="section">
       <div class="form-card">
         <div>
-          <h2>Novo anúncio</h2>
-          <p class="helper">Escolha um game existente e publique seu anúncio em minutos.</p>
+          <h2 id="form-title">Novo anúncio</h2>
+          <p class="helper">Você pode criar apenas 1 anúncio por game.</p>
         </div>
         <form id="listing-form" class="form-vertical">
           <div class="field">
             <label for="listing-title">Título do anúncio *</label>
-            <input id="listing-title" class="input" placeholder="Ex: 1kk gold + itens raros" required />
+            <input id="listing-title" class="input" placeholder="Ex: 1kk gold + itens raros" maxlength="70" required />
           </div>
 
           <div class="field">
@@ -54,31 +116,31 @@
 
           <div class="form-grid">
             <div class="field">
-              <label for="listing-type">Tipo de anúncio *</label>
-              <select id="listing-type" class="input" required>
-                <option value="">Selecione</option>
-                <option value="item">Moeda ou item do game</option>
-                <option value="account">Conta ou personagem do game</option>
-                <option value="service">Serviço no game</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="listing-price">Valor do anúncio (R$) *</label>
-              <input id="listing-price" class="input" type="number" min="1" step="0.01" placeholder="Ex: 49,90" required />
+              <label for="listing-category-pills">Categoria</label>
+              <div class="category-picker">
+                <div id="listing-category-pills" class="category-pills">
+                  <button type="button" class="category-pill" data-value="currency">Moeda do jogo</button>
+                  <button type="button" class="category-pill" data-value="item">Item ou itens</button>
+                  <button type="button" class="category-pill" data-value="account">Conta ou personagem</button>
+                  <button type="button" class="category-pill" data-value="service">Serviço</button>
+                </div>
+                <span class="helper">Selecione uma ou mais categorias (opcional).</span>
+              </div>
             </div>
           </div>
 
           <div class="field">
-            <label for="listing-images">Imagens do anúncio (até 8) *</label>
-            <input id="listing-images" type="file" accept="image/png,image/jpeg,image/webp" multiple required />
-            <span class="helper">Você pode enviar até 8 imagens.</span>
+            <label for="listing-images">Imagens do anúncio (mínimo 1, até 8) *</label>
+            <input id="listing-images" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+            <span class="helper">Envie pelo menos 1 imagem e no máximo 8.</span>
+            <span id="image-count" class="helper">0/8 imagens selecionadas.</span>
+            <div id="image-previews" class="image-preview-grid" aria-live="polite"></div>
           </div>
 
           <div class="field">
             <label for="listing-description">Descrição (opcional)</label>
-            <textarea id="listing-description" class="textarea" maxlength="300" placeholder="Detalhe o que está incluso no anúncio (até 300 caracteres)."></textarea>
-            <span id="desc-counter" class="helper">0/300</span>
+            <textarea id="listing-description" class="textarea" maxlength="1000" placeholder="Descreva seu anúncio (até 1000 caracteres)."></textarea>
+            <span id="desc-counter" class="helper">0/1000</span>
           </div>
 
           <div class="field" style="grid-column: 1 / -1;">
@@ -97,9 +159,17 @@
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
 
     const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
     const form = document.getElementById("listing-form");
+    const formTitle = document.getElementById("form-title");
     const feedback = document.getElementById("form-feedback");
     const submitBtn = document.getElementById("submit-btn");
     const gameInput = document.getElementById("listing-game");
@@ -108,21 +178,83 @@
     const descInput = document.getElementById("listing-description");
     const descCounter = document.getElementById("desc-counter");
     const imagesInput = document.getElementById("listing-images");
+    const imagePreviews = document.getElementById("image-previews");
+    const imageCount = document.getElementById("image-count");
+    const categoryPills = document.getElementById("listing-category-pills");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
 
     const MAX_IMAGES = 8;
-    const MAX_DESC = 300;
+    const MAX_DESC = 1000;
+    const MAX_TITLE = 70;
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     const MAX_IMAGE_DIMENSION = 1600;
     const WEBP_QUALITY = 0.8;
+    const CATEGORY_OPTIONS = ["currency", "item", "account", "service"];
+    const urlParams = new URLSearchParams(window.location.search);
+    const editListingId = urlParams.get("edit");
 
     let supabase;
     let currentUser = null;
     let games = [];
+    let editingListing = null;
+    let originalImageUrls = [];
+    let existingImageUrls = [];
+    let selectedImages = [];
+    let selectedCategories = [];
+    let avatarLoaded = false;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+    if (submitBtn && !submitBtn.dataset.defaultText) {
+      submitBtn.dataset.defaultText = submitBtn.textContent || "Publicar anúncio";
+    }
+
+    function setSubmitLoading(isLoading) {
+      if (!submitBtn) return;
+      const defaultText = submitBtn.dataset.defaultText || "Publicar anúncio";
+      submitBtn.disabled = isLoading;
+      submitBtn.textContent = isLoading ? "Publicando..." : defaultText;
+    }
+
+    function setDefaultSubmitText(text) {
+      if (!submitBtn) return;
+      submitBtn.dataset.defaultText = text;
+      submitBtn.textContent = text;
+    }
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("listing-guard-style");
       if (guard) guard.remove();
+    }
+
+    function renderSelectedCategories() {
+      if (!categoryPills) return;
+      const buttons = categoryPills.querySelectorAll(".category-pill");
+      buttons.forEach((button) => {
+        const value = button.getAttribute("data-value") || "";
+        button.classList.toggle("active", selectedCategories.includes(value));
+      });
     }
 
     function ensureClient() {
@@ -152,7 +284,134 @@
     function updateAuthUI() {
       if (!authBtn) return;
       authBtn.disabled = false;
-      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        loadUserAvatar();
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    function renderImagePreviews() {
+      if (!imagePreviews) return;
+      imagePreviews.innerHTML = "";
+      const normalizePreviewUrl = (rawUrl) => {
+        if (!rawUrl) return "";
+        if (String(rawUrl).startsWith("http")) return String(rawUrl);
+        if (R2_PUBLIC_URL) {
+          return `${R2_PUBLIC_URL.replace(/\/$/, "")}/${String(rawUrl).replace(/^\/+/, "")}`;
+        }
+        return String(rawUrl);
+      };
+      existingImageUrls.forEach((url, index) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-thumb";
+        wrapper.innerHTML = `
+          <img src="${encodeURI(normalizePreviewUrl(url))}" alt="Imagem atual ${index + 1}" />
+          <button type="button" class="image-remove" aria-label="Remover imagem">×</button>
+        `;
+        const removeBtn = wrapper.querySelector(".image-remove");
+        removeBtn.addEventListener("click", () => {
+          existingImageUrls = existingImageUrls.filter((_, i) => i !== index);
+          renderImagePreviews();
+        });
+        imagePreviews.appendChild(wrapper);
+      });
+      selectedImages.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        const wrapper = document.createElement("div");
+        wrapper.className = "image-thumb";
+        wrapper.innerHTML = `
+          <img src="${url}" alt="Imagem ${index + 1}" />
+          <button type="button" class="image-remove" aria-label="Remover imagem">×</button>
+        `;
+        const removeBtn = wrapper.querySelector(".image-remove");
+        removeBtn.addEventListener("click", () => {
+          selectedImages = selectedImages.filter((_, i) => i !== index);
+          renderImagePreviews();
+        });
+        imagePreviews.appendChild(wrapper);
+        wrapper.querySelector("img").addEventListener("load", () => {
+          URL.revokeObjectURL(url);
+        });
+      });
+      if (imageCount) {
+        const total = existingImageUrls.length + selectedImages.length;
+        imageCount.textContent = `${total}/${MAX_IMAGES} imagens selecionadas.`;
+      }
+    }
+
+    function addSelectedImages(files) {
+      const incoming = Array.from(files || []);
+      if (incoming.length === 0) return;
+      const available = MAX_IMAGES - (selectedImages.length + existingImageUrls.length);
+      if (available <= 0) {
+        feedback.textContent = `Você já selecionou ${MAX_IMAGES} imagens.`;
+        return;
+      }
+      selectedImages = selectedImages.concat(incoming.slice(0, available));
+      if (incoming.length > available) {
+        feedback.textContent = `Apenas ${MAX_IMAGES} imagens são permitidas.`;
+      }
+      renderImagePreviews();
     }
 
     function decodeJwtPayload(token) {
@@ -183,6 +442,100 @@
       }
       currentUser = data.user;
       return data.user;
+    }
+
+    async function fetchUserProfile(userId) {
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id, phone_verified")
+          .eq("id", userId)
+          .single();
+        if (error) throw error;
+        return data;
+      } catch (err) {
+        console.error(err);
+        return null;
+      }
+    }
+
+    async function findListingForGame(userId, gameId, excludeListingId = null) {
+      let query = supabase
+        .from("listings")
+        .select("id,title")
+        .eq("user_id", userId)
+        .eq("server_id", gameId)
+        .limit(1);
+      if (excludeListingId) {
+        query = query.neq("id", excludeListingId);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data?.[0] || null;
+    }
+
+    function duplicateListingMessage() {
+      return 'Você já possui um anúncio para este game, <a class="feedback-link" href="my-listings.html">clique aqui</a> para editar ou excluir o anúncio existente.';
+    }
+
+    async function resolveGameNameById(gameId) {
+      const localMatch = games.find((g) => String(g.id) === String(gameId));
+      if (localMatch?.name) return localMatch.name;
+      const { data, error } = await supabase
+        .from("servers")
+        .select("id,name")
+        .eq("id", gameId)
+        .single();
+      if (error) throw error;
+      return data?.name || "";
+    }
+
+    async function loadEditingListing() {
+      if (!editListingId) return;
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id,title,description,server_id,images,categories,category,status,user_id")
+        .eq("id", editListingId)
+        .eq("user_id", currentUser.id)
+        .single();
+      if (error || !data) {
+        throw new Error("Anúncio para edição não encontrado.");
+      }
+      editingListing = data;
+      if (formTitle) formTitle.textContent = "Editar anúncio";
+      setDefaultSubmitText("Salvar alterações");
+
+      document.getElementById("listing-title").value = data.title || "";
+      descInput.value = data.description || "";
+      updateDescCounter();
+
+      const gameName = await resolveGameNameById(data.server_id);
+      gameInput.value = gameName;
+      gameInput.dataset.gameId = data.server_id || "";
+      gameHelper.textContent = "Game selecionado.";
+
+      const rawCategories = Array.isArray(data.categories)
+        ? data.categories
+        : (data.category ? [String(data.category)] : []);
+      selectedCategories = rawCategories
+        .map((item) => String(item || "").trim())
+        .filter((item) => CATEGORY_OPTIONS.includes(item));
+      renderSelectedCategories();
+
+      existingImageUrls = Array.isArray(data.images) ? data.images.slice(0, MAX_IMAGES) : [];
+      originalImageUrls = existingImageUrls.slice();
+      selectedImages = [];
+      renderImagePreviews();
+    }
+
+    function toggleCategory(value) {
+      if (!CATEGORY_OPTIONS.includes(value)) return;
+      if (selectedCategories.includes(value)) {
+        selectedCategories = selectedCategories.filter((item) => item !== value);
+      } else {
+        selectedCategories = [...selectedCategories, value];
+      }
+      renderSelectedCategories();
     }
 
     async function handleAuthClick() {
@@ -228,13 +581,25 @@
       }
       const matches = games.filter((g) => g.name.toLowerCase().includes(term.toLowerCase()));
       if (matches.length === 0) {
-        suggestionsPanel.style.display = "none";
-        suggestionsPanel.innerHTML = "";
+        suggestionsPanel.innerHTML = `
+          <div class="suggestion-empty">
+            Não encontrou o game que procurava?
+            <a class="link-ghost" href="game-submit.html">Clique aqui</a> para cadastrar um novo game.
+          </div>
+        `;
+        suggestionsPanel.style.display = "block";
         return;
       }
-      suggestionsPanel.innerHTML = matches
+      const items = matches
         .map((g) => `<div class="suggestion-item" data-game-id="${g.id}" data-game-name="${g.name}">${g.name}<span class="badge">Selecionar</span></div>`)
         .join("");
+      const footer = `
+        <div class="suggestion-footer">
+          Não encontrou o game que procurava?
+          <a class="link-ghost" href="game-submit.html">Clique aqui</a> para cadastrar um novo game.
+        </div>
+      `;
+      suggestionsPanel.innerHTML = `${items}${footer}`;
       suggestionsPanel.style.display = "block";
     }
 
@@ -301,6 +666,50 @@
       return response.json();
     }
 
+    async function requestImageDeletion(imageUrls) {
+      const keys = Array.isArray(imageUrls)
+        ? imageUrls.map((item) => String(item || "").trim()).filter(Boolean)
+        : [];
+      if (keys.length === 0) {
+        return { ok: true, deletedKeys: 0, failedKeys: 0 };
+      }
+
+      await ensureValidSession();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          mode: "delete",
+          keys,
+          userToken: token,
+        }),
+      });
+
+      if (!response.ok) {
+        let message = "Erro ao remover imagens antigas.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+
+      return response.json();
+    }
+
     async function convertToWebp(file) {
       if (file.type === "image/webp") return file;
       const bitmap = await createImageBitmap(file);
@@ -349,7 +758,7 @@
     async function handleSubmit(event) {
       event.preventDefault();
       feedback.textContent = "";
-      submitBtn.disabled = true;
+      setSubmitLoading(true);
 
       try {
         ensureClient();
@@ -364,67 +773,107 @@
         const title = document.getElementById("listing-title").value.trim();
         const gameName = gameInput.value.trim();
         const gameId = gameInput.dataset.gameId;
-        const listingType = document.getElementById("listing-type").value;
-        const priceRaw = document.getElementById("listing-price").value.trim();
+        const categories = selectedCategories.filter((item) => CATEGORY_OPTIONS.includes(item));
+        const listingType = categories[0] || "other";
         const description = descInput.value.trim() || null;
-        const files = Array.from(imagesInput.files || []);
+        const files = selectedImages;
+        const isEditing = Boolean(editingListing?.id);
 
-        if (!title || !gameName || !listingType || !priceRaw) {
-          feedback.textContent = "Preencha título, game, tipo e valor.";
-          submitBtn.disabled = false;
+        if (!title || !gameName) {
+          feedback.textContent = "Preencha título e game.";
+          setSubmitLoading(false);
+          return;
+        }
+        if (title.length > MAX_TITLE) {
+          feedback.textContent = `O título pode ter no máximo ${MAX_TITLE} caracteres.`;
+          setSubmitLoading(false);
           return;
         }
 
         if (!gameId) {
           feedback.textContent = "Selecione um game existente na lista.";
-          submitBtn.disabled = false;
+          setSubmitLoading(false);
           return;
         }
 
-        if (files.length === 0) {
-          feedback.textContent = "Envie pelo menos uma imagem.";
-          submitBtn.disabled = false;
+        const totalImages = existingImageUrls.length + files.length;
+        if (totalImages < 1) {
+          feedback.textContent = "Envie pelo menos 1 imagem para publicar o anúncio.";
+          setSubmitLoading(false);
           return;
         }
-
-        if (files.length > MAX_IMAGES) {
+        if (totalImages > MAX_IMAGES) {
           feedback.textContent = `Você pode enviar no máximo ${MAX_IMAGES} imagens.`;
-          submitBtn.disabled = false;
+          setSubmitLoading(false);
           return;
         }
 
-        const price = Number(priceRaw.replace(",", "."));
-        if (Number.isNaN(price) || price <= 0) {
-          feedback.textContent = "Informe um valor válido em reais.";
-          submitBtn.disabled = false;
+        const duplicateListing = await findListingForGame(currentUser.id, gameId, editingListing?.id || null);
+        if (duplicateListing) {
+          feedback.innerHTML = duplicateListingMessage();
+          setSubmitLoading(false);
           return;
         }
 
-        const imageUrls = await uploadListingImages(files);
+        const uploadedImageUrls = files.length > 0 ? await uploadListingImages(files) : [];
+        const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls].slice(0, MAX_IMAGES);
+        const removedImageUrls = isEditing
+          ? originalImageUrls.filter((url) => !finalImageUrls.includes(url))
+          : [];
 
-        const { error } = await supabase.from("listings").insert({
+        const payload = {
           server_id: gameId,
-          user_id: currentUser.id,
           category: listingType,
+          categories,
           title,
           description,
-          price,
-          currency: "BRL",
-          images: imageUrls,
+          images: finalImageUrls,
           status: "active"
-        });
-        if (error) throw error;
+        };
 
-        feedback.textContent = "Anúncio publicado com sucesso!";
-        form.reset();
-        gameInput.dataset.gameId = "";
-        gameHelper.textContent = "Selecione um game existente da lista.";
-        updateDescCounter();
+        let saveError = null;
+        if (isEditing) {
+          const { error } = await supabase
+            .from("listings")
+            .update(payload)
+            .eq("id", editingListing.id)
+            .eq("user_id", currentUser.id);
+          saveError = error;
+        } else {
+          const { error } = await supabase.from("listings").insert({
+            ...payload,
+            user_id: currentUser.id,
+          });
+          saveError = error;
+        }
+        if (saveError) {
+          const isUniqueViolation = saveError.code === "23505" && String(saveError.message || "").includes("listings_user_server_unique");
+          if (isUniqueViolation) {
+            feedback.innerHTML = duplicateListingMessage();
+            setSubmitLoading(false);
+            return;
+          }
+          throw saveError;
+        }
+
+        feedback.textContent = isEditing
+          ? "Anúncio atualizado com sucesso!"
+          : "Anúncio publicado com sucesso!";
+        if (isEditing) {
+          if (removedImageUrls.length > 0) {
+            const deleteResult = await requestImageDeletion(removedImageUrls);
+            if (!deleteResult?.ok || Number(deleteResult?.failedKeys || 0) > 0) {
+              throw new Error("Anúncio atualizado, mas não foi possível remover todas as imagens antigas do storage.");
+            }
+          }
+        }
+        window.location.href = "my-listings.html";
+        return;
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao publicar anúncio.";
       } finally {
-        submitBtn.disabled = false;
+        setSubmitLoading(false);
       }
     }
 
@@ -433,9 +882,52 @@
       gameHelper.textContent = "Selecione um game existente da lista.";
       renderSuggestions(event.target.value.trim());
     });
+    imagesInput?.addEventListener("change", (event) => {
+      addSelectedImages(event.target.files);
+      imagesInput.value = "";
+    });
+    categoryPills?.addEventListener("click", (event) => {
+      const button = event.target.closest(".category-pill");
+      if (!button) return;
+      const value = button.getAttribute("data-value") || "";
+      toggleCategory(value);
+    });
     suggestionsPanel?.addEventListener("click", handleSuggestionClick);
     descInput?.addEventListener("input", updateDescCounter);
     authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "login.html";
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
     form?.addEventListener("submit", handleSubmit);
 
     (async function init() {
@@ -449,8 +941,15 @@
           return;
         }
         await ensureValidSession();
+        const profile = await fetchUserProfile(currentUser.id);
+        if (!profile?.phone_verified) {
+          window.location.replace("profile.html?phone_required=1");
+          return;
+        }
         await fetchGames();
         updateDescCounter();
+        renderSelectedCategories();
+        await loadEditingListing();
         revealPage();
       } catch (err) {
         console.error(err);

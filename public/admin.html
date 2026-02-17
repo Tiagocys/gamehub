@@ -152,6 +152,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
   <header>
     <div class="logo">
       <a href="index.html"><img src="img/logo.png" alt="Gimerr" /></a>
@@ -169,7 +172,7 @@
   <main>
     <section class="card">
       <h1>Criar novo servidor</h1>
-      <p>Somente administradores podem criar servidores. Nome, site oficial, moeda do game e logo são obrigatórios.</p>
+      <p>Somente administradores podem criar servidores. Nome, site oficial e logo são obrigatórios.</p>
       <div class="notice" id="session-status">Faça login em login.html para continuar.</div>
       <div class="notice" id="edit-request-banner" style="display:none; gap:10px; align-items:center; justify-content:space-between;">
         <div>
@@ -187,8 +190,8 @@
         <label for="server-site">Site oficial *</label>
         <input id="server-site" placeholder="https://seuservidor.com" required />
 
-        <label for="server-currency">Moeda do game *</label>
-        <input id="server-currency" placeholder="Ex: gold, silver" required />
+        <label for="server-discord">Convite do Discord oficial *</label>
+        <input id="server-discord" placeholder="https://discord.gg/seu-servidor" required />
 
         <label for="server-logo">Logo do servidor (png/jpg/webp) *</label>
         <input id="server-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
@@ -205,7 +208,7 @@
 
     <section class="card">
       <h1>Solicitações de games</h1>
-      <p>Revise e aprove/reprove os envios de usuários. Cada decisão atualiza o status e dispara e-mail.</p>
+      <p>Revise e aprove/reprove os envios de usuários. Cada decisão atualiza o status e dispara e-mail. Ao aprovar uma solicitação, pendências do mesmo domínio são recusadas automaticamente.</p>
       <div class="notice" id="requests-status">Carregando...</div>
       <div id="requests-empty" class="muted" style="display:none;">Nenhuma solicitação pendente.</div>
       <div id="requests-list" class="list"></div>
@@ -215,6 +218,29 @@
   <script src="env.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -229,7 +255,7 @@
     const formSuccess = document.getElementById("form-success");
     const serverNameInput = document.getElementById("server-name");
     const serverSiteInput = document.getElementById("server-site");
-    const serverCurrencyInput = document.getElementById("server-currency");
+    const serverDiscordInput = document.getElementById("server-discord");
     const serverLogoInput = document.getElementById("server-logo");
     const logoPreviewWrapper = document.getElementById("logo-preview-wrapper");
     const logoPreview = document.getElementById("server-logo-preview");
@@ -303,6 +329,41 @@
     function setStatus(ok, text) {
       statusDot.classList.toggle("ok", ok);
       statusText.textContent = text;
+    }
+
+    function ensureHttpsPrefix(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return "";
+      const withoutProtocol = trimmed.replace(/^https?:\/\//i, "");
+      return `https://${withoutProtocol}`;
+    }
+
+    function normalizeOptionalUrl(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return null;
+      try {
+        const withProtocol = ensureHttpsPrefix(trimmed);
+        const url = new URL(withProtocol);
+        if (url.hostname.toLowerCase() !== "discord.gg") return null;
+        if (!url.pathname || url.pathname === "/") return null;
+        url.protocol = "https:";
+        url.hash = "";
+        return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function formatDiscordInviteHtml(urlString) {
+      const normalized = normalizeOptionalUrl(urlString || "");
+      if (!normalized) return '<span class="muted">Discord: não informado</span>';
+      const safeUrl = encodeURI(normalized);
+      return `Discord: <a href="${safeUrl}" target="_blank" rel="noopener" class="pill pill-link">Abrir convite</a>`;
+    }
+
+    function isMissingDiscordInviteColumnError(error) {
+      if (!error) return false;
+      return error.code === "42703" || String(error.message || "").includes("discord_invite");
     }
 
     function persistLocalSession(session) {
@@ -415,7 +476,7 @@
       }
       if (serverNameInput) serverNameInput.value = req.name || "";
       if (serverSiteInput) serverSiteInput.value = req.website || "";
-      if (serverCurrencyInput) serverCurrencyInput.value = req.currency_name || "";
+      if (serverDiscordInput) serverDiscordInput.value = req.discord_invite || "";
       if (serverLogoInput) {
         serverLogoInput.value = "";
         serverLogoInput.required = false;
@@ -548,6 +609,8 @@
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
         revealAdminPage();
+      } finally {
+        markAvatarReady();
       }
     }
 
@@ -588,11 +651,17 @@
 
         const name = serverNameInput?.value.trim();
         const site = serverSiteInput?.value.trim();
-        const currencyName = serverCurrencyInput?.value.trim();
+        const discordInviteRaw = serverDiscordInput?.value.trim() || "";
         const file = serverLogoInput?.files?.[0];
 
-        if (!name || !site || !currencyName) {
-          formError.textContent = "Preencha nome, site e moeda do game.";
+        if (!name || !site) {
+          formError.textContent = "Preencha nome e site do game.";
+          return;
+        }
+
+        const discordInvite = normalizeOptionalUrl(discordInviteRaw);
+        if (!discordInvite) {
+          formError.textContent = "Use um convite que comece com https://discord.gg/";
           return;
         }
 
@@ -610,7 +679,7 @@
         const summary = [
           `Servidor: ${name}`,
           `Site: ${site}`,
-          `Moeda do game: ${currencyName}`,
+          `Discord: ${discordInvite}`,
           `Logo: ${logoSummary}`,
           `Status: ativo`
         ].join("\n");
@@ -631,28 +700,16 @@
           return;
         }
 
-        const { error: insertErr } = await supabase.from("servers").insert({
-          name,
-          game_type: "general",
-          official_site: site,
-          currency_name: currencyName,
-          banner_url: bannerUrl,
-          owner_id: user.id,
-          status: "active"
-        });
-        if (insertErr) throw insertErr;
-
         if (editingRequest?.id) {
           const { data: approveData, error: approveErr } = await supabase.functions.invoke("game_approve", {
             body: {
               requestId: editingRequest.id,
               approved: true,
               note: "Aprovado com ajustes pelo admin.",
-              skipServerInsert: true,
               override: {
                 name,
                 website: site,
-                currency_name: currencyName,
+                discord_invite: discordInvite,
                 cover_url: bannerUrl
               }
             },
@@ -667,17 +724,37 @@
             throw new Error(approveErr?.message || approveData?.error || "Erro ao atualizar status da solicitação.");
           }
           await fetchRequests();
+        } else {
+          let { error: insertErr } = await supabase.from("servers").insert({
+            name,
+            game_type: "general",
+            official_site: site,
+            discord_invite: discordInvite,
+            banner_url: bannerUrl,
+            status: "active"
+          });
+          if (isMissingDiscordInviteColumnError(insertErr)) {
+            const fallback = await supabase.from("servers").insert({
+              name,
+              game_type: "general",
+              official_site: site,
+              banner_url: bannerUrl,
+              status: "active"
+            });
+            insertErr = fallback.error;
+          }
+          if (insertErr) throw insertErr;
         }
 
         const editedName = editingRequest?.name;
         formSuccess.textContent = editedName
-          ? "Servidor salvo com os ajustes. Agora finalize aprovando ou reprovando a solicitação."
+          ? "Solicitação aprovada com os ajustes e servidor salvo."
           : "Servidor criado com sucesso!";
         serverForm.reset();
         setLogoPreview("");
         enterEditMode(null);
         if (editedName) {
-          requestsStatus.textContent = `Servidor ajustado para "${editedName}". Aprove ou recuse na lista.`;
+          requestsStatus.textContent = `Solicitação de "${editedName}" aprovada com ajustes.`;
         }
         requestsStatus.textContent ||= "Servidor salvo.";
       } catch (err) {
@@ -693,11 +770,20 @@
     async function fetchRequests() {
       try {
         requestsStatus.textContent = "Carregando...";
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from("game_requests")
-          .select("id,name,website,currency_name,cover_url,user_email,status,created_at")
+          .select("id,name,website,discord_invite,cover_url,user_email,status,created_at")
           .eq("status", "pending")
           .order("created_at", { ascending: true });
+        if (isMissingDiscordInviteColumnError(error)) {
+          const fallback = await supabase
+            .from("game_requests")
+            .select("id,name,website,cover_url,user_email,status,created_at")
+            .eq("status", "pending")
+            .order("created_at", { ascending: true });
+          data = (fallback.data || []).map((item) => ({ ...item, discord_invite: null }));
+          error = fallback.error;
+        }
         if (error) throw error;
         requestCache = await enhanceRequestsWithSignedUrls(data || []);
         renderRequests(requestCache);
@@ -730,9 +816,9 @@
             </div>
             <span class="pill">${req.status}</span>
           </div>
-          <div class="muted">Moeda do game: ${req.currency_name || "não informada"}</div>
           ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
           <div class="muted">Usuário: ${req.user_email || "-"}</div>
+          <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
             <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;">Aprovar</button>
@@ -741,6 +827,36 @@
         `;
         requestsList.appendChild(card);
       });
+    }
+
+    function setDecisionButtonsProcessing(card, clickedAction, processing) {
+      if (!card) return;
+      const approveBtn = card.querySelector('button[data-action="approve"]');
+      const rejectBtn = card.querySelector('button[data-action="reject"]');
+      if (!approveBtn || !rejectBtn) return;
+
+      if (!approveBtn.dataset.defaultText) {
+        approveBtn.dataset.defaultText = approveBtn.textContent || "Aprovar";
+      }
+      if (!rejectBtn.dataset.defaultText) {
+        rejectBtn.dataset.defaultText = rejectBtn.textContent || "Recusar";
+      }
+
+      if (processing) {
+        approveBtn.disabled = true;
+        rejectBtn.disabled = true;
+        if (clickedAction === "approve") {
+          approveBtn.textContent = "Processando...";
+        } else if (clickedAction === "reject") {
+          rejectBtn.textContent = "Processando...";
+        }
+        return;
+      }
+
+      approveBtn.disabled = false;
+      rejectBtn.disabled = false;
+      approveBtn.textContent = approveBtn.dataset.defaultText;
+      rejectBtn.textContent = rejectBtn.dataset.defaultText;
     }
 
     requestsList?.addEventListener("click", async (event) => {
@@ -765,6 +881,8 @@
       if (!approved) {
         note = window.prompt("Motivo da recusa? (opcional)", "") || "";
       }
+      const card = btn.closest(".notice");
+      setDecisionButtonsProcessing(card, action, true);
       try {
         requestsStatus.textContent = "Processando...";
         const { data: sessionData } = await supabase.auth.getSession();
@@ -800,6 +918,7 @@
       } catch (err) {
         console.error(err);
         requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";
+        setDecisionButtonsProcessing(card, action, false);
       }
     });
 
