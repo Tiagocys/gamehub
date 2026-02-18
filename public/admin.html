@@ -210,8 +210,26 @@
       <h1>Solicitações de games</h1>
       <p>Revise e aprove/reprove os envios de usuários. Cada decisão atualiza o status e dispara e-mail. Ao aprovar uma solicitação, pendências do mesmo domínio são recusadas automaticamente.</p>
       <div class="notice" id="requests-status">Carregando...</div>
+      <div id="requests-nav" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
+        <button id="requests-prev" class="chip-btn" type="button">Anterior</button>
+        <span id="requests-counter" class="muted">1 de 1</span>
+        <button id="requests-next" class="chip-btn" type="button">Próxima</button>
+      </div>
       <div id="requests-empty" class="muted" style="display:none;">Nenhuma solicitação pendente.</div>
       <div id="requests-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h1>Denúncias pendentes</h1>
+      <p>Revise denúncias de anúncios e perfis para aplicar medidas de moderação.</p>
+      <div class="notice" id="reports-status">Carregando...</div>
+      <div id="reports-nav" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
+        <button id="reports-prev" class="chip-btn" type="button">Anterior</button>
+        <span id="reports-counter" class="muted">1 de 1</span>
+        <button id="reports-next" class="chip-btn" type="button">Próxima</button>
+      </div>
+      <div id="reports-empty" class="muted" style="display:none;">Nenhuma denúncia pendente.</div>
+      <div id="reports-list" class="list"></div>
     </section>
   </main>
 
@@ -266,12 +284,26 @@
     const requestsList = document.getElementById("requests-list");
     const requestsEmpty = document.getElementById("requests-empty");
     const requestsStatus = document.getElementById("requests-status");
+    const requestsNav = document.getElementById("requests-nav");
+    const requestsPrevBtn = document.getElementById("requests-prev");
+    const requestsNextBtn = document.getElementById("requests-next");
+    const requestsCounter = document.getElementById("requests-counter");
+    const reportsList = document.getElementById("reports-list");
+    const reportsEmpty = document.getElementById("reports-empty");
+    const reportsStatus = document.getElementById("reports-status");
+    const reportsNav = document.getElementById("reports-nav");
+    const reportsPrevBtn = document.getElementById("reports-prev");
+    const reportsNextBtn = document.getElementById("reports-next");
+    const reportsCounter = document.getElementById("reports-counter");
 
     const SESSION_STORAGE_KEY = "gimerr-auth-session";
     let supabase;
     let authListenerAttached = false;
     let profile = null;
     let requestCache = [];
+    let reportCache = [];
+    let requestCursor = 0;
+    let reportCursor = 0;
     let editingRequest = null;
 
     function getProjectRef() {
@@ -360,6 +392,28 @@
     function isMissingDiscordInviteColumnError(error) {
       if (!error) return false;
       return error.code === "42703" || String(error.message || "").includes("discord_invite");
+    }
+
+    function isMissingReportsTableError(error) {
+      if (!error) return false;
+      return error.code === "42P01" || String(error.message || "").toLowerCase().includes("reports");
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "-";
+      try {
+        return new Date(value).toLocaleString("pt-BR");
+      } catch (_err) {
+        return String(value);
+      }
+    }
+
+    function getUserDisplayName(user) {
+      if (!user) return "Usuário";
+      const first = String(user.first_name || "").trim();
+      const last = String(user.last_name || "").trim();
+      const full = `${first} ${last}`.trim();
+      return full || user.email || user.id || "Usuário";
     }
 
     function persistLocalSession(session) {
@@ -583,9 +637,10 @@
             : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
           if (profile?.is_admin) {
             revealAdminPage();
-            await fetchRequests();
+            await Promise.all([fetchRequests(), fetchReports()]);
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
+            reportsStatus.textContent = "Restrito aos admins.";
             window.location.href = "index.html";
           }
         } else {
@@ -593,8 +648,13 @@
           setStatus(false, "Sem sessão");
           sessionStatus.textContent = "Faça login em login.html para continuar.";
           requestsList.innerHTML = "";
+          if (requestsNav) requestsNav.style.display = "none";
           requestsEmpty.style.display = "block";
           requestsEmpty.textContent = "Faça login para ver solicitações.";
+          reportsList.innerHTML = "";
+          if (reportsNav) reportsNav.style.display = "none";
+          reportsEmpty.style.display = "block";
+          reportsEmpty.textContent = "Faça login para ver denúncias.";
           window.location.href = "index.html";
           return;
         }
@@ -604,6 +664,7 @@
         setStatus(false, "Erro");
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
+        reportsStatus.textContent = "Erro ao checar sessão.";
         revealAdminPage();
       } finally {
         markAvatarReady();
@@ -786,6 +847,7 @@
         requestsStatus.textContent = "Pronto";
       } catch (err) {
         console.error(err);
+        if (requestsNav) requestsNav.style.display = "none";
         requestsStatus.textContent = err?.message || "Erro ao carregar solicitações.";
         requestsEmpty.style.display = "block";
         requestsEmpty.textContent = "Erro ao carregar solicitações.";
@@ -795,33 +857,254 @@
     function renderRequests(list) {
       requestsList.innerHTML = "";
       if (!list || list.length === 0) {
+        requestCursor = 0;
+        if (requestsNav) requestsNav.style.display = "none";
         requestsEmpty.style.display = "block";
         return;
       }
+      if (requestsNav) requestsNav.style.display = "flex";
       requestsEmpty.style.display = "none";
-      list.forEach((req) => {
-        const card = document.createElement("div");
-        card.className = "notice";
-        card.style.display = "grid";
-        card.style.gap = "8px";
-        card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
-            <div>
-              <strong>${req.name}</strong>
-              <div class="muted">${req.website}</div>
+      requestCursor = Math.min(Math.max(requestCursor, 0), list.length - 1);
+      if (requestsCounter) {
+        requestsCounter.textContent = `${requestCursor + 1} de ${list.length}`;
+      }
+      if (requestsPrevBtn) requestsPrevBtn.disabled = requestCursor <= 0;
+      if (requestsNextBtn) requestsNextBtn.disabled = requestCursor >= list.length - 1;
+
+      const req = list[requestCursor];
+      const card = document.createElement("div");
+      card.className = "notice";
+      card.style.display = "grid";
+      card.style.gap = "8px";
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+          <div>
+            <strong>${req.name}</strong>
+            <div class="muted">${req.website}</div>
+          </div>
+          <span class="pill">${req.status}</span>
+        </div>
+        ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
+        <div class="muted">Usuário: ${req.user_email || "-"}</div>
+        <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
+          <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;">Aprovar</button>
+          <button class="btn secondary" data-action="reject" data-id="${req.id}" style="flex:1;">Recusar</button>
+        </div>
+      `;
+      requestsList.appendChild(card);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    async function fetchReports() {
+      try {
+        reportsStatus.textContent = "Carregando...";
+        let { data, error } = await supabase
+          .from("reports")
+          .select("id,target_type,listing_id,reported_user_id,reporter_id,reason,evidence_images,status,created_at")
+          .eq("status", "pending")
+          .order("created_at", { ascending: true });
+        if (error && error.code === "42703" && String(error.message || "").includes("evidence_images")) {
+          const fallback = await supabase
+            .from("reports")
+            .select("id,target_type,listing_id,reported_user_id,reporter_id,reason,status,created_at")
+            .eq("status", "pending")
+            .order("created_at", { ascending: true });
+          data = (fallback.data || []).map((item) => ({ ...item, evidence_images: [] }));
+          error = fallback.error;
+        }
+        if (isMissingReportsTableError(error)) {
+          reportsList.innerHTML = "";
+          if (reportsNav) reportsNav.style.display = "none";
+          reportsEmpty.style.display = "block";
+          reportsEmpty.textContent = "Tabela de denúncias não encontrada. Aplique as migrations mais recentes.";
+          reportsStatus.textContent = "Migration pendente";
+          return;
+        }
+        if (error) throw error;
+
+        const rows = data || [];
+        if (rows.length === 0) {
+          reportCache = [];
+          renderReports(reportCache);
+          reportsStatus.textContent = "Pronto";
+          return;
+        }
+
+        const listingIds = Array.from(new Set(rows.map((row) => row.listing_id).filter(Boolean)));
+        const userIds = new Set(rows.flatMap((row) => [row.reporter_id, row.reported_user_id]).filter(Boolean));
+
+        const listingsMap = new Map();
+        const listingServerIds = new Set();
+        if (listingIds.length > 0) {
+          const { data: listingRows, error: listingError } = await supabase
+            .from("listings")
+            .select("id,title,user_id,server_id")
+            .in("id", listingIds);
+          if (listingError) throw listingError;
+          (listingRows || []).forEach((item) => {
+            listingsMap.set(item.id, item);
+            if (item?.user_id) userIds.add(item.user_id);
+            if (item?.server_id) listingServerIds.add(item.server_id);
+          });
+        }
+
+        const serversMap = new Map();
+        const serverIds = Array.from(listingServerIds);
+        if (serverIds.length > 0) {
+          const { data: serverRows, error: serverError } = await supabase
+            .from("servers")
+            .select("id,name")
+            .in("id", serverIds);
+          if (!serverError) {
+            (serverRows || []).forEach((server) => {
+              serversMap.set(server.id, server);
+            });
+          }
+        }
+
+        const usersMap = new Map();
+        const allUserIds = Array.from(userIds);
+        if (allUserIds.length > 0) {
+          const { data: userRows, error: userError } = await supabase
+            .from("users")
+            .select("id,first_name,last_name,email,status")
+            .in("id", allUserIds);
+          if (userError) throw userError;
+          (userRows || []).forEach((user) => usersMap.set(user.id, user));
+        }
+
+        reportCache = rows.map((row) => {
+          const listing = row.listing_id ? listingsMap.get(row.listing_id) : null;
+          const listingServer = listing?.server_id ? serversMap.get(listing.server_id) : null;
+          const resolvedUserId = row.reported_user_id || listing?.user_id || null;
+          const reporter = usersMap.get(row.reporter_id) || null;
+          const reportedUser = resolvedUserId ? (usersMap.get(resolvedUserId) || null) : null;
+          return {
+            ...row,
+            listing,
+            listing_server_name: listingServer?.name || null,
+            resolved_user_id: resolvedUserId,
+            reporter,
+            reported_user: reportedUser,
+          };
+        });
+        renderReports(reportCache);
+        reportsStatus.textContent = "Pronto";
+      } catch (err) {
+        console.error(err);
+        if (reportsNav) reportsNav.style.display = "none";
+        reportsStatus.textContent = err?.message || "Erro ao carregar denúncias.";
+        reportsEmpty.style.display = "block";
+        reportsEmpty.textContent = "Erro ao carregar denúncias.";
+      }
+    }
+
+    function renderReports(list) {
+      reportsList.innerHTML = "";
+      if (!list || list.length === 0) {
+        reportCursor = 0;
+        if (reportsNav) reportsNav.style.display = "none";
+        reportsEmpty.style.display = "block";
+        return;
+      }
+      if (reportsNav) reportsNav.style.display = "flex";
+      reportsEmpty.style.display = "none";
+      reportCursor = Math.min(Math.max(reportCursor, 0), list.length - 1);
+      if (reportsCounter) {
+        reportsCounter.textContent = `${reportCursor + 1} de ${list.length}`;
+      }
+      if (reportsPrevBtn) reportsPrevBtn.disabled = reportCursor <= 0;
+      if (reportsNextBtn) reportsNextBtn.disabled = reportCursor >= list.length - 1;
+
+      const report = list[reportCursor];
+      const reporterName = getUserDisplayName(report.reporter);
+      const targetUserName = getUserDisplayName(report.reported_user);
+      const listingTitle = report.listing?.title || "Anúncio removido";
+      const listingServer = report.listing_server_name ? ` (${report.listing_server_name})` : "";
+      const targetLabel = report.target_type === "listing"
+        ? `Anúncio: ${listingTitle}${listingServer}`
+        : `Perfil: ${targetUserName}`;
+
+      const card = document.createElement("div");
+      card.className = "notice";
+      card.style.display = "grid";
+      card.style.gap = "8px";
+      const evidence = Array.isArray(report.evidence_images) ? report.evidence_images.filter(Boolean) : [];
+      const evidenceHtml = evidence.length > 0
+        ? `
+          <div style="display:grid;gap:6px;">
+            <strong style="font-size:12px;color:#0f2557;">Anexos da denúncia</strong>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${evidence.map((url, index) => `<a href="${encodeURI(url)}" target="_blank" rel="noopener"><img src="${encodeURI(url)}" alt="Anexo ${index + 1}" style="width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--border);" /></a>`).join("")}
             </div>
-            <span class="pill">${req.status}</span>
           </div>
-          ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
-          <div class="muted">Usuário: ${req.user_email || "-"}</div>
-          <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
-            <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;">Aprovar</button>
-            <button class="btn secondary" data-action="reject" data-id="${req.id}" style="flex:1;">Recusar</button>
+        `
+        : "";
+      const listingLinkHtml = report.target_type === "listing" && report.listing_id
+        ? `<div class="muted">Link do anúncio: <a class="link-ghost" href="listing.html?id=${encodeURIComponent(report.listing_id)}" target="_blank" rel="noopener">Abrir anúncio</a></div>`
+        : "";
+      const moderationNoteHtml = report.target_type === "listing"
+        ? `
+          <div style="display:grid;gap:6px;">
+            <label for="report-note-${report.id}" style="font-size:12px;color:#0f2557;font-weight:600;">Motivo da exclusão do anúncio</label>
+            <textarea id="report-note-${report.id}" data-report-note rows="3" placeholder="Explique por que o anúncio está sendo removido." style="width:100%;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font:inherit;resize:vertical;min-height:76px;"></textarea>
           </div>
-        `;
-        requestsList.appendChild(card);
+        `
+        : "";
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+          <strong>${report.target_type === "listing" ? "Denúncia de anúncio" : "Denúncia de perfil"}</strong>
+          <span class="pill">pending</span>
+        </div>
+        <div class="muted">Denunciante: ${escapeHtml(reporterName)}</div>
+        <div class="muted">${escapeHtml(targetLabel)}</div>
+        ${listingLinkHtml}
+        <div class="muted">Enviado em: ${escapeHtml(formatDateTime(report.created_at))}</div>
+        <div style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(15,37,87,0.03);">${escapeHtml(report.reason || "")}</div>
+        ${evidenceHtml}
+        ${moderationNoteHtml}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn secondary" data-report-action="handled" data-report-id="${report.id}" style="flex:1;">Tratado</button>
+          ${report.target_type === "listing" && report.listing_id ? `<button class="btn secondary" data-report-action="delete-listing" data-report-id="${report.id}" style="flex:1;">Excluir anúncio</button>` : ""}
+          ${report.resolved_user_id ? `<button class="btn secondary" data-report-action="ban-user" data-report-id="${report.id}" style="flex:1;">Banir usuário</button>` : ""}
+        </div>
+      `;
+      reportsList.appendChild(card);
+    }
+
+    function setReportButtonsProcessing(card, clickedAction, processing) {
+      if (!card) return;
+      const buttons = card.querySelectorAll("button[data-report-action]");
+      if (!buttons || buttons.length === 0) return;
+      buttons.forEach((button) => {
+        if (!button.dataset.defaultText) {
+          button.dataset.defaultText = button.textContent || "";
+        }
+      });
+
+      if (processing) {
+        buttons.forEach((button) => {
+          button.disabled = true;
+          if (button.getAttribute("data-report-action") === clickedAction) {
+            button.textContent = "Processando...";
+          }
+        });
+        return;
+      }
+
+      buttons.forEach((button) => {
+        button.disabled = false;
+        button.textContent = button.dataset.defaultText || button.textContent;
       });
     }
 
@@ -854,6 +1137,30 @@
       approveBtn.textContent = approveBtn.dataset.defaultText;
       rejectBtn.textContent = rejectBtn.dataset.defaultText;
     }
+
+    requestsPrevBtn?.addEventListener("click", () => {
+      if (requestCursor <= 0) return;
+      requestCursor -= 1;
+      renderRequests(requestCache);
+    });
+
+    requestsNextBtn?.addEventListener("click", () => {
+      if (requestCursor >= requestCache.length - 1) return;
+      requestCursor += 1;
+      renderRequests(requestCache);
+    });
+
+    reportsPrevBtn?.addEventListener("click", () => {
+      if (reportCursor <= 0) return;
+      reportCursor -= 1;
+      renderReports(reportCache);
+    });
+
+    reportsNextBtn?.addEventListener("click", () => {
+      if (reportCursor >= reportCache.length - 1) return;
+      reportCursor += 1;
+      renderReports(reportCache);
+    });
 
     requestsList?.addEventListener("click", async (event) => {
       const btn = event.target.closest("button[data-action]");
@@ -902,6 +1209,82 @@
         console.error(err);
         requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";
         setDecisionButtonsProcessing(card, action, false);
+      }
+    });
+
+    reportsList?.addEventListener("click", async (event) => {
+      const btn = event.target.closest("button[data-report-action]");
+      if (!btn) return;
+      if (!profile?.is_admin) {
+        reportsStatus.textContent = "Apenas admins podem moderar denúncias.";
+        return;
+      }
+      const reportId = btn.getAttribute("data-report-id");
+      const action = btn.getAttribute("data-report-action");
+      const report = reportCache.find((item) => String(item.id) === String(reportId));
+      if (!report || !action) return;
+
+      const card = btn.closest(".notice");
+      setReportButtonsProcessing(card, action, true);
+      try {
+        reportsStatus.textContent = "Processando denúncia...";
+        const noteInput = card?.querySelector("textarea[data-report-note]");
+        const note = String(noteInput?.value || "").trim();
+        if (action === "delete-listing" && note.length < 10) {
+          setReportButtonsProcessing(card, action, false);
+          reportsStatus.textContent = "Informe o motivo da exclusão com pelo menos 10 caracteres.";
+          noteInput?.focus();
+          return;
+        }
+        if (action === "ban-user") {
+          if (!report.resolved_user_id) {
+            throw new Error("Não foi possível identificar o usuário denunciado.");
+          }
+          const confirmBan = window.confirm("Confirma o banimento deste usuário? Os anúncios dele serão removidos.");
+          if (!confirmBan) {
+            setReportButtonsProcessing(card, action, false);
+            reportsStatus.textContent = "Ação cancelada.";
+            return;
+          }
+        }
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        const { data: moderateData, error: moderateErr } = await supabase.functions.invoke("report_moderate", {
+          body: {
+            reportId: report.id,
+            action,
+            note,
+            userToken: token,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (moderateErr || !moderateData?.ok) {
+          const errMsg = moderateErr?.context?.response?.error ?? moderateData?.error ?? moderateErr?.message;
+          throw new Error(errMsg || "Erro ao tratar denúncia.");
+        }
+        await fetchReports();
+        if (action === "delete-listing") {
+          if (moderateData?.emailSent === false) {
+            reportsStatus.textContent = moderateData?.emailError
+              ? `Anúncio excluído, mas o e-mail falhou: ${moderateData.emailError}`
+              : "Anúncio excluído, mas não foi possível confirmar o envio do e-mail.";
+          } else {
+            reportsStatus.textContent = "Anúncio excluído, denúncia tratada e e-mail enviado ao anunciante.";
+          }
+        } else if (action === "ban-user") {
+          reportsStatus.textContent = "Usuário banido e denúncia tratada.";
+        } else {
+          reportsStatus.textContent = "Denúncia tratada.";
+        }
+      } catch (err) {
+        console.error(err);
+        reportsStatus.textContent = err?.message || "Erro ao tratar denúncia.";
+        setReportButtonsProcessing(card, action, false);
       }
     });
 

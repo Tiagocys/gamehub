@@ -218,11 +218,19 @@
       font-size: 13px;
     }
 
-    .user-contact-corner {
+    .user-card-actions {
       position: absolute;
       top: 12px;
       right: 12px;
       z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-contact-corner {
+      position: static;
+      z-index: auto;
     }
 
     .user-contact-panel {
@@ -258,6 +266,57 @@
       height: 16px;
       object-fit: contain;
       display: block;
+    }
+
+    .report-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .report-icon-btn:hover {
+      background: rgba(12, 21, 51, 0.05);
+    }
+
+    .report-icon {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .report-form {
+      margin-top: 8px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .report-form textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .report-feedback {
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 16px;
     }
 
     .user-listings-header {
@@ -404,7 +463,12 @@
     <main class="section user-public-grid">
       <section class="user-public-card">
         <img id="public-avatar" class="user-public-avatar" src="img/avatar.svg" alt="Foto do usuário" />
-        <button id="contact-toggle-btn" class="btn btn-ghost user-contact-trigger user-contact-corner" type="button" style="display:none;">conversar</button>
+        <div class="user-card-actions">
+          <button id="contact-toggle-btn" class="btn btn-ghost user-contact-trigger user-contact-corner" type="button" style="display:none;">conversar</button>
+          <button id="report-user-btn" class="report-icon-btn" type="button" style="display:none;" aria-label="Denunciar perfil">
+            <img src="img/flag.png" alt="" class="report-icon" />
+          </button>
+        </div>
         <div class="user-public-copy">
           <h1 id="public-name" class="user-public-name">Carregando perfil...</h1>
           <p id="public-discord" class="helper discord-inline" style="display:none;"></p>
@@ -414,6 +478,18 @@
               Recomendar usuário
             </button>
             <button id="recommend-count" class="user-public-reco recommend-count-btn" type="button" aria-expanded="false">0 recomendações</button>
+          </div>
+          <div id="report-user-form" class="report-form" style="display:none;">
+            <label for="report-user-reason">Descreva o problema</label>
+            <textarea id="report-user-reason" placeholder="Explique por que este perfil deve ser analisado."></textarea>
+            <label for="report-user-files">Anexos (opcional, até 4 imagens)</label>
+            <input id="report-user-files" class="input" type="file" accept="image/*" multiple />
+            <div id="report-user-files-info" class="helper">Nenhuma imagem selecionada.</div>
+            <div class="inline-actions">
+              <button id="report-user-submit" class="btn btn-primary" type="button">Enviar denúncia</button>
+              <button id="report-user-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+            </div>
+            <div id="report-user-feedback" class="report-feedback"></div>
           </div>
           <div id="contact-panel" class="user-contact-panel" style="display:none;">
             <p id="contact-discord" class="user-contact-discord" style="display:none;"></p>
@@ -498,6 +574,14 @@
     const publicListingsCount = document.getElementById("public-listings-count");
     const publicListingsEmpty = document.getElementById("public-listings-empty");
     const recommendBtn = document.getElementById("recommend-btn");
+    const reportUserBtn = document.getElementById("report-user-btn");
+    const reportUserForm = document.getElementById("report-user-form");
+    const reportUserReason = document.getElementById("report-user-reason");
+    const reportUserFiles = document.getElementById("report-user-files");
+    const reportUserFilesInfo = document.getElementById("report-user-files-info");
+    const reportUserSubmit = document.getElementById("report-user-submit");
+    const reportUserCancel = document.getElementById("report-user-cancel");
+    const reportUserFeedback = document.getElementById("report-user-feedback");
     const contactToggleBtn = document.getElementById("contact-toggle-btn");
     const contactPanel = document.getElementById("contact-panel");
     const contactDiscord = document.getElementById("contact-discord");
@@ -551,7 +635,12 @@
     let recommendersLoading = false;
     let recommendersFetched = false;
     let contactPanelVisible = false;
+    let currentPublicProfile = null;
     const RECOMMENDERS_PAGE_SIZE = 8;
+    const REPORT_MAX_ATTACHMENTS = 4;
+    const REPORT_MAX_FILE_BYTES = 6 * 1024 * 1024;
+    const REPORT_MAX_DIMENSION = 1600;
+    const REPORT_WEBP_QUALITY = 0.82;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
     if (publicAvatar) publicAvatar.referrerPolicy = "no-referrer";
 
@@ -600,6 +689,93 @@
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
       markNavAvatarReady();
+    }
+
+    function getReportFiles() {
+      return Array.from(reportUserFiles?.files || []).slice(0, REPORT_MAX_ATTACHMENTS);
+    }
+
+    function updateReportFilesInfo() {
+      if (!reportUserFilesInfo) return;
+      const rawCount = reportUserFiles?.files?.length || 0;
+      if (rawCount === 0) {
+        reportUserFilesInfo.textContent = "Nenhuma imagem selecionada.";
+        return;
+      }
+      if (rawCount > REPORT_MAX_ATTACHMENTS) {
+        reportUserFilesInfo.textContent = `Você selecionou ${rawCount} imagens. Serão enviadas apenas ${REPORT_MAX_ATTACHMENTS}.`;
+        return;
+      }
+      reportUserFilesInfo.textContent = `${rawCount} imagem(ns) selecionada(s).`;
+    }
+
+    async function convertImageToWebp(file) {
+      if (!file?.type || !file.type.startsWith("image/")) {
+        throw new Error("Selecione apenas imagens válidas nos anexos.");
+      }
+      if (file.size > REPORT_MAX_FILE_BYTES) {
+        throw new Error("Cada imagem anexa deve ter no máximo 6MB.");
+      }
+      const bitmap = await createImageBitmap(file);
+      const maxSide = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, REPORT_MAX_DIMENSION / maxSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Falha ao processar imagem anexa.");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", REPORT_WEBP_QUALITY));
+      if (!blob) throw new Error("Falha ao converter anexo para WebP.");
+      const baseName = file.name.replace(/\.[^.]+$/, "") || "report";
+      return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    }
+
+    async function requestReportSignedUpload(file) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "application/octet-stream",
+          extension,
+          userToken: token,
+          assetType: "report",
+        }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || "Erro ao solicitar upload de anexo.");
+      }
+      return response.json();
+    }
+
+    async function uploadReportEvidence(files, onProgress) {
+      const uploaded = [];
+      for (let index = 0; index < files.length; index += 1) {
+        const webp = await convertImageToWebp(files[index]);
+        const signed = await requestReportSignedUpload(webp);
+        const uploadRes = await fetch(signed.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": webp.type || "application/octet-stream",
+          },
+          body: webp,
+        });
+        if (!uploadRes.ok) throw new Error("Falha ao enviar anexo da denúncia.");
+        uploaded.push(signed.publicUrl);
+        if (typeof onProgress === "function") onProgress(index + 1, files.length);
+      }
+      return uploaded.filter(Boolean);
     }
 
     async function setAvatarImage(target, src) {
@@ -756,7 +932,7 @@
     async function fetchPublicProfile() {
       const { data, error } = await supabase
         .from("users")
-        .select("id,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_contacts_on_public_profile")
+        .select("id,status,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_contacts_on_public_profile")
         .eq("id", targetUserId)
         .single();
       if (error) throw error;
@@ -971,7 +1147,19 @@
       const lastName = (profile?.last_name || "").trim();
       const displayName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
       const discord = String(profile?.discord_username || "").trim();
+      const profileStatus = String(profile?.status || "active");
       publicName.textContent = displayName;
+
+      if (reportUserBtn) {
+        const ownProfile = !!currentUser && currentUser.id === targetUserId;
+        const canReport = !ownProfile && profileStatus === "active";
+        reportUserBtn.style.display = canReport ? "inline-flex" : "none";
+      }
+      if (reportUserForm) reportUserForm.style.display = "none";
+      if (reportUserReason) reportUserReason.value = "";
+      if (reportUserFeedback) reportUserFeedback.textContent = "";
+      if (reportUserFiles) reportUserFiles.value = "";
+      updateReportFilesInfo();
 
       if (discord) {
         publicDiscord.innerHTML = "";
@@ -1227,12 +1415,29 @@
           fetchPublicProfile(),
           fetchUserListings(),
         ]);
+        currentPublicProfile = profile;
 
         renderProfile(profile);
         setupContactPanel(profile);
         await renderPublicAvatar(profile);
-        renderGames(listings);
-        renderListings(listings);
+        if (String(profile?.status || "active") !== "active") {
+          const isBanned = String(profile?.status) === "banned";
+          publicName.textContent = isBanned ? "Perfil banido" : "Perfil desativado";
+          publicAbout.textContent = isBanned
+            ? "Este perfil foi banido pela moderação."
+            : "Este perfil está temporariamente desativado.";
+          if (recommendBtn) recommendBtn.style.display = "none";
+          if (reportUserBtn) reportUserBtn.style.display = "none";
+          if (contactToggleBtn) contactToggleBtn.style.display = "none";
+          if (recommendCount) recommendCount.textContent = "0 recomendações";
+          renderGames([]);
+          renderListings([]);
+          if (publicGamesEmpty) publicGamesEmpty.style.display = "block";
+          if (publicListingsEmpty) publicListingsEmpty.style.display = "block";
+        } else {
+          renderGames(listings);
+          renderListings(listings);
+        }
 
         if (currentUser.id === targetUserId) {
           selfProfileHint.style.display = "block";
@@ -1254,6 +1459,74 @@
 
     authBtn?.addEventListener("click", handleAuthClick);
     recommendBtn?.addEventListener("click", handleRecommend);
+    reportUserBtn?.addEventListener("click", () => {
+      if (!currentUser || !targetUserId) return;
+      if (currentUser.id === targetUserId) return;
+      if (String(currentPublicProfile?.status || "active") !== "active") return;
+      if (!reportUserForm) return;
+      const showing = reportUserForm.style.display !== "none";
+      reportUserForm.style.display = showing ? "none" : "grid";
+      if (!showing && reportUserReason) reportUserReason.focus();
+    });
+    reportUserCancel?.addEventListener("click", () => {
+      if (reportUserForm) reportUserForm.style.display = "none";
+      if (reportUserReason) reportUserReason.value = "";
+      if (reportUserFeedback) reportUserFeedback.textContent = "";
+      if (reportUserFiles) reportUserFiles.value = "";
+      updateReportFilesInfo();
+    });
+    reportUserFiles?.addEventListener("change", updateReportFilesInfo);
+    reportUserSubmit?.addEventListener("click", async () => {
+      try {
+        if (!currentUser || !targetUserId) return;
+        if (currentUser.id === targetUserId) {
+          if (reportUserFeedback) reportUserFeedback.textContent = "Você não pode denunciar seu próprio perfil.";
+          return;
+        }
+        const reason = String(reportUserReason?.value || "").trim();
+        if (reason.length < 10) {
+          if (reportUserFeedback) reportUserFeedback.textContent = "Descreva o problema com pelo menos 10 caracteres.";
+          return;
+        }
+        const files = getReportFiles();
+        reportUserSubmit.disabled = true;
+        if (reportUserFeedback) reportUserFeedback.textContent = "Enviando denúncia...";
+        let evidenceImages = [];
+        if (files.length > 0) {
+          evidenceImages = await uploadReportEvidence(files, (done, total) => {
+            if (reportUserFeedback) {
+              reportUserFeedback.textContent = `Enviando anexos ${done}/${total}...`;
+            }
+          });
+        }
+        if (reportUserFeedback) reportUserFeedback.textContent = "Registrando denúncia...";
+        const { error } = await supabase.from("reports").insert({
+          reporter_id: currentUser.id,
+          target_type: "user",
+          reported_user_id: targetUserId,
+          reason,
+          evidence_images: evidenceImages,
+        });
+        if (error) {
+          if (error.code === "23505") {
+            throw new Error("Você já possui uma denúncia pendente para este perfil.");
+          }
+          throw error;
+        }
+        if (reportUserFeedback) reportUserFeedback.textContent = "Denúncia enviada para análise.";
+        if (reportUserReason) reportUserReason.value = "";
+        if (reportUserFiles) reportUserFiles.value = "";
+        updateReportFilesInfo();
+        if (reportUserForm) reportUserForm.style.display = "none";
+      } catch (err) {
+        console.error(err);
+        if (reportUserFeedback) {
+          reportUserFeedback.textContent = err?.message || "Erro ao enviar denúncia.";
+        }
+      } finally {
+        if (reportUserSubmit) reportUserSubmit.disabled = false;
+      }
+    });
     contactToggleBtn?.addEventListener("click", toggleContactPanel);
     recommendCount?.addEventListener("click", handleRecommendCountClick);
     recommendersWrap?.addEventListener("scroll", handleRecommendersScroll);

@@ -52,6 +52,50 @@
       object-fit: contain;
       display: block;
     }
+
+    .report-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .report-icon {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .report-form {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .report-form textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .report-feedback {
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 16px;
+    }
+
+    .report-success-banner {
+      margin-top: 10px;
+      border: 1px solid #bfe6c8;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #ecfff1;
+      color: #146c2e;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
@@ -111,6 +155,26 @@
       </div>
 
       <section class="hero-card">
+        <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
+          <img src="img/flag.png" alt="" class="report-icon" />
+          Denunciar anúncio
+        </button>
+        <div id="report-listing-form" class="report-form" style="display:none;">
+          <label for="report-listing-reason">Descreva o problema</label>
+          <textarea id="report-listing-reason" placeholder="Explique por que este anúncio deve ser analisado."></textarea>
+          <label for="report-listing-files">Anexos (opcional, até 4 imagens)</label>
+          <input id="report-listing-files" class="input" type="file" accept="image/*" multiple />
+          <div id="report-listing-files-info" class="helper">Nenhuma imagem selecionada.</div>
+          <div class="inline-actions">
+            <button id="report-listing-submit" class="btn btn-primary" type="button">Enviar denúncia</button>
+            <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+          </div>
+          <div id="report-listing-feedback" class="report-feedback"></div>
+        </div>
+        <div id="report-listing-success" class="report-success-banner" style="display:none;" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="hero-card">
         <h3>Descrição do anúncio</h3>
         <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
       </section>
@@ -143,6 +207,15 @@
     const whatsappChat = document.getElementById("whatsapp-chat");
     const mainMedia = document.getElementById("listing-main");
     const thumbGrid = document.getElementById("listing-thumbs");
+    const reportListingBtn = document.getElementById("report-listing-btn");
+    const reportListingForm = document.getElementById("report-listing-form");
+    const reportListingReason = document.getElementById("report-listing-reason");
+    const reportListingFiles = document.getElementById("report-listing-files");
+    const reportListingFilesInfo = document.getElementById("report-listing-files-info");
+    const reportListingSubmit = document.getElementById("report-listing-submit");
+    const reportListingCancel = document.getElementById("report-listing-cancel");
+    const reportListingFeedback = document.getElementById("report-listing-feedback");
+    const reportListingSuccess = document.getElementById("report-listing-success");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -170,10 +243,16 @@
     let supabase;
     let currentUser = null;
     let avatarLoaded = false;
+    let currentListing = null;
     let currentGalleryImages = [];
     let lightboxImages = [];
     let lightboxIndex = 0;
     let lightboxRoot = null;
+    const REPORT_MAX_ATTACHMENTS = 4;
+    const REPORT_MAX_FILE_BYTES = 6 * 1024 * 1024;
+    const REPORT_MAX_DIMENSION = 1600;
+    const REPORT_WEBP_QUALITY = 0.82;
+    let reportSuccessTimer = null;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     const CATEGORY_LABELS = {
@@ -224,6 +303,115 @@
       if (menuCreateListing) menuCreateListing.style.display = "none";
       avatarLoaded = false;
       markAvatarReady();
+    }
+
+    function getReportFiles() {
+      return Array.from(reportListingFiles?.files || []).slice(0, REPORT_MAX_ATTACHMENTS);
+    }
+
+    function updateReportFilesInfo() {
+      if (!reportListingFilesInfo) return;
+      const rawCount = reportListingFiles?.files?.length || 0;
+      if (rawCount === 0) {
+        reportListingFilesInfo.textContent = "Nenhuma imagem selecionada.";
+        return;
+      }
+      if (rawCount > REPORT_MAX_ATTACHMENTS) {
+        reportListingFilesInfo.textContent = `Você selecionou ${rawCount} imagens. Serão enviadas apenas ${REPORT_MAX_ATTACHMENTS}.`;
+        return;
+      }
+      reportListingFilesInfo.textContent = `${rawCount} imagem(ns) selecionada(s).`;
+    }
+
+    function hideReportSuccess() {
+      if (!reportListingSuccess) return;
+      reportListingSuccess.style.display = "none";
+      reportListingSuccess.textContent = "";
+      if (reportSuccessTimer) {
+        clearTimeout(reportSuccessTimer);
+        reportSuccessTimer = null;
+      }
+    }
+
+    function showReportSuccess(message) {
+      if (!reportListingSuccess) return;
+      reportListingSuccess.textContent = message;
+      reportListingSuccess.style.display = "block";
+      if (reportSuccessTimer) {
+        clearTimeout(reportSuccessTimer);
+      }
+      reportSuccessTimer = setTimeout(() => {
+        hideReportSuccess();
+      }, 7000);
+    }
+
+    async function convertImageToWebp(file) {
+      if (!file?.type || !file.type.startsWith("image/")) {
+        throw new Error("Selecione apenas imagens válidas nos anexos.");
+      }
+      if (file.size > REPORT_MAX_FILE_BYTES) {
+        throw new Error("Cada imagem anexa deve ter no máximo 6MB.");
+      }
+      const bitmap = await createImageBitmap(file);
+      const maxSide = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, REPORT_MAX_DIMENSION / maxSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Falha ao processar imagem anexa.");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", REPORT_WEBP_QUALITY));
+      if (!blob) throw new Error("Falha ao converter anexo para WebP.");
+      const baseName = file.name.replace(/\.[^.]+$/, "") || "report";
+      return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    }
+
+    async function requestReportSignedUpload(file) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "application/octet-stream",
+          extension,
+          userToken: token,
+          assetType: "report",
+        }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || "Erro ao solicitar upload de anexo.");
+      }
+      return response.json();
+    }
+
+    async function uploadReportEvidence(files, onProgress) {
+      const uploaded = [];
+      for (let index = 0; index < files.length; index += 1) {
+        const webp = await convertImageToWebp(files[index]);
+        const signed = await requestReportSignedUpload(webp);
+        const uploadRes = await fetch(signed.uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": webp.type || "application/octet-stream",
+          },
+          body: webp,
+        });
+        if (!uploadRes.ok) throw new Error("Falha ao enviar anexo da denúncia.");
+        uploaded.push(signed.publicUrl);
+        if (typeof onProgress === "function") onProgress(index + 1, files.length);
+      }
+      return uploaded.filter(Boolean);
     }
 
     async function setAvatarImage(src) {
@@ -471,18 +659,32 @@
 
     function setNotFound(message) {
       titleEl.textContent = message || "Anúncio não encontrado.";
-      descriptionEl.textContent = "Sem dados para exibir.";
+      descriptionEl.textContent = "Este anúncio foi excluído ou não está mais disponível.";
       currentGalleryImages = [];
+      currentListing = null;
       if (telegramChat) telegramChat.style.display = "none";
       if (whatsappChat) whatsappChat.style.display = "none";
       if (sellerProfileLink) sellerProfileLink.style.display = "none";
       if (sellerDiscord) sellerDiscord.style.display = "none";
+      if (reportListingBtn) reportListingBtn.style.display = "none";
+      if (reportListingForm) reportListingForm.style.display = "none";
       if (metaEl) metaEl.innerHTML = "";
-      if (mainMedia) mainMedia.textContent = "Sem imagem";
+      if (mainMedia) mainMedia.textContent = "Anúncio indisponível.";
       if (thumbGrid) {
         thumbGrid.innerHTML = "";
         thumbGrid.style.display = "none";
       }
+    }
+
+    function isMissingListingError(error) {
+      if (!error) return false;
+      const code = String(error.code || "").toUpperCase();
+      const message = String(error.message || "").toLowerCase();
+      return (
+        code === "PGRST116" ||
+        message.includes("cannot coerce the result to a single json object") ||
+        message.includes("no rows")
+      );
     }
 
     function renderGallery(images) {
@@ -535,6 +737,7 @@
         setNotFound();
         return;
       }
+      currentListing = listing;
       const firstName = (listing.user_first_name || "").trim();
       const lastName = (listing.user_last_name || "").trim();
       const fullName = `${firstName} ${lastName}`.trim() || "Anunciante";
@@ -613,6 +816,22 @@
         }
       }
 
+      if (reportListingBtn) {
+        const ownListing = !!currentUser && !!listing.user_profile_id && currentUser.id === listing.user_profile_id;
+        reportListingBtn.style.display = ownListing ? "none" : "inline-flex";
+      }
+      if (reportListingForm) {
+        reportListingForm.style.display = "none";
+      }
+      if (reportListingReason) {
+        reportListingReason.value = "";
+      }
+      if (reportListingFeedback) {
+        reportListingFeedback.textContent = "";
+      }
+      if (reportListingFiles) reportListingFiles.value = "";
+      updateReportFilesInfo();
+
       renderGallery(listing.images);
     }
 
@@ -624,7 +843,12 @@
           .select("id,title,description,images,category,categories,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,first_name,last_name,avatar_url,discord_username)")
           .eq("id", listingId)
           .single();
-        if (error) throw error;
+        if (error) {
+          if (isMissingListingError(error)) {
+            return { listing: null };
+          }
+          throw error;
+        }
         if (data?.images) {
           data.images = await resolveImageUrls(data.images);
         }
@@ -657,7 +881,12 @@
           .select("id,title,description,images,category,categories,status,server_id,created_at,user_id")
           .eq("id", listingId)
           .single();
-        if (error) throw error;
+        if (error) {
+          if (isMissingListingError(error)) {
+            return { listing: null };
+          }
+          throw error;
+        }
         if (data?.images) {
           data.images = await resolveImageUrls(data.images);
         }
@@ -713,14 +942,103 @@
           return;
         }
         const result = await fetchListing(listingId);
+        if (!result?.listing) {
+          setNotFound("Este anúncio foi excluído.");
+          return;
+        }
         renderListing(result.listing);
       } catch (err) {
         console.error(err);
-        setNotFound(err?.message || "Erro ao carregar anúncio.");
+        if (isMissingListingError(err)) {
+          setNotFound("Este anúncio foi excluído.");
+          return;
+        }
+        setNotFound("Este anúncio foi excluído ou não está disponível.");
       }
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
+    reportListingBtn?.addEventListener("click", () => {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      hideReportSuccess();
+      if (!currentListing) return;
+      if (currentListing.user_profile_id && currentUser.id === currentListing.user_profile_id) {
+        if (reportListingFeedback) reportListingFeedback.textContent = "Você não pode denunciar seu próprio anúncio.";
+        return;
+      }
+      if (reportListingForm) {
+        const showing = reportListingForm.style.display !== "none";
+        reportListingForm.style.display = showing ? "none" : "grid";
+        if (!showing && reportListingReason) {
+          reportListingReason.focus();
+        }
+      }
+    });
+    reportListingCancel?.addEventListener("click", () => {
+      if (reportListingForm) reportListingForm.style.display = "none";
+      if (reportListingReason) reportListingReason.value = "";
+      if (reportListingFeedback) reportListingFeedback.textContent = "";
+      if (reportListingFiles) reportListingFiles.value = "";
+      updateReportFilesInfo();
+    });
+    reportListingFiles?.addEventListener("change", updateReportFilesInfo);
+    reportListingSubmit?.addEventListener("click", async () => {
+      try {
+        if (!currentUser) {
+          window.location.href = "login.html";
+          return;
+        }
+        hideReportSuccess();
+        if (!currentListing?.id) return;
+        const reason = String(reportListingReason?.value || "").trim();
+        if (reason.length < 10) {
+          if (reportListingFeedback) reportListingFeedback.textContent = "Descreva o problema com pelo menos 10 caracteres.";
+          return;
+        }
+        const files = getReportFiles();
+        reportListingSubmit.disabled = true;
+        if (reportListingFeedback) reportListingFeedback.textContent = "Enviando denúncia...";
+        let evidenceImages = [];
+        if (files.length > 0) {
+          evidenceImages = await uploadReportEvidence(files, (done, total) => {
+            if (reportListingFeedback) {
+              reportListingFeedback.textContent = `Enviando anexos ${done}/${total}...`;
+            }
+          });
+        }
+        if (reportListingFeedback) reportListingFeedback.textContent = "Registrando denúncia...";
+        ensureClient();
+        const { error } = await supabase.from("reports").insert({
+          reporter_id: currentUser.id,
+          target_type: "listing",
+          listing_id: currentListing.id,
+          reason,
+          evidence_images: evidenceImages,
+        });
+        if (error) {
+          if (error.code === "23505") {
+            throw new Error("Você já possui uma denúncia pendente para este anúncio.");
+          }
+          throw error;
+        }
+        if (reportListingFeedback) reportListingFeedback.textContent = "Denúncia enviada para análise.";
+        showReportSuccess("Sua denúncia foi enviada com sucesso. Nossa equipe vai analisar o caso.");
+        if (reportListingReason) reportListingReason.value = "";
+        if (reportListingFiles) reportListingFiles.value = "";
+        updateReportFilesInfo();
+        if (reportListingForm) reportListingForm.style.display = "none";
+      } catch (err) {
+        console.error(err);
+        if (reportListingFeedback) {
+          reportListingFeedback.textContent = err?.message || "Erro ao enviar denúncia.";
+        }
+      } finally {
+        if (reportListingSubmit) reportListingSubmit.disabled = false;
+      }
+    });
     avatarBtn?.addEventListener("click", (event) => {
       event.stopPropagation();
       userMenu?.classList.toggle("open");

@@ -305,6 +305,22 @@ Deno.serve(async (req) => {
         .map((item) => parseR2Key(String(item)))
         .filter((key): key is string => Boolean(key && key.startsWith(`listings/${authData.user.id}/`))),
     ));
+    let reportEvidenceKeys: string[] = [];
+    const { data: reportRows, error: reportRowsErr } = await supabase
+      .from("reports")
+      .select("evidence_images")
+      .eq("listing_id", listing.id);
+    if (reportRowsErr && reportRowsErr.code !== "42P01") {
+      throw reportRowsErr;
+    }
+    if (Array.isArray(reportRows)) {
+      reportEvidenceKeys = Array.from(new Set(
+        reportRows
+          .flatMap((row) => Array.isArray(row?.evidence_images) ? row.evidence_images : [])
+          .map((item) => parseR2Key(String(item)))
+          .filter((key): key is string => Boolean(key && key.startsWith("reports/"))),
+      ));
+    }
 
     let refundableDays = 0;
     let refundedAmount = 0;
@@ -353,12 +369,25 @@ Deno.serve(async (req) => {
         console.error(`Falha ao excluir objeto R2 ${key}`, deleteErr);
       }
     }
+    let deletedReportEvidenceKeys = 0;
+    let failedReportEvidenceKeys = 0;
+    for (const key of reportEvidenceKeys) {
+      try {
+        await deleteR2Object(key);
+        deletedReportEvidenceKeys += 1;
+      } catch (deleteErr) {
+        failedReportEvidenceKeys += 1;
+        console.error(`Falha ao excluir anexo de denúncia no R2 ${key}`, deleteErr);
+      }
+    }
 
     return new Response(
       JSON.stringify({
         ok: true,
         deletedKeys,
         failedKeys,
+        deletedReportEvidenceKeys,
+        failedReportEvidenceKeys,
         refundableDays,
         refundedAmount,
         stripeRefundId,

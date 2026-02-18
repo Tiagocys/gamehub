@@ -297,3 +297,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/stripe_webhook/deno.json"
 entrypoint = "./functions/stripe_webhook/index.ts"
+
+[functions.report_moderate]
+enabled = true
+verify_jwt = false
+import_map = "./functions/report_moderate/deno.json"
+entrypoint = "./functions/report_moderate/index.ts"

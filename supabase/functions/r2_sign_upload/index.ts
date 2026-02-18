@@ -8,7 +8,7 @@ type Payload = {
   key?: string;
   keys?: string[];
   userToken?: string;
-  assetType?: "listing" | "avatar";
+  assetType?: "listing" | "avatar" | "report";
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
@@ -284,7 +284,11 @@ Deno.serve(async (req) => {
       return errorResponse("Extensão inválida", 400);
     }
 
-    const assetType = payload.assetType === "avatar" ? "avatar" : "listing";
+    const assetType = payload.assetType === "avatar"
+      ? "avatar"
+      : payload.assetType === "report"
+        ? "report"
+        : "listing";
     const bucket = assetType === "avatar" ? R2_PROFILE_BUCKET : R2_BUCKET;
     if (!bucket) {
       return errorResponse("Bucket R2 não configurado", 500);
@@ -292,7 +296,9 @@ Deno.serve(async (req) => {
 
     const keyPrefix = assetType === "avatar"
       ? `avatars/${authData.user.id}`
-      : `listings/${authData.user.id}`;
+      : assetType === "report"
+        ? `reports/${authData.user.id}`
+        : `listings/${authData.user.id}`;
     const key = `${keyPrefix}/${crypto.randomUUID()}.${ext}`;
     const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
     const endpointUrl = new URL(endpoint);

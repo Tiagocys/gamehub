@@ -364,14 +364,48 @@
       return user.email.split("@")[0].toLowerCase();
     }
 
+    function isMissingStatusColumnError(error) {
+      if (!error) return false;
+      return error.code === "42703" || String(error.message || "").toLowerCase().includes("status");
+    }
+
     async function upsertProfile(user) {
       const names = parseUserName(user);
       const baseUsername = baseUsernameFromUser(user);
-      const candidates = [
-        baseUsername,
-        `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
-        `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
-      ];
+      let existingProfile = null;
+      let hasStatusColumn = true;
+
+      const existingWithStatus = await supabase
+        .from("users")
+        .select("username,status")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (existingWithStatus.error) {
+        if (isMissingStatusColumnError(existingWithStatus.error)) {
+          hasStatusColumn = false;
+          const fallback = await supabase
+            .from("users")
+            .select("username")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (fallback.error && fallback.error.code !== "PGRST116") throw fallback.error;
+          existingProfile = fallback.data || null;
+        } else if (existingWithStatus.error.code !== "PGRST116") {
+          throw existingWithStatus.error;
+        }
+      } else {
+        existingProfile = existingWithStatus.data || null;
+      }
+
+      const normalizedBase = (baseUsername || "user").replace(/[^a-z0-9._-]/g, "").slice(0, 32) || "user";
+      const candidates = Array.from(new Set([
+        existingProfile?.username || "",
+        normalizedBase,
+        `${normalizedBase}-${Math.floor(Math.random() * 9000 + 1000)}`,
+        `${normalizedBase}-${crypto.randomUUID().slice(0, 6)}`,
+      ].filter(Boolean)));
+
+      const nextStatus = existingProfile?.status === "banned" ? "banned" : "active";
 
       let lastError = null;
       for (const candidate of candidates) {
@@ -383,8 +417,22 @@
           first_name: names.firstName || null,
           last_name: names.lastName || null,
         };
+        if (hasStatusColumn) {
+          payload.status = nextStatus;
+        }
         const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
         if (!error) return;
+        if (hasStatusColumn && isMissingStatusColumnError(error)) {
+          hasStatusColumn = false;
+          delete payload.status;
+          const retry = await supabase.from("users").upsert(payload, { onConflict: "id" });
+          if (!retry.error) return;
+          if (retry.error.code !== "23505") {
+            throw retry.error;
+          }
+          lastError = retry.error;
+          continue;
+        }
         if (error.code !== "23505") {
           throw error;
         }
