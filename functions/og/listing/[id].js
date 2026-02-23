@@ -1,5 +1,12 @@
 const DEFAULT_META_PATH = "/img/meta.png";
 
+function cleanEnv(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  // Remove aspas acidentais copiadas no painel (ex: "xxxxx" ou 'xxxxx').
+  return raw.replace(/^['"]+|['"]+$/g, "").trim();
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replaceAll("&", "&amp;")
@@ -58,13 +65,22 @@ async function fetchListing({ supabaseUrl, supabaseAnonKey, listingId }) {
   const encodedId = encodeURIComponent(listingId);
   const endpoint = `${stripTrailingSlash(supabaseUrl)}/rest/v1/listings?id=eq.${encodedId}&select=id,title,description,images,server_id,status&limit=1`;
 
-  const response = await fetch(endpoint, {
+  let response = await fetch(endpoint, {
     headers: {
       apikey: supabaseAnonKey,
       Authorization: `Bearer ${supabaseAnonKey}`,
       Accept: "application/json",
     },
   });
+  // Alguns ambientes aceitam apenas apikey sem Authorization.
+  if (!response.ok) {
+    response = await fetch(endpoint, {
+      headers: {
+        apikey: supabaseAnonKey,
+        Accept: "application/json",
+      },
+    });
+  }
   if (!response.ok) {
     const payload = await response.text().catch(() => "");
     throw new Error(`Supabase listings query failed (${response.status}): ${payload}`);
@@ -77,13 +93,21 @@ async function fetchListing({ supabaseUrl, supabaseAnonKey, listingId }) {
 async function fetchServerName({ supabaseUrl, supabaseAnonKey, serverId }) {
   if (!serverId) return "";
   const endpoint = `${stripTrailingSlash(supabaseUrl)}/rest/v1/servers?id=eq.${encodeURIComponent(serverId)}&select=name&limit=1`;
-  const response = await fetch(endpoint, {
+  let response = await fetch(endpoint, {
     headers: {
       apikey: supabaseAnonKey,
       Authorization: `Bearer ${supabaseAnonKey}`,
       Accept: "application/json",
     },
   });
+  if (!response.ok) {
+    response = await fetch(endpoint, {
+      headers: {
+        apikey: supabaseAnonKey,
+        Accept: "application/json",
+      },
+    });
+  }
   if (!response.ok) return "";
   const rows = await response.json().catch(() => []);
   return Array.isArray(rows) && rows[0]?.name ? String(rows[0].name) : "";
@@ -135,9 +159,9 @@ function renderMetaPage({ title, description, imageUrl, ogUrl, appUrl, siteName 
 
 export async function onRequestGet(context) {
   const listingId = context.params?.id;
-  const supabaseUrl = context.env.SUPABASE_URL;
-  const supabaseAnonKey = context.env.SUPABASE_ANON_KEY;
-  const siteUrl = stripTrailingSlash(context.env.SITE_URL || new URL(context.request.url).origin);
+  const supabaseUrl = cleanEnv(context.env.SUPABASE_URL);
+  const supabaseAnonKey = cleanEnv(context.env.SUPABASE_ANON_KEY);
+  const siteUrl = stripTrailingSlash(cleanEnv(context.env.SITE_URL) || new URL(context.request.url).origin);
 
   if (!listingId) {
     return new Response("Listing ID ausente.", { status: 400 });
@@ -218,12 +242,16 @@ export async function onRequestGet(context) {
       ogUrl,
       appUrl,
     });
+    const headers = new Headers({
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-store",
+    });
+    // Ajuda debug remoto sem expor segredos.
+    const debugMsg = String(err?.message || "unknown_error").slice(0, 180);
+    headers.set("x-og-debug", debugMsg);
     return new Response(fallbackHtml, {
       status: 200,
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        "cache-control": "no-store",
-      },
+      headers,
     });
   }
 }
