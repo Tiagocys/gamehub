@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Perfil</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
@@ -98,6 +105,50 @@
       box-shadow: none;
       width: fit-content;
     }
+
+    .phone-required-cta {
+      display: none;
+      margin-bottom: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(27, 79, 211, 0.28);
+      background: rgba(118, 168, 255, 0.1);
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .phone-required-cta a {
+      font-weight: 700;
+    }
+
+    .profile-section {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(12, 21, 51, 0.015);
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .profile-section-title {
+      margin: 0;
+      font-size: 20px;
+      color: var(--ink);
+    }
+
+    .verify-card.is-verified {
+      background: rgba(12, 21, 51, 0.01);
+      border-style: dashed;
+      border-color: rgba(12, 21, 51, 0.16);
+      padding: 12px;
+      gap: 8px;
+    }
+
+    .whatsapp-pref-card.contact-highlight {
+      border-color: rgba(34, 197, 94, 0.45);
+      background: rgba(34, 197, 94, 0.1);
+    }
   </style>
   <style id="profile-guard-style">html{visibility:hidden;}</style>
   <script>
@@ -118,70 +169,57 @@
     <img src="img/logo.png" alt="Carregando" />
   </div>
   <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-tagline">Perfil do usuário</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
-        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-        <div id="user-menu" class="nav-user">
-          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
-            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
-          </button>
-          <div class="user-dropdown">
-            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
-            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
-            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
-            <button id="logout-btn" class="menu-item" type="button">Sair</button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <site-navbar></site-navbar>
 
     <main class="section">
+      <div id="phone-required-cta" class="phone-required-cta">
+        Você precisa antes verificar o seu número de telefone para poder anunciar.
+        <a href="#verify-card">Clique aqui para iniciar a verificação</a>.
+      </div>
       <div class="form-card">
         <div>
           <h2>Perfil</h2>
-          <p class="helper">Complete suas informações para aparecer no marketplace.</p>
+          <p class="helper">Mantenha as informações do seu perfil atualizadas.</p>
         </div>
         <form id="profile-form" class="form-vertical">
-          <div class="avatar-upload-card">
-            <label for="avatar-upload">Foto de perfil</label>
-            <div class="avatar-upload-row">
-              <img id="profile-avatar-preview" class="avatar-upload-preview" src="img/avatar.svg" alt="Pré-visualização do avatar" />
-              <input id="avatar-upload" class="input" type="file" accept="image/*" />
+          <section class="profile-section">
+            <h3 class="profile-section-title">Informações do perfil</h3>
+            <div class="avatar-upload-card">
+              <label for="avatar-upload">Foto de perfil</label>
+              <div class="avatar-upload-row">
+                <img id="profile-avatar-preview" class="avatar-upload-preview" src="img/avatar.svg" alt="Pré-visualização do avatar" />
+                <input id="avatar-upload" class="input" type="file" accept="image/*" />
+              </div>
+              <div class="helper">Envie uma imagem JPG, PNG ou WEBP (máx. 5MB).</div>
             </div>
-            <div class="helper">Envie uma imagem JPG, PNG ou WEBP (máx. 5MB).</div>
-          </div>
-          <div class="form-grid">
+            <div class="form-grid">
+              <div class="field">
+                <label for="first-name">Nome *</label>
+                <input id="first-name" class="input" placeholder="Seu nome" required />
+              </div>
+              <div class="field">
+                <label for="last-name">Sobrenome *</label>
+                <input id="last-name" class="input" placeholder="Seu sobrenome" required />
+              </div>
+            </div>
+  
             <div class="field">
-              <label for="first-name">Nome *</label>
-              <input id="first-name" class="input" placeholder="Seu nome" required />
+              <label for="discord-username">Discord</label>
+              <div class="discord-input-wrap">
+                <img src="img/discord.svg" alt="" class="discord-input-icon" />
+                <input id="discord-username" class="input" placeholder="ex: diorgenis6969" minlength="2" maxlength="32" />
+              </div>
+              <div id="discord-help" class="helper"></div>
             </div>
             <div class="field">
-              <label for="last-name">Sobrenome *</label>
-              <input id="last-name" class="input" placeholder="Seu sobrenome" required />
+              <label for="about-me">Sobre mim</label>
+              <textarea id="about-me" class="textarea" maxlength="1000" placeholder="Conte um pouco sobre você, seus horários ou sua experiência no game."></textarea>
+              <div class="helper">Opcional. Até 1000 caracteres.</div>
             </div>
-          </div>
+          </section>
 
-          <div class="field">
-            <label for="discord-username">Discord</label>
-            <div class="discord-input-wrap">
-              <img src="img/discord.svg" alt="" class="discord-input-icon" />
-              <input id="discord-username" class="input" placeholder="ex: diorgenis6969" minlength="2" maxlength="32" />
-            </div>
-            <div id="discord-help" class="helper"></div>
-          </div>
-          <div class="field">
-            <label for="about-me">Sobre mim</label>
-            <textarea id="about-me" class="textarea" maxlength="1000" placeholder="Conte um pouco sobre você, seus horários ou sua experiência no game."></textarea>
-            <div class="helper">Opcional. Até 1000 caracteres.</div>
-          </div>
-          <div class="field">
+          <section class="profile-section">
+            <h3 class="profile-section-title">Contato</h3>
             <div class="field" id="phone-field" style="display:none;">
               <label for="phone">Telefone</label>
               <input id="phone" class="input" type="tel" placeholder="Compartilhe via Telegram" readonly />
@@ -203,8 +241,8 @@
                 Exibir botão para conversar no WhatsApp nos meus anúncios
               </label>
             </div>
-            <div id="public-contact-pref-card" class="whatsapp-pref-card" style="display:grid;">
-              <p class="helper">Onde exibir as formas de contato (Telegram/WhatsApp)?</p>
+            <div id="public-contact-pref-card" class="whatsapp-pref-card">
+              <p class="helper">Onde exibir meu número de telefone?</p>
               <div class="whatsapp-pref-options">
                 <label class="whatsapp-pref-option" for="public-contact-yes">
                   <input id="public-contact-yes" type="radio" name="public-contact-visibility" value="yes" checked />
@@ -216,7 +254,7 @@
                 </label>
               </div>
             </div>
-            <div class="verify-card">
+            <div class="verify-card" id="verify-card">
               <div>
                 <div class="inline-actions" style="gap:8px; align-items:center;">
                   <h3>Verificação do telefone via Telegram</h3>
@@ -224,7 +262,7 @@
                     <span class="info-tooltip">Você precisará baixar o aplicativo do Telegram no seu dispositivo móvel ou o Telegram para desktop caso esteja acessando essa página a partir de um computador.</span>
                   </span>
                 </div>
-                <p class="helper" id="phone-status">Você precisa antes verificar o seu número de telefone para poder anunciar.</p>
+                <p class="helper" id="phone-status">Verifique seu número de telefone via Telegram para ativar sua conta anunciante.</p>
               </div>
               <div class="inline-actions">
                 <button id="verify-phone-btn" class="btn btn-telegram" type="button">
@@ -248,10 +286,13 @@
                 <li>Volte aqui e atualize a página.</li>
               </ol>
             </div>
-          </div>
+          </section>
 
           <div class="field" style="grid-column: 1 / -1;">
-            <button type="submit" class="btn btn-primary" id="save-btn">Salvar perfil</button>
+            <div class="inline-actions">
+              <button type="submit" class="btn btn-primary" id="save-btn">Salvar perfil</button>
+              <a id="view-public-profile-btn" class="btn btn-ghost" href="#" style="display:none;">Ver meu perfil público</a>
+            </div>
             <div id="profile-feedback" class="helper"></div>
           </div>
 
@@ -265,11 +306,17 @@
         </form>
       </div>
     </main>
+
+    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -282,9 +329,11 @@
     const logoutBtn = document.getElementById("logout-btn");
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
     const form = document.getElementById("profile-form");
     const feedback = document.getElementById("profile-feedback");
     const saveBtn = document.getElementById("save-btn");
+    const viewPublicProfileBtn = document.getElementById("view-public-profile-btn");
     const deleteProfileBtn = document.getElementById("delete-profile-btn");
 
     const firstNameInput = document.getElementById("first-name");
@@ -300,6 +349,8 @@
     const verifySteps = document.getElementById("verify-steps");
     const verifyPhoneBtn = document.getElementById("verify-phone-btn");
     const phoneStatus = document.getElementById("phone-status");
+    const verifyCard = document.getElementById("verify-card");
+    const phoneRequiredCta = document.getElementById("phone-required-cta");
     const telegramCode = document.getElementById("telegram-code");
     const copyTelegramCode = document.getElementById("copy-telegram-code");
     const whatsappPrefCard = document.getElementById("whatsapp-pref-card");
@@ -307,6 +358,7 @@
     const whatsappSameNo = document.getElementById("whatsapp-same-no");
     const whatsappShowWrap = document.getElementById("whatsapp-show-wrap");
     const showWhatsappButtonInput = document.getElementById("show-whatsapp-button");
+    const publicContactPrefCard = document.getElementById("public-contact-pref-card");
     const publicContactYes = document.getElementById("public-contact-yes");
     const publicContactNo = document.getElementById("public-contact-no");
 
@@ -341,6 +393,10 @@
     let pendingAvatarObjectUrl = null;
     let whatsappPrefSaving = false;
     let whatsappPrefPending = false;
+    let publicContactPrefSaving = false;
+    let publicContactPrefPending = false;
+    const pageParams = new URLSearchParams(window.location.search);
+    const requiresPhoneCta = pageParams.get("phone_required") === "1";
     const DISCORD_USERNAME_REGEX = /^(?!.*\.\.)[a-z0-9._]{2,32}$/;
     const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
     const MAX_AVATAR_DIMENSION = 1024;
@@ -384,15 +440,24 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
         loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
+        if (viewPublicProfileBtn) {
+          viewPublicProfileBtn.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+          viewPublicProfileBtn.style.display = "inline-flex";
+        }
         return;
       }
       authBtn.style.display = "inline-flex";
       if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
+      if (viewPublicProfileBtn) {
+        viewPublicProfileBtn.style.display = "none";
+      }
       avatarLoaded = false;
       markAvatarReady();
     }
@@ -517,10 +582,14 @@
       if (showWhatsappButtonInput) {
         showWhatsappButtonInput.checked = !!profile.show_whatsapp_button;
       }
-      const showPublicContacts = profile.show_contacts_on_public_profile !== false;
+      syncPublicContactVisibilityInputs(profile);
+      setProfileAvatarPreview(profile.avatar_url || null);
+    }
+
+    function syncPublicContactVisibilityInputs(profile) {
+      const showPublicContacts = profile?.show_contacts_on_public_profile !== false;
       if (publicContactYes) publicContactYes.checked = showPublicContacts;
       if (publicContactNo) publicContactNo.checked = !showPublicContacts;
-      setProfileAvatarPreview(profile.avatar_url || null);
     }
 
     async function fetchProfile() {
@@ -641,6 +710,9 @@
       const verified = !!profile?.phone_verified && !!profile?.phone;
       if (!verified) {
         whatsappPrefCard.style.display = "none";
+        whatsappPrefCard.classList.remove("contact-highlight");
+        if (publicContactPrefCard) publicContactPrefCard.style.display = "none";
+        if (publicContactPrefCard) publicContactPrefCard.classList.remove("contact-highlight");
         if (whatsappSameYes) whatsappSameYes.checked = false;
         if (whatsappSameNo) whatsappSameNo.checked = true;
         if (showWhatsappButtonInput) showWhatsappButtonInput.checked = false;
@@ -649,6 +721,10 @@
       }
 
       whatsappPrefCard.style.display = "grid";
+      whatsappPrefCard.classList.add("contact-highlight");
+      if (publicContactPrefCard) publicContactPrefCard.style.display = "grid";
+      if (publicContactPrefCard) publicContactPrefCard.classList.add("contact-highlight");
+      syncPublicContactVisibilityInputs(profile);
       const samePhone = !!profile?.whatsapp_same_phone;
       if (whatsappSameYes) whatsappSameYes.checked = samePhone;
       if (whatsappSameNo) whatsappSameNo.checked = !samePhone;
@@ -657,6 +733,52 @@
       }
       if (whatsappShowWrap) {
         whatsappShowWrap.style.display = samePhone ? "inline-flex" : "none";
+      }
+    }
+
+    async function persistPublicContactVisibilityOnChange() {
+      if (!currentUser || !currentProfile) return;
+      const verified = !!currentProfile.phone_verified && !!currentProfile.phone;
+      if (!verified) return;
+
+      const nextShowPublicContacts = !!publicContactYes?.checked;
+      const currentShowPublicContacts = currentProfile.show_contacts_on_public_profile !== false;
+
+      if (nextShowPublicContacts === currentShowPublicContacts) {
+        return;
+      }
+
+      if (publicContactPrefSaving) {
+        publicContactPrefPending = true;
+        return;
+      }
+
+      publicContactPrefSaving = true;
+      try {
+        ensureClient();
+        const { error } = await supabase
+          .from("users")
+          .update({
+            show_contacts_on_public_profile: nextShowPublicContacts,
+          })
+          .eq("id", currentUser.id);
+        if (error) throw error;
+
+        currentProfile = {
+          ...(currentProfile || {}),
+          show_contacts_on_public_profile: nextShowPublicContacts,
+        };
+        feedback.textContent = "Preferência de visibilidade de contato salva.";
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || "Erro ao salvar preferência de contato.";
+        syncPublicContactVisibilityInputs(currentProfile);
+      } finally {
+        publicContactPrefSaving = false;
+        if (publicContactPrefPending) {
+          publicContactPrefPending = false;
+          persistPublicContactVisibilityOnChange();
+        }
       }
     }
 
@@ -713,11 +835,15 @@
     function updatePhoneStatus(profile) {
       if (!phoneStatus) return;
       const verified = !!profile?.phone_verified;
+      if (verifyCard) verifyCard.classList.toggle("is-verified", verified);
+      if (phoneRequiredCta) {
+        phoneRequiredCta.style.display = requiresPhoneCta && !verified ? "block" : "none";
+      }
       const verifyLabel = verified
         ? `Clique aqui para alterar o seu número <img src="img/telegram.webp" alt="" class="btn-icon" />`
         : `Clique aqui para verificar seu número <img src="img/telegram.webp" alt="" class="btn-icon" />`;
       if (!profile?.phone) {
-        phoneStatus.textContent = "Você precisa antes verificar o seu número de telefone para poder anunciar.";
+        phoneStatus.textContent = "Verifique seu número de telefone via Telegram para ativar sua conta anunciante.";
         if (verifyPhoneBtn) {
           verifyPhoneBtn.disabled = false;
           verifyPhoneBtn.style.display = "inline-flex";
@@ -950,6 +1076,14 @@
       persistWhatsappPreferencesOnChange();
     });
 
+    publicContactYes?.addEventListener("change", () => {
+      persistPublicContactVisibilityOnChange();
+    });
+
+    publicContactNo?.addEventListener("change", () => {
+      persistPublicContactVisibilityOnChange();
+    });
+
     copyTelegramCode?.addEventListener("click", async () => {
       if (!telegramCode) return;
       const text = telegramCode.textContent || "";
@@ -1024,9 +1158,8 @@
           currentProfile = await createProfileFallback();
         }
         fillProfile(currentProfile);
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("phone_required") === "1" && phoneStatus) {
-          phoneStatus.classList.add("pulse");
+        if (requiresPhoneCta && phoneRequiredCta) {
+          phoneRequiredCta.classList.add("pulse");
         }
         updatePhoneStatus(currentProfile);
         revealPage();

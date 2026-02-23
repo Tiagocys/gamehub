@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Perfil público</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="user-guard-style">html{visibility:hidden;}</style>
@@ -10,6 +17,8 @@
     .user-public-grid {
       display: grid;
       gap: 18px;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
     }
 
     .user-public-card {
@@ -412,6 +421,27 @@
       line-height: 1.2;
     }
 
+    @media (min-width: 980px) {
+      .user-public-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .user-public-card,
+      .user-listings-card,
+      #public-feedback {
+        grid-column: 1 / -1;
+      }
+
+      .user-about-card {
+        grid-column: 1;
+      }
+
+      .user-games-card {
+        grid-column: 2;
+      }
+    }
+
     @media (max-width: 700px) {
       .user-public-card {
         grid-template-columns: 1fr;
@@ -436,29 +466,7 @@
     <img src="img/logo.png" alt="Carregando" />
   </div>
   <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-tagline">Perfil público</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
-        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-        <div id="user-menu" class="nav-user">
-          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
-            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
-          </button>
-          <div class="user-dropdown">
-            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
-            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
-            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
-            <button id="logout-btn" class="menu-item" type="button">Sair</button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <site-navbar></site-navbar>
 
     <main class="section user-public-grid">
       <section class="user-public-card">
@@ -505,23 +513,24 @@
             </div>
           </div>
           <p id="self-profile-hint" class="helper" style="display:none;">
-            Este é seu perfil público. Para editar dados, acesse <a class="link-ghost" href="profile.html">Meu perfil</a>.
+            Este é seu perfil público.
           </p>
+          <a id="edit-profile-btn" class="btn btn-ghost" href="profile.html" style="display:none;">Editar perfil</a>
         </div>
       </section>
 
-      <section class="hero-card">
+      <section class="hero-card user-about-card">
         <h3>Sobre mim</h3>
         <p id="public-about" class="helper user-public-about">Sem informações adicionais.</p>
       </section>
 
-      <section class="hero-card">
+      <section class="hero-card user-games-card">
         <h3>Games com anúncios deste usuário</h3>
         <div id="public-games" class="user-public-games"></div>
         <p id="public-games-empty" class="helper" style="display:none;">Nenhum game vinculado ainda.</p>
       </section>
 
-      <section class="hero-card">
+      <section class="hero-card user-listings-card">
         <div class="user-listings-header">
           <h3>Anúncios ativos</h3>
           <p id="public-listings-count" class="helper"></p>
@@ -531,6 +540,8 @@
       </section>
       <p id="public-feedback" class="helper"></p>
     </main>
+
+    <site-footer></site-footer>
   </div>
   <div id="recommenders-modal" class="recommenders-modal" aria-hidden="true">
     <div class="recommenders-modal-card">
@@ -547,8 +558,12 @@
   </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -563,6 +578,7 @@
     const logoutBtn = document.getElementById("logout-btn");
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
 
     const publicAvatar = document.getElementById("public-avatar");
     const publicName = document.getElementById("public-name");
@@ -595,6 +611,7 @@
     const recommendersLoadingEl = document.getElementById("recommenders-loading");
     const recommendersEmpty = document.getElementById("recommenders-empty");
     const selfProfileHint = document.getElementById("self-profile-hint");
+    const editProfileBtn = document.getElementById("edit-profile-btn");
     const feedback = document.getElementById("public-feedback");
 
     const pageLoader = document.getElementById("page-loader");
@@ -628,6 +645,7 @@
 
     let supabase;
     let currentUser = null;
+    let currentUserProfile = null;
     let targetUserId = null;
     let recommendationGiven = false;
     let recommendersOffset = 0;
@@ -667,6 +685,7 @@
         });
         supabase.auth.onAuthStateChange((_event, session) => {
           currentUser = session?.user || null;
+          currentUserProfile = null;
           updateAuthUI();
         });
       }
@@ -679,13 +698,16 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
         loadUserAvatar();
         return;
       }
+      currentUserProfile = null;
       authBtn.style.display = "inline-flex";
       if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
       markNavAvatarReady();
@@ -939,6 +961,17 @@
       return data;
     }
 
+    async function fetchCurrentUserProfile() {
+      if (!currentUser?.id) return null;
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,phone_verified")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      return data || null;
+    }
+
     async function fetchUserListings() {
       try {
         const { data, error } = await supabase
@@ -979,12 +1012,12 @@
 
     async function fetchRecommendationState() {
       const countPromise = supabase
-        .from("ratings")
+        .from("recommendations")
         .select("id", { count: "exact", head: true })
         .eq("user_id", targetUserId);
       const votePromise = currentUser && currentUser.id !== targetUserId
         ? supabase
-            .from("ratings")
+            .from("recommendations")
             .select("id")
             .eq("user_id", targetUserId)
             .eq("author_id", currentUser.id)
@@ -1081,7 +1114,7 @@
         const from = recommendersOffset;
         const to = recommendersOffset + RECOMMENDERS_PAGE_SIZE - 1;
         const { data, error } = await supabase
-          .from("ratings")
+          .from("recommendations")
           .select("id,author_id,created_at")
           .eq("user_id", targetUserId)
           .order("created_at", { ascending: false })
@@ -1135,7 +1168,22 @@
         recommendBtn.style.display = "none";
         return;
       }
+      if (!currentUserProfile) {
+        try {
+          currentUserProfile = await fetchCurrentUserProfile();
+        } catch (_err) {
+          currentUserProfile = null;
+        }
+      }
+      const canRecommend = !!currentUserProfile?.phone_verified;
       recommendBtn.style.display = "inline-flex";
+      recommendBtn.disabled = !canRecommend;
+      if (!canRecommend) {
+        recommendBtn.title = "Apenas usuários com telefone verificado podem recomendar.";
+        recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> Verifique seu telefone para recomendar`;
+        return;
+      }
+      recommendBtn.title = "";
       recommendBtn.disabled = false;
       recommendBtn.innerHTML = state.didRecommend
         ? `<img src="img/rec.png" alt="" class="recommend-icon" /> Não recomendar usuário`
@@ -1321,12 +1369,19 @@
 
     async function handleRecommend() {
       if (!currentUser || !targetUserId || currentUser.id === targetUserId) return;
+      if (!currentUserProfile) {
+        currentUserProfile = await fetchCurrentUserProfile();
+      }
+      if (!currentUserProfile?.phone_verified) {
+        feedback.textContent = "Apenas usuários com telefone verificado podem recomendar outros usuários.";
+        return;
+      }
       recommendBtn.disabled = true;
       recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> Processando...`;
       try {
         if (recommendationGiven) {
           const { error } = await supabase
-            .from("ratings")
+            .from("recommendations")
             .delete()
             .eq("user_id", targetUserId)
             .eq("author_id", currentUser.id);
@@ -1335,16 +1390,13 @@
           const payload = {
             user_id: targetUserId,
             author_id: currentUser.id,
-            score: 5,
-            comment: null,
-            transaction_id: null,
           };
           let { error } = await supabase
-            .from("ratings")
+            .from("recommendations")
             .upsert(payload, { onConflict: "user_id,author_id" });
           if (error && error.code === "42P10") {
             const { data: existing, error: findError } = await supabase
-              .from("ratings")
+              .from("recommendations")
               .select("id")
               .eq("user_id", targetUserId)
               .eq("author_id", currentUser.id)
@@ -1353,7 +1405,7 @@
               throw findError;
             }
             if (!existing) {
-              const { error: insertError } = await supabase.from("ratings").insert(payload);
+              const { error: insertError } = await supabase.from("recommendations").insert(payload);
               if (insertError) throw insertError;
             }
             error = null;
@@ -1411,10 +1463,12 @@
         const params = new URLSearchParams(window.location.search);
         targetUserId = params.get("id") || currentUser.id;
 
-        const [profile, listings] = await Promise.all([
+        const [profile, listings, viewerProfile] = await Promise.all([
           fetchPublicProfile(),
           fetchUserListings(),
+          fetchCurrentUserProfile(),
         ]);
+        currentUserProfile = viewerProfile;
         currentPublicProfile = profile;
 
         renderProfile(profile);
@@ -1441,6 +1495,10 @@
 
         if (currentUser.id === targetUserId) {
           selfProfileHint.style.display = "block";
+          if (editProfileBtn) editProfileBtn.style.display = "inline-flex";
+        } else {
+          selfProfileHint.style.display = "none";
+          if (editProfileBtn) editProfileBtn.style.display = "none";
         }
 
         await refreshRecommendationUI();

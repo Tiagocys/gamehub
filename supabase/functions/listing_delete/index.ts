@@ -8,7 +8,6 @@ type Payload = {
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
-const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET");
 const R2_ACCOUNT_ID = Deno.env.get("R2_ACCOUNT_ID");
 const R2_ACCESS_KEY_ID = Deno.env.get("R2_ACCESS_KEY_ID");
 const R2_SECRET_ACCESS_KEY = Deno.env.get("R2_SECRET_ACCESS_KEY");
@@ -23,9 +22,6 @@ const corsHeaders = {
 };
 
 const textEncoder = new TextEncoder();
-const DAY_MS = 24 * 60 * 60 * 1000;
-const HIGHLIGHT_BASE_DAY_PRICE = 10;
-const HIGHLIGHT_DAY_DISCOUNT = 0.1;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -185,79 +181,149 @@ async function deleteR2Object(key: string) {
   }
 }
 
-function normalizeDays(value: unknown) {
-  const parsed = Number(value || 0);
-  if (!Number.isFinite(parsed)) return 0;
+type WalletRow = {
+  user_id: string;
+  available_seconds: number;
+  total_purchased_seconds: number;
+  total_consumed_seconds: number;
+  active_listing_count: number;
+  last_consumed_at: string;
+};
+
+function safeInt(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
   return Math.max(0, Math.floor(parsed));
 }
 
-function calculateSingleDayCents(dayIndex: number) {
-  const dayPrice = HIGHLIGHT_BASE_DAY_PRICE * ((1 - HIGHLIGHT_DAY_DISCOUNT) ** dayIndex);
-  return Math.round((Math.round(dayPrice * 100) / 100) * 100);
+function isMissingWalletTableError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  if (err.code === "42P01" || err.code === "42703") return true;
+  const msg = String(err.message || "").toLowerCase();
+  return msg.includes("wallets") || msg.includes("wallet_events");
 }
 
-function calculateRefundableHighlightDays(
-  totalDays: number,
-  startedAtRaw: string | null | undefined,
-  expiresAtRaw: string | null | undefined,
-  now = new Date(),
+async function countActiveHighlights(supabase: any, userId: string) {
+  const { count, error } = await supabase
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .eq("highlight_status", "active");
+  if (error) throw error;
+  return safeInt(count, 0);
+}
+
+async function ensureWallet(supabase: any, userId: string, nowIso: string) {
+  let { data, error } = await supabase
+    .from("wallets")
+    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (isMissingWalletTableError(error)) return null;
+  if (error) throw error;
+  if (data) return data as WalletRow;
+
+  const activeCount = await countActiveHighlights(supabase, userId);
+  const { data: inserted, error: insertErr } = await supabase
+    .from("wallets")
+    .insert({
+      user_id: userId,
+      available_seconds: 0,
+      total_purchased_seconds: 0,
+      total_consumed_seconds: 0,
+      active_listing_count: activeCount,
+      last_consumed_at: nowIso,
+    })
+    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
+    .single();
+  if (insertErr) throw insertErr;
+  return inserted as WalletRow;
+}
+
+async function deactivateAllHighlights(supabase: any, userId: string) {
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      highlight_status: "none",
+      highlight_expires_at: null,
+      highlight_days: 0,
+    })
+    .eq("user_id", userId)
+    .eq("highlight_status", "active");
+  if (error) throw error;
+}
+
+async function appendWalletEvent(supabase: any, payload: Record<string, unknown>) {
+  const { error } = await supabase.from("wallet_events").insert(payload);
+  if (isMissingWalletTableError(error)) return;
+  if (error) throw error;
+}
+
+async function syncWallet(
+  supabase: any,
+  userId: string,
+  reason: string,
 ) {
-  if (totalDays <= 0) return 0;
-  let startedAt: Date | null = startedAtRaw ? new Date(startedAtRaw) : null;
-  const expiresAt = expiresAtRaw ? new Date(expiresAtRaw) : null;
-  if (!startedAt || Number.isNaN(startedAt.getTime())) {
-    if (expiresAt && !Number.isNaN(expiresAt.getTime())) {
-      startedAt = new Date(expiresAt.getTime() - (totalDays * DAY_MS));
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const wallet = await ensureWallet(supabase, userId, nowIso);
+  if (!wallet) return null;
+
+  let activeCount = await countActiveHighlights(supabase, userId);
+  let available = safeInt(wallet.available_seconds);
+  let totalConsumed = safeInt(wallet.total_consumed_seconds);
+  const lastConsumedAt = wallet.last_consumed_at ? new Date(wallet.last_consumed_at) : now;
+  const elapsedSec = Math.max(
+    0,
+    Math.floor((now.getTime() - (Number.isNaN(lastConsumedAt.getTime()) ? now.getTime() : lastConsumedAt.getTime())) / 1000),
+  );
+  let consumedNow = 0;
+
+  if (activeCount > 0) {
+    if (available <= 0) {
+      await deactivateAllHighlights(supabase, userId);
+      activeCount = 0;
+    } else if (elapsedSec > 0) {
+      const requestedConsume = elapsedSec * activeCount;
+      if (requestedConsume >= available) {
+        consumedNow = available;
+        available = 0;
+        totalConsumed += consumedNow;
+        await deactivateAllHighlights(supabase, userId);
+        activeCount = 0;
+      } else {
+        consumedNow = requestedConsume;
+        available -= consumedNow;
+        totalConsumed += consumedNow;
+      }
     }
   }
-  if (!startedAt || Number.isNaN(startedAt.getTime())) return 0;
-  if (now <= startedAt) return Math.max(totalDays - 1, 0);
-  const elapsedDays = Math.floor((now.getTime() - startedAt.getTime()) / DAY_MS);
-  return Math.max(totalDays - (elapsedDays + 1), 0);
-}
 
-function calculateRefundCents(totalDays: number, refundableDays: number) {
-  if (refundableDays <= 0 || totalDays <= 0) return 0;
-  const refundedStartDay = totalDays - refundableDays;
-  let refundCents = 0;
-  for (let dayIndex = refundedStartDay; dayIndex < totalDays; dayIndex += 1) {
-    refundCents += calculateSingleDayCents(dayIndex);
+  const { data: updated, error: updateErr } = await supabase
+    .from("wallets")
+    .update({
+      available_seconds: available,
+      total_consumed_seconds: totalConsumed,
+      active_listing_count: activeCount,
+      last_consumed_at: nowIso,
+    })
+    .eq("user_id", userId)
+    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
+    .single();
+  if (updateErr) throw updateErr;
+
+  if (consumedNow > 0) {
+    await appendWalletEvent(supabase, {
+      user_id: userId,
+      event_type: "consume",
+      seconds_delta: -consumedNow,
+      balance_after: available,
+      metadata: { reason, elapsed_seconds: elapsedSec },
+    });
   }
-  return Math.max(0, refundCents);
-}
 
-async function requestStripeRefund(
-  paymentIntentId: string,
-  amountCents: number,
-  listingId: string,
-  userId: string,
-) {
-  if (!STRIPE_SECRET) {
-    throw new Error("STRIPE_SECRET ausente para efetuar reembolso");
-  }
-  if (amountCents <= 0) return null;
-
-  const body = new URLSearchParams();
-  body.set("payment_intent", paymentIntentId);
-  body.set("amount", String(amountCents));
-  body.set("metadata[listing_id]", listingId);
-  body.set("metadata[user_id]", userId);
-  body.set("metadata[reason]", "listing_deleted_partial_highlight_refund");
-
-  const response = await fetch("https://api.stripe.com/v1/refunds", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${STRIPE_SECRET}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: body.toString(),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = data?.error?.message || `Falha ao solicitar reembolso (${response.status})`;
-    throw new Error(message);
-  }
-  return data;
+  return updated as WalletRow;
 }
 
 Deno.serve(async (req) => {
@@ -291,7 +357,7 @@ Deno.serve(async (req) => {
 
     const { data: listing, error: listingErr } = await supabase
       .from("listings")
-      .select("id,user_id,images,highlight_status,highlight_days,highlight_started_at,highlight_expires_at,highlight_paid_amount,highlight_payment_intent_id")
+      .select("id,user_id,images,highlight_status")
       .eq("id", payload.listingId)
       .eq("user_id", authData.user.id)
       .single();
@@ -322,34 +388,7 @@ Deno.serve(async (req) => {
       ));
     }
 
-    let refundableDays = 0;
-    let refundedAmount = 0;
-    let stripeRefundId: string | null = null;
-    const highlightDays = normalizeDays(listing.highlight_days);
-    const paidAmountCents = Math.max(0, Math.round(Number(listing.highlight_paid_amount || 0) * 100));
-    if (
-      listing.highlight_status === "active" &&
-      highlightDays > 0 &&
-      listing.highlight_payment_intent_id
-    ) {
-      refundableDays = calculateRefundableHighlightDays(
-        highlightDays,
-        listing.highlight_started_at,
-        listing.highlight_expires_at,
-      );
-      const calculatedRefundCents = calculateRefundCents(highlightDays, refundableDays);
-      const refundCents = Math.min(calculatedRefundCents, paidAmountCents);
-      if (refundCents > 0) {
-        const stripeRefund = await requestStripeRefund(
-          listing.highlight_payment_intent_id,
-          refundCents,
-          listing.id,
-          authData.user.id,
-        );
-        refundedAmount = Number((refundCents / 100).toFixed(2));
-        stripeRefundId = typeof stripeRefund?.id === "string" ? stripeRefund.id : null;
-      }
-    }
+    const walletBeforeDelete = await syncWallet(supabase, authData.user.id, "listing-delete-before");
 
     const { error: delErr } = await supabase
       .from("listings")
@@ -357,6 +396,18 @@ Deno.serve(async (req) => {
       .eq("id", listing.id)
       .eq("user_id", authData.user.id);
     if (delErr) throw delErr;
+
+    if (listing.highlight_status === "active") {
+      await appendWalletEvent(supabase, {
+        user_id: authData.user.id,
+        event_type: "deactivate",
+        seconds_delta: 0,
+        balance_after: safeInt(walletBeforeDelete?.available_seconds, 0),
+        listing_id: listing.id,
+        metadata: { reason: "listing_delete" },
+      });
+    }
+    const walletAfterDelete = await syncWallet(supabase, authData.user.id, "listing-delete-after");
 
     let deletedKeys = 0;
     let failedKeys = 0;
@@ -388,9 +439,15 @@ Deno.serve(async (req) => {
         failedKeys,
         deletedReportEvidenceKeys,
         failedReportEvidenceKeys,
-        refundableDays,
-        refundedAmount,
-        stripeRefundId,
+        refundedAmount: 0,
+        wallet: walletAfterDelete
+          ? {
+              availableSeconds: safeInt(walletAfterDelete.available_seconds, 0),
+              totalPurchasedSeconds: safeInt(walletAfterDelete.total_purchased_seconds, 0),
+              totalConsumedSeconds: safeInt(walletAfterDelete.total_consumed_seconds, 0),
+              activeListingCount: safeInt(walletAfterDelete.active_listing_count, 0),
+            }
+          : null,
       }),
       { headers: { "content-type": "application/json", ...corsHeaders } },
     );

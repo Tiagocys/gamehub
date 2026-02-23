@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
 type Payload = {
   listingId?: string;
+  amountBRL?: number | string;
   days?: number;
   returnBaseUrl?: string;
   userToken?: string;
@@ -18,31 +19,15 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
-const BASE_DAY_PRICE = 10;
-const DISCOUNT_PER_DAY = 0.1;
-const MAX_DAYS = 30;
+const MIN_TOPUP_BRL = 10;
+const DAY_SECONDS = 24 * 60 * 60;
+const PRICE_PER_DAY_CENTS = 1000;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
     status,
     headers: { "content-type": "application/json", ...corsHeaders },
   });
-}
-
-function normalizeDays(value: number) {
-  const n = Number(value || 1);
-  return Math.max(1, Math.min(MAX_DAYS, Math.floor(n)));
-}
-
-function calculateTotalCents(days: number) {
-  let dayPrice = BASE_DAY_PRICE;
-  let total = 0;
-  for (let i = 0; i < days; i += 1) {
-    const roundedDayPrice = Math.round(dayPrice * 100) / 100;
-    total += roundedDayPrice;
-    dayPrice *= (1 - DISCOUNT_PER_DAY);
-  }
-  return Math.round(total * 100);
 }
 
 function normalizeBaseUrl(input?: string) {
@@ -53,6 +38,30 @@ function normalizeBaseUrl(input?: string) {
   } catch (_err) {
     return null;
   }
+}
+
+function normalizeAmountBRL(value: unknown): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return null;
+    return Math.round(value * 100) / 100;
+  }
+  const raw = String(value).trim();
+  if (!raw) return null;
+  let normalized = raw.replace(/\s+/g, "").replace(/R\$/gi, "");
+  if (normalized.includes(",")) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  }
+  normalized = normalized.replace(/[^0-9.]/g, "");
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed)) return null;
+  return Math.round(parsed * 100) / 100;
+}
+
+function amountToSeconds(totalCents: number) {
+  if (!Number.isFinite(totalCents) || totalCents <= 0) return 0;
+  return Math.max(1, Math.round((totalCents * DAY_SECONDS) / PRICE_PER_DAY_CENTS));
 }
 
 Deno.serve(async (req) => {
@@ -69,32 +78,44 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("authorization") || req.headers.get("Authorization") || "";
     const token = payload.userToken?.trim()
       || (authHeader.startsWith("Bearer ") ? authHeader.replace("Bearer ", "").trim() : "");
+
     if (!token) return errorResponse("Não autorizado", 401);
     if (!payload.listingId) return errorResponse("listingId é obrigatório", 400);
+
+    const amountFromPayload = normalizeAmountBRL(payload.amountBRL);
+    const legacyDays = Number(payload.days || 0);
+    const fallbackAmount = Number.isFinite(legacyDays) && legacyDays > 0
+      ? Math.round(legacyDays * MIN_TOPUP_BRL * 100) / 100
+      : null;
+    const amountBRL = amountFromPayload ?? fallbackAmount;
+
+    if (!amountBRL || amountBRL < MIN_TOPUP_BRL) {
+      return errorResponse("Valor mínimo para depósito: R$ 10,00", 400);
+    }
+
+    const totalCents = Math.round(amountBRL * 100);
+    const purchasedSeconds = amountToSeconds(totalCents);
+    const equivalentDays = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !authData?.user) return errorResponse("Sessão inválida", 401);
 
-    const days = normalizeDays(payload.days || 1);
-    const totalCents = calculateTotalCents(days);
-    const unitAmount = totalCents;
-
     const { data: listing, error: listingErr } = await supabase
       .from("listings")
-      .select("id,user_id,title,status,highlight_status,highlight_expires_at")
+      .select("id,user_id,title,status")
       .eq("id", payload.listingId)
       .eq("user_id", authData.user.id)
       .single();
+
     if (listingErr || !listing) return errorResponse("Anúncio não encontrado", 404);
-    const highlightExpiresAt = listing.highlight_expires_at ? new Date(listing.highlight_expires_at) : null;
-    if (listing.highlight_status === "active" && highlightExpiresAt && highlightExpiresAt > new Date()) {
-      return errorResponse("Este anúncio já está destacado no momento", 409);
+    if (listing.status !== "active") {
+      return errorResponse("Apenas anúncios ativos podem receber destaque.", 409);
     }
 
     const baseUrl = normalizeBaseUrl(payload.returnBaseUrl) || new URL(req.url).origin;
-    const successUrl = `${baseUrl}/my-listings.html?highlight=success`;
-    const cancelUrl = `${baseUrl}/my-listings.html?highlight=cancel`;
+    const successUrl = `${baseUrl}/ad-wallet.html?listing=${encodeURIComponent(listing.id)}&highlight=success`;
+    const cancelUrl = `${baseUrl}/ad-wallet.html?listing=${encodeURIComponent(listing.id)}&highlight=cancel`;
 
     const body = new URLSearchParams();
     body.set("mode", "payment");
@@ -104,13 +125,16 @@ Deno.serve(async (req) => {
     body.set("payment_method_types[0]", "card");
     body.set("line_items[0][quantity]", "1");
     body.set("line_items[0][price_data][currency]", "brl");
-    body.set("line_items[0][price_data][unit_amount]", String(unitAmount));
-    body.set("line_items[0][price_data][product_data][name]", `Destaque de anúncio (${days} dias)`);
-    body.set("line_items[0][price_data][product_data][description]", listing.title || "Destaque Gimerr");
+    body.set("line_items[0][price_data][unit_amount]", String(totalCents));
+    body.set("line_items[0][price_data][product_data][name]", "Saldo da conta de anúncios");
+    body.set("line_items[0][price_data][product_data][description]", listing.title || "Crédito de destaque Gimerr");
+
     body.set("metadata[listing_id]", listing.id);
     body.set("metadata[user_id]", authData.user.id);
-    body.set("metadata[days]", String(days));
+    body.set("metadata[days]", String(equivalentDays));
+    body.set("metadata[purchased_seconds]", String(purchasedSeconds));
     body.set("metadata[total_cents]", String(totalCents));
+    body.set("metadata[amount_brl]", amountBRL.toFixed(2));
 
     const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -132,8 +156,9 @@ Deno.serve(async (req) => {
         ok: true,
         sessionId: stripeData.id,
         checkoutUrl: stripeData.url,
-        days,
+        amountBRL,
         totalCents,
+        purchasedSeconds,
       }),
       { headers: { "content-type": "application/json", ...corsHeaders } },
     );

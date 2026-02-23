@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Criar anúncio</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="listing-guard-style">html{visibility:hidden;}</style>
@@ -69,29 +76,7 @@
     <img src="img/logo.png" alt="Carregando" />
   </div>
   <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-tagline">Criar anúncio</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
-        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-        <div id="user-menu" class="nav-user">
-          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
-            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
-          </button>
-          <div class="user-dropdown">
-            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
-            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
-            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
-            <button id="logout-btn" class="menu-item" type="button">Sair</button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <site-navbar></site-navbar>
 
     <main class="section">
       <div class="form-card">
@@ -150,11 +135,17 @@
         </form>
       </div>
     </main>
+
+    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -168,6 +159,7 @@
     const logoutBtn = document.getElementById("logout-btn");
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
     const form = document.getElementById("listing-form");
     const formTitle = document.getElementById("form-title");
     const feedback = document.getElementById("form-feedback");
@@ -287,6 +279,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
         loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
@@ -294,6 +287,7 @@
       }
       authBtn.style.display = "inline-flex";
       if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
       avatarLoaded = false;

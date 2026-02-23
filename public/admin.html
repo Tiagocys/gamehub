@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Admin</title>
   <style id="admin-guard-style">html{visibility:hidden;}</style>
   <script>
@@ -71,7 +78,7 @@
     h1 { margin: 0 0 12px; font-size: 28px; color: #0d1b3b; }
     p { color: var(--muted); margin: 6px 0 12px; }
     label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
-    input, textarea {
+    input, textarea, select {
       width: 100%;
       padding: 12px;
       border-radius: 12px;
@@ -82,7 +89,7 @@
       outline: none;
       transition: border 0.2s, box-shadow 0.2s;
     }
-    input:focus, textarea:focus {
+    input:focus, textarea:focus, select:focus {
       border-color: rgba(27,79,211,0.35);
       box-shadow: 0 0 0 3px rgba(27,79,211,0.12);
     }
@@ -193,6 +200,11 @@
         <label for="server-discord">Convite do Discord oficial *</label>
         <input id="server-discord" placeholder="https://discord.gg/seu-servidor" required />
 
+        <label for="server-owner-email">E-mail do owner (opcional)</label>
+        <input id="server-owner-email" type="email" placeholder="Ex: owner@servidor.com" list="server-owner-email-list" autocomplete="off" />
+        <datalist id="server-owner-email-list"></datalist>
+        <div id="server-owner-email-helper" class="muted">Digite para buscar usuários cadastrados pelo e-mail.</div>
+
         <label for="server-logo">Logo do servidor (png/jpg/webp) *</label>
         <input id="server-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
         <div id="logo-preview-wrapper">
@@ -274,6 +286,9 @@
     const serverNameInput = document.getElementById("server-name");
     const serverSiteInput = document.getElementById("server-site");
     const serverDiscordInput = document.getElementById("server-discord");
+    const serverOwnerEmailInput = document.getElementById("server-owner-email");
+    const serverOwnerEmailList = document.getElementById("server-owner-email-list");
+    const serverOwnerEmailHelper = document.getElementById("server-owner-email-helper");
     const serverLogoInput = document.getElementById("server-logo");
     const logoPreviewWrapper = document.getElementById("logo-preview-wrapper");
     const logoPreview = document.getElementById("server-logo-preview");
@@ -305,6 +320,8 @@
     let requestCursor = 0;
     let reportCursor = 0;
     let editingRequest = null;
+    let ownerLookupTimer = null;
+    const OWNER_ADMIN_CONFLICT_MESSAGE = "Administradores não podem ser cadastrados como responsáveis pelos jogos.";
 
     function getProjectRef() {
       try {
@@ -391,12 +408,132 @@
 
     function isMissingDiscordInviteColumnError(error) {
       if (!error) return false;
-      return error.code === "42703" || String(error.message || "").includes("discord_invite");
+      return String(error.message || "").includes("discord_invite");
+    }
+
+    function isMissingOwnerColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("is_owner");
+    }
+
+    function isMissingOwnerIdColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("owner_id");
+    }
+
+    function isMissingOwnerEmailColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("owner_email");
+    }
+
+    function isMissingAdminBeneficiaryIdColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("admin_beneficiary_id");
+    }
+
+    function isMissingAdminBeneficiaryEmailColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("admin_beneficiary_email");
     }
 
     function isMissingReportsTableError(error) {
       if (!error) return false;
       return error.code === "42P01" || String(error.message || "").toLowerCase().includes("reports");
+    }
+
+    function isOwnerAdminConflictMessage(message) {
+      const text = String(message || "").toLowerCase();
+      return text.includes("owner do servidor não pode ser o mesmo usuário que aprovou")
+        || text.includes("regra antifraude");
+    }
+
+    async function resolveInvokeErrorMessage(invokeError, invokeData, fallbackMessage) {
+      let message = invokeData?.error || invokeError?.message || fallbackMessage;
+      const context = invokeError?.context;
+      if (context) {
+        try {
+          if (typeof context.json === "function") {
+            const payload = await context.clone().json();
+            if (payload?.error) {
+              message = payload.error;
+            }
+          } else if (context.response?.error) {
+            message = context.response.error;
+          }
+        } catch (_err) {
+          // Ignora erro de parse e mantém mensagem de fallback.
+        }
+      }
+      if (isOwnerAdminConflictMessage(message)) {
+        return OWNER_ADMIN_CONFLICT_MESSAGE;
+      }
+      return message || fallbackMessage;
+    }
+
+    function normalizeEmail(raw) {
+      return String(raw || "").trim().toLowerCase();
+    }
+
+    function setOwnerEmailHelper(message, isError = false) {
+      if (!serverOwnerEmailHelper) return;
+      serverOwnerEmailHelper.textContent = message || "";
+      serverOwnerEmailHelper.style.color = isError ? "var(--danger)" : "var(--muted)";
+    }
+
+    function clearOwnerEmailSuggestions() {
+      if (!serverOwnerEmailList) return;
+      serverOwnerEmailList.innerHTML = "";
+    }
+
+    function renderOwnerEmailSuggestions(rows) {
+      if (!serverOwnerEmailList) return;
+      serverOwnerEmailList.innerHTML = "";
+      (rows || []).forEach((row) => {
+        const option = document.createElement("option");
+        option.value = row.email;
+        const fullName = `${row.first_name || ""} ${row.last_name || ""}`.trim();
+        option.label = fullName ? `${row.email} (${fullName})` : row.email;
+        serverOwnerEmailList.appendChild(option);
+      });
+    }
+
+    async function findUserByEmail(emailRaw) {
+      ensureClient();
+      const normalized = normalizeEmail(emailRaw);
+      if (!normalized) return null;
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,email,first_name,last_name")
+        .ilike("email", normalized)
+        .limit(10);
+      if (error) throw error;
+      const exact = (data || []).find((row) => normalizeEmail(row.email) === normalized);
+      return exact || null;
+    }
+
+    async function refreshOwnerEmailSuggestions() {
+      ensureClient();
+      const query = normalizeEmail(serverOwnerEmailInput?.value);
+      if (!query || query.length < 2) {
+        clearOwnerEmailSuggestions();
+        setOwnerEmailHelper("Digite para buscar usuários cadastrados pelo e-mail.");
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id,email,first_name,last_name")
+          .ilike("email", `%${query}%`)
+          .order("email", { ascending: true })
+          .limit(8);
+        if (error) throw error;
+        renderOwnerEmailSuggestions(data || []);
+        setOwnerEmailHelper((data || []).length > 0 ? "Selecione um e-mail válido da lista." : "Nenhum usuário encontrado com esse e-mail.");
+      } catch (err) {
+        console.error(err);
+        clearOwnerEmailSuggestions();
+        setOwnerEmailHelper("Erro ao buscar e-mails de usuários.", true);
+      }
     }
 
     function formatDateTime(value) {
@@ -516,6 +653,9 @@
       formError.textContent = "";
       formSuccess.textContent = "";
       if (!req) {
+        if (serverOwnerEmailInput) serverOwnerEmailInput.value = "";
+        clearOwnerEmailSuggestions();
+        setOwnerEmailHelper("Digite para buscar usuários cadastrados pelo e-mail.");
         if (serverLogoInput) {
           serverLogoInput.required = true;
           serverLogoInput.setAttribute("required", "true");
@@ -527,6 +667,9 @@
       if (serverNameInput) serverNameInput.value = req.name || "";
       if (serverSiteInput) serverSiteInput.value = req.website || "";
       if (serverDiscordInput) serverDiscordInput.value = req.discord_invite || "";
+      if (serverOwnerEmailInput) serverOwnerEmailInput.value = req.is_owner ? (req.user_email || "") : "";
+      clearOwnerEmailSuggestions();
+      setOwnerEmailHelper("Confirme ou altere o e-mail do owner.");
       if (serverLogoInput) {
         serverLogoInput.value = "";
         serverLogoInput.required = false;
@@ -709,6 +852,7 @@
         const name = serverNameInput?.value.trim();
         const site = serverSiteInput?.value.trim();
         const discordInviteRaw = serverDiscordInput?.value.trim() || "";
+        const ownerEmailRaw = serverOwnerEmailInput?.value.trim() || "";
         const file = serverLogoInput?.files?.[0];
 
         if (!name || !site) {
@@ -720,6 +864,27 @@
         if (!discordInvite) {
           formError.textContent = "Use um convite que comece com https://discord.gg/";
           return;
+        }
+
+        let ownerRecord = null;
+        if (ownerEmailRaw) {
+          ownerRecord = await findUserByEmail(ownerEmailRaw);
+          if (!ownerRecord) {
+            formError.textContent = "E-mail do owner não encontrado. Selecione um usuário válido.";
+            setOwnerEmailHelper("E-mail inválido para owner.", true);
+            return;
+          }
+          if (ownerRecord.id === user.id) {
+            formError.textContent = "Regra antifraude: o owner não pode ser o mesmo usuário admin.";
+            setOwnerEmailHelper("Defina um owner diferente do admin que está salvando.", true);
+            return;
+          }
+          if (serverOwnerEmailInput) {
+            serverOwnerEmailInput.value = ownerRecord.email;
+          }
+          setOwnerEmailHelper("Owner encontrado.");
+        } else {
+          setOwnerEmailHelper("Sem owner definido para este servidor.");
         }
 
         if (file && file.size > MAX_LOGO_BYTES) {
@@ -737,6 +902,7 @@
           `Servidor: ${name}`,
           `Site: ${site}`,
           `Discord: ${discordInvite}`,
+          `Owner: ${ownerRecord?.email || "não definido"}`,
           `Logo: ${logoSummary}`,
           `Status: ativo`
         ].join("\n");
@@ -767,6 +933,9 @@
                 name,
                 website: site,
                 discord_invite: discordInvite,
+                is_owner: Boolean(ownerRecord?.id),
+                owner_id: ownerRecord?.id || null,
+                owner_email: ownerRecord?.email || null,
                 cover_url: bannerUrl
               }
             },
@@ -778,27 +947,62 @@
               : {}
           });
           if (approveErr || !approveData?.ok) {
-            throw new Error(approveErr?.message || approveData?.error || "Erro ao atualizar status da solicitação.");
+            const errMsg = await resolveInvokeErrorMessage(
+              approveErr,
+              approveData,
+              "Erro ao atualizar status da solicitação."
+            );
+            throw new Error(errMsg);
           }
           await fetchRequests();
         } else {
-          let { error: insertErr } = await supabase.from("servers").insert({
+          let insertPayload = {
             name,
             game_type: "general",
             official_site: site,
             discord_invite: discordInvite,
             banner_url: bannerUrl,
+            owner_id: ownerRecord?.id || null,
+            owner_email: ownerRecord?.email || null,
+            admin_beneficiary_id: user.id,
+            admin_beneficiary_email: user.email || null,
             status: "active"
-          });
-          if (isMissingDiscordInviteColumnError(insertErr)) {
-            const fallback = await supabase.from("servers").insert({
-              name,
-              game_type: "general",
-              official_site: site,
-              banner_url: bannerUrl,
-              status: "active"
-            });
-            insertErr = fallback.error;
+          };
+
+          let insertErr = null;
+          for (let attempt = 0; attempt < 8; attempt += 1) {
+            const insertResult = await supabase.from("servers").insert(insertPayload);
+            insertErr = insertResult.error;
+            if (!insertErr) break;
+
+            let removedAnyColumn = false;
+            if (isMissingDiscordInviteColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "discord_invite")) {
+              const { discord_invite: _discordInvite, ...rest } = insertPayload;
+              insertPayload = rest;
+              removedAnyColumn = true;
+            }
+            if (isMissingOwnerIdColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "owner_id")) {
+              const { owner_id: _ownerId, ...rest } = insertPayload;
+              insertPayload = rest;
+              removedAnyColumn = true;
+            }
+            if (isMissingOwnerEmailColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "owner_email")) {
+              const { owner_email: _ownerEmail, ...rest } = insertPayload;
+              insertPayload = rest;
+              removedAnyColumn = true;
+            }
+            if (isMissingAdminBeneficiaryIdColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "admin_beneficiary_id")) {
+              const { admin_beneficiary_id: _adminBeneficiaryId, ...rest } = insertPayload;
+              insertPayload = rest;
+              removedAnyColumn = true;
+            }
+            if (isMissingAdminBeneficiaryEmailColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "admin_beneficiary_email")) {
+              const { admin_beneficiary_email: _adminBeneficiaryEmail, ...rest } = insertPayload;
+              insertPayload = rest;
+              removedAnyColumn = true;
+            }
+
+            if (!removedAnyColumn) break;
           }
           if (insertErr) throw insertErr;
         }
@@ -829,16 +1033,32 @@
         requestsStatus.textContent = "Carregando...";
         let { data, error } = await supabase
           .from("game_requests")
-          .select("id,name,website,discord_invite,cover_url,user_email,status,created_at")
+          .select("id,name,website,discord_invite,is_owner,cover_url,user_id,user_email,status,created_at")
           .eq("status", "pending")
           .order("created_at", { ascending: true });
-        if (isMissingDiscordInviteColumnError(error)) {
+        if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
           const fallback = await supabase
             .from("game_requests")
-            .select("id,name,website,cover_url,user_email,status,created_at")
+            .select("id,name,website,cover_url,user_id,user_email,status,created_at")
+            .eq("status", "pending")
+            .order("created_at", { ascending: true });
+          data = (fallback.data || []).map((item) => ({ ...item, discord_invite: null, is_owner: false }));
+          error = fallback.error;
+        } else if (isMissingDiscordInviteColumnError(error)) {
+          const fallback = await supabase
+            .from("game_requests")
+            .select("id,name,website,is_owner,cover_url,user_id,user_email,status,created_at")
             .eq("status", "pending")
             .order("created_at", { ascending: true });
           data = (fallback.data || []).map((item) => ({ ...item, discord_invite: null }));
+          error = fallback.error;
+        } else if (isMissingOwnerColumnError(error)) {
+          const fallback = await supabase
+            .from("game_requests")
+            .select("id,name,website,discord_invite,cover_url,user_id,user_email,status,created_at")
+            .eq("status", "pending")
+            .order("created_at", { ascending: true });
+          data = (fallback.data || []).map((item) => ({ ...item, is_owner: false }));
           error = fallback.error;
         }
         if (error) throw error;
@@ -876,6 +1096,9 @@
       card.className = "notice";
       card.style.display = "grid";
       card.style.gap = "8px";
+      const submitterLabel = req.is_owner
+        ? "Administrador do game"
+        : "Player da comunidade";
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
           <div>
@@ -886,6 +1109,7 @@
         </div>
         ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
         <div class="muted">Usuário: ${req.user_email || "-"}</div>
+        <div class="muted">Tipo de envio: ${submitterLabel}</div>
         <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
@@ -1188,8 +1412,16 @@
       setDecisionButtonsProcessing(card, action, true);
       try {
         requestsStatus.textContent = "Processando...";
+        const req = requestCache.find((r) => String(r.id) === String(id));
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
+        const currentUserId = sessionData.session?.user?.id || null;
+        if (approved && req?.is_owner && req?.user_id && currentUserId && String(req.user_id) === String(currentUserId)) {
+          requestsStatus.textContent = OWNER_ADMIN_CONFLICT_MESSAGE;
+          window.alert(`${OWNER_ADMIN_CONFLICT_MESSAGE}\n\nUse "Editar antes de aprovar" para definir outro owner ou aprovar sem owner.`);
+          setDecisionButtonsProcessing(card, action, false);
+          return;
+        }
         const { data: approveData, error: approveErr } = await supabase.functions.invoke("game_approve", {
           body: { requestId: id, approved, note },
           headers: token
@@ -1200,14 +1432,27 @@
             : {}
         });
         if (approveErr || !approveData?.ok) {
-          const errMsg = approveErr?.context?.response?.error ?? approveData?.error ?? approveErr?.message;
+          const errMsg = await resolveInvokeErrorMessage(
+            approveErr,
+            approveData,
+            "Erro ao processar solicitação."
+          );
           throw new Error(errMsg || "Erro ao processar solicitação.");
+        }
+        if (editingRequest && String(editingRequest.id) === String(id)) {
+          serverForm?.reset();
+          enterEditMode(null);
         }
         await fetchRequests();
         requestsStatus.textContent = approved ? "Solicitação aprovada." : "Solicitação recusada.";
+        window.location.reload();
       } catch (err) {
         console.error(err);
-        requestsStatus.textContent = err?.message || "Erro ao processar solicitação.";
+        const msg = err?.message || "Erro ao processar solicitação.";
+        requestsStatus.textContent = msg;
+        if (isOwnerAdminConflictMessage(msg) || msg === OWNER_ADMIN_CONFLICT_MESSAGE) {
+          window.alert(`${OWNER_ADMIN_CONFLICT_MESSAGE}\n\nAdministradores não podem ser cadastrados como responsáveis pelos jogos.`);
+        }
         setDecisionButtonsProcessing(card, action, false);
       }
     });
@@ -1289,6 +1534,32 @@
     });
 
     serverLogoInput?.addEventListener("change", handleLogoChange);
+    serverOwnerEmailInput?.addEventListener("input", () => {
+      if (ownerLookupTimer) clearTimeout(ownerLookupTimer);
+      ownerLookupTimer = setTimeout(() => {
+        refreshOwnerEmailSuggestions();
+      }, 180);
+    });
+    serverOwnerEmailInput?.addEventListener("blur", async () => {
+      const raw = serverOwnerEmailInput.value.trim();
+      if (!raw) {
+        clearOwnerEmailSuggestions();
+        setOwnerEmailHelper("Sem owner definido para este servidor.");
+        return;
+      }
+      try {
+        const owner = await findUserByEmail(raw);
+        if (!owner) {
+          setOwnerEmailHelper("E-mail do owner não encontrado.", true);
+          return;
+        }
+        serverOwnerEmailInput.value = owner.email;
+        setOwnerEmailHelper("Owner encontrado.");
+      } catch (err) {
+        console.error(err);
+        setOwnerEmailHelper("Erro ao validar e-mail do owner.", true);
+      }
+    });
     clearEditBtn?.addEventListener("click", () => {
       serverForm?.reset();
       enterEditMode(null);

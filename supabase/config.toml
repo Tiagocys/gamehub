@@ -292,6 +292,12 @@ verify_jwt = false
 import_map = "./functions/listing_highlight_checkout/deno.json"
 entrypoint = "./functions/listing_highlight_checkout/index.ts"
 
+[functions.listing_highlight_wallet]
+enabled = true
+verify_jwt = false
+import_map = "./functions/listing_highlight_wallet/deno.json"
+entrypoint = "./functions/listing_highlight_wallet/index.ts"
+
 [functions.stripe_webhook]
 enabled = true
 verify_jwt = false
@@ -303,3 +309,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/report_moderate/deno.json"
 entrypoint = "./functions/report_moderate/index.ts"
+
+[functions.partner_connect_onboarding]
+enabled = true
+verify_jwt = false
+import_map = "./functions/partner_connect_onboarding/deno.json"
+entrypoint = "./functions/partner_connect_onboarding/index.ts"

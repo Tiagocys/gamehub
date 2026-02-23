@@ -137,7 +137,11 @@ p { margin: 0; color: var(--muted); }
 
 a { color: inherit; text-decoration: none; }
 
-.page { min-height: 100vh; }
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
 .site-nav {
   position: sticky;
@@ -213,6 +217,18 @@ a { color: inherit; text-decoration: none; }
   height: 20px;
   object-fit: cover;
   border-radius: 999px;
+}
+
+.btn-google-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  display: block;
+  background: #fff;
+  border-radius: 999px;
+  padding: 3px;
+  box-shadow: 0 0 0 1px rgba(12, 21, 51, 0.12);
+  flex: 0 0 auto;
 }
 
 .info-icon {
@@ -299,7 +315,12 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
-main { display: flex; flex-direction: column; gap: 26px; }
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  flex: 1 0 auto;
+}
 
 .hero {
   position: relative;
@@ -729,6 +750,54 @@ main { display: flex; flex-direction: column; gap: 26px; }
   padding: 0 32px 70px;
 }
 
+.site-footer {
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.9);
+  margin-top: auto;
+}
+
+.site-footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 32px 28px;
+  display: grid;
+  gap: 14px;
+}
+
+.site-footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-footer-logo {
+  width: 112px;
+  height: auto;
+}
+
+.site-footer-brand p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.site-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 12px;
+}
+
 .section-header {
   display: flex;
   align-items: flex-start;
@@ -920,6 +989,8 @@ main { display: flex; flex-direction: column; gap: 26px; }
 .listing-page {
   display: grid;
   gap: 24px;
+  width: min(1120px, 100%);
+  margin: 0 auto;
 }
 
 .listing-hero-card {
@@ -929,8 +1000,8 @@ main { display: flex; flex-direction: column; gap: 26px; }
   padding: 24px;
   display: grid;
   gap: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  align-items: start;
   box-shadow: var(--shadow);
 }
 
@@ -971,7 +1042,8 @@ main { display: flex; flex-direction: column; gap: 26px; }
 
 .listing-gallery-main {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: clamp(260px, 34vw, 420px);
+  min-height: 260px;
   border-radius: 16px;
   border: 1px solid var(--border);
   background: radial-gradient(circle at 20% 20%, rgba(27,79,211,0.08), rgba(15,37,87,0.02));
@@ -997,8 +1069,9 @@ main { display: flex; flex-direction: column; gap: 26px; }
 
 .listing-thumb-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(56px, 56px));
   gap: 8px;
+  justify-content: start;
 }
 
 .listing-thumb {
@@ -1008,12 +1081,13 @@ main { display: flex; flex-direction: column; gap: 26px; }
   overflow: hidden;
   background: #fff;
   cursor: pointer;
+  aspect-ratio: 1 / 1;
   transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .listing-thumb img {
   width: 100%;
-  height: 72px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
@@ -1129,10 +1203,14 @@ main { display: flex; flex-direction: column; gap: 26px; }
   .brand-copy { display: none; }
   .hero { padding: 42px 18px 14px; }
   .section { padding: 0 18px 60px; }
+  .site-footer-inner { padding: 22px 18px 26px; }
   .search-bar { flex-direction: column; }
   .search-bar .btn { width: 100%; }
   .hero-list li { gap: 10px; }
-  .listing-gallery { width: 100%; margin-left: 0; }
+  .listing-hero-card { grid-template-columns: 1fr; }
+  .listing-gallery { width: 100%; margin-left: 0; max-width: none; }
+  .listing-gallery-main { height: min(68vw, 360px); min-height: 220px; }
+  .listing-thumb-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 52px)); }
   .suggestions-panel { max-height: 40vh; }
   .create-listing-btn { display: none !important; }
   .menu-item.create-listing-menu { display: inline-flex; }

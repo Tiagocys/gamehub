@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <title>Gimerr - Conta de anúncios</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="ad-wallet-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .wallet-main {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: block;
+      width: 100%;
+    }
+
+    .wallet-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .wallet-sidebar {
+      width: min(360px, 100%);
+      flex: 0 0 min(360px, 100%);
+      position: sticky;
+      top: 92px;
+    }
+
+    .wallet-content {
+      min-width: 0;
+      flex: 1 1 auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .wallet-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .wallet-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .wallet-summary-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .wallet-sidebar .wallet-summary-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .wallet-summary-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(12, 21, 51, 0.03);
+      display: grid;
+      gap: 4px;
+    }
+
+    .wallet-summary-item strong {
+      font-size: 18px;
+      color: var(--ink);
+    }
+
+    .wallet-feedback {
+      min-height: 18px;
+      font-size: 14px;
+      color: #7a4a00;
+      margin: 0;
+    }
+
+    .wallet-listings {
+      display: grid;
+      gap: 10px;
+    }
+
+    .wallet-listing-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .wallet-listing-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .wallet-listing-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .wallet-listing-meta {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .wallet-listing-images {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .wallet-listing-images img {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: #fff;
+      flex: 0 0 auto;
+      display: block;
+    }
+
+    .wallet-listing-description {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      white-space: pre-line;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .wallet-listing-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .wallet-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 21, 51, 0.56);
+      display: none;
+      place-items: center;
+      z-index: 140;
+      padding: 18px;
+    }
+
+    .wallet-modal {
+      width: min(560px, 100%);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 24px 60px rgba(12, 21, 51, 0.18);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .wallet-amount-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .wallet-amount-input:focus {
+      outline: 2px solid rgba(116, 168, 255, 0.34);
+      outline-offset: 1px;
+    }
+
+    .wallet-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .wallet-checkbox {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .wallet-modal-feedback {
+      min-height: 18px;
+      font-size: 14px;
+      color: #7a4a00;
+      margin: 0;
+    }
+
+    .activate-range {
+      width: 100%;
+      accent-color: var(--accent-2);
+    }
+
+    .activate-info-grid {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .activate-info-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: rgba(12, 21, 51, 0.03);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 980px) {
+      .wallet-layout {
+        flex-direction: column;
+      }
+
+      .wallet-sidebar {
+        width: 100%;
+        flex: 1 1 auto;
+        position: static;
+        top: auto;
+      }
+
+      .wallet-sidebar .wallet-summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wallet-modal {
+        padding: 14px;
+      }
+    }
+  </style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("login.html");
+        }
+      } catch (_err) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
+
+  <div class="page">
+    <site-navbar></site-navbar>
+
+    <main class="section wallet-main">
+      <div class="wallet-layout">
+        <aside class="wallet-sidebar">
+          <section class="wallet-card">
+            <h3 class="wallet-title">Resumo da conta de anúncios</h3>
+            <div class="wallet-summary-grid">
+              <div class="wallet-summary-item">
+                <span class="helper">Saldo em tempo</span>
+                <strong id="wallet-balance-human">0d 0h 0m</strong>
+              </div>
+              <div class="wallet-summary-item">
+                <span class="helper">Saldo estimado (R$)</span>
+                <strong id="wallet-balance-brl">R$ 0,00</strong>
+              </div>
+              <div class="wallet-summary-item">
+                <span class="helper">Destaques ativos</span>
+                <strong id="wallet-active-count">0</strong>
+              </div>
+            </div>
+            <div class="inline-actions">
+              <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Adicionar saldo</button>
+            </div>
+            <p id="wallet-feedback" class="wallet-feedback"></p>
+          </section>
+        </aside>
+
+        <div class="wallet-content">
+          <section class="wallet-card">
+            <h3 class="wallet-title">Gerenciar anúncios</h3>
+            <div id="wallet-listings" class="wallet-listings"></div>
+            <p id="wallet-listings-empty" class="helper" style="display:none;">Você ainda não possui anúncios.</p>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <site-footer></site-footer>
+  </div>
+
+  <div id="topup-modal-backdrop" class="wallet-modal-backdrop" aria-hidden="true">
+    <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="topup-modal-title">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <h3 id="topup-modal-title">Adicionar saldo</h3>
+          <p class="helper">Deposite qualquer valor a partir de R$ 10,00.</p>
+        </div>
+        <button id="topup-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+      </div>
+
+      <label for="deposit-amount" class="helper">Valor do depósito (R$)</label>
+      <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="Ex: 10,00" autocomplete="off" />
+
+      <div class="wallet-suggestions">
+        <button class="btn btn-ghost" type="button" data-suggest-amount="10">1 dia = R$ 10,00</button>
+        <button class="btn btn-ghost" type="button" data-suggest-amount="70">7 dias = R$ 70,00</button>
+        <button class="btn btn-ghost" type="button" data-suggest-amount="300">30 dias = R$ 300,00</button>
+      </div>
+
+      <label class="wallet-checkbox" for="wallet-policy-accept">
+        <input id="wallet-policy-accept" type="checkbox" />
+        <span>Li e estou de acordo com as <a href="politica-anuncios.html" target="_blank" rel="noopener">políticas de anúncios</a>.</span>
+      </label>
+
+      <p id="topup-feedback" class="wallet-modal-feedback"></p>
+
+      <div class="inline-actions">
+        <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Adicionar saldo e pagar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="activate-modal-backdrop" class="wallet-modal-backdrop" aria-hidden="true">
+    <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="activate-modal-title">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <h3 id="activate-modal-title">Ativar destaque</h3>
+          <p class="helper" id="activate-target-title">Anúncio escolhido</p>
+        </div>
+        <button id="activate-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+      </div>
+
+      <div class="field">
+        <label for="activate-days-range">Período estimado de destaque: <strong id="activate-days-value">1 dia</strong></label>
+        <input id="activate-days-range" class="activate-range" type="range" min="1" max="1" step="1" value="1" />
+      </div>
+
+      <div class="activate-info-grid">
+        <div class="activate-info-card">Mínimo: <strong>1 dia</strong></div>
+        <div class="activate-info-card">Máximo pelo saldo atual: <strong id="activate-range-max">1 dia</strong></div>
+      </div>
+
+      <p id="activate-feedback" class="wallet-modal-feedback"></p>
+
+      <div class="inline-actions">
+        <button id="activate-confirm-btn" class="btn btn-primary" type="button">Ativar destaque agora</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
+    const R2_BUCKET = env.R2_BUCKET || "";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
+
+    const balanceHumanEl = document.getElementById("wallet-balance-human");
+    const balanceBrlEl = document.getElementById("wallet-balance-brl");
+    const activeCountEl = document.getElementById("wallet-active-count");
+    const walletFeedbackEl = document.getElementById("wallet-feedback");
+
+    const openTopupModalBtn = document.getElementById("open-topup-modal-btn");
+    const topupModalBackdrop = document.getElementById("topup-modal-backdrop");
+    const topupModalClose = document.getElementById("topup-modal-close");
+    const amountInput = document.getElementById("deposit-amount");
+    const policyAccept = document.getElementById("wallet-policy-accept");
+    const topupFeedbackEl = document.getElementById("topup-feedback");
+    const checkoutBtn = document.getElementById("wallet-checkout-btn");
+
+    const activateModalBackdrop = document.getElementById("activate-modal-backdrop");
+    const activateModalClose = document.getElementById("activate-modal-close");
+    const activateTargetTitle = document.getElementById("activate-target-title");
+    const activateDaysRange = document.getElementById("activate-days-range");
+    const activateDaysValue = document.getElementById("activate-days-value");
+    const activateRangeMax = document.getElementById("activate-range-max");
+    const activateFeedbackEl = document.getElementById("activate-feedback");
+    const activateConfirmBtn = document.getElementById("activate-confirm-btn");
+
+    const listingsWrap = document.getElementById("wallet-listings");
+    const listingsEmpty = document.getElementById("wallet-listings-empty");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
+    let supabase;
+    let currentUser = null;
+    let avatarLoaded = false;
+    let walletState = null;
+    let myListings = [];
+    let checkoutReferenceListingId = null;
+    let pendingActivateListingId = null;
+
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    const CATEGORY_LABELS = {
+      item: "Item ou itens",
+      currency: "Moeda do jogo",
+      account: "Conta ou personagem",
+      service: "Serviço",
+      other: "Outro"
+    };
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("ad-wallet-guard-style");
+      if (guard) guard.remove();
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        authBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function setWalletFeedback(message, isError = false) {
+      if (!walletFeedbackEl) return;
+      walletFeedbackEl.textContent = message || "";
+      walletFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function setTopupFeedback(message, isError = false) {
+      if (!topupFeedbackEl) return;
+      topupFeedbackEl.textContent = message || "";
+      topupFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function setActivateFeedback(message, isError = false) {
+      if (!activateFeedbackEl) return;
+      activateFeedbackEl.textContent = message || "";
+      activateFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function formatBRL(value) {
+      return `R$ ${Number(value || 0).toFixed(2).replace(".", ",")}`;
+    }
+
+    function formatDayLabel(days) {
+      const n = Math.max(1, Math.floor(Number(days || 1)));
+      return `${n} ${n === 1 ? "dia" : "dias"}`;
+    }
+
+    function secondsToHuman(secondsRaw) {
+      const total = Math.max(0, Math.floor(Number(secondsRaw || 0)));
+      const days = Math.floor(total / 86400);
+      const hours = Math.floor((total % 86400) / 3600);
+      const minutes = Math.floor((total % 3600) / 60);
+      return `${days}d ${hours}h ${minutes}m`;
+    }
+
+    function secondsToBRL(secondsRaw) {
+      const seconds = Math.max(0, Number(secondsRaw || 0));
+      const amount = (seconds / 86400) * 10;
+      return Number(amount.toFixed(2));
+    }
+
+    function parseAmountBRL(raw) {
+      let text = String(raw || "").trim();
+      if (!text) return NaN;
+      text = text.replace(/\s+/g, "").replace(/R\$/gi, "");
+      if (text.includes(",")) {
+        text = text.replace(/\./g, "").replace(",", ".");
+      }
+      text = text.replace(/[^0-9.]/g, "");
+      if (!text) return NaN;
+      const amount = Number(text);
+      if (!Number.isFinite(amount)) return NaN;
+      return Math.round(amount * 100) / 100;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        await setAvatarImage("img/avatar.svg");
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const parts = rest.split("/");
+        if (parts.length === 0) return null;
+        let bucket = parts[0];
+        let pathParts = parts.slice(1);
+        if (bucket === "public" || bucket === "authenticated" || bucket === "sign") {
+          bucket = parts[1];
+          pathParts = parts.slice(2);
+        }
+        if (!bucket || pathParts.length === 0) return null;
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function resolveImageUrl(rawUrl) {
+      if (!rawUrl || typeof rawUrl !== "string") return null;
+      if (rawUrl.startsWith("http")) {
+        if (R2_PUBLIC_URL && rawUrl.includes(".r2.cloudflarestorage.com/")) {
+          try {
+            const u = new URL(rawUrl);
+            const marker = `/${R2_BUCKET || "img-anuncios"}/`;
+            const idx = u.pathname.indexOf(marker);
+            if (idx >= 0) {
+              const path = u.pathname.substring(idx + marker.length);
+              return `${R2_PUBLIC_URL.replace(/\/$/, "")}/${path}`;
+            }
+          } catch (_e) {
+            // ignore
+          }
+        }
+        return rawUrl;
+      }
+      try {
+        ensureClient();
+        const { data: signedData, error: signedErr } = await supabase.functions.invoke("r2_sign_upload", {
+          body: { mode: "get", key: rawUrl },
+        });
+        if (!signedErr && signedData?.publicUrl) return signedData.publicUrl;
+      } catch (_err) {
+        // ignore
+      }
+      const parsed = parseStoragePath(rawUrl);
+      if (!parsed) return rawUrl;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60);
+        if (error) throw error;
+        return data?.signedUrl || rawUrl;
+      } catch (_err) {
+        return rawUrl;
+      }
+    }
+
+    function getListingCategories(listing) {
+      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
+      const normalized = raw
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+      if (normalized.length > 0) return normalized;
+      if (listing?.category) return [String(listing.category)];
+      return [];
+    }
+
+    function formatCategory(category) {
+      return CATEGORY_LABELS[category] || "Categoria";
+    }
+
+    function findListingById(id) {
+      return myListings.find((item) => String(item.id) === String(id)) || null;
+    }
+
+    function getAvailableSeconds() {
+      return Math.max(0, Number(walletState?.availableSeconds || 0));
+    }
+
+    function getMaxDaysByBalance() {
+      const byBalance = Math.floor(getAvailableSeconds() / 86400);
+      return Math.max(1, byBalance);
+    }
+
+    function getCheckoutReferenceListingId() {
+      if (checkoutReferenceListingId) {
+        const explicit = findListingById(checkoutReferenceListingId);
+        if (explicit && explicit.status === "active") return explicit.id;
+      }
+      const fallback = myListings.find((item) => item.status === "active");
+      return fallback?.id || null;
+    }
+
+    function updateCheckoutButtonState() {
+      const amount = parseAmountBRL(amountInput?.value || "");
+      const hasReference = Boolean(getCheckoutReferenceListingId());
+      const canPay = hasReference && Number.isFinite(amount) && amount >= 10 && Boolean(policyAccept?.checked);
+      checkoutBtn.disabled = !canPay;
+    }
+
+    function updateActivateRangePreview() {
+      const days = Number(activateDaysRange?.value || 1);
+      activateDaysValue.textContent = formatDayLabel(days);
+    }
+
+    function renderListings() {
+      listingsWrap.innerHTML = "";
+      if (!Array.isArray(myListings) || myListings.length === 0) {
+        listingsEmpty.style.display = "block";
+        return;
+      }
+      listingsEmpty.style.display = "none";
+
+      myListings.forEach((listing) => {
+        const canHighlight = listing.status === "active";
+        const isHighlighted = listing.highlight_status === "active";
+
+        const card = document.createElement("article");
+        card.className = "wallet-listing-item";
+
+        const head = document.createElement("div");
+        head.className = "wallet-listing-head";
+
+        const title = document.createElement("div");
+        title.className = "wallet-listing-title";
+        title.textContent = listing.title || "Sem título";
+
+        const meta = document.createElement("div");
+        meta.className = "wallet-listing-meta";
+        const categoryPills = getListingCategories(listing)
+          .map((category) => `<span class="pill">${escapeHtml(formatCategory(category))}</span>`)
+          .join("");
+        meta.innerHTML = `
+          <span class="pill">${escapeHtml(listing.server_name || "Servidor")}</span>
+          ${categoryPills || '<span class="pill">Sem categoria</span>'}
+          <span class="pill">${canHighlight ? "Ativo" : "Inativo"}</span>
+          <span class="pill">${isHighlighted ? "Destaque ativo" : "Sem destaque"}</span>
+        `;
+
+        const images = document.createElement("div");
+        images.className = "wallet-listing-images";
+        const imageUrls = Array.isArray(listing.imageUrls) ? listing.imageUrls : [];
+        if (imageUrls.length === 0) {
+          const noImage = document.createElement("span");
+          noImage.className = "helper";
+          noImage.textContent = "Sem imagens";
+          images.appendChild(noImage);
+        } else {
+          imageUrls.slice(0, 6).forEach((src) => {
+            const img = document.createElement("img");
+            img.src = src;
+            img.alt = listing.title || "Imagem do anúncio";
+            img.loading = "lazy";
+            images.appendChild(img);
+          });
+        }
+
+        const description = document.createElement("p");
+        description.className = "wallet-listing-description";
+        description.textContent = listing.description || "Sem descrição.";
+
+        const actions = document.createElement("div");
+        actions.className = "wallet-listing-actions";
+
+        if (canHighlight && !isHighlighted) {
+          const activateBtn = document.createElement("button");
+          activateBtn.className = "btn btn-primary";
+          activateBtn.type = "button";
+          activateBtn.dataset.action = "activate";
+          activateBtn.dataset.id = listing.id;
+          activateBtn.textContent = "Ativar destaque";
+          actions.appendChild(activateBtn);
+        }
+
+        if (canHighlight && isHighlighted) {
+          const deactivateBtn = document.createElement("button");
+          deactivateBtn.className = "btn btn-ghost";
+          deactivateBtn.type = "button";
+          deactivateBtn.dataset.action = "deactivate";
+          deactivateBtn.dataset.id = listing.id;
+          deactivateBtn.textContent = "Parar destaque";
+          actions.appendChild(deactivateBtn);
+        }
+
+        const viewLink = document.createElement("a");
+        viewLink.className = "btn btn-ghost";
+        viewLink.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
+        viewLink.textContent = "Ver anúncio";
+        actions.appendChild(viewLink);
+
+        head.appendChild(title);
+        head.appendChild(meta);
+
+        card.appendChild(head);
+        card.appendChild(images);
+        card.appendChild(description);
+        card.appendChild(actions);
+        listingsWrap.appendChild(card);
+      });
+    }
+
+    function openTopupModal(referenceListingId = null) {
+      if (referenceListingId) checkoutReferenceListingId = referenceListingId;
+      setTopupFeedback("");
+      topupModalBackdrop.style.display = "grid";
+      topupModalBackdrop.setAttribute("aria-hidden", "false");
+      updateCheckoutButtonState();
+    }
+
+    function closeTopupModal() {
+      topupModalBackdrop.style.display = "none";
+      topupModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    function openActivateModal(listingId) {
+      const listing = findListingById(listingId);
+      if (!listing) return;
+      pendingActivateListingId = listing.id;
+      checkoutReferenceListingId = listing.id;
+      const maxDays = getMaxDaysByBalance();
+
+      activateTargetTitle.textContent = `Anúncio: ${listing.title || "Sem título"}`;
+      activateDaysRange.min = "1";
+      activateDaysRange.max = String(maxDays);
+      activateDaysRange.value = "1";
+      activateRangeMax.textContent = formatDayLabel(maxDays);
+      setActivateFeedback("");
+      updateActivateRangePreview();
+
+      activateModalBackdrop.style.display = "grid";
+      activateModalBackdrop.setAttribute("aria-hidden", "false");
+    }
+
+    function closeActivateModal() {
+      pendingActivateListingId = null;
+      activateModalBackdrop.style.display = "none";
+      activateModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
+    async function syncWallet() {
+      ensureClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+        body: { action: "status" },
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+              apikey: SUPABASE_ANON_KEY,
+            }
+          : {},
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Erro ao consultar saldo.");
+      walletState = data.wallet || null;
+
+      const seconds = Number(walletState?.availableSeconds || 0);
+      balanceHumanEl.textContent = secondsToHuman(seconds);
+      balanceBrlEl.textContent = formatBRL(secondsToBRL(seconds));
+      activeCountEl.textContent = String(Number(walletState?.activeListingCount || 0));
+    }
+
+    async function fetchListings() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("listings")
+        .select("id,title,description,images,category,categories,status,highlight_status,server_id,created_at")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+
+      const rows = Array.isArray(data) ? data : [];
+      const serverIds = [...new Set(rows.map((item) => item.server_id).filter(Boolean))];
+      let serverNameById = {};
+      if (serverIds.length > 0) {
+        const { data: servers, error: serverErr } = await supabase
+          .from("servers")
+          .select("id,name")
+          .in("id", serverIds);
+        if (!serverErr && Array.isArray(servers)) {
+          serverNameById = servers.reduce((acc, item) => {
+            if (item?.id) acc[item.id] = item.name || "Servidor";
+            return acc;
+          }, {});
+        }
+      }
+
+      const mapped = await Promise.all(rows.map(async (item) => {
+        const imageRaw = Array.isArray(item.images) ? item.images : [];
+        const imageUrls = (await Promise.all(imageRaw.slice(0, 6).map((src) => resolveImageUrl(src)))).filter(Boolean);
+        return {
+          ...item,
+          imageUrls,
+          server_name: item.server_id ? (serverNameById[item.server_id] || "Servidor") : "Servidor",
+        };
+      }));
+
+      myListings = mapped;
+
+      renderListings();
+      updateCheckoutButtonState();
+    }
+
+    async function toggleHighlight(listingId, action) {
+      ensureClient();
+      const listing = findListingById(listingId);
+      if (!listing) return;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+        body: { action, listingId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.ok) {
+        throw new Error(data?.error || "Não foi possível atualizar o destaque.");
+      }
+    }
+
+    async function startCheckout() {
+      const amount = parseAmountBRL(amountInput?.value || "");
+      const referenceListingId = getCheckoutReferenceListingId();
+      if (!referenceListingId) {
+        setTopupFeedback("Você precisa ter ao menos um anúncio ativo para adicionar saldo.", true);
+        return;
+      }
+      if (!Number.isFinite(amount) || amount < 10) {
+        setTopupFeedback("Informe um valor válido de no mínimo R$ 10,00.", true);
+        return;
+      }
+      if (!policyAccept?.checked) {
+        setTopupFeedback("Você precisa aceitar as políticas antes de continuar.", true);
+        return;
+      }
+
+      try {
+        ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = "Aguarde...";
+        setTopupFeedback("Criando checkout seguro...");
+
+        const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
+          body: {
+            listingId: referenceListingId,
+            amountBRL: amount,
+            returnBaseUrl: window.location.origin,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+
+        if (error) throw error;
+        if (!data?.ok || !data?.checkoutUrl) {
+          throw new Error(data?.error || "Não foi possível iniciar o checkout.");
+        }
+
+        window.location.href = data.checkoutUrl;
+      } catch (err) {
+        console.error(err);
+        setTopupFeedback(err?.message || "Erro ao iniciar checkout.", true);
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = "Adicionar saldo e pagar";
+        updateCheckoutButtonState();
+      }
+    }
+
+    async function confirmActivateHighlight() {
+      if (!pendingActivateListingId) return;
+      try {
+        activateConfirmBtn.disabled = true;
+        activateConfirmBtn.textContent = "Ativando...";
+        setActivateFeedback("Ativando destaque...");
+
+        await toggleHighlight(pendingActivateListingId, "activate");
+        await syncWallet();
+        await fetchListings();
+
+        closeActivateModal();
+        setWalletFeedback("Destaque ativado com sucesso.");
+      } catch (err) {
+        console.error(err);
+        setActivateFeedback(err?.message || "Erro ao ativar destaque.", true);
+        activateConfirmBtn.disabled = false;
+        activateConfirmBtn.textContent = "Ativar destaque agora";
+      }
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        window.location.href = "login.html";
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    openTopupModalBtn?.addEventListener("click", () => {
+      openTopupModal();
+    });
+
+    topupModalClose?.addEventListener("click", () => {
+      closeTopupModal();
+    });
+
+    topupModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === topupModalBackdrop) {
+        closeTopupModal();
+      }
+    });
+
+    activateModalClose?.addEventListener("click", () => {
+      closeActivateModal();
+    });
+
+    activateModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === activateModalBackdrop) {
+        closeActivateModal();
+      }
+    });
+
+    activateDaysRange?.addEventListener("input", updateActivateRangePreview);
+
+    amountInput?.addEventListener("input", () => {
+      updateCheckoutButtonState();
+      if (topupFeedbackEl?.textContent) setTopupFeedback("");
+    });
+
+    policyAccept?.addEventListener("change", () => {
+      updateCheckoutButtonState();
+      if (topupFeedbackEl?.textContent) setTopupFeedback("");
+    });
+
+    document.querySelectorAll("[data-suggest-amount]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const value = Number(button.getAttribute("data-suggest-amount") || 0);
+        if (!Number.isFinite(value) || value <= 0) return;
+        amountInput.value = value.toFixed(2).replace(".", ",");
+        updateCheckoutButtonState();
+      });
+    });
+
+    listingsWrap?.addEventListener("click", async (event) => {
+      const target = event.target.closest("[data-action][data-id]");
+      if (!target) return;
+      const action = target.getAttribute("data-action");
+      const listingId = target.getAttribute("data-id");
+      if (!action || !listingId) return;
+
+      try {
+        target.disabled = true;
+        checkoutReferenceListingId = listingId;
+
+        if (action === "activate") {
+          if (getAvailableSeconds() <= 0) {
+            setTopupFeedback("Você não possui saldo para destacar. Adicione saldo para continuar.", true);
+            openTopupModal(listingId);
+          } else {
+            openActivateModal(listingId);
+          }
+          return;
+        }
+
+        if (action === "deactivate") {
+          setWalletFeedback("Parando destaque...");
+          await toggleHighlight(listingId, "deactivate");
+          await syncWallet();
+          await fetchListings();
+          setWalletFeedback("Destaque pausado.");
+        }
+      } catch (err) {
+        console.error(err);
+        setWalletFeedback(err?.message || "Erro ao atualizar destaque.", true);
+      } finally {
+        target.disabled = false;
+      }
+    });
+
+    checkoutBtn?.addEventListener("click", () => {
+      startCheckout();
+    });
+
+    activateConfirmBtn?.addEventListener("click", () => {
+      confirmActivateHighlight();
+    });
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "login.html";
+      } catch (_err) {
+        // ignore
+      }
+    });
+
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
+
+    (async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+
+        if (params.get("highlight") === "success") {
+          setWalletFeedback("Pagamento confirmado. Seu saldo foi atualizado.");
+        } else if (params.get("highlight") === "cancel") {
+          setWalletFeedback("Pagamento cancelado.");
+        }
+
+        await syncWallet();
+        await fetchListings();
+      } catch (err) {
+        console.error(err);
+        setWalletFeedback(err?.message || "Erro ao carregar conta de anúncios.", true);
+        checkoutBtn.disabled = true;
+      } finally {
+        revealPage();
+      }
+    })();
+  </script>
+</body>
+</html>

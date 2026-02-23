@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <title>Gimerr - Políticas para parceiros</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    .policy-page {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .policy-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .policy-card h3 {
+      font-size: 18px;
+    }
+
+    .policy-card p,
+    .policy-card li {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .policy-card ul {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="site-nav">
+      <a href="index.html" class="brand">
+        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
+        <div class="brand-copy">
+          <span class="brand-tagline">Políticas para parceiros</span>
+        </div>
+      </a>
+      <div class="nav-actions">
+        <a class="btn btn-ghost" href="partner.html">Voltar ao painel</a>
+      </div>
+    </header>
+
+    <main class="section policy-page">
+      <section class="hero-card">
+        <h2>Políticas de repasse para parceiros</h2>
+        <p class="helper">Regras para cálculo e liberação de recebimentos de destaques contratados em servidores parceiros.</p>
+      </section>
+
+      <article class="policy-card">
+        <h3>1. Base de cálculo</h3>
+        <ul>
+          <li>O painel exibe o valor esperado para recebimento do parceiro com base no pagamento processado pela Stripe.</li>
+          <li>O repasse do parceiro é calculado como <strong>50% do valor líquido</strong> do pagamento.</li>
+          <li>Quando disponível, o cálculo usa o líquido real retornado pela Stripe.</li>
+          <li>Se a Stripe ainda não devolver o líquido real, o sistema aplica uma estimativa temporária.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>2. Quando o valor fica disponível</h3>
+        <ul>
+          <li>O repasse só fica disponível após o fim do período de destaque contratado.</li>
+          <li>Enquanto o anúncio estiver em período ativo, o valor permanece em “Em período ativo”.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>3. Exclusão do anúncio e reembolso</h3>
+        <ul>
+          <li>Se o usuário excluir o anúncio antes do fim do período, o sistema pode solicitar reembolso proporcional dos dias não usados.</li>
+          <li>Após o processamento do reembolso, apenas o valor remanescente elegível continua para repasse do parceiro.</li>
+          <li>Se todo o valor for reembolsado, não haverá repasse para aquele evento.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>4. Janela de processamento</h3>
+        <ul>
+          <li>Eventos podem levar alguns minutos para aparecer no painel após confirmação de pagamento.</li>
+          <li>A atualização de status depende do webhook da Stripe e das ações do usuário no anúncio.</li>
+        </ul>
+      </article>
+    </main>
+
+    <site-footer></site-footer>
+  </div>
+  <script src="js/site-footer.js"></script>
+</body>
+</html>

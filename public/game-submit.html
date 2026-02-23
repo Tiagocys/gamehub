@@ -3,26 +3,38 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Cadastrar game</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="submit-guard-style">html{visibility:hidden;}</style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("login.html");
+        }
+      } catch (_err) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-tagline">Novo game</span>
-        </div>
-      </a>
-      <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-    </header>
+    <site-navbar></site-navbar>
 
     <main class="section">
       <div class="form-card">
         <div>
           <h2>Cadastre um novo game</h2>
-          <p class="helper">Envie uma solicitação por vez. O admin aprova ou recusa, e você recebe e-mail com o status.</p>
+          <p class="helper">Envie uma solicitação por vez.</p>
         </div>
         <div id="pending-info" class="pill-status" style="display:none;"></div>
         <form id="game-request-form" class="form-vertical">
@@ -36,9 +48,26 @@
             <span id="website-helper" class="helper"></span>
           </div>
           <div class="field">
-            <label for="game-discord">Convite para o Discord oficial do game *</label>
+            <label for="game-discord">Convite para discord oficial *</label>
             <input id="game-discord" class="input" placeholder="https://discord.gg/seu-servidor" required />
             <span id="discord-helper" class="helper"></span>
+          </div>
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>Você é administrador do game? *</label>
+            <div class="inline-actions">
+              <label style="display:inline-flex;align-items:center;gap:8px;">
+                <input type="radio" name="is-official-admin" value="yes" required />
+                Sim
+              </label>
+              <label style="display:inline-flex;align-items:center;gap:8px;">
+                <input type="radio" name="is-official-admin" value="no" required />
+                Não
+              </label>
+            </div>
+            <div id="official-admin-note" class="notice" style="display:none;">
+              Antes de finalizar o cadastro como administrador, é importante verificar seu número telefônico para facilitar o próximo contato com nossa equipe.
+              <a class="link-ghost" href="profile.html">Ir para perfil</a>
+            </div>
           </div>
           <div class="field">
             <label for="game-logo">Logo do servidor (png/jpg/webp) *</label>
@@ -51,17 +80,30 @@
         </form>
       </div>
     </main>
+
+    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
     const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
     const form = document.getElementById("game-request-form");
     const pendingInfo = document.getElementById("pending-info");
     const feedback = document.getElementById("form-feedback");
@@ -71,19 +113,34 @@
     const websiteHelper = document.getElementById("website-helper");
     const discordHelper = document.getElementById("discord-helper");
     const logoInput = document.getElementById("game-logo");
+    const officialAdminNote = document.getElementById("official-admin-note");
+    const officialAdminRadios = Array.from(document.querySelectorAll('input[name="is-official-admin"]'));
     const MAX_LOGO_BYTES = 3 * 1024 * 1024;
     const MAX_WIDTH = 512;
     const WEBSITE_PREFIX_REGEX = /^https:\/\/.+/i;
     const DISCORD_INVITE_PREFIX = "https://discord.gg/";
+    const SUBMIT_DEFAULT_TEXT = submitBtn?.textContent || "Enviar solicitação";
 
     let supabase;
     let currentUser = null;
+    let currentUserProfile = null;
     let hasPending = null;
+    let pageRevealed = false;
+    let avatarLoaded = false;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    function revealPage() {
+      if (pageRevealed) return;
+      pageRevealed = true;
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("submit-guard-style");
+      if (guard) guard.remove();
+    }
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         feedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
-        authBtn.disabled = true;
+        if (authBtn) authBtn.disabled = true;
         submitBtn.disabled = true;
         throw new Error("Supabase não configurado");
       }
@@ -99,7 +156,13 @@
         supabase.auth.onAuthStateChange((_event, session) => {
           currentUser = session?.user || null;
           updateAuthUI();
-          if (currentUser) fetchPendingForUser();
+          if (currentUser) {
+            fetchPendingForUser();
+            fetchUserProfile();
+          } else {
+            currentUserProfile = null;
+            updateOfficialAdminNote();
+          }
         });
       }
       return supabase;
@@ -108,25 +171,77 @@
     function updateAuthUI() {
       if (!authBtn) return;
       authBtn.disabled = false;
-      authBtn.textContent = currentUser ? "Sair" : "Entrar com Google";
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      authBtn.innerHTML = '<img src="img/google.svg" alt="" class="btn-google-logo" /> Entrar com Google';
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
     }
 
     async function handleAuthClick() {
       try {
         ensureClient();
         authBtn.disabled = true;
-        if (currentUser) {
-          await supabase.auth.signOut();
-          currentUser = null;
-          hasPending = null;
-          renderPending();
-          updateAuthUI();
-          return;
-        }
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: window.location.href.split("#")[0] }
-        });
+        window.location.replace("login.html");
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao autenticar.";
@@ -186,7 +301,12 @@
 
     function isMissingDiscordInviteColumnError(error) {
       if (!error) return false;
-      return error.code === "42703" || String(error.message || "").includes("discord_invite");
+      return String(error.message || "").includes("discord_invite");
+    }
+
+    function isMissingOwnerColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("is_owner");
     }
 
     function setWebsiteHelper(message) {
@@ -245,6 +365,34 @@
       }
     }
 
+    function updateOfficialAdminNote() {
+      if (!officialAdminNote) return;
+      const selected = document.querySelector('input[name="is-official-admin"]:checked');
+      const shouldShow = selected?.value === "yes" && currentUserProfile && currentUserProfile.phone_verified === false;
+      officialAdminNote.style.display = shouldShow ? "block" : "none";
+    }
+
+    async function fetchUserProfile() {
+      if (!currentUser) {
+        currentUserProfile = null;
+        updateOfficialAdminNote();
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id,phone_verified")
+          .eq("id", currentUser.id)
+          .single();
+        if (error) throw error;
+        currentUserProfile = data || null;
+      } catch (err) {
+        console.warn("Não foi possível carregar status do telefone.", err);
+        currentUserProfile = null;
+      }
+      updateOfficialAdminNote();
+    }
+
     async function fetchPendingForUser() {
       if (!currentUser) return;
       try {
@@ -269,30 +417,40 @@
       if (!hasPending) {
         pendingInfo.style.display = "none";
         submitBtn.disabled = false;
+        submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
         return;
       }
       pendingInfo.style.display = "inline-flex";
       pendingInfo.textContent = `Você já tem uma solicitação pendente: ${hasPending.name}`;
       submitBtn.disabled = true;
+      submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+    }
+
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
     }
 
     async function handleSubmit(event) {
       event.preventDefault();
       feedback.textContent = "";
       submitBtn.disabled = true;
+      submitBtn.textContent = "Enviando...";
 
       try {
         ensureClient();
         if (!currentUser) {
-          await supabase.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: window.location.href.split("#")[0] }
-          });
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          window.location.replace("login.html");
           return;
         }
         if (hasPending) {
           feedback.textContent = "Você já possui uma solicitação pendente.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
@@ -300,6 +458,7 @@
         const websiteRaw = document.getElementById("game-website").value.trim();
         const discordRaw = discordInput?.value?.trim() || "";
         const logoFile = logoInput.files[0];
+        const isOwner = document.querySelector('input[name="is-official-admin"]:checked')?.value === "yes";
 
         const website = normalizeWebsite(websiteRaw);
         const domainKey = extractDomainKey(website || websiteRaw);
@@ -310,12 +469,14 @@
           setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
           feedback.textContent = "Preencha o nome, site com https:// e selecione a logo (png/jpg/webp até 3MB).";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
         if (!domainKey) {
           feedback.textContent = "Não foi possível ler o domínio do site. Verifique o formato.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
@@ -324,6 +485,7 @@
           setDiscordHelper("Use um convite que comece com https://discord.gg/");
           feedback.textContent = "Convite do Discord inválido.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
         setDiscordHelper("");
@@ -331,6 +493,7 @@
         if (logoFile.size > MAX_LOGO_BYTES) {
           feedback.textContent = "Logo deve ter no máximo 3MB.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
@@ -338,11 +501,13 @@
         if (websiteRecord.inServers) {
           feedback.textContent = "Este jogo já está cadastrado ou em análise.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
         if (websiteRecord.request && ["pending", "under_review", "approved"].includes(websiteRecord.request.status)) {
           feedback.textContent = "Este jogo já está cadastrado ou em análise.";
           submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
@@ -353,6 +518,7 @@
           name,
           website,
           discord_invite: discordInvite,
+          is_owner: isOwner,
           cover_url: logoUrl,
           status: "pending",
           user_id: currentUser.id,
@@ -367,6 +533,16 @@
           const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
           error = fallback.error;
         }
+        if (isMissingOwnerColumnError(error)) {
+          const { is_owner: _isOwner, ...fallbackPayload } = requestPayload;
+          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          error = fallback.error;
+        }
+        if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
+          const { discord_invite: _discordInvite, is_owner: _isOwner, ...fallbackPayload } = requestPayload;
+          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          error = fallback.error;
+        }
         if (error) throw error;
 
         feedback.textContent = "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.";
@@ -375,10 +551,12 @@
         form.reset();
         setWebsiteHelper("");
         setDiscordHelper("");
+        updateOfficialAdminNote();
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao enviar solicitação.";
         submitBtn.disabled = false;
+        submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
       }
     }
 
@@ -440,22 +618,63 @@
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        currentUserProfile = null;
+        hasPending = null;
+        renderPending();
+        updateOfficialAdminNote();
+        updateAuthUI();
+        window.location.replace("login.html");
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
     form?.addEventListener("submit", handleSubmit);
     websiteInput?.addEventListener("input", handleWebsiteInput);
     websiteInput?.addEventListener("blur", handleWebsiteBlur);
     discordInput?.addEventListener("input", handleDiscordInput);
     discordInput?.addEventListener("blur", handleDiscordBlur);
+    officialAdminRadios.forEach((radio) => {
+      radio.addEventListener("change", updateOfficialAdminNote);
+    });
 
     (async function init() {
       try {
         ensureClient();
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
         updateAuthUI();
-        if (currentUser) fetchPendingForUser();
+        await fetchPendingForUser();
+        await fetchUserProfile();
+        updateOfficialAdminNote();
+        revealPage();
       } catch (err) {
         console.error(err);
         feedback.textContent = "Erro ao iniciar página.";
+        revealPage();
       }
     })();
   </script>

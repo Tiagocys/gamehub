@@ -10,6 +10,9 @@ type Payload = {
     name?: string;
     website?: string;
     discord_invite?: string | null;
+    is_owner?: boolean;
+    owner_id?: string | null;
+    owner_email?: string | null;
     cover_url?: string | null;
   };
 };
@@ -32,14 +35,37 @@ function errorResponse(message: string, status = 400) {
 
 function isMissingReviewedByColumnError(err: { code?: string; message?: string } | null | undefined) {
   if (!err) return false;
-  if (err.code === "42703") return true;
   return String(err.message || "").includes("reviewed_by_admin_id");
 }
 
 function isMissingDiscordInviteColumnError(err: { code?: string; message?: string } | null | undefined) {
   if (!err) return false;
-  if (err.code === "42703") return true;
   return String(err.message || "").includes("discord_invite");
+}
+
+function isMissingOwnerIdColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("owner_id");
+}
+
+function isMissingOwnerEmailColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("owner_email");
+}
+
+function isMissingIsOwnerColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("is_owner");
+}
+
+function isMissingAdminBeneficiaryIdColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("admin_beneficiary_id");
+}
+
+function isMissingAdminBeneficiaryEmailColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("admin_beneficiary_email");
 }
 
 function ensureHttpsPrefix(raw: string) {
@@ -90,6 +116,10 @@ function normalizeOptionalUrl(raw: string | null | undefined) {
   }
 }
 
+function isSameUser(a: string | null | undefined, b: string | null | undefined) {
+  return Boolean(a && b && String(a) === String(b));
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method === "OPTIONS") {
@@ -126,16 +156,32 @@ Deno.serve(async (req) => {
 
     let { data: reqData, error: fetchErr } = await supabase
       .from("game_requests")
-      .select("id,name,website,discord_invite,cover_url,user_email,status,created_at")
+      .select("id,name,website,discord_invite,is_owner,cover_url,user_id,user_email,status,created_at")
       .eq("id", body.requestId)
       .single();
-    if (isMissingDiscordInviteColumnError(fetchErr)) {
+    if (isMissingDiscordInviteColumnError(fetchErr) && isMissingIsOwnerColumnError(fetchErr)) {
       const fallback = await supabase
         .from("game_requests")
-        .select("id,name,website,cover_url,user_email,status,created_at")
+        .select("id,name,website,cover_url,user_id,user_email,status,created_at")
+        .eq("id", body.requestId)
+        .single();
+      reqData = fallback.data ? { ...fallback.data, discord_invite: null, is_owner: false } : null;
+      fetchErr = fallback.error;
+    } else if (isMissingDiscordInviteColumnError(fetchErr)) {
+      const fallback = await supabase
+        .from("game_requests")
+        .select("id,name,website,is_owner,cover_url,user_id,user_email,status,created_at")
         .eq("id", body.requestId)
         .single();
       reqData = fallback.data ? { ...fallback.data, discord_invite: null } : null;
+      fetchErr = fallback.error;
+    } else if (isMissingIsOwnerColumnError(fetchErr)) {
+      const fallback = await supabase
+        .from("game_requests")
+        .select("id,name,website,discord_invite,cover_url,user_id,user_email,status,created_at")
+        .eq("id", body.requestId)
+        .single();
+      reqData = fallback.data ? { ...fallback.data, is_owner: false } : null;
       fetchErr = fallback.error;
     }
     if (fetchErr || !reqData) {
@@ -150,6 +196,23 @@ Deno.serve(async (req) => {
     const finalWebsiteRaw = body.override?.website?.trim() || reqData.website;
     const finalWebsite = normalizeWebsite(finalWebsiteRaw);
     const finalDiscordInvite = normalizeOptionalUrl(body.override?.discord_invite ?? reqData.discord_invite);
+    const finalIsOwner = typeof body.override?.is_owner === "boolean" ? body.override.is_owner : Boolean(reqData.is_owner);
+    const hasOwnerOverride = Object.prototype.hasOwnProperty.call(body.override || {}, "owner_id");
+    const finalOwnerId = hasOwnerOverride
+      ? (body.override?.owner_id || null)
+      : (finalIsOwner ? reqData.user_id : null);
+    const overrideOwnerEmail = String(body.override?.owner_email || "").trim() || null;
+    let finalOwnerEmail = overrideOwnerEmail
+      || (finalOwnerId && finalOwnerId === reqData.user_id ? (reqData.user_email || null) : null);
+    if (finalOwnerId && !finalOwnerEmail) {
+      const { data: ownerUser, error: ownerUserErr } = await supabase
+        .from("users")
+        .select("email")
+        .eq("id", finalOwnerId)
+        .maybeSingle();
+      if (ownerUserErr) throw ownerUserErr;
+      finalOwnerEmail = ownerUser?.email || null;
+    }
     const finalCover = body.override?.cover_url ?? reqData.cover_url;
     const finalDomain = extractDomainKey(finalWebsiteRaw);
 
@@ -158,6 +221,9 @@ Deno.serve(async (req) => {
     }
     if (body.approved && !finalDiscordInvite) {
       return errorResponse("Convite do Discord inválido. Use https://discord.gg/...", 400);
+    }
+    if (body.approved && isSameUser(finalOwnerId, authData.user.id)) {
+      return errorResponse("Regra antifraude: o owner do servidor não pode ser o mesmo usuário que aprovou.", 409);
     }
 
     if (body.approved && body.skipServerInsert) {
@@ -177,21 +243,51 @@ Deno.serve(async (req) => {
         return errorResponse(`Servidor já cadastrado para o domínio ${finalDomain}`, 409);
       }
 
-      let { error: insertErr } = await supabase.from("servers").insert({
+      let insertPayload: Record<string, unknown> = {
         name: finalName,
         official_site: finalWebsite,
         discord_invite: finalDiscordInvite,
         banner_url: finalCover,
+        owner_id: finalOwnerId,
+        owner_email: finalOwnerEmail,
+        admin_beneficiary_id: authData.user.id,
+        admin_beneficiary_email: authData.user.email || null,
         status: "active"
-      });
-      if (isMissingDiscordInviteColumnError(insertErr)) {
-        const fallback = await supabase.from("servers").insert({
-          name: finalName,
-          official_site: finalWebsite,
-          banner_url: finalCover,
-          status: "active"
-        });
-        insertErr = fallback.error;
+      };
+
+      let insertErr: { code?: string; message?: string } | null = null;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const insertResult = await supabase.from("servers").insert(insertPayload);
+        insertErr = insertResult.error;
+        if (!insertErr) break;
+
+        let removedAnyColumn = false;
+        if (isMissingDiscordInviteColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "discord_invite")) {
+          const { discord_invite: _discordInvite, ...rest } = insertPayload;
+          insertPayload = rest;
+          removedAnyColumn = true;
+        }
+        if (isMissingOwnerIdColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "owner_id")) {
+          const { owner_id: _ownerId, ...rest } = insertPayload;
+          insertPayload = rest;
+          removedAnyColumn = true;
+        }
+        if (isMissingOwnerEmailColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "owner_email")) {
+          const { owner_email: _ownerEmail, ...rest } = insertPayload;
+          insertPayload = rest;
+          removedAnyColumn = true;
+        }
+        if (isMissingAdminBeneficiaryIdColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "admin_beneficiary_id")) {
+          const { admin_beneficiary_id: _adminBeneficiaryId, ...rest } = insertPayload;
+          insertPayload = rest;
+          removedAnyColumn = true;
+        }
+        if (isMissingAdminBeneficiaryEmailColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "admin_beneficiary_email")) {
+          const { admin_beneficiary_email: _adminBeneficiaryEmail, ...rest } = insertPayload;
+          insertPayload = rest;
+          removedAnyColumn = true;
+        }
+        if (!removedAnyColumn) break;
       }
       if (insertErr) {
         if (insertErr.code === "23505") {
@@ -206,24 +302,33 @@ Deno.serve(async (req) => {
       name: finalName,
       website: finalWebsite,
       discord_invite: finalDiscordInvite,
+      is_owner: finalIsOwner,
       cover_url: finalCover,
       status: approvedStatus,
       note: body.note || null,
     };
 
+    let requestUpdatePayload: Record<string, unknown> = { ...baseRequestUpdate, reviewed_by_admin_id: authData.user.id };
     let { error: updateErr } = await supabase
       .from("game_requests")
-      .update({ ...baseRequestUpdate, reviewed_by_admin_id: authData.user.id })
+      .update(requestUpdatePayload)
       .eq("id", reqData.id);
-    if (isMissingReviewedByColumnError(updateErr)) {
-      let fallbackPayload: Record<string, unknown> = { ...baseRequestUpdate };
+    if (isMissingReviewedByColumnError(updateErr) || isMissingDiscordInviteColumnError(updateErr) || isMissingIsOwnerColumnError(updateErr)) {
+      if (isMissingReviewedByColumnError(updateErr)) {
+        const { reviewed_by_admin_id: _reviewedByAdminId, ...withoutReviewedByAdminId } = requestUpdatePayload;
+        requestUpdatePayload = withoutReviewedByAdminId;
+      }
       if (isMissingDiscordInviteColumnError(updateErr)) {
-        const { discord_invite: _discordInvite, ...withoutDiscordInvite } = fallbackPayload;
-        fallbackPayload = withoutDiscordInvite;
+        const { discord_invite: _discordInvite, ...withoutDiscordInvite } = requestUpdatePayload;
+        requestUpdatePayload = withoutDiscordInvite;
+      }
+      if (isMissingIsOwnerColumnError(updateErr)) {
+        const { is_owner: _isOwner, ...withoutIsOwner } = requestUpdatePayload;
+        requestUpdatePayload = withoutIsOwner;
       }
       const fallback = await supabase
         .from("game_requests")
-        .update(fallbackPayload)
+        .update(requestUpdatePayload)
         .eq("id", reqData.id);
       updateErr = fallback.error;
     }

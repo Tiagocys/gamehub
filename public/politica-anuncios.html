@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Políticas de anúncios</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
@@ -74,41 +81,39 @@
       <article class="policy-card">
         <h3>1. Como funciona o destaque</h3>
         <ul>
-          <li>O destaque é contratado por período, de 1 até 30 dias.</li>
-          <li>O valor é calculado por dia, com desconto progressivo nos dias adicionais.</li>
+          <li>O usuário compra saldo para a conta de anúncios a partir de R$ 10,00 (equivalente a 1 dia).</li>
+          <li>Sem descontos progressivos: o cálculo é linear (R$ 10,00 por dia equivalente).</li>
           <li>O pagamento é processado via Stripe em ambiente seguro.</li>
-          <li>Após confirmação do pagamento, o destaque do anúncio é ativado automaticamente.</li>
+          <li>Após confirmação do pagamento, o saldo entra na conta de anúncios e pode ser usado em qualquer anúncio do usuário.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>2. Início, vigência e término</h3>
+        <h3>2. Consumo do saldo</h3>
         <ul>
-          <li>A contagem começa no momento da confirmação do pagamento.</li>
-          <li>O destaque permanece ativo até o fim do período contratado.</li>
-          <li>Ao expirar, o anúncio volta automaticamente para o estado normal.</li>
+          <li>O saldo é descontado por segundo, enquanto houver anúncio destacado ativo.</li>
+          <li>Se houver mais de um anúncio ativo ao mesmo tempo, o consumo por segundo é proporcional à quantidade ativa.</li>
+          <li>Ao zerar o saldo, os destaques ativos são interrompidos automaticamente.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>3. Reembolso ao excluir anúncio destacado</h3>
+        <h3>3. Exclusão de anúncio destacado</h3>
         <ul>
-          <li>O dia em vigor no momento da exclusão não é reembolsável.</li>
-          <li>Somente os dias futuros restantes são elegíveis para reembolso.</li>
-          <li>Exemplo: compra de 1 dia e exclusão no mesmo dia: reembolso de R$ 0,00.</li>
-          <li>Exemplo: compra de 10 dias e exclusão no 5º dia: reembolso referente aos 5 dias restantes.</li>
-          <li>O cálculo de reembolso respeita o valor progressivo aplicado na contratação.</li>
+          <li>Ao excluir um anúncio, o destaque desse anúncio é encerrado imediatamente.</li>
+          <li>O saldo já consumido pelo tempo ativo não é revertido.</li>
+          <li>O saldo restante permanece na conta de anúncios para uso em outros anúncios.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>4. Prazo de estorno</h3>
+        <h3>4. Transparência de custo</h3>
         <p>
-          Após a aprovação do reembolso, o valor pode levar de <strong>5 a 10 dias úteis</strong> para aparecer na
-          fatura/extrato, conforme a operadora do cartão e o banco emissor.
+          A compra continua sendo exibida por dia para o usuário, em modelo linear de preço.
+          Internamente, o sistema utiliza segundos para cálculo preciso de consumo de saldo.
         </p>
         <div class="policy-alert">
-          O prazo de compensação é definido pela rede de pagamento e pela instituição financeira do usuário.
+          O consumo é contínuo e proporcional ao tempo ativo de destaque.
         </div>
       </article>
 
@@ -120,6 +125,9 @@
         </p>
       </article>
     </main>
+
+    <site-footer></site-footer>
   </div>
+  <script src="js/site-footer.js"></script>
 </body>
 </html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <title>Gimerr - Área de parceiros</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="partner-guard-style">html{visibility:hidden;}</style>
+  <script>
+    (() => {
+      try {
+        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
+        if (!hasSession) {
+          window.location.replace("login.html");
+        }
+      } catch (_err) {
+        window.location.replace("login.html");
+      }
+    })();
+  </script>
+  <style>
+    .partner-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .partner-grid .hero-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .partner-status-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .partner-status-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 10px 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .partner-status-item small {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .partner-status-item strong {
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .partner-server-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .partner-server-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .partner-server-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .partner-server-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .partner-feedback {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .partner-status-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Carregando" />
+  </div>
+  <div class="page">
+    <site-navbar></site-navbar>
+
+    <main class="section partner-grid">
+      <section class="hero-card">
+        <h2>Painel de parceiro</h2>
+        <p class="helper">Gerencie seu onboarding no Stripe Connect e acompanhe os servidores sob sua titularidade.</p>
+        <p id="partner-welcome" class="helper"></p>
+      </section>
+
+      <section class="hero-card">
+        <h3>Stripe Connect Express</h3>
+        <div class="partner-status-list">
+          <div class="partner-status-item">
+            <small>Conta Connect</small>
+            <strong id="partner-account-id">Ainda não criada</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Status do parceiro</small>
+            <strong id="partner-flag">Não parceiro</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Recebimentos habilitados</small>
+            <strong id="partner-payouts">Não</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Onboarding concluído</small>
+            <strong id="partner-onboarded">Não</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Esperado para recebimento (50% líquido)</small>
+            <strong id="partner-expected-amount">R$ 0,00</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Disponível para repasse</small>
+            <strong id="partner-available-amount">R$ 0,00</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Em período ativo</small>
+            <strong id="partner-pending-amount">R$ 0,00</strong>
+          </div>
+          <div class="partner-status-item">
+            <small>Eventos registrados</small>
+            <strong id="partner-events-count">0</strong>
+          </div>
+        </div>
+        <div class="inline-actions">
+          <button id="start-connect-btn" class="btn btn-primary" type="button">Iniciar onboarding Connect</button>
+          <button id="refresh-connect-btn" class="btn btn-ghost" type="button">Atualizar status</button>
+          <a class="btn btn-ghost" href="politica-parceiros.html">Políticas de parceiros</a>
+          <a class="btn btn-ghost" href="parcerias.html">Terms of Use</a>
+        </div>
+        <p id="connect-feedback" class="partner-feedback"></p>
+        <p id="partner-payout-note" class="helper"></p>
+      </section>
+
+      <section class="hero-card">
+        <div class="partner-server-head">
+          <h3>Servidores vinculados</h3>
+          <span id="partner-servers-count" class="pill">0 servidores</span>
+        </div>
+        <div id="partner-server-list" class="partner-server-list"></div>
+        <p id="partner-servers-empty" class="helper" style="display:none;">Nenhum servidor vinculado ao seu usuário no momento.</p>
+      </section>
+    </main>
+
+    <site-footer></site-footer>
+  </div>
+
+  <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
+
+    const partnerWelcome = document.getElementById("partner-welcome");
+    const partnerAccountId = document.getElementById("partner-account-id");
+    const partnerFlag = document.getElementById("partner-flag");
+    const partnerPayouts = document.getElementById("partner-payouts");
+    const partnerOnboarded = document.getElementById("partner-onboarded");
+    const connectFeedback = document.getElementById("connect-feedback");
+    const startConnectBtn = document.getElementById("start-connect-btn");
+    const refreshConnectBtn = document.getElementById("refresh-connect-btn");
+    const partnerServersCount = document.getElementById("partner-servers-count");
+    const partnerServerList = document.getElementById("partner-server-list");
+    const partnerServersEmpty = document.getElementById("partner-servers-empty");
+    const partnerExpectedAmount = document.getElementById("partner-expected-amount");
+    const partnerAvailableAmount = document.getElementById("partner-available-amount");
+    const partnerPendingAmount = document.getElementById("partner-pending-amount");
+    const partnerEventsCount = document.getElementById("partner-events-count");
+    const partnerPayoutNote = document.getElementById("partner-payout-note");
+
+    const pageLoader = document.getElementById("page-loader");
+    let loaderDone = false;
+    let windowLoaded = false;
+    let avatarReady = false;
+    let contentReady = false;
+
+    function hideLoader() {
+      if (loaderDone || !pageLoader) return;
+      if (!windowLoaded || !avatarReady || !contentReady) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
+    }
+
+    function markAvatarReady() {
+      avatarReady = true;
+      hideLoader();
+    }
+
+    function markContentReady() {
+      contentReady = true;
+      hideLoader();
+    }
+
+    window.addEventListener("load", () => {
+      windowLoaded = true;
+      hideLoader();
+    });
+
+    let supabase;
+    let currentUser = null;
+    let currentProfile = null;
+    let avatarLoaded = false;
+    if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("partner-guard-style");
+      if (guard) guard.remove();
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        connectFeedback.textContent = "Supabase não configurado.";
+        authBtn.disabled = true;
+        throw new Error("Supabase não configurado");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          const avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+          await setAvatarImage(avatar);
+        } catch (_innerErr) {
+          await setAvatarImage("img/avatar.svg");
+        }
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    async function handleAuthClick() {
+      try {
+        ensureClient();
+        authBtn.disabled = true;
+        window.location.href = "login.html";
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "-";
+      try {
+        return new Date(value).toLocaleString("pt-BR");
+      } catch (_err) {
+        return String(value);
+      }
+    }
+
+    function formatBRL(value) {
+      return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(Number(value || 0));
+    }
+
+    async function resolveFunctionErrorMessage(error, data, fallbackMessage) {
+      if (data?.error) return String(data.error);
+      if (!error) return fallbackMessage;
+      try {
+        const context = error.context;
+        if (context) {
+          const json = await context.clone().json().catch(() => null);
+          if (json?.error) return String(json.error);
+          const text = await context.clone().text().catch(() => "");
+          if (text) return String(text);
+        }
+      } catch (_err) {
+        // ignore parse errors
+      }
+      return error?.message || fallbackMessage;
+    }
+
+    function isMissingPartnerPayoutTableError(error) {
+      if (!error) return false;
+      if (error.code === "42P01" || error.code === "42703") return true;
+      const message = String(error.message || "").toLowerCase();
+      return message.includes("partner_payout_events");
+    }
+
+    function isMissingAdminBeneficiaryColumnError(error) {
+      if (!error) return false;
+      return String(error.message || "").includes("admin_beneficiary_id");
+    }
+
+    async function fetchPartnerProfile() {
+      const fields = "id,email,first_name,last_name,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
+      let { data, error } = await supabase
+        .from("users")
+        .select(fields)
+        .eq("id", currentUser.id)
+        .single();
+
+      if (error && error.code === "42703") {
+        const fallback = await supabase
+          .from("users")
+          .select("id,email,first_name,last_name")
+          .eq("id", currentUser.id)
+          .single();
+        data = fallback.data
+          ? {
+              ...fallback.data,
+              is_partner: false,
+              stripe_connect_account_id: null,
+              stripe_connect_charges_enabled: false,
+              stripe_connect_payouts_enabled: false,
+              stripe_connect_details_submitted: false,
+              stripe_connect_onboarded_at: null,
+            }
+          : null;
+        error = fallback.error;
+      }
+      if (error) throw error;
+      return data;
+    }
+
+    function renderPartnerProfile(profile) {
+      currentProfile = profile;
+      const first = String(profile?.first_name || "").trim();
+      const last = String(profile?.last_name || "").trim();
+      const full = `${first} ${last}`.trim() || "Parceiro";
+      partnerWelcome.textContent = `Conta conectada: ${full}`;
+      partnerAccountId.textContent = profile?.stripe_connect_account_id || "Ainda não criada";
+      partnerFlag.textContent = profile?.is_partner ? "Parceiro ativo" : "Não parceiro";
+      partnerPayouts.textContent = profile?.stripe_connect_payouts_enabled ? "Sim" : "Não";
+      partnerOnboarded.textContent = profile?.stripe_connect_onboarded_at
+        ? `Sim (${formatDateTime(profile.stripe_connect_onboarded_at)})`
+        : "Não";
+    }
+
+    async function fetchPartnerPayoutSummary() {
+      const { data, error } = await supabase
+        .from("partner_payout_events")
+        .select("expected_net_amount,refunded_net_amount,payout_status,highlight_expires_at,currency")
+        .eq("owner_user_id", currentUser.id)
+        .neq("payout_status", "paid");
+
+      if (isMissingPartnerPayoutTableError(error)) {
+        return { unsupported: true };
+      }
+      if (error) throw error;
+
+      const now = new Date();
+      let totalExpected = 0;
+      let availableAmount = 0;
+      let pendingAmount = 0;
+      let count = 0;
+
+      (data || []).forEach((row) => {
+        const expected = Number(row?.expected_net_amount || 0);
+        const refunded = Number(row?.refunded_net_amount || 0);
+        const effective = Math.max(0, Number((expected - refunded).toFixed(2)));
+        if (effective <= 0) return;
+
+        count += 1;
+        totalExpected += effective;
+
+        const expiresAt = row?.highlight_expires_at ? new Date(row.highlight_expires_at) : null;
+        const isEligibleByTime = expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt <= now;
+        if (row?.payout_status === "eligible" || isEligibleByTime) {
+          availableAmount += effective;
+        } else {
+          pendingAmount += effective;
+        }
+      });
+
+      return {
+        unsupported: false,
+        totalExpected: Number(totalExpected.toFixed(2)),
+        availableAmount: Number(availableAmount.toFixed(2)),
+        pendingAmount: Number(pendingAmount.toFixed(2)),
+        count,
+      };
+    }
+
+    function renderPartnerPayoutSummary(summary) {
+      if (!partnerExpectedAmount || !partnerAvailableAmount || !partnerPendingAmount || !partnerEventsCount) return;
+
+      if (!summary || summary.unsupported) {
+        partnerExpectedAmount.textContent = "-";
+        partnerAvailableAmount.textContent = "-";
+        partnerPendingAmount.textContent = "-";
+        partnerEventsCount.textContent = "-";
+        if (partnerPayoutNote) {
+          partnerPayoutNote.textContent = "Aplique a migration de repasse para habilitar o cálculo de recebimentos.";
+        }
+        return;
+      }
+
+      partnerExpectedAmount.textContent = formatBRL(summary.totalExpected);
+      partnerAvailableAmount.textContent = formatBRL(summary.availableAmount);
+      partnerPendingAmount.textContent = formatBRL(summary.pendingAmount);
+      partnerEventsCount.textContent = String(summary.count);
+      if (partnerPayoutNote) {
+        partnerPayoutNote.textContent = "Repasse previsto após término do destaque ou após processamento de reembolso por exclusão.";
+      }
+    }
+
+    async function fetchOwnedServers() {
+      let { data, error } = await supabase
+        .from("servers")
+        .select("id,name,official_site,status,created_at,discord_invite,owner_id,admin_beneficiary_id")
+        .or(`owner_id.eq.${currentUser.id},admin_beneficiary_id.eq.${currentUser.id}`)
+        .order("created_at", { ascending: false });
+
+      if (isMissingAdminBeneficiaryColumnError(error)) {
+        const fallback = await supabase
+          .from("servers")
+          .select("id,name,official_site,status,created_at,discord_invite,owner_id")
+          .eq("owner_id", currentUser.id)
+          .order("created_at", { ascending: false });
+        data = (fallback.data || []).map((item) => ({ ...item, admin_beneficiary_id: null }));
+        error = fallback.error;
+      }
+      if (error && error.code === "42703") {
+        connectFeedback.textContent = "As colunas de vínculo do servidor ainda não existem. Aplique as migrations mais recentes.";
+        return [];
+      }
+      if (error) throw error;
+      const servers = data || [];
+      if (servers.length === 0) return [];
+
+      const serverIds = servers.map((item) => item.id);
+      let listingRows = [];
+      const { data: listingsData, error: listingsErr } = await supabase
+        .from("listings")
+        .select("id,server_id,status")
+        .in("server_id", serverIds);
+      if (!listingsErr) {
+        listingRows = listingsData || [];
+      }
+
+      const listingCountMap = new Map();
+      const activeCountMap = new Map();
+      listingRows.forEach((row) => {
+        const key = String(row.server_id || "");
+        if (!key) return;
+        listingCountMap.set(key, (listingCountMap.get(key) || 0) + 1);
+        if (String(row.status || "") === "active") {
+          activeCountMap.set(key, (activeCountMap.get(key) || 0) + 1);
+        }
+      });
+
+      return servers.map((server) => ({
+        ...server,
+        relationship_role: server.owner_id === currentUser.id
+          ? (server.admin_beneficiary_id === currentUser.id ? "owner + admin" : "owner")
+          : "admin",
+        listing_count: listingCountMap.get(String(server.id)) || 0,
+        active_listing_count: activeCountMap.get(String(server.id)) || 0,
+      }));
+    }
+
+    function renderServers(servers) {
+      partnerServerList.innerHTML = "";
+      const total = servers.length;
+      partnerServersCount.textContent = `${total} ${total === 1 ? "servidor" : "servidores"}`;
+      if (total === 0) {
+        partnerServersEmpty.style.display = "block";
+        return;
+      }
+      partnerServersEmpty.style.display = "none";
+      servers.forEach((server) => {
+        const card = document.createElement("article");
+        card.className = "partner-server-card";
+        card.innerHTML = `
+          <div class="partner-server-head">
+            <strong>${server.name || "Servidor sem nome"}</strong>
+            <span class="pill">${server.status || "active"}</span>
+          </div>
+          <div class="partner-server-meta">
+            <span class="pill">Vínculo: ${server.relationship_role || "owner"}</span>
+            <span class="pill">Anúncios: ${server.listing_count}</span>
+            <span class="pill">Ativos: ${server.active_listing_count}</span>
+          </div>
+          ${server.official_site ? `<a class="link-ghost" href="${server.official_site}" target="_blank" rel="noopener">Site oficial</a>` : ""}
+          ${server.discord_invite ? `<a class="link-ghost" href="${server.discord_invite}" target="_blank" rel="noopener">Discord oficial</a>` : ""}
+          <p class="helper">Criado em ${formatDateTime(server.created_at)}</p>
+        `;
+        partnerServerList.appendChild(card);
+      });
+    }
+
+    async function refreshConnectStatus() {
+      try {
+        ensureClient();
+        connectFeedback.textContent = "Atualizando status do Connect...";
+        refreshConnectBtn.disabled = true;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        const { data, error } = await supabase.functions.invoke("partner_connect_onboarding", {
+          body: {
+            action: "status",
+            userToken: token,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok) {
+          const errorMessage = await resolveFunctionErrorMessage(error, data, "Erro ao consultar status Connect.");
+          throw new Error(errorMessage);
+        }
+        currentProfile = {
+          ...currentProfile,
+          is_partner: true,
+          stripe_connect_account_id: data.accountId,
+          stripe_connect_charges_enabled: data.chargesEnabled,
+          stripe_connect_payouts_enabled: data.payoutsEnabled,
+          stripe_connect_details_submitted: data.detailsSubmitted,
+          stripe_connect_onboarded_at: data.onboarded
+            ? (currentProfile?.stripe_connect_onboarded_at || new Date().toISOString())
+            : null,
+        };
+        renderPartnerProfile(currentProfile);
+        connectFeedback.textContent = data.onboarded
+          ? "Conta Connect pronta para recebimentos."
+          : "Conta Connect ainda pendente de conclusão.";
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || "Erro ao atualizar status do Connect.";
+      } finally {
+        refreshConnectBtn.disabled = false;
+      }
+    }
+
+    async function startOnboarding() {
+      try {
+        ensureClient();
+        connectFeedback.textContent = "Gerando link de onboarding...";
+        startConnectBtn.disabled = true;
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        const { data, error } = await supabase.functions.invoke("partner_connect_onboarding", {
+          body: {
+            action: "onboard",
+            returnBaseUrl: window.location.origin,
+            userToken: token,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok || !data?.onboardingUrl) {
+          const errorMessage = await resolveFunctionErrorMessage(error, data, "Erro ao iniciar onboarding.");
+          throw new Error(errorMessage);
+        }
+        window.location.href = data.onboardingUrl;
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || "Erro ao iniciar onboarding Connect.";
+        startConnectBtn.disabled = false;
+      }
+    }
+
+    async function init() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          window.location.replace("login.html");
+          return;
+        }
+
+        const [profile, servers, payoutSummary] = await Promise.all([
+          fetchPartnerProfile(),
+          fetchOwnedServers(),
+          fetchPartnerPayoutSummary(),
+        ]);
+        renderPartnerProfile(profile);
+        renderServers(servers);
+        renderPartnerPayoutSummary(payoutSummary);
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("connect") === "return") {
+          connectFeedback.textContent = "Retorno do Stripe recebido. Atualize o status para confirmar a ativação.";
+        } else if (params.get("connect") === "retry") {
+          connectFeedback.textContent = "Onboarding não concluído. Tente novamente.";
+        }
+
+        markContentReady();
+        revealPage();
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || "Erro ao carregar área de parceiros.";
+        markContentReady();
+        revealPage();
+      }
+    }
+
+    authBtn?.addEventListener("click", handleAuthClick);
+    startConnectBtn?.addEventListener("click", startOnboarding);
+    refreshConnectBtn?.addEventListener("click", refreshConnectStatus);
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "index.html";
+      } catch (_err) {
+        // ignore
+      }
+    });
+
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
+    });
+
+    init();
+  </script>
+</body>
+</html>

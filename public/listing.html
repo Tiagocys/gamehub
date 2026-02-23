@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:alt" content="Gimerr" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta name="twitter:image:alt" content="Gimerr" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Anúncio</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
@@ -53,10 +60,38 @@
       display: block;
     }
 
+    .seller-recommendations {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #76a8ff;
+      font-weight: 700;
+      white-space: nowrap;
+      border: none;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .seller-recommendations img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .listing-report-card {
+      margin-top: 2px;
+      padding: 12px;
+    }
+
     .report-trigger {
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      width: 100%;
+      justify-content: center;
     }
 
     .report-icon {
@@ -96,6 +131,118 @@
       color: #146c2e;
       font-size: 14px;
     }
+
+    .recommenders-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(12, 21, 51, 0.56);
+    }
+
+    .recommenders-modal.open {
+      display: flex;
+    }
+
+    .recommenders-modal-card {
+      width: min(560px, 100%);
+      max-height: min(80vh, 640px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .recommenders-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .recommenders-modal-head h3 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .recommenders-modal-close {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .recommenders-wrap {
+      overflow-y: auto;
+      display: grid;
+      gap: 0;
+    }
+
+    .recommender-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .recommender-item:last-child {
+      border-bottom: none;
+    }
+
+    .recommender-item:hover {
+      background: rgba(14, 165, 233, 0.08);
+    }
+
+    .recommender-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      object-fit: cover;
+      background: #fff;
+      display: block;
+    }
+
+    .recommender-name {
+      font-weight: 700;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .recommenders-empty {
+      padding: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .recommenders-loading {
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: rgba(12, 21, 51, 0.02);
+    }
   </style>
 </head>
 <body>
@@ -103,29 +250,7 @@
     <img src="img/logo.png" alt="Carregando" />
   </div>
   <div class="page">
-    <header class="site-nav">
-      <a href="index.html" class="brand">
-        <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
-        <div class="brand-copy">
-          <span class="brand-tagline">Detalhes do anúncio</span>
-        </div>
-      </a>
-      <div class="nav-actions">
-        <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
-        <button id="auth-btn" class="btn btn-primary">Entrar com Google</button>
-        <div id="user-menu" class="nav-user">
-          <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
-            <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
-          </button>
-          <div class="user-dropdown">
-            <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">Criar anúncio</button>
-            <a id="my-listings-link" class="menu-item" href="my-listings.html">Meus anúncios</a>
-            <a id="profile-link" class="menu-item" href="profile.html">Meu perfil</a>
-            <button id="logout-btn" class="menu-item" type="button">Sair</button>
-          </div>
-        </div>
-      </div>
-    </header>
+    <site-navbar></site-navbar>
 
     <main class="section listing-page">
       <div class="listing-hero-card">
@@ -133,57 +258,71 @@
           <h1 id="listing-title">Carregando...</h1>
           <div class="seller-meta-row">
             <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
-            <span id="seller-discord" class="seller-discord" style="display:none;"></span>
+            <button id="seller-recommendations" class="seller-recommendations" type="button" style="display:none;" aria-expanded="false"></button>
+          </div>
+          <span id="seller-discord" class="seller-discord" style="display:none;"></span>
+          <div id="listing-contact-actions" class="inline-actions listing-contact-actions" style="display:none;">
+            <a id="telegram-chat" class="btn btn-telegram btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
+              Conversar no Telegram
+              <img src="img/telegram.webp" alt="" class="btn-icon" />
+            </a>
+            <a id="whatsapp-chat" class="btn btn-whatsapp btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
+              Conversar no WhatsApp
+              <img src="img/wtsp.png" alt="" class="btn-icon" />
+            </a>
           </div>
           <div id="listing-meta" class="pill-trail"></div>
+          <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
         </div>
         <div class="listing-gallery">
           <div id="listing-main" class="listing-gallery-main">Sem imagem</div>
           <div id="listing-thumbs" class="listing-thumb-grid"></div>
+          <section id="report-listing-card" class="hero-card listing-report-card">
+            <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
+              <img src="img/flag.png" alt="" class="report-icon" />
+              Denunciar anúncio
+            </button>
+            <div id="report-listing-form" class="report-form" style="display:none;">
+              <label for="report-listing-reason">Descreva o problema</label>
+              <textarea id="report-listing-reason" placeholder="Explique por que este anúncio deve ser analisado."></textarea>
+              <label for="report-listing-files">Anexos (opcional, até 4 imagens)</label>
+              <input id="report-listing-files" class="input" type="file" accept="image/*" multiple />
+              <div id="report-listing-files-info" class="helper">Nenhuma imagem selecionada.</div>
+              <div class="inline-actions">
+                <button id="report-listing-submit" class="btn btn-primary" type="button">Enviar denúncia</button>
+                <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+              </div>
+              <div id="report-listing-feedback" class="report-feedback"></div>
+            </div>
+            <div id="report-listing-success" class="report-success-banner" style="display:none;" role="status" aria-live="polite"></div>
+          </section>
         </div>
       </div>
-
-      <div class="inline-actions listing-contact-actions">
-        <a id="telegram-chat" class="btn btn-telegram btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
-          Conversar no Telegram
-          <img src="img/telegram.webp" alt="" class="btn-icon" />
-        </a>
-        <a id="whatsapp-chat" class="btn btn-whatsapp btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
-          Conversar no WhatsApp
-          <img src="img/wtsp.png" alt="" class="btn-icon" />
-        </a>
-      </div>
-
-      <section class="hero-card">
-        <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
-          <img src="img/flag.png" alt="" class="report-icon" />
-          Denunciar anúncio
-        </button>
-        <div id="report-listing-form" class="report-form" style="display:none;">
-          <label for="report-listing-reason">Descreva o problema</label>
-          <textarea id="report-listing-reason" placeholder="Explique por que este anúncio deve ser analisado."></textarea>
-          <label for="report-listing-files">Anexos (opcional, até 4 imagens)</label>
-          <input id="report-listing-files" class="input" type="file" accept="image/*" multiple />
-          <div id="report-listing-files-info" class="helper">Nenhuma imagem selecionada.</div>
-          <div class="inline-actions">
-            <button id="report-listing-submit" class="btn btn-primary" type="button">Enviar denúncia</button>
-            <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancelar</button>
-          </div>
-          <div id="report-listing-feedback" class="report-feedback"></div>
-        </div>
-        <div id="report-listing-success" class="report-success-banner" style="display:none;" role="status" aria-live="polite"></div>
-      </section>
-
-      <section class="hero-card">
-        <h3>Descrição do anúncio</h3>
-        <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
-      </section>
     </main>
+
+    <site-footer></site-footer>
+  </div>
+  <div id="recommenders-modal" class="recommenders-modal" aria-hidden="true">
+    <div class="recommenders-modal-card">
+      <div class="recommenders-modal-head">
+        <h3>Usuários que recomendaram</h3>
+        <button id="recommenders-modal-close" class="recommenders-modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <div id="recommenders-wrap" class="recommenders-wrap">
+        <div id="recommenders-list"></div>
+        <div id="recommenders-loading" class="recommenders-loading" style="display:none;">Carregando mais perfis...</div>
+      </div>
+      <p id="recommenders-empty" class="recommenders-empty" style="display:none;">Nenhuma recomendação ainda.</p>
+    </div>
   </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -198,16 +337,20 @@
     const logoutBtn = document.getElementById("logout-btn");
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
     const titleEl = document.getElementById("listing-title");
     const sellerProfileLink = document.getElementById("seller-profile-link");
     const sellerDiscord = document.getElementById("seller-discord");
+    const sellerRecommendations = document.getElementById("seller-recommendations");
     const descriptionEl = document.getElementById("listing-description");
     const metaEl = document.getElementById("listing-meta");
+    const contactActionsRow = document.getElementById("listing-contact-actions");
     const telegramChat = document.getElementById("telegram-chat");
     const whatsappChat = document.getElementById("whatsapp-chat");
     const mainMedia = document.getElementById("listing-main");
     const thumbGrid = document.getElementById("listing-thumbs");
     const reportListingBtn = document.getElementById("report-listing-btn");
+    const reportListingCard = document.getElementById("report-listing-card");
     const reportListingForm = document.getElementById("report-listing-form");
     const reportListingReason = document.getElementById("report-listing-reason");
     const reportListingFiles = document.getElementById("report-listing-files");
@@ -216,6 +359,12 @@
     const reportListingCancel = document.getElementById("report-listing-cancel");
     const reportListingFeedback = document.getElementById("report-listing-feedback");
     const reportListingSuccess = document.getElementById("report-listing-success");
+    const recommendersModal = document.getElementById("recommenders-modal");
+    const recommendersModalClose = document.getElementById("recommenders-modal-close");
+    const recommendersWrap = document.getElementById("recommenders-wrap");
+    const recommendersList = document.getElementById("recommenders-list");
+    const recommendersLoadingEl = document.getElementById("recommenders-loading");
+    const recommendersEmpty = document.getElementById("recommenders-empty");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -248,6 +397,12 @@
     let lightboxImages = [];
     let lightboxIndex = 0;
     let lightboxRoot = null;
+    let recommendersTargetUserId = null;
+    let recommendersOffset = 0;
+    let recommendersHasMore = true;
+    let recommendersLoading = false;
+    let recommendersFetched = false;
+    const RECOMMENDERS_PAGE_SIZE = 8;
     const REPORT_MAX_ATTACHMENTS = 4;
     const REPORT_MAX_FILE_BYTES = 6 * 1024 * 1024;
     const REPORT_MAX_DIMENSION = 1600;
@@ -292,6 +447,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
         loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
@@ -299,6 +455,7 @@
       }
       authBtn.style.display = "inline-flex";
       if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
       avatarLoaded = false;
@@ -343,6 +500,129 @@
       reportSuccessTimer = setTimeout(() => {
         hideReportSuccess();
       }, 7000);
+    }
+
+    function renderRecommendersEmpty(show) {
+      if (recommendersEmpty) {
+        recommendersEmpty.style.display = show ? "block" : "none";
+      }
+      if (recommendersWrap) {
+        recommendersWrap.style.display = show ? "none" : "block";
+      }
+    }
+
+    function openRecommendersModal() {
+      if (!recommendersModal) return;
+      recommendersModal.classList.add("open");
+      recommendersModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("no-scroll");
+      if (sellerRecommendations) {
+        sellerRecommendations.setAttribute("aria-expanded", "true");
+      }
+    }
+
+    function closeRecommendersModal() {
+      if (!recommendersModal) return;
+      recommendersModal.classList.remove("open");
+      recommendersModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("no-scroll");
+      if (sellerRecommendations) {
+        sellerRecommendations.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function setRecommendersLoading(show) {
+      if (recommendersLoadingEl) {
+        recommendersLoadingEl.style.display = show ? "block" : "none";
+      }
+    }
+
+    function appendRecommenderItem(recommendation, user) {
+      if (!recommendersList) return;
+      const link = document.createElement("a");
+      link.className = "recommender-item";
+      link.href = `user.html?id=${encodeURIComponent(recommendation.author_id)}`;
+
+      const avatar = document.createElement("img");
+      avatar.className = "recommender-avatar";
+      avatar.src = user?.avatar_url || "img/avatar.svg";
+      avatar.alt = "Avatar do usuário";
+      avatar.referrerPolicy = "no-referrer";
+      avatar.loading = "lazy";
+      avatar.addEventListener("error", () => {
+        avatar.src = "img/avatar.svg";
+      });
+
+      const copy = document.createElement("div");
+      const firstName = (user?.first_name || "").trim();
+      const lastName = (user?.last_name || "").trim();
+      const fullName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
+      const nameEl = document.createElement("div");
+      nameEl.className = "recommender-name";
+      nameEl.textContent = fullName;
+      copy.appendChild(nameEl);
+
+      link.appendChild(avatar);
+      link.appendChild(copy);
+      recommendersList.appendChild(link);
+    }
+
+    async function loadMoreRecommenders({ reset = false } = {}) {
+      if (!recommendersTargetUserId || recommendersLoading) return;
+      if (!reset && !recommendersHasMore) return;
+
+      if (reset) {
+        recommendersOffset = 0;
+        recommendersHasMore = true;
+        if (recommendersList) recommendersList.innerHTML = "";
+      }
+
+      recommendersLoading = true;
+      setRecommendersLoading(true);
+      try {
+        const from = recommendersOffset;
+        const to = recommendersOffset + RECOMMENDERS_PAGE_SIZE - 1;
+        const { data, error } = await supabase
+          .from("recommendations")
+          .select("id,author_id,created_at")
+          .eq("user_id", recommendersTargetUserId)
+          .order("created_at", { ascending: false })
+          .range(from, to);
+        if (error) throw error;
+
+        const rows = data || [];
+        if (reset && rows.length === 0) {
+          renderRecommendersEmpty(true);
+          recommendersHasMore = false;
+          return;
+        }
+
+        renderRecommendersEmpty(false);
+        recommendersOffset += rows.length;
+        if (rows.length < RECOMMENDERS_PAGE_SIZE) {
+          recommendersHasMore = false;
+        }
+
+        const authorIds = Array.from(new Set(rows.map((row) => row.author_id).filter(Boolean)));
+        let usersMap = new Map();
+        if (authorIds.length > 0) {
+          const { data: usersData, error: usersError } = await supabase
+            .from("users")
+            .select("id,first_name,last_name,avatar_url")
+            .in("id", authorIds);
+          if (usersError) throw usersError;
+          usersMap = new Map((usersData || []).map((user) => [user.id, user]));
+        }
+
+        rows.forEach((row) => {
+          appendRecommenderItem(row, usersMap.get(row.author_id));
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        recommendersLoading = false;
+        setRecommendersLoading(false);
+      }
     }
 
     async function convertImageToWebp(file) {
@@ -662,11 +942,17 @@
       descriptionEl.textContent = "Este anúncio foi excluído ou não está mais disponível.";
       currentGalleryImages = [];
       currentListing = null;
+      recommendersTargetUserId = null;
+      recommendersFetched = false;
+      closeRecommendersModal();
       if (telegramChat) telegramChat.style.display = "none";
       if (whatsappChat) whatsappChat.style.display = "none";
+      if (contactActionsRow) contactActionsRow.style.display = "none";
       if (sellerProfileLink) sellerProfileLink.style.display = "none";
       if (sellerDiscord) sellerDiscord.style.display = "none";
+      if (sellerRecommendations) sellerRecommendations.style.display = "none";
       if (reportListingBtn) reportListingBtn.style.display = "none";
+      if (reportListingCard) reportListingCard.style.display = "none";
       if (reportListingForm) reportListingForm.style.display = "none";
       if (metaEl) metaEl.innerHTML = "";
       if (mainMedia) mainMedia.textContent = "Anúncio indisponível.";
@@ -794,6 +1080,18 @@
         }
       }
 
+      if (sellerRecommendations) {
+        const totalRecommendations = Number(listing.user_recommendations_count || 0);
+        const label = totalRecommendations === 1
+          ? "1 recomendação"
+          : `${totalRecommendations} recomendações`;
+        sellerRecommendations.innerHTML = `<img src="img/rec.png" alt="" /> ${escapeHtml(label)}`;
+        sellerRecommendations.style.display = listing.user_profile_id ? "inline-flex" : "none";
+        sellerRecommendations.setAttribute("aria-expanded", "false");
+      }
+      recommendersTargetUserId = listing.user_profile_id || null;
+      recommendersFetched = false;
+
       if (telegramChat) {
         if (listing.user_phone) {
           const phone = String(listing.user_phone).replace(/\D/g, "");
@@ -815,9 +1113,18 @@
           whatsappChat.style.display = "none";
         }
       }
+      if (contactActionsRow) {
+        const hasVisibleContact =
+          (telegramChat && telegramChat.style.display !== "none") ||
+          (whatsappChat && whatsappChat.style.display !== "none");
+        contactActionsRow.style.display = hasVisibleContact ? "flex" : "none";
+      }
 
+      const ownListing = !!currentUser && !!listing.user_profile_id && currentUser.id === listing.user_profile_id;
+      if (reportListingCard) {
+        reportListingCard.style.display = ownListing ? "none" : "block";
+      }
       if (reportListingBtn) {
-        const ownListing = !!currentUser && !!listing.user_profile_id && currentUser.id === listing.user_profile_id;
         reportListingBtn.style.display = ownListing ? "none" : "inline-flex";
       }
       if (reportListingForm) {
@@ -833,6 +1140,22 @@
       updateReportFilesInfo();
 
       renderGallery(listing.images);
+    }
+
+    async function fetchRecommendationsCount(userId) {
+      if (!userId) return 0;
+      try {
+        ensureClient();
+        const { count, error } = await supabase
+          .from("recommendations")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId);
+        if (error) throw error;
+        return count || 0;
+      } catch (err) {
+        console.warn("Falha ao carregar recomendações do anunciante.", err);
+        return 0;
+      }
     }
 
     async function fetchListing(listingId) {
@@ -862,6 +1185,7 @@
         const userAvatarUrl = resolvedAvatarUrl || "";
         const userDiscordUsername = data?.users?.discord_username || "";
         const userProfileId = data?.users?.id || data?.user_id || null;
+        const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
         return {
           listing: {
             ...data,
@@ -872,6 +1196,7 @@
             user_avatar_url: userAvatarUrl,
             user_discord_username: userDiscordUsername,
             user_profile_id: userProfileId,
+            user_recommendations_count: userRecommendationsCount,
           },
         };
       } catch (err) {
@@ -913,6 +1238,7 @@
             : "";
           userDiscordUsername = userData?.discord_username || "";
         }
+        const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
         return {
           listing: {
             ...data,
@@ -923,6 +1249,7 @@
             user_avatar_url: userAvatarUrl,
             user_discord_username: userDiscordUsername || "",
             user_profile_id: userProfileId,
+            user_recommendations_count: userRecommendationsCount,
           },
         };
       }
@@ -983,6 +1310,20 @@
       if (reportListingFeedback) reportListingFeedback.textContent = "";
       if (reportListingFiles) reportListingFiles.value = "";
       updateReportFilesInfo();
+    });
+    sellerRecommendations?.addEventListener("click", async () => {
+      try {
+        if (!recommendersTargetUserId) return;
+        openRecommendersModal();
+        if (!recommendersFetched) {
+          recommendersFetched = true;
+          await loadMoreRecommenders({ reset: true });
+        }
+        const shouldShowEmpty = !!recommendersFetched && !recommendersHasMore && (!recommendersList || recommendersList.childElementCount === 0);
+        renderRecommendersEmpty(shouldShowEmpty);
+      } catch (err) {
+        console.error(err);
+      }
     });
     reportListingFiles?.addEventListener("change", updateReportFilesInfo);
     reportListingSubmit?.addEventListener("click", async () => {
@@ -1047,6 +1388,25 @@
       if (!userMenu) return;
       if (!userMenu.contains(event.target)) {
         userMenu.classList.remove("open");
+      }
+    });
+    recommendersWrap?.addEventListener("scroll", () => {
+      if (!recommendersWrap || recommendersLoading || !recommendersHasMore) return;
+      const threshold = 24;
+      const reachedBottom = recommendersWrap.scrollTop + recommendersWrap.clientHeight >= recommendersWrap.scrollHeight - threshold;
+      if (reachedBottom) {
+        loadMoreRecommenders();
+      }
+    });
+    recommendersModalClose?.addEventListener("click", closeRecommendersModal);
+    recommendersModal?.addEventListener("click", (event) => {
+      if (event.target === recommendersModal) {
+        closeRecommendersModal();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && recommendersModal?.classList.contains("open")) {
+        closeRecommendersModal();
       }
     });
     mainMedia?.addEventListener("click", (event) => {
