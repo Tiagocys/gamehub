@@ -7,6 +7,19 @@ function cleanEnv(value) {
   return raw.replace(/^['"]+|['"]+$/g, "").trim();
 }
 
+function normalizeSupabaseUrl(primary, fallback = "") {
+  const first = cleanEnv(primary);
+  const second = cleanEnv(fallback);
+  const candidate = first || second;
+  if (!candidate) return "";
+  // Corrige erro comum de configuração: "ttps://..."
+  if (candidate.startsWith("ttps://")) return `h${candidate}`;
+  if (candidate.startsWith("http://") || candidate.startsWith("https://")) return candidate;
+  // Evita URL inválida e tenta fallback.
+  if (second && (second.startsWith("http://") || second.startsWith("https://"))) return second;
+  return candidate;
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replaceAll("&", "&amp;")
@@ -159,7 +172,7 @@ function renderMetaPage({ title, description, imageUrl, ogUrl, appUrl, siteName 
 
 export async function onRequestGet(context) {
   const listingId = context.params?.id;
-  const supabaseUrl = cleanEnv(context.env.SUPABASE_URL);
+  const supabaseUrl = normalizeSupabaseUrl(context.env.SUPABASE_URL, context.env.PROJECT_URL);
   const supabaseAnonKey = cleanEnv(context.env.SUPABASE_ANON_KEY);
   const siteUrl = stripTrailingSlash(cleanEnv(context.env.SITE_URL) || new URL(context.request.url).origin);
 
