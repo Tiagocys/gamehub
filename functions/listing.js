@@ -26,14 +26,25 @@ export async function onRequestGet(context) {
   const siteUrl = stripTrailingSlash(context.env.SITE_URL || requestUrl.origin);
 
   if (!listingId) {
-    return Response.redirect(`${siteUrl}/listing.html`, 302);
+    // Sem ID, deixa o Pages resolver a rota normalmente.
+    return context.next();
   }
 
   const userAgent = context.request.headers.get("user-agent") || "";
   if (looksLikeBot(userAgent)) {
     const ogUrl = new URL(`${siteUrl}/og/listing/${encodeURIComponent(listingId)}`);
-    return fetch(new Request(ogUrl.toString(), context.request));
+    const ogResponse = await fetch(new Request(ogUrl.toString(), context.request));
+    const headers = new Headers(ogResponse.headers);
+    // Evita cache compartilhado entre bot/humano na mesma URL.
+    headers.set("cache-control", "no-store");
+    headers.set("vary", "user-agent");
+    return new Response(ogResponse.body, {
+      status: ogResponse.status,
+      statusText: ogResponse.statusText,
+      headers,
+    });
   }
 
-  return Response.redirect(`${siteUrl}/listing.html?id=${encodeURIComponent(listingId)}`, 302);
+  // Para humanos, deixa o Pages resolver /listing para o HTML do app.
+  return context.next();
 }
