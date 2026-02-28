@@ -28,7 +28,7 @@
         <div class="hero-overlay"></div>
         <div class="hero-grid single">
           <div class="hero-copy">
-            <h1 style="font-size: 100px; text-align: center;">Encontre seu jogo</h1>
+            <h1 style="font-size: 80px; text-align: center;">Encontre seu jogo</h1>
             <p class="lede">Cada game tem seu próprio marketplace operado 100% por players.</p>
             <form class="search" id="game-search">
               <div class="search-bar">
@@ -211,7 +211,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
         showSuggestionMessage(err?.message || "Erro ao autenticar.");
@@ -496,7 +496,7 @@
       if (!link) return;
       event.preventDefault();
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "game-submit.html";
@@ -536,7 +536,7 @@
     });
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";

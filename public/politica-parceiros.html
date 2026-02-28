@@ -70,7 +70,18 @@
       </section>
 
       <article class="policy-card">
-        <h3>1. Base de cálculo</h3>
+        <h3>1. Indicadores do painel</h3>
+        <ul>
+          <li><strong>Conta Connect:</strong> mostra o identificador da conta Stripe Connect vinculada ao seu perfil de parceiro.</li>
+          <li><strong>Recebimentos habilitados:</strong> indica se sua conta Connect já está apta a receber repasses.</li>
+          <li><strong>Esperado para recebimento:</strong> soma total estimada dos eventos de destaque vinculados ao parceiro, considerando ajustes e reembolsos.</li>
+          <li><strong>Disponível para repasse:</strong> parte já acumulada e pronta para repasse conforme o consumo real do saldo de anúncios.</li>
+          <li><strong>Em período ativo:</strong> parte ainda em andamento, que será liberada conforme o consumo do destaque.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>2. Base de cálculo</h3>
         <ul>
           <li>O painel exibe o valor esperado para recebimento do parceiro com base no pagamento processado pela Stripe.</li>
           <li>O repasse do parceiro é calculado como <strong>50% do valor líquido</strong> do pagamento.</li>
@@ -80,7 +91,7 @@
       </article>
 
       <article class="policy-card">
-        <h3>2. Quando o valor fica disponível</h3>
+        <h3>3. Quando o valor fica disponível</h3>
         <ul>
           <li>O repasse só fica disponível após o fim do período de destaque contratado.</li>
           <li>Enquanto o anúncio estiver em período ativo, o valor permanece em “Em período ativo”.</li>
@@ -88,7 +99,7 @@
       </article>
 
       <article class="policy-card">
-        <h3>3. Exclusão do anúncio e reembolso</h3>
+        <h3>4. Exclusão do anúncio e reembolso</h3>
         <ul>
           <li>Se o usuário excluir o anúncio antes do fim do período, o sistema pode solicitar reembolso proporcional dos dias não usados.</li>
           <li>Após o processamento do reembolso, apenas o valor remanescente elegível continua para repasse do parceiro.</li>
@@ -97,7 +108,7 @@
       </article>
 
       <article class="policy-card">
-        <h3>4. Janela de processamento</h3>
+        <h3>5. Janela de processamento</h3>
         <ul>
           <li>Eventos podem levar alguns minutos para aparecer no painel após confirmação de pagamento.</li>
           <li>A atualização de status depende do webhook da Stripe e das ações do usuário no anúncio.</li>

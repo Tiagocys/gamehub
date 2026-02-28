@@ -42,6 +42,23 @@
       font-size: 14px;
     }
 
+    #my-listings-grid {
+      margin-top: 0;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+
+    @media (min-width: 980px) {
+      #my-listings-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1320px) {
+      #my-listings-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+
     #my-listings-grid .listing-media {
       display: flex;
       align-items: center;
@@ -86,10 +103,10 @@
       try {
         const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
         if (!hasSession) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
         }
       } catch (_err) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     })();
   </script>
@@ -470,9 +487,6 @@
     }
 
     async function deleteListing(listingId) {
-      const confirmDelete = window.confirm("Deseja realmente excluir este anúncio?");
-      if (!confirmDelete) return;
-
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token || "";
       const { data, error } = await supabase.functions.invoke("listing_delete", {
@@ -495,7 +509,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (_err) {
         // ignore
       }
@@ -507,18 +521,28 @@
       const action = button.dataset.action;
       const id = button.dataset.id;
       if (!action || !id) return;
+      const originalLabel = button.textContent;
       try {
         button.disabled = true;
         if (action === "edit") {
           window.location.href = `listing-create.html?edit=${encodeURIComponent(id)}`;
         } else if (action === "delete") {
+          button.textContent = "Aguarde...";
           await deleteListing(id);
         }
       } catch (err) {
         console.error(err);
         alert(err?.message || "Erro ao gerenciar anúncio.");
       } finally {
-        button.disabled = false;
+        if (action === "edit") {
+          button.disabled = false;
+          return;
+        }
+        // Em exclusão bem-sucedida o card some no re-render.
+        if (listingsGrid.contains(button)) {
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
       }
     });
 
@@ -539,7 +563,7 @@
         await supabase.auth.signOut();
         currentUser = null;
         updateAuthUI();
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (_err) {
         // ignore
       }
@@ -547,7 +571,7 @@
 
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";
@@ -566,7 +590,7 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
         await fetchMyListings();

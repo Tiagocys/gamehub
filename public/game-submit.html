@@ -18,10 +18,10 @@
       try {
         const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
         if (!hasSession) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
         }
       } catch (_err) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     })();
   </script>
@@ -241,7 +241,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao autenticar.";
@@ -428,7 +428,7 @@
 
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";
@@ -444,7 +444,7 @@
         ensureClient();
         if (!currentUser) {
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
         if (hasPending) {
@@ -638,7 +638,7 @@
         renderPending();
         updateOfficialAdminNote();
         updateAuthUI();
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       } catch (err) {
         console.error(err);
       }
@@ -663,7 +663,7 @@
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
         if (!currentUser) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
         updateAuthUI();

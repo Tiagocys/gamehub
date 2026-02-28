@@ -516,7 +516,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao autenticar.";
@@ -1179,7 +1179,7 @@
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
         if (!token) {
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
         verifyPhoneBtn.disabled = true;
@@ -1231,7 +1231,7 @@
       try {
         feedback.textContent = "";
         if (!currentUser) {
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
         const firstConfirm = window.confirm("Deseja excluir seu perfil? Todos os seus anúncios serão removidos.");
@@ -1257,7 +1257,7 @@
         if (updateError) throw updateError;
 
         await supabase.auth.signOut();
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao excluir perfil.";
@@ -1288,7 +1288,7 @@
     });
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";

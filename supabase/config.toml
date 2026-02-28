@@ -315,3 +315,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/partner_connect_onboarding/deno.json"
 entrypoint = "./functions/partner_connect_onboarding/index.ts"
+
+[functions.server_update_settings]
+enabled = true
+verify_jwt = false
+import_map = "./functions/server_update_settings/deno.json"
+entrypoint = "./functions/server_update_settings/index.ts"

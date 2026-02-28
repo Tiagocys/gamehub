@@ -8,7 +8,7 @@ type Payload = {
   key?: string;
   keys?: string[];
   userToken?: string;
-  assetType?: "listing" | "avatar" | "report";
+  assetType?: "listing" | "avatar" | "report" | "server";
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
@@ -288,7 +288,9 @@ Deno.serve(async (req) => {
       ? "avatar"
       : payload.assetType === "report"
         ? "report"
-        : "listing";
+        : payload.assetType === "server"
+          ? "server"
+          : "listing";
     const bucket = assetType === "avatar" ? R2_PROFILE_BUCKET : R2_BUCKET;
     if (!bucket) {
       return errorResponse("Bucket R2 não configurado", 500);
@@ -298,6 +300,8 @@ Deno.serve(async (req) => {
       ? `avatars/${authData.user.id}`
       : assetType === "report"
         ? `reports/${authData.user.id}`
+        : assetType === "server"
+          ? `servers/${authData.user.id}`
         : `listings/${authData.user.id}`;
     const key = `${keyPrefix}/${crypto.randomUUID()}.${ext}`;
     const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;

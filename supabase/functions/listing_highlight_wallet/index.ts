@@ -2,8 +2,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
 type Payload = {
-  action?: "status" | "activate" | "deactivate";
+  action?: "status" | "activate" | "deactivate" | "withdraw_request";
   listingId?: string;
+  policyAccepted?: boolean;
   userToken?: string;
 };
 
@@ -17,7 +18,7 @@ const corsHeaders = {
 };
 
 const DAY_SECONDS = 24 * 60 * 60;
-const BASE_DAY_PRICE = 10;
+const BASE_DAY_PRICE = 5;
 const DAY_DISCOUNT = 0;
 
 type WalletRow = {
@@ -248,6 +249,58 @@ Deno.serve(async (req) => {
     if (action === "status") {
       const wallet = await syncWallet(supabase, userId, "status");
       return new Response(JSON.stringify({ ok: true, wallet }), {
+        headers: { "content-type": "application/json", ...corsHeaders },
+      });
+    }
+
+    if (action === "withdraw_request") {
+      if (!payload.policyAccepted) {
+        return errorResponse("Você precisa aceitar as políticas de anúncio para solicitar saque.", 400);
+      }
+
+      const nowIso = new Date().toISOString();
+      const wallet = await syncWallet(supabase, userId, "withdraw-request-pre");
+      const availableSeconds = safeInt(wallet.availableSeconds);
+
+      if (availableSeconds <= 0) {
+        return errorResponse("Você não possui saldo disponível para saque.", 409);
+      }
+
+      const requestedRefundBRL = Number(((availableSeconds / DAY_SECONDS) * BASE_DAY_PRICE).toFixed(2));
+
+      await deactivateAllHighlights(supabase, userId);
+
+      const { error: resetErr } = await supabase
+        .from("wallets")
+        .update({
+          available_seconds: 0,
+          active_listing_count: 0,
+          last_consumed_at: nowIso,
+        })
+        .eq("user_id", userId);
+      if (resetErr) throw resetErr;
+
+      await appendWalletEvent(supabase, {
+        user_id: userId,
+        event_type: "adjust",
+        seconds_delta: -availableSeconds,
+        balance_after: 0,
+        metadata: {
+          reason: "withdraw_request",
+          status: "pending",
+          policy_accepted: true,
+          requested_refund_brl: requestedRefundBRL,
+          requested_seconds: availableSeconds,
+        },
+      });
+
+      const refreshed = await syncWallet(supabase, userId, "withdraw-request-post");
+      return new Response(JSON.stringify({
+        ok: true,
+        withdrawRequested: true,
+        requestedRefundBRL,
+        wallet: refreshed,
+      }), {
         headers: { "content-type": "application/json", ...corsHeaders },
       });
     }

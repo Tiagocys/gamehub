@@ -16,6 +16,7 @@ const NET_ESTIMATE_RATIO = 0.921;
 const PARTNER_SHARE_RATIO = 0.5;
 const ADMIN_SHARE_RATIO = 0.25;
 const DAY_SECONDS = 24 * 60 * 60;
+const PRICE_PER_DAY_CENTS = 500;
 
 const textEncoder = new TextEncoder();
 
@@ -358,7 +359,7 @@ Deno.serve(async (req) => {
       const userId = metadata.user_id;
       const totalCents = normalizeAmountCents(metadata.total_cents || session?.amount_total || 0);
       const metadataDays = normalizeDays(metadata.days);
-      const fallbackSecondsByAmount = Math.max(1, Math.round((totalCents * DAY_SECONDS) / 1000));
+      const fallbackSecondsByAmount = Math.max(1, Math.round((totalCents * DAY_SECONDS) / PRICE_PER_DAY_CENTS));
       const fallbackSecondsByDays = metadataDays * DAY_SECONDS;
       const purchasedSeconds = safeInt(
         metadata.purchased_seconds,
@@ -449,23 +450,6 @@ Deno.serve(async (req) => {
             .eq("balance_after", 0);
         }
         throw topupFlowErr;
-      }
-
-      if (listing.status === "active" && listing.highlight_status !== "active") {
-        const { error: activateErr } = await supabase
-          .from("listings")
-          .update({
-            highlight_status: "active",
-            highlight_started_at: nowIso,
-            highlight_days: 0,
-            highlight_expires_at: null,
-            highlight_checkout_session_id: sessionId,
-            highlight_payment_intent_id: paymentIntentId,
-            highlight_paid_amount: Number((totalCents / 100).toFixed(2)),
-            highlight_currency: stripeCurrency || "BRL",
-          })
-          .eq("id", listing.id);
-        if (activateErr) throw activateErr;
       }
 
       const walletAfterTopup = await syncWallet(supabase, userId, "stripe-webhook-after-topup");

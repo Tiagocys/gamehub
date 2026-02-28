@@ -18,10 +18,10 @@
       try {
         const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
         if (!hasSession) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
         }
       } catch (_err) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     })();
   </script>
@@ -78,6 +78,16 @@
       gap: 6px;
     }
 
+    .partner-server-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: #fff;
+      flex-shrink: 0;
+    }
+
     .partner-server-head {
       display: flex;
       align-items: center;
@@ -97,6 +107,123 @@
       font-size: 13px;
     }
 
+    .partner-server-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .partner-server-desc {
+      white-space: pre-wrap;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .partner-edit-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(12, 21, 51, 0.6);
+    }
+
+    .partner-edit-modal.open {
+      display: flex;
+    }
+
+    .partner-edit-card {
+      width: min(640px, 100%);
+      max-height: min(92vh, 760px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .partner-edit-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+
+    .partner-edit-head h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .partner-edit-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .partner-edit-form {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px 18px;
+      overflow-y: auto;
+    }
+
+    .partner-edit-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .partner-edit-field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .partner-edit-field input,
+    .partner-edit-field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+      resize: vertical;
+    }
+
+    .partner-edit-preview {
+      width: 96px;
+      height: 96px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(12, 21, 51, 0.04);
+      object-fit: contain;
+      display: block;
+    }
+
+    .partner-edit-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .partner-edit-feedback {
+      font-size: 13px;
+      min-height: 18px;
+      color: var(--muted);
+    }
+
     @media (max-width: 760px) {
       .partner-status-list {
         grid-template-columns: 1fr;
@@ -114,31 +241,21 @@
     <main class="section partner-grid">
       <section class="hero-card">
         <h2>Painel de parceiro</h2>
-        <p class="helper">Gerencie seu onboarding no Stripe Connect e acompanhe os servidores sob sua titularidade.</p>
-        <p id="partner-welcome" class="helper"></p>
+        <p class="helper">Gerencie seus games e acompanhe seus ganhos.</p>
       </section>
 
       <section class="hero-card">
-        <h3>Stripe Connect Express</h3>
         <div class="partner-status-list">
           <div class="partner-status-item">
             <small>Conta Connect</small>
             <strong id="partner-account-id">Ainda não criada</strong>
           </div>
           <div class="partner-status-item">
-            <small>Status do parceiro</small>
-            <strong id="partner-flag">Não parceiro</strong>
-          </div>
-          <div class="partner-status-item">
             <small>Recebimentos habilitados</small>
             <strong id="partner-payouts">Não</strong>
           </div>
           <div class="partner-status-item">
-            <small>Onboarding concluído</small>
-            <strong id="partner-onboarded">Não</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Esperado para recebimento (50% líquido)</small>
+            <small>Esperado para recebimento</small>
             <strong id="partner-expected-amount">R$ 0,00</strong>
           </div>
           <div class="partner-status-item">
@@ -150,18 +267,17 @@
             <strong id="partner-pending-amount">R$ 0,00</strong>
           </div>
           <div class="partner-status-item">
-            <small>Eventos registrados</small>
-            <strong id="partner-events-count">0</strong>
+            <small>Destaques ativos</small>
+            <strong id="partner-active-highlights-count">0</strong>
           </div>
         </div>
         <div class="inline-actions">
           <button id="start-connect-btn" class="btn btn-primary" type="button">Iniciar onboarding Connect</button>
           <button id="refresh-connect-btn" class="btn btn-ghost" type="button">Atualizar status</button>
           <a class="btn btn-ghost" href="politica-parceiros.html">Políticas de parceiros</a>
-          <a class="btn btn-ghost" href="parcerias.html">Terms of Use</a>
+          <a class="btn btn-ghost" href="terms.html">Termos de uso</a>
         </div>
         <p id="connect-feedback" class="partner-feedback"></p>
-        <p id="partner-payout-note" class="helper"></p>
       </section>
 
       <section class="hero-card">
@@ -173,6 +289,45 @@
         <p id="partner-servers-empty" class="helper" style="display:none;">Nenhum servidor vinculado ao seu usuário no momento.</p>
       </section>
     </main>
+
+    <div id="partner-edit-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3>Editar servidor</h3>
+          <button id="partner-edit-close" class="partner-edit-close" type="button" aria-label="Fechar">×</button>
+        </div>
+        <form id="partner-edit-form" class="partner-edit-form">
+          <input id="partner-edit-server-id" type="hidden" />
+          <div class="partner-edit-field">
+            <label for="partner-edit-name">Nome do servidor</label>
+            <input id="partner-edit-name" maxlength="120" required />
+          </div>
+          <div class="partner-edit-field">
+            <label for="partner-edit-site">Site oficial</label>
+            <input id="partner-edit-site" placeholder="https://seu-servidor.com" required />
+          </div>
+          <div class="partner-edit-field">
+            <label for="partner-edit-discord">Discord oficial</label>
+            <input id="partner-edit-discord" placeholder="https://discord.gg/seu-servidor" />
+          </div>
+          <div class="partner-edit-field">
+            <label for="partner-edit-description">Descrição</label>
+            <textarea id="partner-edit-description" rows="4" maxlength="2000" placeholder="Descreva rapidamente o servidor."></textarea>
+          </div>
+          <div class="partner-edit-field">
+            <label for="partner-edit-logo-file">Logo (opcional)</label>
+            <input id="partner-edit-logo-file" type="file" accept="image/png,image/jpeg,image/webp" />
+            <span class="helper">A imagem será convertida para WebP antes do envio.</span>
+          </div>
+          <img id="partner-edit-logo-preview" class="partner-edit-preview" alt="Prévia da logo do servidor" style="display:none;" />
+          <div class="partner-edit-actions">
+            <button id="partner-edit-submit" class="btn btn-primary" type="submit">Salvar alterações</button>
+            <button id="partner-edit-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+          </div>
+          <div id="partner-edit-feedback" class="partner-edit-feedback"></div>
+        </form>
+      </div>
+    </div>
 
     <site-footer></site-footer>
   </div>
@@ -188,6 +343,7 @@
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -198,11 +354,8 @@
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
 
-    const partnerWelcome = document.getElementById("partner-welcome");
     const partnerAccountId = document.getElementById("partner-account-id");
-    const partnerFlag = document.getElementById("partner-flag");
     const partnerPayouts = document.getElementById("partner-payouts");
-    const partnerOnboarded = document.getElementById("partner-onboarded");
     const connectFeedback = document.getElementById("connect-feedback");
     const startConnectBtn = document.getElementById("start-connect-btn");
     const refreshConnectBtn = document.getElementById("refresh-connect-btn");
@@ -212,8 +365,20 @@
     const partnerExpectedAmount = document.getElementById("partner-expected-amount");
     const partnerAvailableAmount = document.getElementById("partner-available-amount");
     const partnerPendingAmount = document.getElementById("partner-pending-amount");
-    const partnerEventsCount = document.getElementById("partner-events-count");
-    const partnerPayoutNote = document.getElementById("partner-payout-note");
+    const partnerActiveHighlightsCount = document.getElementById("partner-active-highlights-count");
+    const partnerEditModal = document.getElementById("partner-edit-modal");
+    const partnerEditForm = document.getElementById("partner-edit-form");
+    const partnerEditClose = document.getElementById("partner-edit-close");
+    const partnerEditCancel = document.getElementById("partner-edit-cancel");
+    const partnerEditServerId = document.getElementById("partner-edit-server-id");
+    const partnerEditName = document.getElementById("partner-edit-name");
+    const partnerEditSite = document.getElementById("partner-edit-site");
+    const partnerEditDiscord = document.getElementById("partner-edit-discord");
+    const partnerEditDescription = document.getElementById("partner-edit-description");
+    const partnerEditLogoFile = document.getElementById("partner-edit-logo-file");
+    const partnerEditLogoPreview = document.getElementById("partner-edit-logo-preview");
+    const partnerEditFeedback = document.getElementById("partner-edit-feedback");
+    const partnerEditSubmit = document.getElementById("partner-edit-submit");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -248,12 +413,204 @@
     let currentUser = null;
     let currentProfile = null;
     let avatarLoaded = false;
+    let currentServers = [];
+    let currentEditBannerUrl = "";
+    let editLogoPreviewObjectUrl = null;
+    const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+    const LOGO_MAX_DIMENSION = 1400;
+    const LOGO_WEBP_QUALITY = 0.84;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("partner-guard-style");
       if (guard) guard.remove();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function ensureHttpsPrefix(raw) {
+      const trimmed = String(raw || "").trim();
+      if (!trimmed) return "";
+      const withoutProtocol = trimmed.replace(/^https?:\/\//i, "");
+      return `https://${withoutProtocol}`;
+    }
+
+    function normalizeWebsite(raw) {
+      const withProtocol = ensureHttpsPrefix(raw);
+      if (!withProtocol) return "";
+      try {
+        const parsed = new URL(withProtocol);
+        parsed.protocol = "https:";
+        parsed.hash = "";
+        return parsed.toString();
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    function normalizeDiscordInvite(raw) {
+      const withProtocol = ensureHttpsPrefix(raw);
+      if (!withProtocol) return "";
+      try {
+        const parsed = new URL(withProtocol);
+        if (parsed.hostname.toLowerCase() !== "discord.gg") return "";
+        parsed.protocol = "https:";
+        parsed.hash = "";
+        if (!parsed.pathname || parsed.pathname === "/") return "";
+        parsed.pathname = parsed.pathname.replace(/\/+$/, "");
+        return parsed.toString();
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    function resolveMediaUrl(raw) {
+      const value = String(raw || "").trim();
+      if (!value) return "";
+      if (/^https?:\/\//i.test(value)) {
+        return normalizeR2PublicUrl(value);
+      }
+      const normalized = value.replace(/^\/+/, "");
+      if (normalized.startsWith("storage/v1/object/")) {
+        return `${SUPABASE_URL.replace(/\/$/, "")}/${normalized}`;
+      }
+      if (normalized.startsWith("server_logos/")) {
+        return `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/${normalized}`;
+      }
+      if (R2_PUBLIC_URL) {
+        return `${R2_PUBLIC_URL.replace(/\/$/, "")}/${normalized}`;
+      }
+      return normalized;
+    }
+
+    function normalizeR2PublicUrl(urlString) {
+      try {
+        const url = new URL(urlString);
+        if (!url.hostname.endsWith(".r2.cloudflarestorage.com")) return urlString;
+        const pathParts = url.pathname.split("/").filter(Boolean);
+        if (pathParts.length < 2) return urlString;
+        let bucket = pathParts[0];
+        const keyParts = pathParts.slice(1);
+        if (R2_PUBLIC_URL) {
+          const publicPath = new URL(R2_PUBLIC_URL).pathname.split("/").filter(Boolean);
+          if (publicPath.length > 0) {
+            bucket = publicPath[0];
+          }
+        }
+        if (!bucket || keyParts.length === 0) return urlString;
+        const accountId = url.hostname.split(".")[0];
+        const base = R2_PUBLIC_URL ? R2_PUBLIC_URL.replace(/\/$/, "") : `https://${bucket}.${accountId}.r2.dev`;
+        return `${base}/${keyParts.join("/")}`;
+      } catch (_err) {
+        return urlString;
+      }
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const parts = rest.split("/");
+        if (parts.length === 0) return null;
+        let bucket = parts[0];
+        let pathParts = parts.slice(1);
+        if (bucket === "public" || bucket === "authenticated" || bucket === "sign") {
+          bucket = parts[1];
+          pathParts = parts.slice(2);
+        }
+        if (!bucket || pathParts.length === 0) return null;
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function resolveServerBannerUrl(raw) {
+      const normalized = resolveMediaUrl(raw);
+      if (!normalized) return "";
+      const parsed = parseStoragePath(normalized);
+      if (!parsed) return normalized;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60 * 6);
+        if (error) throw error;
+        return data?.signedUrl || normalized;
+      } catch (_err) {
+        return normalized;
+      }
+    }
+
+    function setModalFeedback(message, isError = false) {
+      if (!partnerEditFeedback) return;
+      partnerEditFeedback.textContent = message || "";
+      partnerEditFeedback.style.color = isError ? "#c62828" : "var(--muted)";
+    }
+
+    function clearLogoPreviewObjectUrl() {
+      if (editLogoPreviewObjectUrl) {
+        URL.revokeObjectURL(editLogoPreviewObjectUrl);
+        editLogoPreviewObjectUrl = null;
+      }
+    }
+
+    function setLogoPreview(url) {
+      if (!partnerEditLogoPreview) return;
+      if (!url) {
+        partnerEditLogoPreview.removeAttribute("src");
+        partnerEditLogoPreview.style.display = "none";
+        partnerEditLogoPreview.dataset.fallbackApplied = "";
+        return;
+      }
+      partnerEditLogoPreview.dataset.fallbackApplied = "";
+      partnerEditLogoPreview.src = url;
+      partnerEditLogoPreview.style.display = "block";
+    }
+
+    function closeEditModal() {
+      clearLogoPreviewObjectUrl();
+      if (partnerEditModal) {
+        partnerEditModal.classList.remove("open");
+        partnerEditModal.setAttribute("aria-hidden", "true");
+      }
+      if (partnerEditForm) partnerEditForm.reset();
+      setLogoPreview("");
+      setModalFeedback("");
+      currentEditBannerUrl = "";
+    }
+
+    function openEditModal(serverId) {
+      const server = currentServers.find((item) => String(item.id) === String(serverId));
+      if (!server) return;
+      if (!partnerEditModal || !partnerEditForm) return;
+
+      clearLogoPreviewObjectUrl();
+      currentEditBannerUrl = resolveMediaUrl(server.banner_url || "");
+      partnerEditServerId.value = String(server.id || "");
+      partnerEditName.value = String(server.name || "");
+      partnerEditSite.value = String(server.official_site || "");
+      partnerEditDiscord.value = String(server.discord_invite || "");
+      partnerEditDescription.value = String(server.description || "");
+      partnerEditLogoFile.value = "";
+      setLogoPreview(currentEditBannerUrl);
+      setModalFeedback("");
+      partnerEditSubmit.disabled = false;
+      partnerEditSubmit.textContent = "Salvar alterações";
+      partnerEditModal.classList.add("open");
+      partnerEditModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => partnerEditName?.focus(), 0);
     }
 
     function ensureClient() {
@@ -354,7 +711,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (_err) {
         // ignore
       }
@@ -376,6 +733,17 @@
       }).format(Number(value || 0));
     }
 
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function toSafeDate(value) {
+      if (!value) return null;
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return null;
+      return parsed;
+    }
+
     async function resolveFunctionErrorMessage(error, data, fallbackMessage) {
       if (data?.error) return String(data.error);
       if (!error) return fallbackMessage;
@@ -391,6 +759,151 @@
         // ignore parse errors
       }
       return error?.message || fallbackMessage;
+    }
+
+    async function requestServerLogoSignedUpload(file) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "application/octet-stream",
+          extension,
+          userToken: token,
+          assetType: "server",
+        }),
+      });
+
+      if (!response.ok) {
+        let message = "Erro ao solicitar upload da logo.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text().catch(() => "");
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      return response.json();
+    }
+
+    async function convertLogoToWebp(file) {
+      if (!file.type || !file.type.startsWith("image/")) {
+        throw new Error("Selecione uma imagem válida para a logo.");
+      }
+      const bitmap = await createImageBitmap(file);
+      const maxSide = Math.max(bitmap.width, bitmap.height);
+      const scale = Math.min(1, LOGO_MAX_DIMENSION / maxSide);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Falha ao processar imagem.");
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", LOGO_WEBP_QUALITY));
+      if (!blob) throw new Error("Falha ao converter imagem para WebP.");
+      const baseName = file.name.replace(/\.[^.]+$/, "") || "logo";
+      return new File([blob], `${baseName}.webp`, { type: "image/webp" });
+    }
+
+    async function uploadServerLogo(file) {
+      const webpFile = await convertLogoToWebp(file);
+      if (webpFile.size > LOGO_MAX_BYTES) {
+        throw new Error("A logo excede 5MB após conversão.");
+      }
+      const signed = await requestServerLogoSignedUpload(webpFile);
+      const uploadRes = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": webpFile.type || "application/octet-stream",
+        },
+        body: webpFile,
+      });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.text().catch(() => "");
+        throw new Error(body || "Falha ao enviar logo para o storage.");
+      }
+      return signed.publicUrl;
+    }
+
+    async function saveServerSettings(event) {
+      event.preventDefault();
+      try {
+        ensureClient();
+        setModalFeedback("");
+        partnerEditSubmit.disabled = true;
+        partnerEditSubmit.textContent = "Salvando...";
+
+        const serverId = String(partnerEditServerId.value || "").trim();
+        const name = String(partnerEditName.value || "").trim();
+        const officialSite = normalizeWebsite(partnerEditSite.value);
+        const discordRaw = String(partnerEditDiscord.value || "").trim();
+        const discordInvite = discordRaw ? normalizeDiscordInvite(discordRaw) : "";
+        const description = String(partnerEditDescription.value || "").trim();
+        const logoFile = partnerEditLogoFile.files?.[0] || null;
+
+        if (!serverId) throw new Error("Servidor inválido.");
+        if (!name) throw new Error("Informe o nome do servidor.");
+        if (!officialSite) throw new Error("Informe um site oficial válido.");
+        if (discordRaw && !discordInvite) throw new Error("Convite Discord inválido. Use https://discord.gg/...");
+        if (logoFile && logoFile.size > LOGO_MAX_BYTES) throw new Error("A logo deve ter no máximo 5MB.");
+
+        let bannerUrl = currentEditBannerUrl || "";
+        if (logoFile) {
+          setModalFeedback("Enviando nova logo...");
+          bannerUrl = await uploadServerLogo(logoFile);
+        }
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+
+        const updateBody = {
+          serverId,
+          name,
+          officialSite,
+          discordInvite: discordInvite || null,
+          description: description || null,
+        };
+        if (logoFile) {
+          updateBody.bannerUrl = bannerUrl || null;
+        }
+
+        const { data, error } = await supabase.functions.invoke("server_update_settings", {
+          body: updateBody,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(error, data, "Erro ao salvar servidor.");
+          throw new Error(message);
+        }
+
+        connectFeedback.textContent = "Servidor atualizado com sucesso.";
+        const refreshedServers = await fetchOwnedServers();
+        renderServers(refreshedServers);
+        closeEditModal();
+      } catch (err) {
+        console.error(err);
+        setModalFeedback(err?.message || "Erro ao salvar servidor.", true);
+      } finally {
+        partnerEditSubmit.disabled = false;
+        partnerEditSubmit.textContent = "Salvar alterações";
+      }
     }
 
     function isMissingPartnerPayoutTableError(error) {
@@ -438,22 +951,33 @@
 
     function renderPartnerProfile(profile) {
       currentProfile = profile;
-      const first = String(profile?.first_name || "").trim();
-      const last = String(profile?.last_name || "").trim();
-      const full = `${first} ${last}`.trim() || "Parceiro";
-      partnerWelcome.textContent = `Conta conectada: ${full}`;
       partnerAccountId.textContent = profile?.stripe_connect_account_id || "Ainda não criada";
-      partnerFlag.textContent = profile?.is_partner ? "Parceiro ativo" : "Não parceiro";
       partnerPayouts.textContent = profile?.stripe_connect_payouts_enabled ? "Sim" : "Não";
-      partnerOnboarded.textContent = profile?.stripe_connect_onboarded_at
-        ? `Sim (${formatDateTime(profile.stripe_connect_onboarded_at)})`
-        : "Não";
     }
 
     async function fetchPartnerPayoutSummary() {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        const { data, error } = await supabase.functions.invoke("partner_payout_summary", {
+          body: {},
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (!error && data?.ok && data?.summary) {
+          return data.summary;
+        }
+      } catch (_err) {
+        // Fallback para cálculo legado abaixo.
+      }
+
       const { data, error } = await supabase
         .from("partner_payout_events")
-        .select("expected_net_amount,refunded_net_amount,payout_status,highlight_expires_at,currency")
+        .select("expected_net_amount,refunded_net_amount,payout_status,highlight_started_at,highlight_expires_at,currency")
         .eq("owner_user_id", currentUser.id)
         .neq("payout_status", "paid");
 
@@ -466,20 +990,46 @@
       let totalExpected = 0;
       let availableAmount = 0;
       let pendingAmount = 0;
-      let count = 0;
+      const count = (data || []).length;
 
       (data || []).forEach((row) => {
+        const payoutStatus = String(row?.payout_status || "").toLowerCase();
+        if (payoutStatus === "refunded") return;
         const expected = Number(row?.expected_net_amount || 0);
         const refunded = Number(row?.refunded_net_amount || 0);
         const effective = Math.max(0, Number((expected - refunded).toFixed(2)));
         if (effective <= 0) return;
 
-        count += 1;
         totalExpected += effective;
+        if (payoutStatus === "eligible") {
+          availableAmount += effective;
+          return;
+        }
 
-        const expiresAt = row?.highlight_expires_at ? new Date(row.highlight_expires_at) : null;
-        const isEligibleByTime = expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt <= now;
-        if (row?.payout_status === "eligible" || isEligibleByTime) {
+        const startedAt = toSafeDate(row?.highlight_started_at);
+        const expiresAt = toSafeDate(row?.highlight_expires_at);
+        if (startedAt && expiresAt && expiresAt > startedAt) {
+          if (now >= expiresAt) {
+            availableAmount += effective;
+            return;
+          }
+          if (now <= startedAt) {
+            pendingAmount += effective;
+            return;
+          }
+          const progress = clamp(
+            (now.getTime() - startedAt.getTime()) / (expiresAt.getTime() - startedAt.getTime()),
+            0,
+            1,
+          );
+          const accrued = Number((effective * progress).toFixed(2));
+          const pending = Number(Math.max(0, effective - accrued).toFixed(2));
+          availableAmount += accrued;
+          pendingAmount += pending;
+          return;
+        }
+
+        if (expiresAt && expiresAt <= now) {
           availableAmount += effective;
         } else {
           pendingAmount += effective;
@@ -496,39 +1046,33 @@
     }
 
     function renderPartnerPayoutSummary(summary) {
-      if (!partnerExpectedAmount || !partnerAvailableAmount || !partnerPendingAmount || !partnerEventsCount) return;
+      if (!partnerExpectedAmount || !partnerAvailableAmount || !partnerPendingAmount || !partnerActiveHighlightsCount) return;
 
       if (!summary || summary.unsupported) {
         partnerExpectedAmount.textContent = "-";
         partnerAvailableAmount.textContent = "-";
         partnerPendingAmount.textContent = "-";
-        partnerEventsCount.textContent = "-";
-        if (partnerPayoutNote) {
-          partnerPayoutNote.textContent = "Aplique a migration de repasse para habilitar o cálculo de recebimentos.";
-        }
+        partnerActiveHighlightsCount.textContent = "-";
         return;
       }
 
       partnerExpectedAmount.textContent = formatBRL(summary.totalExpected);
       partnerAvailableAmount.textContent = formatBRL(summary.availableAmount);
       partnerPendingAmount.textContent = formatBRL(summary.pendingAmount);
-      partnerEventsCount.textContent = String(summary.count);
-      if (partnerPayoutNote) {
-        partnerPayoutNote.textContent = "Repasse previsto após término do destaque ou após processamento de reembolso por exclusão.";
-      }
+      // Este indicador é calculado em renderServers() com base nos servidores vinculados.
     }
 
     async function fetchOwnedServers() {
       let { data, error } = await supabase
         .from("servers")
-        .select("id,name,official_site,status,created_at,discord_invite,owner_id,admin_beneficiary_id")
+        .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id,admin_beneficiary_id")
         .or(`owner_id.eq.${currentUser.id},admin_beneficiary_id.eq.${currentUser.id}`)
         .order("created_at", { ascending: false });
 
       if (isMissingAdminBeneficiaryColumnError(error)) {
         const fallback = await supabase
           .from("servers")
-          .select("id,name,official_site,status,created_at,discord_invite,owner_id")
+          .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id")
           .eq("owner_id", currentUser.id)
           .order("created_at", { ascending: false });
         data = (fallback.data || []).map((item) => ({ ...item, admin_beneficiary_id: null }));
@@ -546,59 +1090,90 @@
       let listingRows = [];
       const { data: listingsData, error: listingsErr } = await supabase
         .from("listings")
-        .select("id,server_id,status")
+        .select("id,server_id,status,highlight_status")
         .in("server_id", serverIds);
       if (!listingsErr) {
         listingRows = listingsData || [];
       }
 
       const listingCountMap = new Map();
-      const activeCountMap = new Map();
+      const highlightActiveCountMap = new Map();
       listingRows.forEach((row) => {
         const key = String(row.server_id || "");
         if (!key) return;
         listingCountMap.set(key, (listingCountMap.get(key) || 0) + 1);
-        if (String(row.status || "") === "active") {
-          activeCountMap.set(key, (activeCountMap.get(key) || 0) + 1);
+        if (String(row.status || "") === "active" && String(row.highlight_status || "") === "active") {
+          highlightActiveCountMap.set(key, (highlightActiveCountMap.get(key) || 0) + 1);
         }
       });
 
-      return servers.map((server) => ({
+      const decorated = await Promise.all(servers.map(async (server) => ({
         ...server,
-        relationship_role: server.owner_id === currentUser.id
-          ? (server.admin_beneficiary_id === currentUser.id ? "owner + admin" : "owner")
-          : "admin",
+        banner_url: await resolveServerBannerUrl(server.banner_url),
         listing_count: listingCountMap.get(String(server.id)) || 0,
-        active_listing_count: activeCountMap.get(String(server.id)) || 0,
-      }));
+        highlight_active_count: highlightActiveCountMap.get(String(server.id)) || 0,
+      })));
+
+      return decorated;
     }
 
     function renderServers(servers) {
+      currentServers = Array.isArray(servers) ? servers : [];
       partnerServerList.innerHTML = "";
-      const total = servers.length;
+      const total = currentServers.length;
       partnerServersCount.textContent = `${total} ${total === 1 ? "servidor" : "servidores"}`;
+      const activeHighlightsTotal = (currentServers || []).reduce((sum, server) => {
+        return sum + Number(server?.highlight_active_count || 0);
+      }, 0);
+      if (partnerActiveHighlightsCount) {
+        partnerActiveHighlightsCount.textContent = String(activeHighlightsTotal);
+      }
       if (total === 0) {
         partnerServersEmpty.style.display = "block";
         return;
       }
       partnerServersEmpty.style.display = "none";
-      servers.forEach((server) => {
+      currentServers.forEach((server) => {
+        const safeName = escapeHtml(server.name || "Servidor sem nome");
+        const safeStatus = escapeHtml(server.status || "active");
+        const gameUrl = `game.html?id=${encodeURIComponent(String(server.id || ""))}`;
+        const safeSite = server.official_site ? String(server.official_site) : "";
+        const safeDiscord = server.discord_invite ? String(server.discord_invite) : "";
+        const safeDescription = String(server.description || "").trim();
+        const logo = resolveMediaUrl(server.banner_url || "");
+        const descHtml = safeDescription
+          ? `<p class="partner-server-desc">${escapeHtml(safeDescription)}</p>`
+          : "";
         const card = document.createElement("article");
         card.className = "partner-server-card";
         card.innerHTML = `
           <div class="partner-server-head">
-            <strong>${server.name || "Servidor sem nome"}</strong>
-            <span class="pill">${server.status || "active"}</span>
+            <div style="display:flex;align-items:center;gap:10px;">
+              ${logo ? `<img class="partner-server-logo" src="${escapeHtml(logo)}" alt="Logo de ${safeName}" loading="lazy" data-logo-src="${escapeHtml(logo)}" />` : ""}
+              <strong>${safeName}</strong>
+            </div>
+            <span class="pill">${safeStatus}</span>
           </div>
           <div class="partner-server-meta">
-            <span class="pill">Vínculo: ${server.relationship_role || "owner"}</span>
             <span class="pill">Anúncios: ${server.listing_count}</span>
-            <span class="pill">Ativos: ${server.active_listing_count}</span>
           </div>
-          ${server.official_site ? `<a class="link-ghost" href="${server.official_site}" target="_blank" rel="noopener">Site oficial</a>` : ""}
-          ${server.discord_invite ? `<a class="link-ghost" href="${server.discord_invite}" target="_blank" rel="noopener">Discord oficial</a>` : ""}
+          ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">Site oficial</a>` : ""}
+          ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">Discord oficial</a>` : ""}
+          ${descHtml}
           <p class="helper">Criado em ${formatDateTime(server.created_at)}</p>
+          <div class="partner-server-actions">
+            <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">Ver anúncios</a>
+            <button class="btn btn-ghost partner-edit-server-btn" type="button" data-server-id="${escapeHtml(server.id)}">Editar</button>
+          </div>
         `;
+        const cardLogo = card.querySelector(".partner-server-logo");
+        if (cardLogo) {
+          cardLogo.addEventListener("error", () => {
+            if (cardLogo.dataset.fallbackApplied === "1") return;
+            cardLogo.dataset.fallbackApplied = "1";
+            cardLogo.src = "img/logo.png";
+          });
+        }
         partnerServerList.appendChild(card);
       });
     }
@@ -688,7 +1263,7 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
 
@@ -697,6 +1272,11 @@
           fetchOwnedServers(),
           fetchPartnerPayoutSummary(),
         ]);
+        const hasPartnerAccess = Boolean(profile?.is_partner || profile?.is_admin || (servers || []).length > 0);
+        if (!hasPartnerAccess) {
+          window.location.replace("index.html");
+          return;
+        }
         renderPartnerProfile(profile);
         renderServers(servers);
         renderPartnerPayoutSummary(payoutSummary);
@@ -745,7 +1325,7 @@
 
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";
@@ -755,6 +1335,48 @@
       userMenu?.classList.remove("open");
       goToCreateListing();
     });
+
+    partnerServerList?.addEventListener("click", (event) => {
+      const button = event.target?.closest?.(".partner-edit-server-btn");
+      if (!button) return;
+      const serverId = button.getAttribute("data-server-id");
+      if (!serverId) return;
+      openEditModal(serverId);
+    });
+
+    partnerEditClose?.addEventListener("click", closeEditModal);
+    partnerEditCancel?.addEventListener("click", closeEditModal);
+    partnerEditModal?.addEventListener("click", (event) => {
+      if (event.target === partnerEditModal) {
+        closeEditModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && partnerEditModal?.classList.contains("open")) {
+        closeEditModal();
+      }
+    });
+
+    partnerEditLogoFile?.addEventListener("change", () => {
+      clearLogoPreviewObjectUrl();
+      const file = partnerEditLogoFile.files?.[0];
+      if (!file) {
+        setLogoPreview(currentEditBannerUrl || "");
+        return;
+      }
+      editLogoPreviewObjectUrl = URL.createObjectURL(file);
+      setLogoPreview(editLogoPreviewObjectUrl);
+    });
+
+    partnerEditLogoPreview?.addEventListener("error", () => {
+      if (partnerEditLogoPreview.dataset.fallbackApplied === "1") return;
+      partnerEditLogoPreview.dataset.fallbackApplied = "1";
+      partnerEditLogoPreview.src = "img/logo.png";
+      partnerEditLogoPreview.style.display = "block";
+    });
+
+    partnerEditForm?.addEventListener("submit", saveServerSettings);
 
     init();
   </script>

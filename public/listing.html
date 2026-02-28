@@ -94,6 +94,25 @@
       justify-content: center;
     }
 
+    .listing-gallery-fallback {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .listing-gallery-main .listing-gallery-fallback img {
+      width: min(220px, 72%);
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      opacity: 0.18;
+      filter: saturate(0.7);
+      cursor: default;
+    }
+
     .report-icon {
       width: 16px;
       height: 16px;
@@ -275,7 +294,7 @@
           <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
         </div>
         <div class="listing-gallery">
-          <div id="listing-main" class="listing-gallery-main">Sem imagem</div>
+          <div id="listing-main" class="listing-gallery-main"></div>
           <div id="listing-thumbs" class="listing-thumb-grid"></div>
           <section id="report-listing-card" class="hero-card listing-report-card">
             <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
@@ -748,7 +767,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
       }
@@ -978,11 +997,17 @@
       const list = Array.isArray(images) ? images.filter(Boolean) : [];
       currentGalleryImages = list.slice();
       if (list.length === 0) {
-        mainMedia.textContent = "Sem imagem";
+        mainMedia.style.display = "";
+        mainMedia.innerHTML = `
+          <div class="listing-gallery-fallback">
+            <img src="img/logo.png" alt="Sem imagem do anúncio" loading="lazy" />
+          </div>
+        `;
         thumbGrid.innerHTML = "";
         thumbGrid.style.display = "none";
         return;
       }
+      mainMedia.style.display = "";
 
       const items = list.map((src, index) => ({ src, index }));
       let mainItem = items[0];
@@ -1287,7 +1312,7 @@
     authBtn?.addEventListener("click", handleAuthClick);
     reportListingBtn?.addEventListener("click", () => {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       hideReportSuccess();
@@ -1329,7 +1354,7 @@
     reportListingSubmit?.addEventListener("click", async () => {
       try {
         if (!currentUser) {
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
         hideReportSuccess();
@@ -1427,7 +1452,7 @@
     });
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";

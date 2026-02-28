@@ -11,7 +11,13 @@
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Admin</title>
+  <link rel="stylesheet" href="css/global.css" />
   <style id="admin-guard-style">html{visibility:hidden;}</style>
+  <style>
+    /* Prevents oversized logo flash before global CSS is fully applied. */
+    #page-loader{position:fixed;inset:0;background:#fff;z-index:9999;display:grid;place-items:center}
+    #page-loader img{width:120px;height:auto}
+  </style>
   <script>
     (() => {
       try {
@@ -37,27 +43,13 @@
       --radius: 14px;
     }
     * { box-sizing: border-box; }
-    body {
+body {
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      font-family: "Satoshi", "Inter", system-ui, -apple-system, sans-serif;
       min-height: 100vh;
     }
-    header {
-      padding: 18px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(255,255,255,0.92);
-    }
-    .logo { display: flex; align-items: center; gap: 10px; }
-    .logo img { width: 110px; height: auto; }
     .pill {
       padding: 4px 10px;
       border-radius: 999px;
@@ -162,25 +154,18 @@
   <div id="page-loader" class="page-loader">
     <img src="img/logo.png" alt="Carregando" />
   </div>
-  <header>
-    <div class="logo">
-      <a href="index.html"><img src="img/logo.png" alt="Gimerr" /></a>
-      <span class="pill">Admin</span>
-    </div>
-    <div class="header-actions">
-      <div class="status">
-        <div class="dot" id="status-dot"></div>
-        <span id="status-text">Desconectado</span>
-      </div>
-      <button id="header-auth-btn" class="secondary">Entrar</button>
-    </div>
-  </header>
+  <div class="page">
+    <site-navbar></site-navbar>
 
-  <main>
+    <main>
     <section class="card">
       <h1>Criar novo servidor</h1>
       <p>Somente administradores podem criar servidores. Nome, site oficial e logo são obrigatórios.</p>
-      <div class="notice" id="session-status">Faça login em login.html para continuar.</div>
+      <div class="notice" id="session-status">Faça login para continuar.</div>
+      <div class="status" style="margin: 8px 0 4px;">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">Desconectado</span>
+      </div>
       <div class="notice" id="edit-request-banner" style="display:none; gap:10px; align-items:center; justify-content:space-between;">
         <div>
           Editando solicitação de usuário:
@@ -243,20 +228,27 @@
       <div id="reports-empty" class="muted" style="display:none;">Nenhuma denúncia pendente.</div>
       <div id="reports-list" class="list"></div>
     </section>
-  </main>
+    </main>
+    <site-footer></site-footer>
+  </div>
 
   <script src="env.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
     let windowLoaded = false;
     let avatarReady = false;
+    let contentReady = false;
 
     function hideLoader() {
       if (loaderDone || !pageLoader) return;
-      if (!windowLoaded || !avatarReady) return;
+      if (!windowLoaded || !avatarReady || !contentReady) return;
       loaderDone = true;
       pageLoader.classList.add("hidden");
       pageLoader.remove();
@@ -264,6 +256,11 @@
 
     function markAvatarReady() {
       avatarReady = true;
+      hideLoader();
+    }
+
+    function markContentReady() {
+      contentReady = true;
       hideLoader();
     }
 
@@ -276,10 +273,18 @@
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
+
     const statusDot = document.getElementById("status-dot");
     const statusText = document.getElementById("status-text");
     const sessionStatus = document.getElementById("session-status");
-    const headerAuthBtn = document.getElementById("header-auth-btn");
     const serverForm = document.getElementById("server-form");
     const formError = document.getElementById("form-error");
     const formSuccess = document.getElementById("form-success");
@@ -314,6 +319,8 @@
     const SESSION_STORAGE_KEY = "gimerr-auth-session";
     let supabase;
     let authListenerAttached = false;
+    let currentUser = null;
+    let avatarLoaded = false;
     let profile = null;
     let requestCache = [];
     let reportCache = [];
@@ -371,9 +378,77 @@
       if (guard) guard.remove();
     }
 
+    function redirectToIndex() {
+      window.location.replace("index.html");
+    }
+
     function setStatus(ok, text) {
-      statusDot.classList.toggle("ok", ok);
-      statusText.textContent = text;
+      if (statusDot) statusDot.classList.toggle("ok", ok);
+      if (statusText) statusText.textContent = text;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+      markAvatarReady();
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+          try {
+            await avatarImg.decode();
+          } catch (_innerErr) {
+            // ignore
+          }
+        }
+      } finally {
+        markAvatarReady();
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        await setAvatarImage("img/avatar.svg");
+      } finally {
+        avatarLoaded = true;
+      }
     }
 
     function ensureHttpsPrefix(raw) {
@@ -590,29 +665,6 @@
       }
     }
 
-    function configureHeaderButton(userPresent) {
-      if (!headerAuthBtn) return;
-      headerAuthBtn.disabled = false;
-      if (userPresent) {
-        headerAuthBtn.textContent = "Sair";
-        headerAuthBtn.onclick = async () => {
-          try {
-            ensureClient();
-            headerAuthBtn.disabled = true;
-            await supabase.auth.signOut();
-            setStatus(false, "Sessão encerrada");
-            await refreshSession();
-          } catch (err) {
-            console.error(err);
-            headerAuthBtn.disabled = false;
-          }
-        };
-      } else {
-        headerAuthBtn.textContent = "Entrar";
-        headerAuthBtn.onclick = () => window.location.href = "login.html";
-      }
-    }
-
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         setStatus(false, "Defina SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js");
@@ -772,8 +824,10 @@
             return;
           }
           const user = session.user;
+          currentUser = user;
           await upsertProfile(user);
           profile = await fetchProfile(user.id);
+          updateAuthUI();
           setStatus(true, "Sessão ativa");
           sessionStatus.textContent = profile?.is_admin
             ? `Logado como ${profile.username} (admin)`
@@ -784,12 +838,15 @@
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
             reportsStatus.textContent = "Restrito aos admins.";
-            window.location.href = "index.html";
+            redirectToIndex();
+            return;
           }
         } else {
+          currentUser = null;
           profile = null;
+          updateAuthUI();
           setStatus(false, "Sem sessão");
-          sessionStatus.textContent = "Faça login em login.html para continuar.";
+          sessionStatus.textContent = "Faça login para continuar.";
           requestsList.innerHTML = "";
           if (requestsNav) requestsNav.style.display = "none";
           requestsEmpty.style.display = "block";
@@ -798,19 +855,25 @@
           if (reportsNav) reportsNav.style.display = "none";
           reportsEmpty.style.display = "block";
           reportsEmpty.textContent = "Faça login para ver denúncias.";
-          window.location.href = "index.html";
+          redirectToIndex();
           return;
         }
-        configureHeaderButton(session?.user || null);
       } catch (err) {
         console.error(err);
         setStatus(false, "Erro");
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
         reportsStatus.textContent = "Erro ao checar sessão.";
+        if (!currentUser || !profile?.is_admin) {
+          redirectToIndex();
+          return;
+        }
         revealAdminPage();
       } finally {
-        markAvatarReady();
+        if (!currentUser) {
+          markAvatarReady();
+        }
+        markContentReady();
       }
     }
 
@@ -1563,6 +1626,43 @@
     clearEditBtn?.addEventListener("click", () => {
       serverForm?.reset();
       enterEditMode(null);
+    });
+
+    authBtn?.addEventListener("click", () => {
+      window.location.href = "index.html";
+    });
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu) return;
+      if (!userMenu.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+        currentUser = null;
+        updateAuthUI();
+        window.location.href = "index.html";
+      } catch (_err) {
+        // ignore
+      }
+    });
+    function goToCreateListing() {
+      if (!currentUser) {
+        window.location.href = "index.html";
+        return;
+      }
+      window.location.href = "listing-create.html";
+    }
+    createListingBtn?.addEventListener("click", goToCreateListing);
+    menuCreateListing?.addEventListener("click", () => {
+      userMenu?.classList.remove("open");
+      goToCreateListing();
     });
 
     // Inicializa

@@ -1,4 +1,22 @@
 (() => {
+  async function updateFooterPartnerVisibility(scope) {
+    const nodes = Array.from((scope || document).querySelectorAll("[data-partner-link]"));
+    if (nodes.length === 0) return;
+
+    let canAccess = false;
+    try {
+      if (typeof window.__RESOLVE_PARTNER_AREA_ACCESS__ === "function") {
+        canAccess = await window.__RESOLVE_PARTNER_AREA_ACCESS__();
+      }
+    } catch (_err) {
+      canAccess = false;
+    }
+
+    nodes.forEach((node) => {
+      node.style.display = canAccess ? "" : "none";
+    });
+  }
+
   class SiteFooter extends HTMLElement {
     connectedCallback() {
       if (this.dataset.rendered === "1") return;
@@ -12,18 +30,23 @@
               <p>Community marketplace powered by gamers.</p>
             </div>
             <nav class="site-footer-links" aria-label="Links úteis">
-              <a href="index.html">Início</a>
-              <a href="game-submit.html">Cadastrar game</a>
-              <a href="listing-create.html">Criar anúncio</a>
-              <a href="my-listings.html">Meus anúncios</a>
-              <a href="profile.html">Meu perfil</a>
-              <a href="partner.html">Área de parceiros</a>
-              <a href="politica-anuncios.html">Política de anúncios</a>
-              <a href="parcerias.html">Termos de uso</a>
+              <a href="ad-wallet.html">Conta de anúncios</a>
+              <a href="partner.html" data-partner-link style="display:none;">Área de parceiros</a>
+              <a href="ads-policy.html">Política de anúncios</a>
+              <a href="terms.html">Termos de uso</a>
             </nav>
           </div>
         </footer>
       `;
+
+      updateFooterPartnerVisibility(this);
+      document.addEventListener("gimerr:partner-access", (event) => {
+        const canAccess = !!event?.detail?.canAccess;
+        const nodes = Array.from(this.querySelectorAll("[data-partner-link]"));
+        nodes.forEach((node) => {
+          node.style.display = canAccess ? "" : "none";
+        });
+      });
     }
   }
 

@@ -180,11 +180,14 @@
     }
 
     .wallet-amount-input {
-      width: 100%;
+      width: min(220px, 100%);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 15px;
+      padding: 14px 12px;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-align: center;
       background: #fff;
       color: var(--text);
     }
@@ -206,6 +209,20 @@
       align-items: flex-start;
       font-size: 14px;
       color: var(--muted);
+    }
+
+    .wallet-checkbox span {
+      line-height: 1.45;
+    }
+
+    .wallet-policy-link {
+      color: #1b4fd3;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .wallet-policy-link:hover {
+      color: #143ca0;
     }
 
     .wallet-modal-feedback {
@@ -263,10 +280,10 @@
       try {
         const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
         if (!hasSession) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
         }
       } catch (_err) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     })();
   </script>
@@ -286,11 +303,7 @@
             <h3 class="wallet-title">Resumo da conta de anúncios</h3>
             <div class="wallet-summary-grid">
               <div class="wallet-summary-item">
-                <span class="helper">Saldo em tempo</span>
-                <strong id="wallet-balance-human">0d 0h 0m</strong>
-              </div>
-              <div class="wallet-summary-item">
-                <span class="helper">Saldo estimado (R$)</span>
+                <span class="helper">Saldo</span>
                 <strong id="wallet-balance-brl">R$ 0,00</strong>
               </div>
               <div class="wallet-summary-item">
@@ -300,6 +313,7 @@
             </div>
             <div class="inline-actions">
               <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Adicionar saldo</button>
+              <button id="open-withdraw-modal-btn" class="btn btn-ghost" type="button">Solicitar saque</button>
             </div>
             <p id="wallet-feedback" class="wallet-feedback"></p>
           </section>
@@ -323,23 +337,23 @@
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
           <h3 id="topup-modal-title">Adicionar saldo</h3>
-          <p class="helper">Deposite qualquer valor a partir de R$ 10,00.</p>
+          <p class="helper">Deposite qualquer valor a partir de R$ 5,00.</p>
         </div>
         <button id="topup-modal-close" class="btn btn-ghost" type="button">Fechar</button>
       </div>
 
       <label for="deposit-amount" class="helper">Valor do depósito (R$)</label>
-      <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="Ex: 10,00" autocomplete="off" />
+      <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="Ex: 5,00" autocomplete="off" />
 
       <div class="wallet-suggestions">
-        <button class="btn btn-ghost" type="button" data-suggest-amount="10">1 dia = R$ 10,00</button>
-        <button class="btn btn-ghost" type="button" data-suggest-amount="70">7 dias = R$ 70,00</button>
-        <button class="btn btn-ghost" type="button" data-suggest-amount="300">30 dias = R$ 300,00</button>
+        <button class="btn btn-ghost" type="button" data-suggest-amount="5">R$ 5,00</button>
+        <button class="btn btn-ghost" type="button" data-suggest-amount="35">R$ 35,00</button>
+        <button class="btn btn-ghost" type="button" data-suggest-amount="150">R$ 150,00</button>
       </div>
 
       <label class="wallet-checkbox" for="wallet-policy-accept">
         <input id="wallet-policy-accept" type="checkbox" />
-        <span>Li e estou de acordo com as <a href="politica-anuncios.html" target="_blank" rel="noopener">políticas de anúncios</a>.</span>
+        <span>Li e estou de acordo com as <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncio</a>.</span>
       </label>
 
       <p id="topup-feedback" class="wallet-modal-feedback"></p>
@@ -378,6 +392,35 @@
     </div>
   </div>
 
+  <div id="withdraw-modal-backdrop" class="wallet-modal-backdrop" aria-hidden="true">
+    <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <h3 id="withdraw-modal-title">Solicitar saque</h3>
+          <p class="helper">Seu saldo disponível será pausado imediatamente para análise de reembolso.</p>
+        </div>
+        <button id="withdraw-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+      </div>
+
+      <div class="wallet-summary-item">
+        <span class="helper">Valor estimado para saque</span>
+        <strong id="withdraw-estimate-value">R$ 0,00</strong>
+      </div>
+
+      <label class="wallet-checkbox" for="withdraw-policy-accept">
+        <input id="withdraw-policy-accept" type="checkbox" />
+        <span>Li e estou de acordo com as <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncio</a>.</span>
+      </label>
+
+      <p class="helper">O valor final pode ser menor por causa das taxas de processamento do pagamento (Stripe).</p>
+      <p id="withdraw-feedback" class="wallet-modal-feedback"></p>
+
+      <div class="inline-actions">
+        <button id="withdraw-confirm-btn" class="btn btn-primary" type="button" disabled>Confirmar solicitação</button>
+      </div>
+    </div>
+  </div>
+
   <script src="env.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
@@ -401,12 +444,12 @@
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
 
-    const balanceHumanEl = document.getElementById("wallet-balance-human");
     const balanceBrlEl = document.getElementById("wallet-balance-brl");
     const activeCountEl = document.getElementById("wallet-active-count");
     const walletFeedbackEl = document.getElementById("wallet-feedback");
 
     const openTopupModalBtn = document.getElementById("open-topup-modal-btn");
+    const openWithdrawModalBtn = document.getElementById("open-withdraw-modal-btn");
     const topupModalBackdrop = document.getElementById("topup-modal-backdrop");
     const topupModalClose = document.getElementById("topup-modal-close");
     const amountInput = document.getElementById("deposit-amount");
@@ -422,6 +465,13 @@
     const activateRangeMax = document.getElementById("activate-range-max");
     const activateFeedbackEl = document.getElementById("activate-feedback");
     const activateConfirmBtn = document.getElementById("activate-confirm-btn");
+
+    const withdrawModalBackdrop = document.getElementById("withdraw-modal-backdrop");
+    const withdrawModalClose = document.getElementById("withdraw-modal-close");
+    const withdrawPolicyAccept = document.getElementById("withdraw-policy-accept");
+    const withdrawFeedbackEl = document.getElementById("withdraw-feedback");
+    const withdrawEstimateValue = document.getElementById("withdraw-estimate-value");
+    const withdrawConfirmBtn = document.getElementById("withdraw-confirm-btn");
 
     const listingsWrap = document.getElementById("wallet-listings");
     const listingsEmpty = document.getElementById("wallet-listings-empty");
@@ -513,6 +563,12 @@
       activateFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
     }
 
+    function setWithdrawFeedback(message, isError = false) {
+      if (!withdrawFeedbackEl) return;
+      withdrawFeedbackEl.textContent = message || "";
+      withdrawFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
     function formatBRL(value) {
       return `R$ ${Number(value || 0).toFixed(2).replace(".", ",")}`;
     }
@@ -522,18 +578,14 @@
       return `${n} ${n === 1 ? "dia" : "dias"}`;
     }
 
-    function secondsToHuman(secondsRaw) {
-      const total = Math.max(0, Math.floor(Number(secondsRaw || 0)));
-      const days = Math.floor(total / 86400);
-      const hours = Math.floor((total % 86400) / 3600);
-      const minutes = Math.floor((total % 3600) / 60);
-      return `${days}d ${hours}h ${minutes}m`;
-    }
-
     function secondsToBRL(secondsRaw) {
       const seconds = Math.max(0, Number(secondsRaw || 0));
-      const amount = (seconds / 86400) * 10;
+      const amount = (seconds / 86400) * 5;
       return Number(amount.toFixed(2));
+    }
+
+    function getAvailableBalanceBRL() {
+      return secondsToBRL(getAvailableSeconds());
     }
 
     function parseAmountBRL(raw) {
@@ -725,8 +777,21 @@
     function updateCheckoutButtonState() {
       const amount = parseAmountBRL(amountInput?.value || "");
       const hasReference = Boolean(getCheckoutReferenceListingId());
-      const canPay = hasReference && Number.isFinite(amount) && amount >= 10 && Boolean(policyAccept?.checked);
+      const canPay = hasReference && Number.isFinite(amount) && amount >= 5 && Boolean(policyAccept?.checked);
       checkoutBtn.disabled = !canPay;
+    }
+
+    function updateWithdrawButtonState() {
+      const hasBalance = getAvailableBalanceBRL() > 0;
+      if (openWithdrawModalBtn) {
+        openWithdrawModalBtn.disabled = !hasBalance;
+      }
+      if (withdrawEstimateValue) {
+        withdrawEstimateValue.textContent = formatBRL(getAvailableBalanceBRL());
+      }
+      if (withdrawConfirmBtn) {
+        withdrawConfirmBtn.disabled = !hasBalance || !Boolean(withdrawPolicyAccept?.checked);
+      }
     }
 
     function updateActivateRangePreview() {
@@ -745,6 +810,7 @@
       myListings.forEach((listing) => {
         const canHighlight = listing.status === "active";
         const isHighlighted = listing.highlight_status === "active";
+        const canActivateByBalance = getAvailableSeconds() > 0;
 
         const card = document.createElement("article");
         card.className = "wallet-listing-item";
@@ -793,7 +859,7 @@
         const actions = document.createElement("div");
         actions.className = "wallet-listing-actions";
 
-        if (canHighlight && !isHighlighted) {
+        if (canHighlight && !isHighlighted && canActivateByBalance) {
           const activateBtn = document.createElement("button");
           activateBtn.className = "btn btn-primary";
           activateBtn.type = "button";
@@ -843,6 +909,18 @@
       topupModalBackdrop.setAttribute("aria-hidden", "true");
     }
 
+    function openWithdrawModal() {
+      setWithdrawFeedback("");
+      updateWithdrawButtonState();
+      withdrawModalBackdrop.style.display = "grid";
+      withdrawModalBackdrop.setAttribute("aria-hidden", "false");
+    }
+
+    function closeWithdrawModal() {
+      withdrawModalBackdrop.style.display = "none";
+      withdrawModalBackdrop.setAttribute("aria-hidden", "true");
+    }
+
     function openActivateModal(listingId) {
       const listing = findListingById(listingId);
       if (!listing) return;
@@ -886,9 +964,9 @@
       walletState = data.wallet || null;
 
       const seconds = Number(walletState?.availableSeconds || 0);
-      balanceHumanEl.textContent = secondsToHuman(seconds);
       balanceBrlEl.textContent = formatBRL(secondsToBRL(seconds));
       activeCountEl.textContent = String(Number(walletState?.activeListingCount || 0));
+      updateWithdrawButtonState();
     }
 
     async function fetchListings() {
@@ -930,6 +1008,7 @@
 
       renderListings();
       updateCheckoutButtonState();
+      updateWithdrawButtonState();
     }
 
     async function toggleHighlight(listingId, action) {
@@ -940,7 +1019,7 @@
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token || "";
       if (!token) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
 
@@ -965,8 +1044,8 @@
         setTopupFeedback("Você precisa ter ao menos um anúncio ativo para adicionar saldo.", true);
         return;
       }
-      if (!Number.isFinite(amount) || amount < 10) {
-        setTopupFeedback("Informe um valor válido de no mínimo R$ 10,00.", true);
+      if (!Number.isFinite(amount) || amount < 5) {
+        setTopupFeedback("Informe um valor válido de no mínimo R$ 5,00.", true);
         return;
       }
       if (!policyAccept?.checked) {
@@ -979,13 +1058,12 @@
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         if (!token) {
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
 
         checkoutBtn.disabled = true;
         checkoutBtn.textContent = "Aguarde...";
-        setTopupFeedback("Criando checkout seguro...");
 
         const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
           body: {
@@ -1014,6 +1092,60 @@
       }
     }
 
+    async function requestWithdraw() {
+      if (!withdrawPolicyAccept?.checked) {
+        setWithdrawFeedback("Você precisa aceitar as políticas antes de continuar.", true);
+        return;
+      }
+      if (getAvailableBalanceBRL() <= 0) {
+        setWithdrawFeedback("Você não possui saldo disponível para saque.", true);
+        updateWithdrawButtonState();
+        return;
+      }
+
+      try {
+        ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        if (!token) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        withdrawConfirmBtn.disabled = true;
+        withdrawConfirmBtn.textContent = "Enviando...";
+        setWithdrawFeedback("Registrando solicitação...");
+
+        const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+          body: {
+            action: "withdraw_request",
+            policyAccepted: true,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+
+        if (error) throw error;
+        if (!data?.ok) {
+          throw new Error(data?.error || "Não foi possível solicitar o saque.");
+        }
+
+        closeWithdrawModal();
+        await syncWallet();
+        await fetchListings();
+        const amountLabel = formatBRL(Number(data?.requestedRefundBRL || 0));
+        setWalletFeedback(`Solicitação de saque enviada (${amountLabel}). O valor final pode variar por taxas de processamento.`);
+      } catch (err) {
+        console.error(err);
+        setWithdrawFeedback(err?.message || "Erro ao solicitar saque.", true);
+      } finally {
+        withdrawConfirmBtn.textContent = "Confirmar solicitação";
+        updateWithdrawButtonState();
+      }
+    }
+
     async function confirmActivateHighlight() {
       if (!pendingActivateListingId) return;
       try {
@@ -1039,7 +1171,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (_err) {
         // ignore
       }
@@ -1049,6 +1181,10 @@
       openTopupModal();
     });
 
+    openWithdrawModalBtn?.addEventListener("click", () => {
+      openWithdrawModal();
+    });
+
     topupModalClose?.addEventListener("click", () => {
       closeTopupModal();
     });
@@ -1056,6 +1192,16 @@
     topupModalBackdrop?.addEventListener("click", (event) => {
       if (event.target === topupModalBackdrop) {
         closeTopupModal();
+      }
+    });
+
+    withdrawModalClose?.addEventListener("click", () => {
+      closeWithdrawModal();
+    });
+
+    withdrawModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === withdrawModalBackdrop) {
+        closeWithdrawModal();
       }
     });
 
@@ -1079,6 +1225,11 @@
     policyAccept?.addEventListener("change", () => {
       updateCheckoutButtonState();
       if (topupFeedbackEl?.textContent) setTopupFeedback("");
+    });
+
+    withdrawPolicyAccept?.addEventListener("change", () => {
+      updateWithdrawButtonState();
+      if (withdrawFeedbackEl?.textContent) setWithdrawFeedback("");
     });
 
     document.querySelectorAll("[data-suggest-amount]").forEach((button) => {
@@ -1130,6 +1281,10 @@
       startCheckout();
     });
 
+    withdrawConfirmBtn?.addEventListener("click", () => {
+      requestWithdraw();
+    });
+
     activateConfirmBtn?.addEventListener("click", () => {
       confirmActivateHighlight();
     });
@@ -1153,7 +1308,7 @@
         await supabase.auth.signOut();
         currentUser = null;
         updateAuthUI();
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (_err) {
         // ignore
       }
@@ -1161,7 +1316,7 @@
 
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";
@@ -1180,15 +1335,13 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
 
         const params = new URLSearchParams(window.location.search);
 
-        if (params.get("highlight") === "success") {
-          setWalletFeedback("Pagamento confirmado. Seu saldo foi atualizado.");
-        } else if (params.get("highlight") === "cancel") {
+        if (params.get("highlight") === "cancel") {
           setWalletFeedback("Pagamento cancelado.");
         }
 

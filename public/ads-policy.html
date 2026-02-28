@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Políticas de anúncios</title>
+  <title>Gimerr - Política de anúncios</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
     .policy-page {
@@ -47,15 +47,6 @@
       display: grid;
       gap: 8px;
     }
-
-    .policy-alert {
-      border: 1px solid rgba(33, 123, 215, 0.24);
-      background: rgba(33, 123, 215, 0.08);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 14px;
-      color: #1c4fa0;
-    }
   </style>
 </head>
 <body>
@@ -64,7 +55,7 @@
       <a href="index.html" class="brand">
         <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
         <div class="brand-copy">
-          <span class="brand-tagline">Políticas de anúncios</span>
+          <span class="brand-tagline">Política de anúncios</span>
         </div>
       </a>
       <div class="nav-actions">
@@ -74,54 +65,61 @@
 
     <main class="section policy-page">
       <section class="hero-card">
-        <h2>Políticas de destaque de anúncios</h2>
-        <p class="helper">Leia atentamente antes de contratar um destaque pago.</p>
+        <h2>Política de anúncios destacados</h2>
+        <p class="helper">Leia com atenção antes de adicionar saldo e ativar destaque.</p>
       </section>
 
       <article class="policy-card">
-        <h3>1. Como funciona o destaque</h3>
+        <h3>1. Adição de saldo</h3>
         <ul>
-          <li>O usuário compra saldo para a conta de anúncios a partir de R$ 10,00 (equivalente a 1 dia).</li>
-          <li>Sem descontos progressivos: o cálculo é linear (R$ 10,00 por dia equivalente).</li>
+          <li>O usuário adiciona saldo na conta de anúncios a partir de R$ 5,00.</li>
+          <li>R$ 5,00 em saldo equivalem a 24 horas de destaque.</li>
           <li>O pagamento é processado via Stripe em ambiente seguro.</li>
-          <li>Após confirmação do pagamento, o saldo entra na conta de anúncios e pode ser usado em qualquer anúncio do usuário.</li>
+          <li>Após confirmação do pagamento, o saldo fica disponível para uso nos anúncios do próprio usuário.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>2. Consumo do saldo</h3>
+        <h3>2. Ativação e consumo</h3>
         <ul>
-          <li>O saldo é descontado por segundo, enquanto houver anúncio destacado ativo.</li>
-          <li>Se houver mais de um anúncio ativo ao mesmo tempo, o consumo por segundo é proporcional à quantidade ativa.</li>
-          <li>Ao zerar o saldo, os destaques ativos são interrompidos automaticamente.</li>
+          <li>O destaque é ativado pelo painel da conta de anúncios.</li>
+          <li>O saldo é consumido por tempo de uso (cálculo interno por segundos).</li>
+          <li>Se houver mais de um anúncio destacado ao mesmo tempo, o consumo ocorre de forma proporcional.</li>
+          <li>Ao zerar o saldo, os destaques ativos são pausados automaticamente.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>3. Exclusão de anúncio destacado</h3>
+        <h3>3. Pausa e exclusão de anúncio</h3>
         <ul>
-          <li>Ao excluir um anúncio, o destaque desse anúncio é encerrado imediatamente.</li>
-          <li>O saldo já consumido pelo tempo ativo não é revertido.</li>
-          <li>O saldo restante permanece na conta de anúncios para uso em outros anúncios.</li>
+          <li>Ao pausar ou excluir um anúncio, o destaque desse anúncio é encerrado imediatamente.</li>
+          <li>O valor já consumido pelo tempo ativo não é estornado.</li>
+          <li>O saldo restante permanece na conta de anúncios para uso futuro.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>4. Transparência de custo</h3>
-        <p>
-          A compra continua sendo exibida por dia para o usuário, em modelo linear de preço.
-          Internamente, o sistema utiliza segundos para cálculo preciso de consumo de saldo.
-        </p>
-        <div class="policy-alert">
-          O consumo é contínuo e proporcional ao tempo ativo de destaque.
-        </div>
+        <h3>4. Saque e reembolso de saldo</h3>
+        <ul>
+          <li>Você pode solicitar saque do saldo disponível na conta de anúncios.</li>
+          <li>Ao solicitar saque, os destaques ativos são pausados e o saldo entra em análise.</li>
+          <li>O valor final devolvido pode ser menor que o total pago, devido às taxas da plataforma de pagamento (Stripe).</li>
+        </ul>
       </article>
 
       <article class="policy-card">
-        <h3>5. Aceite das políticas</h3>
+        <h3>5. Moderação</h3>
+        <ul>
+          <li>Anúncios podem ser removidos por violação das regras da plataforma.</li>
+          <li>Mesmo em remoção por moderação, o consumo já realizado até o momento da remoção não é revertido.</li>
+        </ul>
+      </article>
+
+      <article class="policy-card">
+        <h3>6. Suporte</h3>
         <p>
-          Para concluir a contratação do destaque, o usuário deve marcar que leu e está de acordo com estas políticas
-          antes de ser redirecionado ao checkout.
+          Dúvidas sobre pagamentos, saldo e destaques:
+          <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>
         </p>
       </article>
     </main>

@@ -18,9 +18,20 @@
       gap: 14px;
       grid-template-columns: minmax(0, 1fr) auto;
       align-items: center;
+      min-height: 126px;
+    }
+
+    .game-hero-shell,
+    .game-toolbar-shell {
+      padding-bottom: 0;
     }
 
     .game-hero-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .game-hero-head {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
@@ -31,6 +42,14 @@
       margin: 0;
       font-size: clamp(24px, 3vw, 34px);
       line-height: 1.05;
+    }
+
+    .game-description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
     }
 
     .game-logo-frame {
@@ -51,6 +70,8 @@
       display: grid;
       gap: 10px;
       width: 100%;
+      min-height: 132px;
+      align-content: start;
     }
 
     .section-header {
@@ -114,6 +135,13 @@
       justify-content: center;
     }
 
+    .feed-sort {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
     .feed-filter-btn {
       border: 1px solid var(--border);
       background: rgba(12, 21, 51, 0.04);
@@ -137,6 +165,44 @@
       display: grid;
       gap: 10px;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .game-feed-shell {
+      position: relative;
+      min-height: 220px;
+    }
+
+    .feed-loading-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 248, 255, 0.98));
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .feed-loading-overlay.open {
+      display: flex;
+    }
+
+    .feed-loading-overlay img {
+      width: 108px;
+      height: auto;
+      opacity: 0.28;
+      animation: feed-logo-pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes feed-logo-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.22; }
+      50% { transform: scale(1.04); opacity: 0.36; }
+    }
+
+    .listing-feed.is-refreshing {
+      opacity: 0.9;
     }
 
     .feed-card {
@@ -196,6 +262,16 @@
       display: block;
     }
 
+    .feed-media img.feed-media-fallback-logo {
+      width: 68%;
+      height: 68%;
+      object-fit: contain;
+      opacity: 0.18;
+      filter: grayscale(100%);
+      pointer-events: none;
+      user-select: none;
+    }
+
     .feed-title {
       font-size: 13px;
       color: var(--ink);
@@ -221,6 +297,7 @@
     @media (max-width: 860px) {
       .game-hero-card {
         grid-template-columns: 1fr;
+        min-height: 0;
       }
 
       .game-logo-frame {
@@ -230,6 +307,10 @@
 
       .feed-search {
         padding: 10px;
+      }
+
+      .feed-toolbar {
+        min-height: 0;
       }
 
       .listing-feed {
@@ -245,43 +326,57 @@
   <div class="page">
     <site-navbar></site-navbar>
 
-    <main class="section game-page">
+    <section class="section game-hero-shell">
       <div class="game-hero-card">
         <div class="game-hero-copy">
-          <h1 id="game-title">Carregando...</h1>
-          <div id="game-actions" class="game-actions"></div>
+          <div class="game-hero-head">
+            <h1 id="game-title">Carregando...</h1>
+            <div id="game-actions" class="game-actions"></div>
+          </div>
+          <p id="game-description" class="game-description" style="display:none;"></p>
         </div>
         <div class="game-logo-frame">
           <img id="game-logo" alt="Logo do game" />
         </div>
       </div>
+    </section>
 
-      <section class="section">
-        <div class="section-header">
-          <div>
-            <div class="feed-toolbar">
-              <div class="feed-search">
-                <span class="feed-search-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none">
-                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
-                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                  </svg>
-                </span>
-                <input
-                  id="listing-search"
-                  type="search"
-                  placeholder="O que você está procurando?"
-                  autocomplete="off"
-                />
-              </div>
-              <div id="listing-search-meta" class="feed-search-meta"></div>
-              <div id="category-filters" class="feed-filters"></div>
+    <section class="section game-toolbar-shell">
+      <div class="section-header">
+        <div>
+          <div class="feed-toolbar">
+            <div class="feed-search">
+              <span class="feed-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                  <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <input
+                id="listing-search"
+                type="search"
+                placeholder="O que você está procurando?"
+                autocomplete="off"
+              />
             </div>
+            <div id="listing-search-meta" class="feed-search-meta"></div>
+            <div id="category-filters" class="feed-filters"></div>
+            <div id="sort-filters" class="feed-sort"></div>
           </div>
         </div>
-        <div id="listing-feed" class="listing-feed"></div>
-        <div id="feed-sentinel" class="feed-sentinel" style="display:none;">Role para carregar mais</div>
-        <p id="listing-empty" class="search-feedback" style="display:none;">Nenhum anúncio para este game ainda.</p>
+      </div>
+    </section>
+
+    <main class="game-page">
+      <section class="section">
+        <div id="game-feed-shell" class="game-feed-shell">
+          <div id="listing-feed" class="listing-feed"></div>
+          <div id="feed-sentinel" class="feed-sentinel" style="display:none;">Role para carregar mais</div>
+          <p id="listing-empty" class="search-feedback" style="display:none;">Nenhum anúncio para este game ainda.</p>
+          <div id="feed-loading-overlay" class="feed-loading-overlay" aria-hidden="true">
+            <img src="img/logo.png" alt="Carregando anúncios" />
+          </div>
+        </div>
       </section>
     </main>
 
@@ -311,27 +406,95 @@
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
     const titleEl = document.getElementById("game-title");
+    const descriptionEl = document.getElementById("game-description");
     const logoEl = document.getElementById("game-logo");
     const actionsEl = document.getElementById("game-actions");
     const listingSearchInput = document.getElementById("listing-search");
     const listingSearchMeta = document.getElementById("listing-search-meta");
     const listingFeed = document.getElementById("listing-feed");
     const categoryFilters = document.getElementById("category-filters");
+    const sortFilters = document.getElementById("sort-filters");
     const feedSentinel = document.getElementById("feed-sentinel");
     const listingEmpty = document.getElementById("listing-empty");
+    const gameFeedShell = document.getElementById("game-feed-shell");
+    const feedLoadingOverlay = document.getElementById("feed-loading-overlay");
 
     const pageLoader = document.getElementById("page-loader");
-    let loaderDone = false;
+    let initialLoaderCompleted = false;
+    let transientLoaderCount = 0;
     let windowLoaded = false;
     let avatarReady = false;
     let contentReady = false;
 
     function hideLoader() {
-      if (loaderDone || !pageLoader) return;
+      if (!pageLoader) return;
       if (!windowLoaded || !avatarReady || !contentReady) return;
-      loaderDone = true;
+      initialLoaderCompleted = true;
+      if (transientLoaderCount > 0) {
+        pageLoader.classList.remove("hidden");
+        return;
+      }
       pageLoader.classList.add("hidden");
-      pageLoader.remove();
+    }
+
+    function showTransientLoader() {
+      if (!pageLoader || !initialLoaderCompleted) return;
+      transientLoaderCount += 1;
+      pageLoader.classList.remove("hidden");
+    }
+
+    function hideTransientLoader() {
+      if (!pageLoader || !initialLoaderCompleted) return;
+      transientLoaderCount = Math.max(0, transientLoaderCount - 1);
+      if (transientLoaderCount === 0) {
+        pageLoader.classList.add("hidden");
+      }
+    }
+
+    function setFeedInlineLoading(isLoading) {
+      if (!feedLoadingOverlay || !listingFeed) return;
+      if (isLoading) {
+        if (gameFeedShell && listingFeed) {
+          const currentHeight = Math.max(220, gameFeedShell.offsetHeight || listingFeed.offsetHeight || 0);
+          gameFeedShell.style.minHeight = `${currentHeight}px`;
+        }
+        feedLoadingOverlay.classList.add("open");
+        feedLoadingOverlay.setAttribute("aria-hidden", "false");
+        listingFeed.style.visibility = "hidden";
+        if (feedSentinel) feedSentinel.style.visibility = "hidden";
+        if (listingEmpty) listingEmpty.style.visibility = "hidden";
+        return;
+      }
+      listingFeed.style.visibility = "";
+      if (feedSentinel) feedSentinel.style.visibility = "";
+      if (listingEmpty) listingEmpty.style.visibility = "";
+      feedLoadingOverlay.classList.remove("open");
+      feedLoadingOverlay.setAttribute("aria-hidden", "true");
+      if (gameFeedShell) gameFeedShell.style.minHeight = "";
+    }
+
+    function waitForImageWithTimeout(img, timeoutMs = 1600) {
+      if (!img) return Promise.resolve();
+      if (img.complete) return Promise.resolve();
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve();
+        };
+        const timer = setTimeout(finish, timeoutMs);
+        img.addEventListener("load", finish, { once: true });
+        img.addEventListener("error", finish, { once: true });
+      });
+    }
+
+    async function waitForVisibleFeedCards(maxImages = 16) {
+      if (!listingFeed) return;
+      const images = Array.from(listingFeed.querySelectorAll(".feed-card img")).slice(0, maxImages);
+      if (images.length === 0) return;
+      await Promise.all(images.map((img) => waitForImageWithTimeout(img)));
     }
 
     function markAvatarReady() {
@@ -356,6 +519,7 @@
     let orderedListings = [];
     let visibleCount = 0;
     let activeCategoryFilter = "all";
+    let activeSortFilter = "recent";
     let searchQuery = "";
     let feedObserver = null;
     let isRenderingBatch = false;
@@ -372,6 +536,10 @@
       { value: "item", label: "Item ou itens" },
       { value: "account", label: "Conta ou personagem" },
       { value: "service", label: "Serviço" },
+    ];
+    const SORT_OPTIONS = [
+      { value: "relevant", label: "Mais relevantes" },
+      { value: "recent", label: "Mais recentes" },
     ];
 
     function computeFeedPageSize() {
@@ -487,7 +655,7 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
       }
@@ -588,7 +756,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("servers")
-          .select("id,name,official_site,banner_url")
+          .select("id,name,official_site,banner_url,description")
           .eq("id", id)
           .single();
         if (error) throw error;
@@ -597,6 +765,7 @@
           name: data.name,
           website: data.official_site,
           cover_url: data.banner_url,
+          description: data.description,
         } : null;
       } catch (err) {
         console.warn("Falha ao buscar em servers, tentando games.", err);
@@ -611,6 +780,7 @@
           name: data.name,
           website: data.website,
           cover_url: data.cover_url,
+          description: null,
         } : null;
       }
     }
@@ -619,9 +789,20 @@
       if (!game) {
         titleEl.textContent = "Game não encontrado.";
         logoEl.style.display = "none";
+        if (descriptionEl) descriptionEl.style.display = "none";
         return;
       }
       titleEl.textContent = game.name;
+      if (descriptionEl) {
+        const text = String(game.description || "").trim();
+        if (text) {
+          descriptionEl.textContent = text;
+          descriptionEl.style.display = "block";
+        } else {
+          descriptionEl.textContent = "";
+          descriptionEl.style.display = "none";
+        }
+      }
       if (game.cover_url) {
         logoEl.src = game.cover_url;
         logoEl.style.display = "block";
@@ -654,6 +835,10 @@
 
     function isHighlightActive(listing) {
       return Boolean(listing && listing.highlight_status === "active");
+    }
+
+    function getListingRelevanceScore(listing) {
+      return Number(listing?.user_recommendations_count || 0);
     }
 
     function listingHasCategory(listing, category) {
@@ -692,6 +877,14 @@
       await Promise.all(criticalImages.map((img) => waitForImageElement(img)));
     }
 
+    function compareListingBySort(a, b) {
+      if (activeSortFilter === "relevant") {
+        const relevanceDiff = getListingRelevanceScore(b) - getListingRelevanceScore(a);
+        if (relevanceDiff !== 0) return relevanceDiff;
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+
     function buildOrderedFeed(list) {
       if (!Array.isArray(list) || list.length === 0) return [];
       const highlighted = [];
@@ -710,7 +903,7 @@
         [highlighted[i], highlighted[j]] = [highlighted[j], highlighted[i]];
       }
 
-      normal.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      normal.sort(compareListingBySort);
 
       const merged = [];
       const maxLen = Math.max(highlighted.length, normal.length);
@@ -736,16 +929,67 @@
         .join("");
     }
 
-    async function prepareListingForCard(listing) {
-      const rawImage = getCardImageUrl(listing);
-      let resolvedImage = "";
-      if (rawImage) {
-        resolvedImage = await resolveImageUrl(rawImage);
+    function renderSortFilters() {
+      if (!sortFilters) return;
+      sortFilters.innerHTML = SORT_OPTIONS
+        .map((option) => `
+          <button
+            type="button"
+            class="feed-filter-btn${activeSortFilter === option.value ? " active" : ""}"
+            data-sort="${option.value}">
+            ${option.label}
+          </button>
+        `)
+        .join("");
+    }
+
+    async function attachRecommendationsScore(listings) {
+      const items = Array.isArray(listings) ? listings : [];
+      const userIds = Array.from(new Set(
+        items
+          .map((item) => String(item?.user_id || "").trim())
+          .filter(Boolean),
+      ));
+      if (userIds.length === 0) {
+        return items.map((item) => ({ ...item, user_recommendations_count: 0 }));
       }
-      return {
-        ...listing,
-        cardImage: resolvedImage || "",
-      };
+
+      const scoreMap = new Map();
+      await Promise.all(userIds.map(async (userId) => {
+        try {
+          const { count, error } = await supabase
+            .from("recommendations")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+          if (error) throw error;
+          scoreMap.set(userId, Number(count || 0));
+        } catch (_err) {
+          scoreMap.set(userId, 0);
+        }
+      }));
+
+      return items.map((item) => ({
+        ...item,
+        user_recommendations_count: scoreMap.get(String(item?.user_id || "").trim()) || 0,
+      }));
+    }
+
+    async function ensureCardImageResolved(listing) {
+      const rawImage = getCardImageUrl(listing);
+      if (!rawImage) {
+        listing._cardImageSource = "";
+        listing.cardImage = "";
+        return listing;
+      }
+
+      if (listing._cardImageSource === rawImage && typeof listing.cardImage === "string") {
+        return listing;
+      }
+
+      const resolvedImage = await resolveImageUrl(rawImage);
+      listing._cardImageSource = rawImage;
+      listing.cardImage = resolvedImage || "";
+      return listing;
     }
 
     function createListingCard(listing) {
@@ -759,7 +1003,7 @@
         : "";
       const media = listing.cardImage
         ? `<div class="feed-media">${highlightBadge}<img src="${encodeURI(listing.cardImage)}" alt="Imagem do anúncio ${escapeHtml(listing.title || "Anúncio")}" loading="lazy" /></div>`
-        : `<div class="feed-media empty">${highlightBadge}Sem imagem</div>`;
+        : `<div class="feed-media empty">${highlightBadge}<img src="img/logo.png" alt="" class="feed-media-fallback-logo" loading="lazy" /></div>`;
       card.innerHTML = `
         ${media}
         <h3 class="feed-title">${escapeHtml(listing.title || "Anúncio")}</h3>
@@ -804,25 +1048,45 @@
       }
 
       isRenderingBatch = true;
-      const batch = orderedListings.slice(visibleCount, visibleCount + feedPageSize);
-      const prepared = await Promise.all(batch.map((item) => prepareListingForCard(item)));
-      const fragment = document.createDocumentFragment();
-      prepared.forEach((item) => {
-        fragment.appendChild(createListingCard(item));
-      });
-      listingFeed.appendChild(fragment);
-      visibleCount += prepared.length;
-      isRenderingBatch = false;
-      updateFeedState();
+      try {
+        const batch = orderedListings.slice(visibleCount, visibleCount + feedPageSize);
+        await Promise.all(batch.map((item) => ensureCardImageResolved(item)));
+        const fragment = document.createDocumentFragment();
+        batch.forEach((item) => {
+          fragment.appendChild(createListingCard(item));
+        });
+        listingFeed.appendChild(fragment);
+        visibleCount += batch.length;
+        updateFeedState();
+      } finally {
+        isRenderingBatch = false;
+      }
     }
 
     async function resetFeed() {
-      if (listingFeed) listingFeed.innerHTML = "";
+      if (!listingFeed) return;
       visibleCount = 0;
-      updateFeedState();
-      if (orderedListings.length > 0) {
-        await renderNextBatch();
+      if (orderedListings.length === 0) {
+        listingFeed.innerHTML = "";
+        updateFeedState();
+        return;
+      }
+
+      const initialBatch = orderedListings.slice(0, feedPageSize);
+      listingFeed.classList.add("is-refreshing");
+      try {
+        await Promise.all(initialBatch.map((item) => ensureCardImageResolved(item)));
+        const fragment = document.createDocumentFragment();
+        initialBatch.forEach((item) => {
+          fragment.appendChild(createListingCard(item));
+        });
+        listingFeed.innerHTML = "";
+        listingFeed.appendChild(fragment);
+        visibleCount = initialBatch.length;
+        updateFeedState();
         await fillFeedUntilTarget();
+      } finally {
+        listingFeed.classList.remove("is-refreshing");
       }
     }
 
@@ -849,18 +1113,39 @@
       feedObserver.observe(feedSentinel);
     }
 
-    async function refreshFeed() {
-      feedPageSize = computeFeedPageSize();
-      const filteredByCategory = activeCategoryFilter === "all"
-        ? allListings
-        : allListings.filter((item) => listingHasCategory(item, activeCategoryFilter));
-      const filtered = String(searchQuery || "").trim()
-        ? filteredByCategory.filter((item) => listingMatchesQuery(item, searchQuery))
-        : filteredByCategory;
-      orderedListings = buildOrderedFeed(filtered);
-      updateSearchMeta(filtered.length);
-      renderCategoryFilters();
-      await resetFeed();
+    async function refreshFeed(options = {}) {
+      const withLoader = Boolean(options?.withLoader);
+      const withInlineLoader = Boolean(options?.inlineLoader);
+      if (withLoader) {
+        showTransientLoader();
+        await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      }
+      if (withInlineLoader) {
+        setFeedInlineLoading(true);
+        await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      }
+      try {
+        feedPageSize = computeFeedPageSize();
+        const filteredByCategory = activeCategoryFilter === "all"
+          ? allListings
+          : allListings.filter((item) => listingHasCategory(item, activeCategoryFilter));
+        const filtered = String(searchQuery || "").trim()
+          ? filteredByCategory.filter((item) => listingMatchesQuery(item, searchQuery))
+          : filteredByCategory;
+        orderedListings = buildOrderedFeed(filtered);
+        updateSearchMeta(filtered.length);
+        renderCategoryFilters();
+        renderSortFilters();
+        await resetFeed();
+      } finally {
+        if (withInlineLoader) {
+          await waitForVisibleFeedCards();
+          setFeedInlineLoading(false);
+        }
+        if (withLoader) {
+          hideTransientLoader();
+        }
+      }
     }
 
     async function fetchListings(gameId) {
@@ -868,12 +1153,12 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,category,categories,status,server_id,created_at,highlight_status,highlight_expires_at")
+          .select("id,title,description,images,category,categories,status,server_id,user_id,created_at,highlight_status,highlight_expires_at")
           .eq("server_id", gameId)
           .eq("status", "active")
           .order("created_at", { ascending: false });
         if (error) throw error;
-        allListings = data || [];
+        allListings = await attachRecommendationsScore(data || []);
         await refreshFeed();
       } catch (err) {
         console.error(err);
@@ -885,6 +1170,7 @@
           listingEmpty.textContent = err?.message || "Erro ao carregar anúncios.";
         }
         if (feedSentinel) feedSentinel.style.display = "none";
+        setFeedInlineLoading(false);
       }
     }
 
@@ -939,10 +1225,19 @@
     categoryFilters?.addEventListener("click", (event) => {
       const button = event.target.closest(".feed-filter-btn");
       if (!button) return;
+      if (button.hasAttribute("data-sort")) return;
       const category = button.getAttribute("data-category") || "all";
       if (category === activeCategoryFilter) return;
       activeCategoryFilter = category;
-      refreshFeed();
+      refreshFeed({ inlineLoader: true });
+    });
+    sortFilters?.addEventListener("click", (event) => {
+      const button = event.target.closest(".feed-filter-btn[data-sort]");
+      if (!button) return;
+      const sort = button.getAttribute("data-sort") || "recent";
+      if (sort === activeSortFilter) return;
+      activeSortFilter = sort;
+      refreshFeed({ inlineLoader: true });
     });
     listingSearchInput?.addEventListener("input", () => {
       searchQuery = listingSearchInput.value || "";
@@ -968,7 +1263,7 @@
     });
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";

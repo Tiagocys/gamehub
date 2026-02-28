@@ -63,10 +63,10 @@
       try {
         const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
         if (!hasSession) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
         }
       } catch (_err) {
-        window.location.replace("login.html");
+        window.location.replace("index.html");
       }
     })();
   </script>
@@ -115,9 +115,9 @@
           </div>
 
           <div class="field">
-            <label for="listing-images">Imagens do anúncio (mínimo 1, até 8) *</label>
+            <label for="listing-images">Imagens do anúncio (opcional, até 8)</label>
             <input id="listing-images" type="file" accept="image/png,image/jpeg,image/webp" multiple />
-            <span class="helper">Envie pelo menos 1 imagem e no máximo 8.</span>
+            <span class="helper">Você pode enviar até 8 imagens.</span>
             <span id="image-count" class="helper">0/8 imagens selecionadas.</span>
             <div id="image-previews" class="image-preview-grid" aria-live="polite"></div>
           </div>
@@ -431,7 +431,7 @@
         }
         localStorage.removeItem("gimerr-auth-token");
         localStorage.removeItem("gimerr-auth-session");
-        window.location.replace("login.html");
+        window.location.replace("index.html");
         throw new Error("Sessão inválida. Faça login novamente.");
       }
       currentUser = data.user;
@@ -540,10 +540,10 @@
           await supabase.auth.signOut();
           currentUser = null;
           updateAuthUI();
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao autenticar.";
@@ -630,7 +630,7 @@
       if (!payload?.iss || payload.iss !== expectedIss) {
         localStorage.removeItem("gimerr-auth-token");
         localStorage.removeItem("gimerr-auth-session");
-        window.location.replace("login.html");
+        window.location.replace("index.html");
         throw new Error("Sessão inválida para este projeto.");
       }
       const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
@@ -760,7 +760,7 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.href = "login.html";
+          window.location.href = "index.html";
           return;
         }
 
@@ -791,11 +791,6 @@
         }
 
         const totalImages = existingImageUrls.length + files.length;
-        if (totalImages < 1) {
-          feedback.textContent = "Envie pelo menos 1 imagem para publicar o anúncio.";
-          setSubmitLoading(false);
-          return;
-        }
         if (totalImages > MAX_IMAGES) {
           feedback.textContent = `Você pode enviar no máximo ${MAX_IMAGES} imagens.`;
           setSubmitLoading(false);
@@ -905,14 +900,14 @@
         await supabase.auth.signOut();
         currentUser = null;
         updateAuthUI();
-        window.location.href = "login.html";
+        window.location.href = "index.html";
       } catch (err) {
         console.error(err);
       }
     });
     function goToCreateListing() {
       if (!currentUser) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       window.location.href = "listing-create.html";
@@ -931,7 +926,7 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.replace("login.html");
+          window.location.replace("index.html");
           return;
         }
         await ensureValidSession();

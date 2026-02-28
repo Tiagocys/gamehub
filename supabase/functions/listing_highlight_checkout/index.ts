@@ -19,9 +19,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
-const MIN_TOPUP_BRL = 10;
+const MIN_TOPUP_BRL = 5;
 const DAY_SECONDS = 24 * 60 * 60;
-const PRICE_PER_DAY_CENTS = 1000;
+const PRICE_PER_DAY_CENTS = 500;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     const amountBRL = amountFromPayload ?? fallbackAmount;
 
     if (!amountBRL || amountBRL < MIN_TOPUP_BRL) {
-      return errorResponse("Valor mínimo para depósito: R$ 10,00", 400);
+      return errorResponse("Valor mínimo para depósito: R$ 5,00", 400);
     }
 
     const totalCents = Math.round(amountBRL * 100);
