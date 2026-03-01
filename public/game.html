@@ -316,6 +316,11 @@
       .listing-feed {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
+
+      .feed-media img:not(.feed-media-fallback-logo) {
+        object-fit: contain;
+        background: #fff;
+      }
     }
   </style>
 </head>
