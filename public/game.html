@@ -265,6 +265,12 @@
       display: block;
     }
 
+    .feed-media.feed-media-image {
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+    }
+
     .feed-media img.feed-media-fallback-logo {
       width: 68%;
       height: 68%;
@@ -328,6 +334,16 @@
         object-fit: contain !important;
         object-position: center center !important;
         background: #fff;
+      }
+
+      .feed-media.feed-media-image {
+        background-image: var(--feed-image);
+        background-size: contain;
+        background-color: #fff;
+      }
+
+      .feed-media.feed-media-image img:not(.feed-media-fallback-logo) {
+        display: none !important;
       }
     }
   </style>
@@ -1038,8 +1054,9 @@
       const highlightBadge = isHighlightActive(listing)
         ? `<span class="feed-highlight-badge">Em destaque</span>`
         : "";
+      const cardImageUrl = listing.cardImage ? encodeURI(listing.cardImage).replace(/'/g, "%27") : "";
       const media = listing.cardImage
-        ? `<div class="feed-media">${highlightBadge}<img src="${encodeURI(listing.cardImage)}" alt="Imagem do anúncio ${escapeHtml(listing.title || "Anúncio")}" loading="lazy" /></div>`
+        ? `<div class="feed-media feed-media-image" style="--feed-image:url('${cardImageUrl}');">${highlightBadge}<img src="${cardImageUrl}" alt="Imagem do anúncio ${escapeHtml(listing.title || "Anúncio")}" loading="lazy" /></div>`
         : `<div class="feed-media empty">${highlightBadge}<img src="img/logo.png" alt="" class="feed-media-fallback-logo" loading="lazy" /></div>`;
       card.innerHTML = `
         ${media}
