@@ -870,13 +870,20 @@
       return list.find(Boolean) || "";
     }
 
-    function waitForImageElement(img) {
+    function waitForImageElement(img, timeoutMs = 1800) {
       if (!img) return Promise.resolve();
       const src = img.getAttribute("src");
       if (!src) return Promise.resolve();
       if (img.complete) return Promise.resolve();
       return new Promise((resolve) => {
-        const finish = () => resolve();
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          resolve();
+        };
+        const timer = setTimeout(finish, timeoutMs);
         img.addEventListener("load", finish, { once: true });
         img.addEventListener("error", finish, { once: true });
       });
