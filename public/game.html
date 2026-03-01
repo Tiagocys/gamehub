@@ -519,10 +519,20 @@
       hideLoader();
     }
 
-    window.addEventListener("load", () => {
+    setTimeout(() => {
+      if (!avatarReady) markAvatarReady();
+      if (!contentReady) markContentReady();
+    }, 5000);
+
+    function markWindowReady() {
+      if (windowLoaded) return;
       windowLoaded = true;
       hideLoader();
-    });
+    }
+
+    document.addEventListener("DOMContentLoaded", markWindowReady, { once: true });
+    window.addEventListener("load", markWindowReady, { once: true });
+    setTimeout(markWindowReady, 4500);
 
     let supabase;
     let currentUser = null;
@@ -572,7 +582,7 @@
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         titleEl.textContent = "Supabase não configurado.";
-        authBtn.disabled = true;
+        if (authBtn) authBtn.disabled = true;
         throw new Error("Supabase não configurado");
       }
       if (!supabase) {
@@ -593,18 +603,21 @@
     }
 
     function updateAuthUI() {
-      if (!authBtn) return;
-      authBtn.disabled = false;
+      if (authBtn) authBtn.disabled = false;
       if (currentUser) {
-        authBtn.style.display = "none";
+        if (authBtn) authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
         if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
-        loadUserAvatar();
+        if (!avatarImg) {
+          markAvatarReady();
+        } else {
+          loadUserAvatar();
+        }
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
         return;
       }
-      authBtn.style.display = "inline-flex";
+      if (authBtn) authBtn.style.display = "inline-flex";
       if (userMenu) userMenu.style.display = "none";
       if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
@@ -634,7 +647,11 @@
     }
 
     async function loadUserAvatar() {
-      if (!avatarImg || !currentUser || avatarLoaded) return;
+      if (!currentUser || avatarLoaded) return;
+      if (!avatarImg) {
+        markAvatarReady();
+        return;
+      }
       try {
         ensureClient();
         const { data } = await supabase
@@ -666,7 +683,7 @@
     async function handleAuthClick() {
       try {
         ensureClient();
-        authBtn.disabled = true;
+        if (authBtn) authBtn.disabled = true;
         window.location.href = "index.html";
       } catch (err) {
         console.error(err);
