@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
 type Payload = {
   listingId?: string;
+  autoActivate?: boolean;
   amountBRL?: number | string;
   days?: number;
   returnBaseUrl?: string;
@@ -80,7 +81,6 @@ Deno.serve(async (req) => {
       || (authHeader.startsWith("Bearer ") ? authHeader.replace("Bearer ", "").trim() : "");
 
     if (!token) return errorResponse("Não autorizado", 401);
-    if (!payload.listingId) return errorResponse("listingId é obrigatório", 400);
 
     const amountFromPayload = normalizeAmountBRL(payload.amountBRL);
     const legacyDays = Number(payload.days || 0);
@@ -101,21 +101,36 @@ Deno.serve(async (req) => {
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !authData?.user) return errorResponse("Sessão inválida", 401);
 
-    const { data: listing, error: listingErr } = await supabase
-      .from("listings")
-      .select("id,user_id,title,status")
-      .eq("id", payload.listingId)
-      .eq("user_id", authData.user.id)
-      .single();
+    let listing: { id: string; user_id: string; title: string | null; status: string } | null = null;
+    if (payload.listingId) {
+      const { data: listingData, error: listingErr } = await supabase
+        .from("listings")
+        .select("id,user_id,title,status")
+        .eq("id", payload.listingId)
+        .eq("user_id", authData.user.id)
+        .single();
 
-    if (listingErr || !listing) return errorResponse("Anúncio não encontrado", 404);
-    if (listing.status !== "active") {
-      return errorResponse("Apenas anúncios ativos podem receber destaque.", 409);
+      if (listingErr || !listingData) return errorResponse("Anúncio não encontrado", 404);
+      if (listingData.status !== "active") {
+        return errorResponse("Apenas anúncios ativos podem receber destaque.", 409);
+      }
+      listing = listingData;
     }
 
+    const shouldAutoActivate = Boolean(payload.autoActivate && listing?.id);
+
     const baseUrl = normalizeBaseUrl(payload.returnBaseUrl) || new URL(req.url).origin;
-    const successUrl = `${baseUrl}/ad-wallet.html?listing=${encodeURIComponent(listing.id)}&highlight=success`;
-    const cancelUrl = `${baseUrl}/ad-wallet.html?listing=${encodeURIComponent(listing.id)}&highlight=cancel`;
+    const successParams = new URLSearchParams({ highlight: "success" });
+    const cancelParams = new URLSearchParams({ highlight: "cancel" });
+    if (listing?.id) {
+      successParams.set("listing", listing.id);
+      cancelParams.set("listing", listing.id);
+    }
+    if (shouldAutoActivate) {
+      successParams.set("activate", "1");
+    }
+    const successUrl = `${baseUrl}/ad-wallet.html?${successParams.toString()}`;
+    const cancelUrl = `${baseUrl}/ad-wallet.html?${cancelParams.toString()}`;
 
     const body = new URLSearchParams();
     body.set("mode", "payment");
@@ -127,14 +142,17 @@ Deno.serve(async (req) => {
     body.set("line_items[0][price_data][currency]", "brl");
     body.set("line_items[0][price_data][unit_amount]", String(totalCents));
     body.set("line_items[0][price_data][product_data][name]", "Saldo da conta de anúncios");
-    body.set("line_items[0][price_data][product_data][description]", listing.title || "Crédito de destaque Gimerr");
+    body.set("line_items[0][price_data][product_data][description]", listing?.title || "Crédito de destaque Gimerr");
 
-    body.set("metadata[listing_id]", listing.id);
     body.set("metadata[user_id]", authData.user.id);
     body.set("metadata[days]", String(equivalentDays));
     body.set("metadata[purchased_seconds]", String(purchasedSeconds));
     body.set("metadata[total_cents]", String(totalCents));
     body.set("metadata[amount_brl]", amountBRL.toFixed(2));
+    body.set("metadata[auto_activate]", shouldAutoActivate ? "1" : "0");
+    if (listing?.id) {
+      body.set("metadata[listing_id]", listing.id);
+    }
 
     const stripeResponse = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
@@ -159,6 +177,8 @@ Deno.serve(async (req) => {
         amountBRL,
         totalCents,
         purchasedSeconds,
+        referenceListingId: listing?.id || null,
+        autoActivate: shouldAutoActivate,
       }),
       { headers: { "content-type": "application/json", ...corsHeaders } },
     );

@@ -355,8 +355,9 @@ Deno.serve(async (req) => {
 
     if (eventType === "checkout.session.completed" || eventType === "checkout.session.async_payment_succeeded") {
       const metadata = session?.metadata || {};
-      const listingId = metadata.listing_id;
-      const userId = metadata.user_id;
+      const listingIdRaw = typeof metadata.listing_id === "string" ? metadata.listing_id.trim() : "";
+      const listingId = listingIdRaw || null;
+      const userId = typeof metadata.user_id === "string" ? metadata.user_id : "";
       const totalCents = normalizeAmountCents(metadata.total_cents || session?.amount_total || 0);
       const metadataDays = normalizeDays(metadata.days);
       const fallbackSecondsByAmount = Math.max(1, Math.round((totalCents * DAY_SECONDS) / PRICE_PER_DAY_CENTS));
@@ -369,19 +370,34 @@ Deno.serve(async (req) => {
       const sessionId = session?.id;
       const paymentIntentId = typeof session?.payment_intent === "string" ? session.payment_intent : null;
       const stripeCurrency = typeof session?.currency === "string" ? session.currency.toUpperCase() : "BRL";
-      if (!listingId || !userId || !sessionId) {
+      if (!userId || !sessionId) {
         return errorResponse("Metadata incompleta no checkout", 400);
       }
 
       const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-      const { data: listing, error: listingErr } = await supabase
-        .from("listings")
-        .select("id,user_id,server_id,status,highlight_status")
-        .eq("id", listingId)
-        .eq("user_id", userId)
-        .single();
-      if (listingErr || !listing) {
-        return errorResponse("Anúncio não encontrado para aplicar destaque", 404);
+      let listing: {
+        id: string;
+        user_id: string;
+        server_id: string | null;
+        status: string;
+        highlight_status: string | null;
+      } | null = null;
+      if (listingId) {
+        const { data: listingData, error: listingErr } = await supabase
+          .from("listings")
+          .select("id,user_id,server_id,status,highlight_status")
+          .eq("id", listingId)
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (!listingErr && listingData) {
+          listing = listingData;
+        } else {
+          console.warn("Stripe webhook: listing_id ausente/inválido para repasse. Top-up será aplicado sem vínculo.", {
+            listing_id: listingId,
+            user_id: userId,
+            error: listingErr?.message || null,
+          });
+        }
       }
 
       const nowIso = new Date().toISOString();
@@ -390,7 +406,7 @@ Deno.serve(async (req) => {
         event_type: "topup",
         seconds_delta: purchasedSeconds,
         balance_after: 0,
-        listing_id: listing.id,
+        listing_id: listing?.id || null,
         checkout_session_id: sessionId,
         payment_intent_id: paymentIntentId,
         amount_paid: Number((totalCents / 100).toFixed(2)),
@@ -460,30 +476,32 @@ Deno.serve(async (req) => {
 
       let ownerId: string | null = null;
       let adminBeneficiaryId: string | null = null;
-      let { data: serverData, error: serverErr } = await supabase
-        .from("servers")
-        .select("owner_id,admin_beneficiary_id")
-        .eq("id", listing.server_id)
-        .single();
-      if (isMissingAdminBeneficiaryColumnError(serverErr)) {
-        const fallback = await supabase
+      if (listing?.server_id) {
+        let { data: serverData, error: serverErr } = await supabase
           .from("servers")
-          .select("owner_id")
+          .select("owner_id,admin_beneficiary_id")
           .eq("id", listing.server_id)
           .single();
-        serverData = fallback.data ? { ...fallback.data, admin_beneficiary_id: null } : null;
-        serverErr = fallback.error;
-      }
-      if (!serverErr) {
-        ownerId = typeof serverData?.owner_id === "string" ? serverData.owner_id : null;
-        adminBeneficiaryId = typeof serverData?.admin_beneficiary_id === "string" ? serverData.admin_beneficiary_id : null;
-        if (ownerId && adminBeneficiaryId && ownerId === adminBeneficiaryId) {
-          console.warn("Regra antifraude aplicada no webhook: owner_id e admin_beneficiary_id iguais. Ignorando repasse admin.");
-          adminBeneficiaryId = null;
+        if (isMissingAdminBeneficiaryColumnError(serverErr)) {
+          const fallback = await supabase
+            .from("servers")
+            .select("owner_id")
+            .eq("id", listing.server_id)
+            .single();
+          serverData = fallback.data ? { ...fallback.data, admin_beneficiary_id: null } : null;
+          serverErr = fallback.error;
+        }
+        if (!serverErr) {
+          ownerId = typeof serverData?.owner_id === "string" ? serverData.owner_id : null;
+          adminBeneficiaryId = typeof serverData?.admin_beneficiary_id === "string" ? serverData.admin_beneficiary_id : null;
+          if (ownerId && adminBeneficiaryId && ownerId === adminBeneficiaryId) {
+            console.warn("Regra antifraude aplicada no webhook: owner_id e admin_beneficiary_id iguais. Ignorando repasse admin.");
+            adminBeneficiaryId = null;
+          }
         }
       }
 
-      if (ownerId || adminBeneficiaryId) {
+      if ((ownerId || adminBeneficiaryId) && listing) {
         const stripeNetDetails = await fetchStripeNetDetails(paymentIntentId);
         const platformNetCents = stripeNetDetails.netCents ?? Math.round(totalCents * NET_ESTIMATE_RATIO);
         const grossAmount = centsToMoney(totalCents);

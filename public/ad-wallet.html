@@ -80,13 +80,6 @@
       color: var(--ink);
     }
 
-    .wallet-feedback {
-      min-height: 18px;
-      font-size: 14px;
-      color: #7a4a00;
-      margin: 0;
-    }
-
     .wallet-listings {
       display: grid;
       gap: 10px;
@@ -315,7 +308,6 @@
               <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Adicionar saldo</button>
               <button id="open-withdraw-modal-btn" class="btn btn-ghost" type="button">Solicitar saque</button>
             </div>
-            <p id="wallet-feedback" class="wallet-feedback"></p>
           </section>
         </aside>
 
@@ -355,8 +347,6 @@
         <input id="wallet-policy-accept" type="checkbox" />
         <span>Li e estou de acordo com as <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncio</a>.</span>
       </label>
-
-      <p id="topup-feedback" class="wallet-modal-feedback"></p>
 
       <div class="inline-actions">
         <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Adicionar saldo e pagar</button>
@@ -446,7 +436,6 @@
 
     const balanceBrlEl = document.getElementById("wallet-balance-brl");
     const activeCountEl = document.getElementById("wallet-active-count");
-    const walletFeedbackEl = document.getElementById("wallet-feedback");
 
     const openTopupModalBtn = document.getElementById("open-topup-modal-btn");
     const openWithdrawModalBtn = document.getElementById("open-withdraw-modal-btn");
@@ -506,6 +495,7 @@
     let myListings = [];
     let checkoutReferenceListingId = null;
     let pendingActivateListingId = null;
+    let topupIntent = "balance";
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
@@ -543,12 +533,6 @@
         });
       }
       return supabase;
-    }
-
-    function setWalletFeedback(message, isError = false) {
-      if (!walletFeedbackEl) return;
-      walletFeedbackEl.textContent = message || "";
-      walletFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
     }
 
     function setTopupFeedback(message, isError = false) {
@@ -765,19 +749,9 @@
       return Math.max(1, byBalance);
     }
 
-    function getCheckoutReferenceListingId() {
-      if (checkoutReferenceListingId) {
-        const explicit = findListingById(checkoutReferenceListingId);
-        if (explicit && explicit.status === "active") return explicit.id;
-      }
-      const fallback = myListings.find((item) => item.status === "active");
-      return fallback?.id || null;
-    }
-
     function updateCheckoutButtonState() {
       const amount = parseAmountBRL(amountInput?.value || "");
-      const hasReference = Boolean(getCheckoutReferenceListingId());
-      const canPay = hasReference && Number.isFinite(amount) && amount >= 5 && Boolean(policyAccept?.checked);
+      const canPay = Number.isFinite(amount) && amount >= 5 && Boolean(policyAccept?.checked);
       checkoutBtn.disabled = !canPay;
     }
 
@@ -810,8 +784,6 @@
       myListings.forEach((listing) => {
         const canHighlight = listing.status === "active";
         const isHighlighted = listing.highlight_status === "active";
-        const canActivateByBalance = getAvailableSeconds() > 0;
-
         const card = document.createElement("article");
         card.className = "wallet-listing-item";
 
@@ -859,7 +831,7 @@
         const actions = document.createElement("div");
         actions.className = "wallet-listing-actions";
 
-        if (canHighlight && !isHighlighted && canActivateByBalance) {
+        if (canHighlight && !isHighlighted) {
           const activateBtn = document.createElement("button");
           activateBtn.className = "btn btn-primary";
           activateBtn.type = "button";
@@ -875,7 +847,7 @@
           deactivateBtn.type = "button";
           deactivateBtn.dataset.action = "deactivate";
           deactivateBtn.dataset.id = listing.id;
-          deactivateBtn.textContent = "Parar destaque";
+          deactivateBtn.textContent = "Pausar destaque";
           actions.appendChild(deactivateBtn);
         }
 
@@ -896,9 +868,15 @@
       });
     }
 
-    function openTopupModal(referenceListingId = null) {
-      if (referenceListingId) checkoutReferenceListingId = referenceListingId;
-      setTopupFeedback("");
+    function openTopupModal(referenceListingId = null, intent = "balance") {
+      checkoutReferenceListingId = referenceListingId || null;
+      topupIntent = intent;
+      if (intent === "activate" && checkoutReferenceListingId) {
+        setTopupFeedback("Após o pagamento, o anúncio será destacado automaticamente.");
+      } else {
+        setTopupFeedback("");
+      }
+      checkoutBtn.textContent = intent === "activate" ? "Pagar e destacar anúncio" : "Adicionar saldo e pagar";
       topupModalBackdrop.style.display = "grid";
       topupModalBackdrop.setAttribute("aria-hidden", "false");
       updateCheckoutButtonState();
@@ -907,6 +885,8 @@
     function closeTopupModal() {
       topupModalBackdrop.style.display = "none";
       topupModalBackdrop.setAttribute("aria-hidden", "true");
+      topupIntent = "balance";
+      checkoutReferenceListingId = null;
     }
 
     function openWithdrawModal() {
@@ -1039,11 +1019,8 @@
 
     async function startCheckout() {
       const amount = parseAmountBRL(amountInput?.value || "");
-      const referenceListingId = getCheckoutReferenceListingId();
-      if (!referenceListingId) {
-        setTopupFeedback("Você precisa ter ao menos um anúncio ativo para adicionar saldo.", true);
-        return;
-      }
+      const shouldAutoActivate = topupIntent === "activate" && Boolean(checkoutReferenceListingId);
+      const referenceListingId = shouldAutoActivate ? checkoutReferenceListingId : null;
       if (!Number.isFinite(amount) || amount < 5) {
         setTopupFeedback("Informe um valor válido de no mínimo R$ 5,00.", true);
         return;
@@ -1068,6 +1045,7 @@
         const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
           body: {
             listingId: referenceListingId,
+            autoActivate: shouldAutoActivate,
             amountBRL: amount,
             returnBaseUrl: window.location.origin,
           },
@@ -1087,7 +1065,7 @@
         console.error(err);
         setTopupFeedback(err?.message || "Erro ao iniciar checkout.", true);
         checkoutBtn.disabled = false;
-        checkoutBtn.textContent = "Adicionar saldo e pagar";
+        checkoutBtn.textContent = topupIntent === "activate" ? "Pagar e destacar anúncio" : "Adicionar saldo e pagar";
         updateCheckoutButtonState();
       }
     }
@@ -1135,8 +1113,6 @@
         closeWithdrawModal();
         await syncWallet();
         await fetchListings();
-        const amountLabel = formatBRL(Number(data?.requestedRefundBRL || 0));
-        setWalletFeedback(`Solicitação de saque enviada (${amountLabel}). O valor final pode variar por taxas de processamento.`);
       } catch (err) {
         console.error(err);
         setWithdrawFeedback(err?.message || "Erro ao solicitar saque.", true);
@@ -1158,7 +1134,6 @@
         await fetchListings();
 
         closeActivateModal();
-        setWalletFeedback("Destaque ativado com sucesso.");
       } catch (err) {
         console.error(err);
         setActivateFeedback(err?.message || "Erro ao ativar destaque.", true);
@@ -1178,7 +1153,7 @@
     }
 
     openTopupModalBtn?.addEventListener("click", () => {
-      openTopupModal();
+      openTopupModal(null, "balance");
     });
 
     openWithdrawModalBtn?.addEventListener("click", () => {
@@ -1247,6 +1222,7 @@
       const action = target.getAttribute("data-action");
       const listingId = target.getAttribute("data-id");
       if (!action || !listingId) return;
+      const originalLabel = target.textContent;
 
       try {
         target.disabled = true;
@@ -1255,7 +1231,7 @@
         if (action === "activate") {
           if (getAvailableSeconds() <= 0) {
             setTopupFeedback("Você não possui saldo para destacar. Adicione saldo para continuar.", true);
-            openTopupModal(listingId);
+            openTopupModal(listingId, "activate");
           } else {
             openActivateModal(listingId);
           }
@@ -1263,17 +1239,18 @@
         }
 
         if (action === "deactivate") {
-          setWalletFeedback("Parando destaque...");
+          target.textContent = "Pausando...";
           await toggleHighlight(listingId, "deactivate");
           await syncWallet();
           await fetchListings();
-          setWalletFeedback("Destaque pausado.");
         }
       } catch (err) {
         console.error(err);
-        setWalletFeedback(err?.message || "Erro ao atualizar destaque.", true);
       } finally {
-        target.disabled = false;
+        if (target.isConnected) {
+          target.disabled = false;
+          target.textContent = originalLabel || target.textContent;
+        }
       }
     });
 
@@ -1340,16 +1317,30 @@
         }
 
         const params = new URLSearchParams(window.location.search);
-
-        if (params.get("highlight") === "cancel") {
-          setWalletFeedback("Pagamento cancelado.");
-        }
+        const highlightResult = params.get("highlight");
+        const autoActivate = params.get("activate") === "1";
+        const returnListingId = params.get("listing");
 
         await syncWallet();
         await fetchListings();
+
+        if (highlightResult === "success" && autoActivate && returnListingId) {
+          try {
+            await toggleHighlight(returnListingId, "activate");
+            await syncWallet();
+            await fetchListings();
+          } catch (activateErr) {
+            console.error(activateErr);
+          }
+        }
+
+        if (highlightResult === "success" || highlightResult === "cancel") {
+          const cleanUrl = `${window.location.origin}/ad-wallet.html`;
+          window.history.replaceState({}, "", cleanUrl);
+        }
       } catch (err) {
         console.error(err);
-        setWalletFeedback(err?.message || "Erro ao carregar conta de anúncios.", true);
+        setTopupFeedback(err?.message || "Erro ao carregar conta de anúncios.", true);
         checkoutBtn.disabled = true;
       } finally {
         revealPage();
