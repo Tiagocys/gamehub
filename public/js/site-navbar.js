@@ -1,9 +1,99 @@
 (() => {
   let authClientPromise = null;
+  let profileSyncBootstrapped = false;
   let partnerAccessCache = {
     userId: null,
     canAccess: false,
   };
+
+  function normalizeUsername(value) {
+    const clean = String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "")
+      .slice(0, 32);
+    return clean || "user";
+  }
+
+  function parseUserName(user) {
+    const meta = user?.user_metadata || {};
+    const given = meta.given_name || meta.first_name || "";
+    const family = meta.family_name || meta.last_name || "";
+    if (given || family) {
+      return { first_name: given || null, last_name: family || null };
+    }
+    const full = String(meta.full_name || meta.name || "").trim();
+    if (!full) return { first_name: null, last_name: null };
+    const parts = full.split(/\s+/);
+    if (parts.length === 1) return { first_name: parts[0], last_name: null };
+    return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
+  }
+
+  function baseUsernameFromUser(user) {
+    const fromName = String(user?.user_metadata?.full_name || "").trim().split(/\s+/)[0];
+    if (fromName) return normalizeUsername(fromName);
+    return normalizeUsername(String(user?.email || "").split("@")[0]);
+  }
+
+  async function ensurePublicUserProfile(client, user) {
+    if (!client || !user?.id || !user?.email) return;
+
+    const existing = await client
+      .from("users")
+      .select("username")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (existing.error && existing.error.code !== "PGRST116") {
+      throw existing.error;
+    }
+
+    const names = parseUserName(user);
+    const baseUsername = baseUsernameFromUser(user);
+    const candidates = Array.from(new Set([
+      existing.data?.username || "",
+      baseUsername,
+      `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
+      `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
+    ].filter(Boolean)));
+
+    let lastError = null;
+    for (const username of candidates) {
+      const payload = {
+        id: user.id,
+        username,
+        email: user.email,
+        avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+        first_name: names.first_name,
+        last_name: names.last_name,
+      };
+      const { error } = await client.from("users").upsert(payload, { onConflict: "id" });
+      if (!error) return;
+      if (error.code === "23505") {
+        lastError = error;
+        continue;
+      }
+      throw error;
+    }
+    if (lastError) throw lastError;
+  }
+
+  async function bootstrapProfileSync(client) {
+    if (profileSyncBootstrapped) return;
+    profileSyncBootstrapped = true;
+
+    client.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) return;
+      ensurePublicUserProfile(client, session.user).catch((err) => {
+        console.error("Falha ao sincronizar perfil público:", err);
+      });
+    });
+
+    const { data } = await client.auth.getSession();
+    if (data?.session?.user) {
+      ensurePublicUserProfile(client, data.session.user).catch((err) => {
+        console.error("Falha ao sincronizar perfil público:", err);
+      });
+    }
+  }
 
   async function getAuthClient() {
     if (authClientPromise) return authClientPromise;
@@ -15,7 +105,7 @@
         throw new Error("Supabase não configurado.");
       }
       const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.40.0");
-      return createClient(url, anonKey, {
+      const client = createClient(url, anonKey, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
@@ -23,6 +113,8 @@
           storageKey: "gimerr-auth-token",
         },
       });
+      await bootstrapProfileSync(client);
+      return client;
     })();
     return authClientPromise;
   }
