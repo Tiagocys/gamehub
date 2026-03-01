@@ -13,18 +13,6 @@
   <title>Gimerr - Cadastrar game</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="submit-guard-style">html{visibility:hidden;}</style>
-  <script>
-    (() => {
-      try {
-        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
-        if (!hasSession) {
-          window.location.replace("index.html");
-        }
-      } catch (_err) {
-        window.location.replace("index.html");
-      }
-    })();
-  </script>
 </head>
 <body>
   <div class="page">
@@ -241,12 +229,22 @@
       try {
         ensureClient();
         authBtn.disabled = true;
-        window.location.replace("index.html");
+        await redirectToGoogleOAuth();
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || "Erro ao autenticar.";
         authBtn.disabled = false;
       }
+    }
+
+    async function redirectToGoogleOAuth() {
+      ensureClient();
+      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) throw error;
     }
 
     function ensureHttpsPrefix(raw) {
@@ -444,7 +442,7 @@
         ensureClient();
         if (!currentUser) {
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          window.location.replace("index.html");
+          await redirectToGoogleOAuth();
           return;
         }
         if (hasPending) {
@@ -663,7 +661,7 @@
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
         if (!currentUser) {
-          window.location.replace("index.html");
+          await redirectToGoogleOAuth();
           return;
         }
         updateAuthUI();

@@ -29,14 +29,15 @@
 
   async function startGoogleLogin() {
     const client = await getAuthClient();
+    const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/index.html` },
+      options: { redirectTo },
     });
     if (error) throw error;
   }
 
-  window.__NAVBAR_GOOGLE_LOGIN__ = async function navbarGoogleLogin(event, buttonEl) {
+  window.__NAVBAR_GOOGLE_LOGIN__ = async function navbarGoogleLogin(_event, buttonEl) {
     try {
       if (buttonEl) buttonEl.disabled = true;
       await startGoogleLogin();

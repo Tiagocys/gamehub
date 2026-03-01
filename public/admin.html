@@ -18,18 +18,6 @@
     #page-loader{position:fixed;inset:0;background:#fff;z-index:9999;display:grid;place-items:center}
     #page-loader img{width:120px;height:auto}
   </style>
-  <script>
-    (() => {
-      try {
-        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
-        if (!hasSession) {
-          window.location.replace("index.html");
-        }
-      } catch (_err) {
-        window.location.replace("index.html");
-      }
-    })();
-  </script>
   <style>
     :root {
       --bg: #f4f6fb;
@@ -789,15 +777,49 @@ body {
       }));
     }
 
+    function normalizeUsername(value) {
+      const clean = String(value || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g, "")
+        .slice(0, 32);
+      return clean || "user";
+    }
+
     async function upsertProfile(user) {
-      const payload = {
-        id: user.id,
-        username: user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
-        email: user.email,
-        avatar_url: user.user_metadata?.avatar_url ?? null
-      };
-      const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
-      if (error) throw error;
+      const { data: existingRow, error: existingError } = await supabase
+        .from("users")
+        .select("username")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (existingError && existingError.code !== "PGRST116") throw existingError;
+
+      const baseUsername = normalizeUsername(
+        user.user_metadata?.full_name?.split(" ")?.[0] || user.email.split("@")[0],
+      );
+      const candidates = Array.from(new Set([
+        existingRow?.username || "",
+        baseUsername,
+        `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
+        `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
+      ].filter(Boolean)));
+
+      let lastError = null;
+      for (const candidate of candidates) {
+        const payload = {
+          id: user.id,
+          username: candidate,
+          email: user.email,
+          avatar_url: user.user_metadata?.avatar_url ?? null,
+        };
+        const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
+        if (!error) return;
+        if (error.code === "23505") {
+          lastError = error;
+          continue;
+        }
+        throw error;
+      }
+      if (lastError) throw lastError;
     }
 
     async function fetchProfile(userId) {

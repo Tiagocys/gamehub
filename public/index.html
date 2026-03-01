@@ -209,14 +209,25 @@
 
     async function handleAuthClick() {
       try {
-        ensureClient();
-        authBtn.disabled = true;
-        window.location.href = "index.html";
+        await startOAuthLikeNavbar();
       } catch (err) {
         console.error(err);
         showSuggestionMessage(err?.message || "Erro ao autenticar.");
         authBtn.disabled = false;
       }
+    }
+
+    async function startOAuthLikeNavbar(targetPath = null) {
+      ensureClient();
+      const normalizedPath = targetPath
+        ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
+        : `${window.location.pathname}${window.location.search || ""}`;
+      const redirectTo = `${window.location.origin}${normalizedPath}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) throw error;
     }
 
     async function bootstrapAuth() {
@@ -496,7 +507,10 @@
       if (!link) return;
       event.preventDefault();
       if (!currentUser) {
-        window.location.href = "index.html";
+        startOAuthLikeNavbar("game-submit.html").catch((err) => {
+          console.error(err);
+          showSuggestionMessage(err?.message || "Erro ao iniciar login com Google.");
+        });
         return;
       }
       window.location.href = "game-submit.html";
