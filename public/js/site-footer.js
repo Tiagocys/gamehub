@@ -32,7 +32,8 @@
             <nav class="site-footer-links" aria-label="Links úteis">
               <a href="ad-wallet.html">Conta de anúncios</a>
               <a href="partner.html" data-partner-link style="display:none;">Área de parceiros</a>
-              <a href="ads-policy.html">Política de anúncios</a>
+              <a href="ads-policy.html">Políticas de anúncios</a>
+              <a href="privacy-policy.html">Políticas de privacidade</a>
               <a href="terms.html">Termos de uso</a>
             </nav>
           </div>

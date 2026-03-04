@@ -20,6 +20,8 @@ const corsHeaders = {
 const DAY_SECONDS = 24 * 60 * 60;
 const BASE_DAY_PRICE = 5;
 const DAY_DISCOUNT = 0;
+const CONSUME_EVENT_MIN_SECONDS = 300;
+const CONSUME_EVENT_COALESCE_WINDOW_SECONDS = 60 * 60;
 
 type WalletRow = {
   user_id: string;
@@ -41,6 +43,12 @@ function safeInt(value: unknown, fallback = 0) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.max(0, Math.floor(parsed));
+}
+
+function safeSignedInt(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.trunc(parsed);
 }
 
 function secondsToHuman(seconds: number) {
@@ -125,6 +133,91 @@ async function appendWalletEvent(
   if (error) throw error;
 }
 
+async function appendConsumeWalletEvent(
+  supabase: any,
+  {
+    userId,
+    consumedNow,
+    balanceAfter,
+    reason,
+    elapsedSec,
+  }: {
+    userId: string;
+    consumedNow: number;
+    balanceAfter: number;
+    reason: string;
+    elapsedSec: number;
+  },
+) {
+  if (consumedNow <= 0) return;
+  if (consumedNow < CONSUME_EVENT_MIN_SECONDS) return;
+
+  const { data: lastEvent, error: lastEventErr } = await supabase
+    .from("wallet_events")
+    .select("id,seconds_delta,metadata,created_at")
+    .eq("user_id", userId)
+    .eq("event_type", "consume")
+    .is("listing_id", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (isMissingWalletTableError(lastEventErr)) return;
+  if (lastEventErr) throw lastEventErr;
+
+  const nowMs = Date.now();
+  const lastCreatedMs = lastEvent?.created_at ? new Date(String(lastEvent.created_at)).getTime() : 0;
+  const canCoalesce = Boolean(
+    lastEvent?.id
+      && Number.isFinite(lastCreatedMs)
+      && lastCreatedMs > 0
+      && (nowMs - lastCreatedMs) <= (CONSUME_EVENT_COALESCE_WINDOW_SECONDS * 1000),
+  );
+
+  if (canCoalesce) {
+    const previousDelta = safeSignedInt(lastEvent.seconds_delta, 0);
+    const previousMeta = lastEvent?.metadata && typeof lastEvent.metadata === "object" && !Array.isArray(lastEvent.metadata)
+      ? lastEvent.metadata
+      : {};
+    const aggregatedCalls = safeInt((previousMeta as Record<string, unknown>)?.aggregated_calls, 1) + 1;
+    const consumedTotal = safeInt((previousMeta as Record<string, unknown>)?.consumed_seconds_total, Math.abs(previousDelta)) + consumedNow;
+
+    const { error: updateErr } = await supabase
+      .from("wallet_events")
+      .update({
+        seconds_delta: previousDelta - consumedNow,
+        balance_after: balanceAfter,
+        metadata: {
+          ...(previousMeta as Record<string, unknown>),
+          reason,
+          elapsed_seconds: elapsedSec,
+          aggregated: true,
+          aggregated_calls: aggregatedCalls,
+          consumed_seconds_total: consumedTotal,
+          last_reason: reason,
+          last_elapsed_seconds: elapsedSec,
+        },
+      })
+      .eq("id", lastEvent.id);
+    if (isMissingWalletTableError(updateErr)) return;
+    if (updateErr) throw updateErr;
+    return;
+  }
+
+  await appendWalletEvent(supabase, {
+    user_id: userId,
+    event_type: "consume",
+    seconds_delta: -consumedNow,
+    balance_after: balanceAfter,
+    metadata: {
+      reason,
+      elapsed_seconds: elapsedSec,
+      aggregated: false,
+      aggregated_calls: 1,
+      consumed_seconds_total: consumedNow,
+    },
+  });
+}
+
 async function syncWallet(
   supabase: any,
   userId: string,
@@ -180,19 +273,13 @@ async function syncWallet(
     .single();
   if (updateErr) throw updateErr;
 
-  if (consumedNow > 0) {
-    await appendWalletEvent(supabase, {
-      user_id: userId,
-      event_type: "consume",
-      seconds_delta: -consumedNow,
-      balance_after: available,
-      metadata: {
-        reason,
-        elapsed_seconds: elapsedSec,
-        active_listing_count: activeCount,
-      },
-    });
-  }
+  await appendConsumeWalletEvent(supabase, {
+    userId,
+    consumedNow,
+    balanceAfter: available,
+    reason,
+    elapsedSec,
+  });
 
   if (depleted) {
     await appendWalletEvent(supabase, {
