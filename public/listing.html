@@ -1278,13 +1278,17 @@
 
       const ownListing = !!currentUser && !!listing.user_profile_id && currentUser.id === listing.user_profile_id;
       if (reportListingCard) {
-        reportListingCard.style.display = ownListing ? "none" : "block";
+        reportListingCard.style.display = "block";
       }
       if (reportListingBtn) {
         reportListingBtn.style.display = ownListing ? "none" : "inline-flex";
       }
       if (reportListingForm) {
         reportListingForm.style.display = "none";
+      }
+      if (reportListingSuccess) {
+        reportListingSuccess.style.display = "none";
+        reportListingSuccess.textContent = "";
       }
       if (reportListingReason) {
         reportListingReason.value = "";
