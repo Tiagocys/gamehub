@@ -895,12 +895,21 @@
 
     async function handleAuthClick() {
       try {
-        ensureClient();
         authBtn.disabled = true;
-        window.location.href = "index.html";
+        await redirectToGoogleLogin();
       } catch (err) {
         console.error(err);
       }
+    }
+
+    async function redirectToGoogleLogin() {
+      ensureClient();
+      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) throw error;
     }
 
     function formatCategory(category) {
@@ -1447,7 +1456,9 @@
     authBtn?.addEventListener("click", handleAuthClick);
     reportListingBtn?.addEventListener("click", () => {
       if (!currentUser) {
-        window.location.href = "index.html";
+        redirectToGoogleLogin().catch((err) => {
+          console.error(err);
+        });
         return;
       }
       hideReportSuccess();
@@ -1527,7 +1538,7 @@
     reportListingSubmit?.addEventListener("click", async () => {
       try {
         if (!currentUser) {
-          window.location.href = "index.html";
+          await redirectToGoogleLogin();
           return;
         }
         hideReportSuccess();

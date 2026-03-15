@@ -300,6 +300,26 @@
       background: rgba(12, 21, 51, 0.05);
     }
 
+    .user-share-btn {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .user-share-btn:hover {
+      background: rgba(12, 21, 51, 0.05);
+    }
+
     .report-icon {
       width: 16px;
       height: 16px;
@@ -326,6 +346,73 @@
       font-size: 12px;
       color: var(--muted);
       min-height: 16px;
+    }
+
+    .share-modal-card {
+      width: min(460px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .share-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .share-modal-head h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .share-modal-close {
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .share-qr {
+      width: min(220px, 100%);
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      object-fit: contain;
+      padding: 10px;
+      margin-inline: auto;
+      display: block;
+    }
+
+    .share-link-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .share-link-row .input {
+      min-width: 0;
+    }
+
+    .share-feedback {
+      min-height: 18px;
+      font-size: 12px;
+      color: var(--muted);
     }
 
     .user-listings-header {
@@ -448,18 +535,6 @@
       }
     }
   </style>
-  <script>
-    (() => {
-      try {
-        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
-        if (!hasSession) {
-          window.location.replace("index.html");
-        }
-      } catch (_err) {
-        window.location.replace("index.html");
-      }
-    })();
-  </script>
 </head>
 <body>
   <div id="page-loader" class="page-loader">
@@ -473,6 +548,7 @@
         <img id="public-avatar" class="user-public-avatar" src="img/avatar.svg" alt="Foto do usuário" />
         <div class="user-card-actions">
           <button id="contact-toggle-btn" class="btn btn-ghost user-contact-trigger user-contact-corner" type="button" style="display:none;">conversar</button>
+          <button id="share-user-btn" class="user-share-btn" type="button">Compartilhar</button>
           <button id="report-user-btn" class="report-icon-btn" type="button" style="display:none;" aria-label="Denunciar perfil">
             <img src="img/flag.png" alt="" class="report-icon" />
           </button>
@@ -500,7 +576,6 @@
             <div id="report-user-feedback" class="report-feedback"></div>
           </div>
           <div id="contact-panel" class="user-contact-panel" style="display:none;">
-            <p id="contact-discord" class="user-contact-discord" style="display:none;"></p>
             <div class="inline-actions">
               <a id="contact-telegram" class="btn btn-telegram" href="#" target="_blank" rel="noopener" style="display:none;">
                 Conversar via Telegram
@@ -556,6 +631,24 @@
       <p id="recommenders-empty" class="recommenders-empty" style="display:none;">Nenhuma recomendação ainda.</p>
     </div>
   </div>
+  <div id="share-modal" class="recommenders-modal" aria-hidden="true">
+    <div class="share-modal-card">
+      <div class="share-modal-head">
+        <h3>Compartilhar perfil</h3>
+        <button id="share-modal-close" class="share-modal-close" type="button" aria-label="Fechar">×</button>
+      </div>
+      <img id="share-qr-img" class="share-qr" src="" alt="QR Code do perfil" />
+      <label for="share-link-input">Link do perfil</label>
+      <div class="share-link-row">
+        <input id="share-link-input" class="input" type="text" readonly />
+        <button id="share-copy-btn" class="btn btn-ghost" type="button">Copiar</button>
+      </div>
+      <div class="inline-actions">
+        <button id="share-native-btn" class="btn btn-primary" type="button">Compartilhar</button>
+      </div>
+      <div id="share-feedback" class="share-feedback"></div>
+    </div>
+  </div>
 
   <script src="env.js"></script>
   <script src="js/site-navbar.js"></script>
@@ -599,8 +692,8 @@
     const reportUserCancel = document.getElementById("report-user-cancel");
     const reportUserFeedback = document.getElementById("report-user-feedback");
     const contactToggleBtn = document.getElementById("contact-toggle-btn");
+    const shareUserBtn = document.getElementById("share-user-btn");
     const contactPanel = document.getElementById("contact-panel");
-    const contactDiscord = document.getElementById("contact-discord");
     const contactTelegram = document.getElementById("contact-telegram");
     const contactWhatsapp = document.getElementById("contact-whatsapp");
     const recommendCount = document.getElementById("recommend-count");
@@ -610,6 +703,13 @@
     const recommendersList = document.getElementById("recommenders-list");
     const recommendersLoadingEl = document.getElementById("recommenders-loading");
     const recommendersEmpty = document.getElementById("recommenders-empty");
+    const shareModal = document.getElementById("share-modal");
+    const shareModalClose = document.getElementById("share-modal-close");
+    const shareQrImg = document.getElementById("share-qr-img");
+    const shareLinkInput = document.getElementById("share-link-input");
+    const shareCopyBtn = document.getElementById("share-copy-btn");
+    const shareNativeBtn = document.getElementById("share-native-btn");
+    const shareFeedback = document.getElementById("share-feedback");
     const selfProfileHint = document.getElementById("self-profile-hint");
     const editProfileBtn = document.getElementById("edit-profile-btn");
     const feedback = document.getElementById("public-feedback");
@@ -654,6 +754,7 @@
     let recommendersFetched = false;
     let contactPanelVisible = false;
     let currentPublicProfile = null;
+    let shareUrl = "";
     const RECOMMENDERS_PAGE_SIZE = 8;
     const REPORT_MAX_ATTACHMENTS = 4;
     const REPORT_MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -849,12 +950,21 @@
 
     async function handleAuthClick() {
       try {
-        ensureClient();
         authBtn.disabled = true;
-        window.location.href = "index.html";
+        await redirectToGoogleLogin();
       } catch (err) {
         console.error(err);
       }
+    }
+
+    async function redirectToGoogleLogin() {
+      ensureClient();
+      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) throw error;
     }
 
     function formatDate(value) {
@@ -1062,6 +1172,31 @@
       }
     }
 
+    function setShareFeedback(message = "") {
+      if (!shareFeedback) return;
+      shareFeedback.textContent = message;
+    }
+
+    function openShareModal() {
+      if (!shareModal || !shareUrl) return;
+      if (shareLinkInput) shareLinkInput.value = shareUrl;
+      if (shareQrImg) {
+        shareQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`;
+      }
+      setShareFeedback("");
+      shareModal.classList.add("open");
+      shareModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("no-scroll");
+    }
+
+    function closeShareModal() {
+      if (!shareModal) return;
+      shareModal.classList.remove("open");
+      shareModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("no-scroll");
+      setShareFeedback("");
+    }
+
     function setRecommendersLoading(show) {
       if (recommendersLoadingEl) {
         recommendersLoadingEl.style.display = show ? "block" : "none";
@@ -1196,6 +1331,7 @@
       const displayName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
       const discord = String(profile?.discord_username || "").trim();
       const profileStatus = String(profile?.status || "active");
+      shareUrl = `${window.location.origin}/user.html?id=${encodeURIComponent(targetUserId || "")}`;
       publicName.textContent = displayName;
 
       if (reportUserBtn) {
@@ -1232,7 +1368,7 @@
     }
 
     function setupContactPanel(profile) {
-      if (!contactToggleBtn || !contactPanel || !contactDiscord || !contactTelegram || !contactWhatsapp) return;
+      if (!contactToggleBtn || !contactPanel || !contactTelegram || !contactWhatsapp) return;
       const isOwnProfile = !!currentUser && currentUser.id === targetUserId;
       const discord = String(profile?.discord_username || "").trim();
       const firstName = String(profile?.first_name || "").trim();
@@ -1251,17 +1387,9 @@
       contactToggleBtn.dataset.baseLabel = baseLabel;
 
       if (isOwnProfile || !hasAny || !showOnPublicProfile) {
-        contactDiscord.style.display = "none";
         contactTelegram.style.display = "none";
         contactWhatsapp.style.display = "none";
         return;
-      }
-
-      if (hasDiscord) {
-        contactDiscord.textContent = `Discord: ${discord}`;
-        contactDiscord.style.display = "block";
-      } else {
-        contactDiscord.style.display = "none";
       }
 
       if (hasTelegram) {
@@ -1455,13 +1583,12 @@
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
         updateAuthUI();
-        if (!currentUser) {
-          window.location.replace("index.html");
-          return;
-        }
 
         const params = new URLSearchParams(window.location.search);
-        targetUserId = params.get("id") || currentUser.id;
+        targetUserId = params.get("id") || currentUser?.id || "";
+        if (!targetUserId) {
+          throw new Error("Perfil nao encontrado.");
+        }
 
         const [profile, listings, viewerProfile] = await Promise.all([
           fetchPublicProfile(),
@@ -1493,7 +1620,7 @@
           renderListings(listings);
         }
 
-        if (currentUser.id === targetUserId) {
+        if (currentUser?.id === targetUserId) {
           selfProfileHint.style.display = "block";
           if (editProfileBtn) editProfileBtn.style.display = "inline-flex";
         } else {
@@ -1518,7 +1645,13 @@
     authBtn?.addEventListener("click", handleAuthClick);
     recommendBtn?.addEventListener("click", handleRecommend);
     reportUserBtn?.addEventListener("click", () => {
-      if (!currentUser || !targetUserId) return;
+      if (!currentUser) {
+        redirectToGoogleLogin().catch((err) => {
+          console.error(err);
+        });
+        return;
+      }
+      if (!targetUserId) return;
       if (currentUser.id === targetUserId) return;
       if (String(currentPublicProfile?.status || "active") !== "active") return;
       if (!reportUserForm) return;
@@ -1533,10 +1666,52 @@
       if (reportUserFiles) reportUserFiles.value = "";
       updateReportFilesInfo();
     });
+    shareUserBtn?.addEventListener("click", () => {
+      openShareModal();
+    });
+    shareModalClose?.addEventListener("click", closeShareModal);
+    shareModal?.addEventListener("click", (event) => {
+      if (event.target === shareModal) {
+        closeShareModal();
+      }
+    });
+    shareCopyBtn?.addEventListener("click", async () => {
+      try {
+        if (!shareUrl) return;
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback("Link copiado.");
+      } catch (_err) {
+        setShareFeedback("Nao foi possivel copiar automaticamente.");
+      }
+    });
+    shareNativeBtn?.addEventListener("click", async () => {
+      try {
+        if (!shareUrl) return;
+        if (navigator.share) {
+          await navigator.share({
+            title: currentPublicProfile?.first_name
+              ? `${currentPublicProfile.first_name} no Gimerr`
+              : "Perfil no Gimerr",
+            text: "Confira este perfil no Gimerr:",
+            url: shareUrl,
+          });
+          setShareFeedback("Compartilhado com sucesso.");
+          return;
+        }
+        await navigator.clipboard.writeText(shareUrl);
+        setShareFeedback("Link copiado. Cole no app que deseja compartilhar.");
+      } catch (_err) {
+        setShareFeedback("Nao foi possivel compartilhar agora.");
+      }
+    });
     reportUserFiles?.addEventListener("change", updateReportFilesInfo);
     reportUserSubmit?.addEventListener("click", async () => {
       try {
-        if (!currentUser || !targetUserId) return;
+        if (!currentUser) {
+          await redirectToGoogleLogin();
+          return;
+        }
+        if (!targetUserId) return;
         if (currentUser.id === targetUserId) {
           if (reportUserFeedback) reportUserFeedback.textContent = "Você não pode denunciar seu próprio perfil.";
           return;
@@ -1597,6 +1772,10 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && recommendersModal?.classList.contains("open")) {
         closeRecommendersModal();
+        return;
+      }
+      if (event.key === "Escape" && shareModal?.classList.contains("open")) {
+        closeShareModal();
       }
     });
     avatarBtn?.addEventListener("click", (event) => {
