@@ -12,6 +12,7 @@ if (!(Deno as any).writeAll) {
 interface Payload {
   to: string;
   gameName: string;
+  gameId?: string;
   approved: boolean;
   note?: string;
 }
@@ -31,64 +32,65 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function toMultilineHtml(value: string) {
-  return escapeHtml(value).replace(/\n/g, "<br />");
-}
-
-function buildTextContent(gameName: string, approved: boolean, note?: string) {
-  if (approved) {
+function buildTextContent(params: { gameName: string; gameId?: string; approved: boolean; appUrl: string }) {
+  const targetUrl = params.approved && params.gameId
+    ? `${params.appUrl}/game.html?id=${encodeURIComponent(params.gameId)}`
+    : params.appUrl;
+  if (params.approved) {
     return [
       "Olá,",
       "",
-      `O game ${gameName} foi aprovado e já pode aparecer no marketplace da comunidade.`,
-      "Se você tiver assets adicionais, responda este e-mail com as URLs atualizadas.",
+      `O game "${params.gameName}" foi aprovado.`,
+      `Você já pode criar anúncios para o game "${params.gameName}"!`,
       "",
-      "Obrigado por colaborar com a comunidade Gimerr!",
+      "Ir para o Gimerr:",
+      targetUrl,
     ].join("\n");
   }
 
   return [
     "Olá,",
     "",
-    `Sua solicitação para o game ${gameName} foi recusada.`,
-    note ? `Motivo: ${note}` : "Motivo: não informado.",
-    "Você pode reenviar corrigindo as informações.",
+    `O game "${params.gameName}" não foi aprovado.`,
+    "Verifique o website enviado.",
+    "Quaisquer dúvidas entre em contato com o suporte através do email admin@gimerr.com",
+    "",
+    "Ir para o Gimerr:",
+    params.appUrl,
   ].join("\n");
 }
 
 function buildHtmlContent(params: {
   gameName: string;
+  gameId?: string;
   approved: boolean;
   note?: string;
   logoUrl: string;
   appUrl: string;
 }) {
   const gameName = escapeHtml(params.gameName);
-  const safeNote = params.note ? toMultilineHtml(params.note) : "Não informado.";
+  const targetUrl = params.approved && params.gameId
+    ? `${params.appUrl}/game.html?id=${encodeURIComponent(params.gameId)}`
+    : params.appUrl;
   const title = params.approved
-    ? `Seu game ${gameName} foi aprovado`
-    : `Sua solicitação para ${gameName} foi recusada`;
-  const subtitle = params.approved
-    ? "Seu envio já pode aparecer no marketplace da comunidade."
-    : "Revise os dados e envie novamente quando quiser.";
+    ? `O game "${gameName}" foi aprovado`
+    : `O game "${gameName}" não foi aprovado`;
   const bodyMessage = params.approved
     ? `
-      <p style="margin:0 0 14px;color:#233154;font-size:15px;line-height:1.7;">
-        O game <strong>${gameName}</strong> foi aprovado e já pode aparecer no marketplace da comunidade.
+      <p style="margin:0 0 12px;color:#101a2e;font-size:16px;line-height:1.7;font-weight:700;">
+        Sua solicitação foi aprovada.
       </p>
-      <p style="margin:0 0 14px;color:#516081;font-size:14px;line-height:1.7;">
-        Se você tiver assets adicionais, responda este e-mail com as URLs atualizadas.
+      <p style="margin:0 0 12px;color:#516081;font-size:15px;line-height:1.7;">
+        Você já pode criar anúncios para o game "${gameName}".
+      </p>
+      <p style="margin:0 0 16px;color:#516081;font-size:14px;line-height:1.7;">
+        Acesse a página do game clicando no botão abaixo:
       </p>
     `
     : `
-      <p style="margin:0 0 12px;color:#233154;font-size:15px;line-height:1.7;">
-        Sua solicitação para o game <strong>${gameName}</strong> foi recusada.
-      </p>
-      <div style="margin:0 0 14px;background:#fff2f4;border:1px solid #ffd6de;border-radius:10px;padding:12px 14px;color:#8f2f42;font-size:14px;line-height:1.6;">
-        <strong>Motivo:</strong> ${safeNote}
-      </div>
       <p style="margin:0 0 14px;color:#516081;font-size:14px;line-height:1.7;">
-        Você pode reenviar corrigindo as informações e o website.
+        Verifique o website enviado. Quaisquer dúvidas entre em contato com o suporte através do email
+        <a href="mailto:admin@gimerr.com" style="color:#76a8ff;text-decoration:none;font-weight:700;">admin@gimerr.com</a>.
       </p>
     `;
 
@@ -96,35 +98,36 @@ function buildHtmlContent(params: {
 <!DOCTYPE html>
 <html lang="pt-BR">
   <body style="margin:0;padding:0;background:#f4f7ff;font-family:Arial,sans-serif;">
-    <div style="background:
-      radial-gradient(circle at 20% 20%, rgba(0,194,255,0.09), transparent 30%),
-      radial-gradient(circle at 80% 0%, rgba(14,165,233,0.1), transparent 32%),
-      linear-gradient(150deg, #f8faff 0%, #eef2fb 42%, #f9fbff 100%);
-      padding:28px 10px;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-        <tr>
-          <td align="center">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;border-collapse:collapse;background:#ffffff;border:1px solid #e0e6f4;border-radius:16px;overflow:hidden;">
-              <tr>
-                <td style="padding:26px 24px;background:linear-gradient(120deg,#0d1b3b,#1b4fd3);">
-                  <img src="${escapeHtml(params.logoUrl)}" alt="Gimerr" style="display:block;height:40px;width:auto;max-width:160px;" />
-                  <h1 style="margin:16px 0 8px;color:#ffffff;font-size:24px;line-height:1.2;">${title}</h1>
-                  <p style="margin:0;color:#dbe6ff;font-size:14px;line-height:1.6;">${subtitle}</p>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:24px;">
-                  <p style="margin:0 0 14px;color:#233154;font-size:15px;line-height:1.7;">Olá,</p>
-                  ${bodyMessage}
-                  <p style="margin:0 0 18px;color:#233154;font-size:14px;line-height:1.7;">Obrigado por colaborar com a comunidade Gimerr.</p>
-                  <a href="${escapeHtml(params.appUrl)}" style="display:inline-block;padding:11px 18px;background:linear-gradient(120deg,#00c2ff,#0ea5e9);border-radius:999px;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;">Ir para o Gimerr</a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#f4f7ff;">
+      <tr>
+        <td align="center" style="padding:28px 10px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e0e6f4;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td align="left" bgcolor="#ffffff" style="padding:26px 24px;background-color:#ffffff;">
+                <img src="${escapeHtml(params.logoUrl)}" alt="Gimerr" style="display:block;height:40px;width:auto;max-width:160px;border:0;outline:none;text-decoration:none;" />
+                <div style="margin-top:16px;font-size:24px;line-height:1.2;font-weight:700;color:#101a2e;">
+                  ${title}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px;">
+                ${bodyMessage}
+                <table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:separate;border-spacing:0;">
+                  <tr>
+                    <td align="center" bgcolor="#101a2e" style="border-radius:999px;background-color:#101a2e;">
+                      <a href="${escapeHtml(targetUrl)}" style="display:inline-block;padding:11px 18px;font-size:14px;line-height:1;font-weight:700;color:#ffffff;text-decoration:none;">
+                        Ir para o Gimerr
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
   `.trim();
@@ -162,12 +165,18 @@ Deno.serve(async (req) => {
     await client.connectTLS({ hostname: host, port, username: user, password: pass });
 
     const subject = body.approved
-      ? `Seu game ${body.gameName} foi aprovado`
-      : `Sua solicitação para ${body.gameName} foi recusada`;
+      ? `O game "${body.gameName}" foi aprovado`
+      : `O game "${body.gameName}" não foi aprovado`;
 
-    const textContent = buildTextContent(body.gameName, body.approved, body.note);
+    const textContent = buildTextContent({
+      gameName: body.gameName,
+      gameId: body.gameId,
+      approved: body.approved,
+      appUrl: baseUrl,
+    });
     const htmlContent = buildHtmlContent({
       gameName: body.gameName,
+      gameId: body.gameId,
       approved: body.approved,
       note: body.note,
       logoUrl,

@@ -268,18 +268,6 @@
       }
     }
   </style>
-  <script>
-    (() => {
-      try {
-        const hasSession = localStorage.getItem("gimerr-auth-token") || localStorage.getItem("gimerr-auth-session");
-        if (!hasSession) {
-          window.location.replace("index.html");
-        }
-      } catch (_err) {
-        window.location.replace("index.html");
-      }
-    })();
-  </script>
 </head>
 <body>
   <div id="page-loader" class="page-loader">
@@ -496,6 +484,7 @@
     let checkoutReferenceListingId = null;
     let pendingActivateListingId = null;
     let topupIntent = "balance";
+    let authRedirectInFlight = false;
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
@@ -999,7 +988,7 @@
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token || "";
       if (!token) {
-        window.location.href = "index.html";
+        await redirectToGoogleAuth("ad-wallet.html");
         return;
       }
 
@@ -1035,7 +1024,7 @@
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         if (!token) {
-          window.location.href = "index.html";
+          await redirectToGoogleAuth("ad-wallet.html");
           return;
         }
 
@@ -1086,7 +1075,7 @@
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         if (!token) {
-          window.location.href = "index.html";
+          await redirectToGoogleAuth("ad-wallet.html");
           return;
         }
 
@@ -1142,13 +1131,32 @@
       }
     }
 
+    async function redirectToGoogleAuth(targetPath = null) {
+      authRedirectInFlight = true;
+      ensureClient();
+      const normalizedPath = targetPath
+        ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
+        : `${window.location.pathname}${window.location.search || ""}`;
+      const redirectTo = `${window.location.origin}${normalizedPath}`;
+      try {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo },
+        });
+        if (error) throw error;
+      } catch (err) {
+        authRedirectInFlight = false;
+        throw err;
+      }
+    }
+
     async function handleAuthClick() {
       try {
-        ensureClient();
         authBtn.disabled = true;
-        window.location.href = "index.html";
-      } catch (_err) {
-        // ignore
+        await redirectToGoogleAuth();
+      } catch (err) {
+        console.error(err);
+        authBtn.disabled = false;
       }
     }
 
@@ -1312,7 +1320,7 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
-          window.location.replace("index.html");
+          await redirectToGoogleAuth("ad-wallet.html");
           return;
         }
 
@@ -1343,7 +1351,9 @@
         setTopupFeedback(err?.message || "Erro ao carregar conta de anúncios.", true);
         checkoutBtn.disabled = true;
       } finally {
-        revealPage();
+        if (!authRedirectInFlight) {
+          revealPage();
+        }
       }
     })();
   </script>

@@ -18,47 +18,61 @@
     <img src="img/logo.png" alt="Carregando" />
   </div>
   <div class="page">
-    <site-navbar></site-navbar>
+    <site-navbar search-enabled="games"></site-navbar>
 
-    <main>
-      <section class="hero">
-        <video class="hero-video" autoplay muted loop playsinline>
-          <source src="videos/bg.webm" type="video/webm" />
-        </video>
-        <div class="hero-overlay"></div>
-        <div class="hero-grid single">
-          <div class="hero-copy">
-            <h1 style="font-size: 80px; text-align: center;">Encontre seu jogo</h1>
-            <p class="lede">Cada game tem seu próprio marketplace operado 100% por players.</p>
-            <form class="search" id="game-search">
-              <div class="search-bar">
-                <input id="game-search-input" class="search-input" type="search" placeholder="Pesquise aqui um game" aria-label="Pesquise aqui um game" autocomplete="off" />
-                <button type="submit" class="btn btn-ghost">Buscar</button>
-              </div>
-              <div class="suggestions">
-                <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
-              </div>
-            </form>
-            <div class="pill-trail">
-              <span class="pill">Itens</span>
-              <span class="pill">Serviços</span>
-              <span class="pill">Contas e personagens</span>
+    <main class="home-layout">
+      <aside id="home-sidebar" class="home-sidebar">
+        <div class="home-sidebar-head">
+          <div class="home-sidebar-heading">
+            <p class="home-sidebar-kicker">Explorar</p>
+            <div class="home-sidebar-titlebar">
+              <h2>Descobertas</h2>
+              <button id="home-sidebar-toggle" class="home-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true">‹</button>
             </div>
           </div>
         </div>
-      </section>
 
-      <section class="section popular">
-        <div class="section-header">
-          <div>
-            <h2>Games mais populares agora</h2>
-            <p class="section-sub">Escolha um título e navegue no marketplace alimentado pela própria comunidade.</p>
+        <section class="home-sidebar-section">
+          <div class="home-sidebar-section-head">
+            <h3>Anunciantes recomendados</h3>
           </div>
-        </div>
-        <div id="games-grid" class="games-grid"></div>
-        <p id="games-empty" class="search-feedback" style="display:none;">Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.</p>
-      </section>
+          <div id="sidebar-users" class="sidebar-list"></div>
+          <p id="sidebar-users-empty" class="helper" style="display:none;">Sem sugestões de usuários por enquanto.</p>
+        </section>
 
+        <section class="home-sidebar-section">
+          <div class="home-sidebar-section-head">
+            <h3>Games sugeridos</h3>
+          </div>
+          <div id="sidebar-games" class="sidebar-list"></div>
+          <p id="sidebar-games-empty" class="helper" style="display:none;">Nenhum game com anúncios ativos no momento.</p>
+        </section>
+      </aside>
+
+      <section class="home-feed">
+        <section class="hero hero-reputation">
+          <section class="hero-spotlight-card" aria-label="Anúncios destacados">
+            <div class="hero-spotlight-head">
+              <div class="hero-spotlight-controls">
+                <button id="hero-carousel-prev" class="hero-carousel-btn" type="button" aria-label="Anúncio anterior">‹</button>
+                <button id="hero-carousel-next" class="hero-carousel-btn" type="button" aria-label="Próximo anúncio">›</button>
+              </div>
+            </div>
+            <div id="hero-carousel" class="hero-carousel-track"></div>
+            <p id="hero-carousel-empty" class="helper" style="display:none;">Nenhum anúncio destacado no momento.</p>
+          </section>
+        </section>
+
+        <section class="section home-feed-sections">
+          <div class="section-header">
+            <div>
+              <h2>Games recomendados</h2>
+            </div>
+          </div>
+          <div id="home-game-sections" class="home-game-sections"></div>
+          <p id="home-game-sections-empty" class="helper" style="display:none;">Nenhum anúncio ativo para montar o feed.</p>
+        </section>
+      </section>
     </main>
 
     <site-footer></site-footer>
@@ -75,7 +89,10 @@
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+    const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
+    const R2_BUCKET = env.R2_BUCKET || "";
 
+    const homeLayout = document.querySelector("main.home-layout");
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
     const avatarBtn = document.getElementById("avatar-btn");
@@ -86,20 +103,40 @@
     const searchForm = document.getElementById("game-search");
     const searchInput = document.getElementById("game-search-input");
     const searchSuggestions = document.getElementById("search-suggestions");
-    const gamesGrid = document.getElementById("games-grid");
-    const gamesEmpty = document.getElementById("games-empty");
     const createListingBtn = document.getElementById("create-listing-btn");
+    const heroCarousel = document.getElementById("hero-carousel");
+    const heroCarouselEmpty = document.getElementById("hero-carousel-empty");
+    const heroCarouselPrev = document.getElementById("hero-carousel-prev");
+    const heroCarouselNext = document.getElementById("hero-carousel-next");
+    const homeSidebar = document.getElementById("home-sidebar");
+    const homeSidebarToggle = document.getElementById("home-sidebar-toggle");
+    const sidebarUsers = document.getElementById("sidebar-users");
+    const sidebarUsersEmpty = document.getElementById("sidebar-users-empty");
+    const sidebarGames = document.getElementById("sidebar-games");
+    const sidebarGamesEmpty = document.getElementById("sidebar-games-empty");
+    const homeGameSections = document.getElementById("home-game-sections");
+    const homeGameSectionsEmpty = document.getElementById("home-game-sections-empty");
 
     let supabase;
     let currentUser = null;
     let games = [];
     let allSortedGames = [];
-    let loadedGameCards = [];
-    const GAMES_PAGE_SIZE = 10;
-    let gamesOffset = 0;
-    let gamesHasMore = true;
-    let gamesLoading = false;
+    let activeListingsCatalog = [];
+    let searchablePlayers = [];
+    let serverMap = new Map();
+    let recommendationCountMap = new Map();
+    let followedGameIds = new Set();
+    const FEATURED_LISTINGS_LIMIT = 12;
+    const SIDEBAR_USERS_LIMIT = 8;
+    const SIDEBAR_GAMES_LIMIT = 8;
+    const HOME_GAME_SECTION_LIMIT = 6;
+    const HOME_GAME_CARD_LIMIT = 6;
     let avatarLoaded = false;
+    let featuredListings = [];
+    let featuredCarouselIndex = 0;
+    let featuredCarouselTimer = null;
+    let sidebarCollapsed = window.innerWidth < 960;
+    let sidebarAutoManaged = true;
     if (avatarImg) {
       avatarImg.referrerPolicy = "no-referrer";
       avatarImg.addEventListener("error", () => {
@@ -107,6 +144,14 @@
         avatarImg.dataset.fallbackApplied = "1";
         avatarImg.src = "img/avatar.svg";
       });
+    }
+
+    function getSidebarToggleIcon() {
+      const isMobile = window.matchMedia("(max-width: 900px)").matches;
+      if (isMobile) {
+        return sidebarCollapsed ? "img/seta-para-baixo.svg" : "img/seta-para-cima.svg";
+      }
+      return sidebarCollapsed ? "img/seta-para-direita.svg" : "img/seta-para-esquerda.svg";
     }
 
     function ensureClient() {
@@ -254,6 +299,102 @@
       };
     }
 
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function normalizeSearchText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function matchesPrefix(value, term) {
+      const normalizedValue = normalizeSearchText(value);
+      const normalizedTerm = normalizeSearchText(term);
+      if (!normalizedValue || !normalizedTerm) return false;
+      if (normalizedValue.startsWith(normalizedTerm)) return true;
+      return normalizedValue.split(/\s+/).some((part) => part.startsWith(normalizedTerm));
+    }
+
+    function parseStoragePath(urlString) {
+      try {
+        const url = new URL(urlString);
+        const marker = "/storage/v1/object/";
+        const idx = url.pathname.indexOf(marker);
+        if (idx === -1) return null;
+        const rest = url.pathname.substring(idx + marker.length);
+        const parts = rest.split("/").filter(Boolean);
+        if (parts.length < 2) return null;
+        let bucket = parts[0];
+        let pathParts = parts.slice(1);
+        if (bucket === "public" || bucket === "authenticated" || bucket === "sign") {
+          bucket = parts[1];
+          pathParts = parts.slice(2);
+        }
+        if (!bucket || pathParts.length === 0) return null;
+        return { bucket, path: pathParts.join("/") };
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function normalizeR2PublicUrl(urlString) {
+      try {
+        const url = new URL(urlString);
+        if (R2_PUBLIC_URL) {
+          const publicHost = new URL(R2_PUBLIC_URL).host;
+          if (url.hostname.endsWith(".r2.dev") && url.hostname !== publicHost) {
+            return `${R2_PUBLIC_URL.replace(/\/$/, "")}${url.pathname}`;
+          }
+        }
+        if (!url.hostname.endsWith(".r2.cloudflarestorage.com")) return urlString;
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (parts.length === 0) return urlString;
+        const accountId = url.hostname.split(".")[0];
+        let bucket = R2_BUCKET;
+        let keyParts = parts;
+        if (bucket) {
+          if (parts[0] === bucket) keyParts = parts.slice(1);
+        } else {
+          bucket = parts[0];
+          keyParts = parts.slice(1);
+        }
+        if (!bucket || keyParts.length === 0) return urlString;
+        const base = R2_PUBLIC_URL ? R2_PUBLIC_URL.replace(/\/$/, "") : `https://${bucket}.${accountId}.r2.dev`;
+        return `${base}/${keyParts.join("/")}`;
+      } catch (_err) {
+        return urlString;
+      }
+    }
+
+    async function resolveImageUrl(urlString) {
+      if (!urlString) return "";
+      const normalized = normalizeR2PublicUrl(urlString);
+      if (!normalized.includes(SUPABASE_URL) || !normalized.includes("/storage/v1/object/")) {
+        return normalized;
+      }
+      const parsed = parseStoragePath(normalized);
+      if (!parsed) return normalized;
+      try {
+        ensureClient();
+        const { data, error } = await supabase.storage
+          .from(parsed.bucket)
+          .createSignedUrl(parsed.path, 60 * 60 * 6);
+        if (error) throw error;
+        return data?.signedUrl || normalized;
+      } catch (_err) {
+        return normalized;
+      }
+    }
+
     function buildPopularityMap(listings) {
       const map = new Map();
       (listings || []).forEach((row) => {
@@ -262,6 +403,37 @@
         map.set(key, (map.get(key) || 0) + 1);
       });
       return map;
+    }
+
+    async function attachRecommendationsScore(listings) {
+      const items = Array.isArray(listings) ? listings : [];
+      const userIds = Array.from(new Set(
+        items
+          .map((item) => String(item?.user_id || "").trim())
+          .filter(Boolean),
+      ));
+      if (userIds.length === 0) {
+        return items.map((item) => ({ ...item, user_recommendations_count: 0 }));
+      }
+
+      const scoreMap = new Map();
+      await Promise.all(userIds.map(async (userId) => {
+        try {
+          const { count, error } = await supabase
+            .from("recommendations")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId);
+          if (error) throw error;
+          scoreMap.set(userId, Number(count || 0));
+        } catch (_err) {
+          scoreMap.set(userId, 0);
+        }
+      }));
+
+      return items.map((item) => ({
+        ...item,
+        user_recommendations_count: scoreMap.get(String(item?.user_id || "").trim()) || 0,
+      }));
     }
 
     function sortGamesByPopularity(servers, popularityMap) {
@@ -282,75 +454,394 @@
           .eq("status", "active"),
         supabase
           .from("listings")
-          .select("server_id")
+          .select("id,title,images,server_id,user_id,created_at,status,highlight_status,highlight_expires_at")
           .eq("status", "active"),
       ]);
       if (serverError) throw serverError;
       if (listingError) throw listingError;
 
-      const mappedServers = (serverData || []).map(mapServerRow);
-      const popularityMap = buildPopularityMap(listingData || []);
+      const mappedServers = await Promise.all((serverData || []).map(async (row) => {
+        const mapped = mapServerRow(row);
+        return {
+          ...mapped,
+          cover_url: mapped.cover_url ? await resolveImageUrl(mapped.cover_url) : "",
+        };
+      }));
+      activeListingsCatalog = listingData || [];
+      serverMap = new Map(mappedServers.map((server) => [String(server.id), server]));
+      const popularityMap = buildPopularityMap(activeListingsCatalog);
       allSortedGames = sortGamesByPopularity(mappedServers, popularityMap);
       games = allSortedGames.map((item) => ({ id: item.id, name: item.name }));
     }
 
-    async function fetchGamesPage(reset = false) {
-      if (gamesLoading) return;
-      if (!gamesHasMore && !reset) return;
+    async function fetchRecommendationCounts() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("recommendations")
+        .select("user_id");
+      if (error) throw error;
+      recommendationCountMap = new Map();
+      (data || []).forEach((row) => {
+        const key = String(row?.user_id || "").trim();
+        if (!key) return;
+        recommendationCountMap.set(key, (recommendationCountMap.get(key) || 0) + 1);
+      });
+    }
 
-      let shouldAutoloadNext = false;
-      try {
-        ensureClient();
-        gamesLoading = true;
+    async function fetchSearchablePlayers() {
+      const sellerIds = Array.from(new Set(
+        activeListingsCatalog
+          .map((listing) => String(listing?.user_id || "").trim())
+          .filter(Boolean),
+      ));
+      if (sellerIds.length === 0) {
+        searchablePlayers = [];
+        return;
+      }
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,username,first_name,last_name,email,avatar_url")
+        .in("id", sellerIds);
+      if (error) throw error;
+      searchablePlayers = (data || []).map((user) => {
+        const displayName = formatSellerName(user);
+        const username = String(user?.username || "").trim();
+        return {
+          id: String(user.id || "").trim(),
+          username,
+          name: displayName,
+          avatar_url: user?.avatar_url ? normalizeR2PublicUrl(user.avatar_url) : "img/avatar.svg",
+          searchTerms: [
+            username,
+            displayName,
+            user?.first_name,
+            user?.last_name,
+          ].filter(Boolean),
+          searchText: normalizeSearchText([
+            username,
+            displayName,
+            user?.first_name,
+            user?.last_name,
+            user?.email,
+          ].filter(Boolean).join(" ")),
+        };
+      });
+    }
 
-        if (reset) {
-          gamesGrid.innerHTML = "";
-          loadedGameCards = [];
-          allSortedGames = [];
-          games = [];
-          gamesOffset = 0;
-          gamesHasMore = true;
-          gamesEmpty.style.display = "none";
-          await fetchGamesCatalog();
-        }
+    function getRecommendationCount(userId) {
+      return recommendationCountMap.get(String(userId || "").trim()) || 0;
+    }
 
-        const rows = allSortedGames.slice(gamesOffset, gamesOffset + GAMES_PAGE_SIZE);
-        const enhanced = await enhanceCovers(rows);
-        loadedGameCards = [...loadedGameCards, ...enhanced];
-        appendGames(enhanced);
-        gamesOffset += rows.length;
-        gamesHasMore = gamesOffset < allSortedGames.length;
-        gamesEmpty.style.display = loadedGameCards.length === 0 ? "block" : "none";
-        if (loadedGameCards.length === 0) {
-          gamesEmpty.textContent = "Nenhum game cadastrado ainda. Adicione o primeiro clicando no CTA acima.";
-        }
+    async function fetchFollowedGames() {
+      followedGameIds = new Set();
+      if (!currentUser?.id) return;
+      ensureClient();
+      const { data, error } = await supabase
+        .from("server_follows")
+        .select("server_id")
+        .eq("user_id", currentUser.id);
+      if (error) throw error;
+      followedGameIds = new Set((data || []).map((row) => String(row?.server_id || "").trim()).filter(Boolean));
+    }
 
-        shouldAutoloadNext = !!gamesGrid && gamesHasMore && gamesGrid.scrollWidth <= gamesGrid.clientWidth + 16;
-      } catch (err) {
-        console.error(err);
-        if (loadedGameCards.length === 0) {
-          gamesGrid.innerHTML = "";
-          gamesEmpty.style.display = "block";
-          gamesEmpty.textContent = err?.message || "Erro ao carregar games.";
-        }
-      } finally {
-        gamesLoading = false;
-        if (shouldAutoloadNext) {
-          fetchGamesPage(false);
-        }
+    function isFollowedGame(serverId) {
+      return followedGameIds.has(String(serverId || "").trim());
+    }
+
+    function formatRecommendations(count) {
+      const total = Number(count || 0);
+      return total === 1 ? "1 recomendação" : `${total} recomendações`;
+    }
+
+    function formatSellerName(user) {
+      const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim();
+      if (fullName) return fullName;
+      const email = String(user?.email || "").trim();
+      return email ? email.split("@")[0] : "Vendedor";
+    }
+
+    function setSidebarCollapsed(nextValue) {
+      sidebarCollapsed = Boolean(nextValue);
+      if (homeLayout) {
+        homeLayout.classList.toggle("sidebar-collapsed", sidebarCollapsed);
+      }
+      if (homeSidebar) {
+        homeSidebar.classList.toggle("collapsed", sidebarCollapsed);
+      }
+      if (homeSidebarToggle) {
+        homeSidebarToggle.setAttribute("aria-expanded", String(!sidebarCollapsed));
+        homeSidebarToggle.setAttribute("aria-label", sidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral");
+        homeSidebarToggle.innerHTML = `<img src="${getSidebarToggleIcon()}" alt="" aria-hidden="true" class="home-sidebar-toggle-icon" />`;
       }
     }
 
-    async function enhanceCovers(list) {
-      if (!list || list.length === 0) return [];
-      return Promise.all(list.map(async (game) => {
-        if (!game.cover_url) return game;
-        const signed = await getSignedCoverUrl(game.cover_url);
-        return { ...game, cover_url: signed || game.cover_url };
-      }));
+    function getTopSellerIds(limit = SIDEBAR_USERS_LIMIT) {
+      const sellers = new Map();
+      activeListingsCatalog.forEach((listing) => {
+        const userId = String(listing?.user_id || "").trim();
+        if (!userId) return;
+        const createdAt = new Date(listing?.created_at || 0).getTime();
+        const current = sellers.get(userId);
+        const isFollowed = isFollowedGame(listing?.server_id);
+        if (!current) {
+          sellers.set(userId, {
+            userId,
+            lastCreatedAt: createdAt,
+            followedListingsCount: isFollowed ? 1 : 0,
+            totalListingsCount: 1,
+          });
+          return;
+        }
+        current.lastCreatedAt = Math.max(current.lastCreatedAt, createdAt);
+        current.totalListingsCount += 1;
+        if (isFollowed) current.followedListingsCount += 1;
+      });
+      return Array.from(sellers.values())
+        .sort((a, b) => {
+          const followedDiff = Number(b.followedListingsCount || 0) - Number(a.followedListingsCount || 0);
+          if (followedDiff !== 0) return followedDiff;
+          const scoreDiff = getRecommendationCount(b.userId) - getRecommendationCount(a.userId);
+          if (scoreDiff !== 0) return scoreDiff;
+          const totalListingsDiff = Number(b.totalListingsCount || 0) - Number(a.totalListingsCount || 0);
+          if (totalListingsDiff !== 0) return totalListingsDiff;
+          return b.lastCreatedAt - a.lastCreatedAt;
+        })
+        .slice(0, limit)
+        .map((item) => item.userId);
     }
 
-    function parseStoragePath(urlString) {
+    function getFeaturedListings() {
+      const highlighted = activeListingsCatalog.filter((listing) => listing?.highlight_status === "active");
+      const source = highlighted.length > 0 ? highlighted : activeListingsCatalog;
+      return [...source]
+        .sort((a, b) => {
+          const followedDiff = Number(isFollowedGame(b.server_id)) - Number(isFollowedGame(a.server_id));
+          if (followedDiff !== 0) return followedDiff;
+          const scoreDiff = getRecommendationCount(b.user_id) - getRecommendationCount(a.user_id);
+          if (scoreDiff !== 0) return scoreDiff;
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        })
+        .slice(0, FEATURED_LISTINGS_LIMIT);
+    }
+
+    async function fetchUserProfiles(userIds) {
+      const ids = Array.from(new Set((userIds || []).filter(Boolean)));
+      if (ids.length === 0) return new Map();
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,first_name,last_name,email,avatar_url")
+        .in("id", ids);
+      if (error) throw error;
+      const entries = await Promise.all((data || []).map(async (user) => {
+        const avatarUrl = user?.avatar_url ? await resolveImageUrl(user.avatar_url) : "img/avatar.svg";
+        return [String(user.id), { ...user, avatar_url: avatarUrl || "img/avatar.svg" }];
+      }));
+      return new Map(entries);
+    }
+
+    function renderSidebarGames() {
+      if (!sidebarGames || !sidebarGamesEmpty) return;
+      const counts = buildPopularityMap(activeListingsCatalog);
+      const items = allSortedGames
+        .filter((game) => (counts.get(String(game.id)) || 0) > 0)
+        .slice(0, SIDEBAR_GAMES_LIMIT);
+
+      if (items.length === 0) {
+        sidebarGames.innerHTML = "";
+        sidebarGamesEmpty.style.display = "block";
+        return;
+      }
+
+      sidebarGamesEmpty.style.display = "none";
+      sidebarGames.innerHTML = items
+        .sort((a, b) => {
+          const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
+          if (followedDiff !== 0) return followedDiff;
+          return 0;
+        })
+        .map((game) => {
+        const count = counts.get(String(game.id)) || 0;
+        const followedTag = isFollowedGame(game.id) ? `<span class="sidebar-item-chip">Seguindo</span>` : "";
+        const safeGameName = escapeHtml(game.name);
+        const gameThumb = game.cover_url
+          ? `<img class="sidebar-item-thumb game-logo" src="${encodeURI(game.cover_url)}" alt="${safeGameName}" loading="lazy" />`
+          : `<span class="sidebar-item-thumb game">${escapeHtml(String(game.name || "G").slice(0, 1))}</span>`;
+        return `
+          <a class="sidebar-item" href="game.html?id=${encodeURIComponent(game.id)}">
+            ${gameThumb}
+            <span class="sidebar-item-copy">
+              <strong>${safeGameName} ${followedTag}</strong>
+              <span>${count} anúncio${count === 1 ? "" : "s"} ativo${count === 1 ? "" : "s"}</span>
+            </span>
+          </a>
+        `;
+      }).join("");
+    }
+
+    function renderSidebarUsers(userMap) {
+      if (!sidebarUsers || !sidebarUsersEmpty) return;
+      const topSellerIds = getTopSellerIds();
+      if (topSellerIds.length === 0) {
+        sidebarUsers.innerHTML = "";
+        sidebarUsersEmpty.style.display = "block";
+        return;
+      }
+
+      sidebarUsersEmpty.style.display = "none";
+      sidebarUsers.innerHTML = topSellerIds.map((userId) => {
+        const user = userMap.get(String(userId)) || {};
+        const sellerName = formatSellerName(user);
+        return `
+          <a class="sidebar-item" href="user.html?id=${encodeURIComponent(userId)}">
+            <img class="sidebar-item-thumb avatar" src="${encodeURI(user.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(sellerName)}" loading="lazy" referrerpolicy="no-referrer" />
+            <span class="sidebar-item-copy">
+              <strong>${escapeHtml(sellerName)}</strong>
+              <span>${formatRecommendations(getRecommendationCount(userId))}</span>
+            </span>
+          </a>
+        `;
+      }).join("");
+    }
+
+    async function toggleFollowGame(serverId) {
+      const normalizedServerId = String(serverId || "").trim();
+      if (!normalizedServerId) return;
+      if (!currentUser) {
+        await startOAuthLikeNavbar(`${window.location.pathname}${window.location.search || ""}`);
+        return;
+      }
+
+      const shouldFollow = !isFollowedGame(normalizedServerId);
+      if (shouldFollow) {
+        const { error } = await supabase
+          .from("server_follows")
+          .insert({ user_id: currentUser.id, server_id: normalizedServerId });
+        if (error) throw error;
+        followedGameIds.add(normalizedServerId);
+      } else {
+        const { error } = await supabase
+          .from("server_follows")
+          .delete()
+          .eq("user_id", currentUser.id)
+          .eq("server_id", normalizedServerId);
+        if (error) throw error;
+        followedGameIds.delete(normalizedServerId);
+      }
+    }
+
+    function renderFeaturedPlaceholder() {
+      if (!heroCarousel) return;
+      heroCarousel.innerHTML = Array.from({ length: 3 }).map(() => `
+        <article class="hero-listing-card is-placeholder" aria-hidden="true">
+          <div class="hero-listing-media"></div>
+          <div class="hero-listing-body">
+            <div class="hero-listing-pill"></div>
+            <div class="hero-listing-line hero-listing-line-lg"></div>
+            <div class="hero-listing-line"></div>
+            <div class="hero-listing-line hero-listing-line-sm"></div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function createFeaturedCard(listing) {
+      const card = document.createElement("a");
+      card.className = "hero-listing-card";
+      card.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
+      card.innerHTML = `
+        <div class="hero-listing-media${listing.image_url ? "" : " empty"}">
+          ${listing.image_url
+            ? `<img src="${encodeURI(listing.image_url)}" alt="${escapeHtml(listing.title || "Anúncio")}" loading="lazy" />`
+            : `<img src="img/logo.png" alt="" class="hero-listing-fallback" loading="lazy" />`}
+        </div>
+        <div class="hero-listing-body">
+          <span class="pill hero-listing-server">${escapeHtml(listing.server_name || "Marketplace")}</span>
+          <h3>${escapeHtml(listing.title || "Anúncio sem título")}</h3>
+          <div class="hero-listing-seller">
+            <img src="${encodeURI(listing.avatar_url || "img/avatar.svg")}" alt="" class="hero-listing-avatar" loading="lazy" referrerpolicy="no-referrer" />
+            <div>
+              <strong>${escapeHtml(listing.seller_name || "Vendedor")}</strong>
+              <span>${escapeHtml(formatRecommendations(listing.user_recommendations_count))}</span>
+            </div>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    function scrollFeaturedCarousel(direction = 1) {
+      if (!heroCarousel || featuredListings.length === 0) return;
+      featuredCarouselIndex = (featuredCarouselIndex + direction + featuredListings.length) % featuredListings.length;
+      const target = heroCarousel.children[featuredCarouselIndex];
+      target?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    }
+
+    function startFeaturedCarouselAutoplay() {
+      if (!heroCarousel || featuredListings.length <= 1) return;
+      if (featuredCarouselTimer) window.clearInterval(featuredCarouselTimer);
+      featuredCarouselTimer = window.setInterval(() => {
+        scrollFeaturedCarousel(1);
+      }, 5000);
+    }
+
+    function stopFeaturedCarouselAutoplay() {
+      if (!featuredCarouselTimer) return;
+      window.clearInterval(featuredCarouselTimer);
+      featuredCarouselTimer = null;
+    }
+
+    function renderFeaturedCarousel(items) {
+      if (!heroCarousel || !heroCarouselEmpty) return;
+      featuredListings = Array.isArray(items) ? items : [];
+      featuredCarouselIndex = 0;
+      heroCarousel.innerHTML = "";
+      if (featuredListings.length === 0) {
+        heroCarouselEmpty.style.display = "block";
+        if (heroCarouselPrev) heroCarouselPrev.disabled = true;
+        if (heroCarouselNext) heroCarouselNext.disabled = true;
+        stopFeaturedCarouselAutoplay();
+        return;
+      }
+
+      heroCarouselEmpty.style.display = "none";
+      featuredListings.forEach((listing) => {
+        heroCarousel.appendChild(createFeaturedCard(listing));
+      });
+      const disableControls = featuredListings.length <= 1;
+      if (heroCarouselPrev) heroCarouselPrev.disabled = disableControls;
+      if (heroCarouselNext) heroCarouselNext.disabled = disableControls;
+      startFeaturedCarouselAutoplay();
+    }
+
+    async function populateFeaturedCarousel(userMap) {
+      renderFeaturedPlaceholder();
+      try {
+        const featured = getFeaturedListings();
+        const resolved = await Promise.all(featured.map(async (listing) => {
+          const user = userMap.get(String(listing.user_id)) || {};
+          const primaryImage = Array.isArray(listing.images) ? listing.images[0] : "";
+          const [imageUrl, avatarUrl] = await Promise.all([
+            primaryImage ? resolveImageUrl(primaryImage) : Promise.resolve(""),
+            Promise.resolve(user.avatar_url || "img/avatar.svg"),
+          ]);
+          return {
+            ...listing,
+            image_url: imageUrl || "",
+            avatar_url: avatarUrl || "img/avatar.svg",
+            seller_name: formatSellerName(user),
+            server_name: serverMap.get(String(listing.server_id))?.name || "Marketplace",
+            user_recommendations_count: getRecommendationCount(listing.user_id),
+          };
+        }));
+
+        renderFeaturedCarousel(resolved);
+      } catch (err) {
+        console.error(err);
+        renderFeaturedCarousel([]);
+      }
+    }
+
+    function parseCoverStoragePath(urlString) {
       try {
         const url = new URL(urlString);
         const marker = "/storage/v1/object/public/";
@@ -373,7 +864,7 @@
     }
 
     async function getSignedCoverUrl(urlString) {
-      const parsed = parseStoragePath(urlString);
+      const parsed = parseCoverStoragePath(urlString);
       if (!parsed) return urlString;
       try {
         ensureClient();
@@ -388,46 +879,122 @@
       }
     }
 
-    function appendGames(list) {
-      if (!list || list.length === 0) {
-        if (loadedGameCards.length === 0) {
-          gamesEmpty.style.display = "block";
-        }
+    async function renderHomeGameSections() {
+      if (!homeGameSections || !homeGameSectionsEmpty) return;
+      const groupedListings = new Map();
+      activeListingsCatalog.forEach((listing) => {
+        const serverId = String(listing?.server_id || "").trim();
+        if (!serverId) return;
+        if (!groupedListings.has(serverId)) groupedListings.set(serverId, []);
+        groupedListings.get(serverId).push(listing);
+      });
+
+      const selectedGames = [...allSortedGames]
+        .filter((game) => groupedListings.has(String(game.id)))
+        .sort((a, b) => {
+          const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
+          if (followedDiff !== 0) return followedDiff;
+          return 0;
+        })
+        .slice(0, HOME_GAME_SECTION_LIMIT);
+
+      if (selectedGames.length === 0) {
+        homeGameSections.innerHTML = "";
+        homeGameSectionsEmpty.style.display = "block";
         return;
       }
-      gamesEmpty.style.display = "none";
-      list.forEach((game) => {
-        const card = createGameCard(game);
-        gamesGrid.appendChild(card);
-      });
+
+      homeGameSectionsEmpty.style.display = "none";
+      const sectionsMarkup = await Promise.all(selectedGames.map(async (game) => {
+        const listings = (groupedListings.get(String(game.id)) || [])
+          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+          .slice(0, HOME_GAME_CARD_LIMIT);
+
+        const cards = await Promise.all(listings.map(async (listing) => {
+          const imageUrl = Array.isArray(listing.images) && listing.images[0]
+            ? await resolveImageUrl(listing.images[0])
+            : "";
+          const highlightBadge = listing?.highlight_status === "active"
+            ? `<span class="home-feed-card-badge">Destaque</span>`
+            : "";
+          return `
+            <a class="home-feed-card" href="listing.html?id=${encodeURIComponent(listing.id)}">
+              <div class="home-feed-card-media${imageUrl ? "" : " empty"}">
+                ${highlightBadge}
+                ${imageUrl
+                  ? `<img src="${encodeURI(imageUrl)}" alt="${escapeHtml(listing.title || "Anúncio")}" loading="lazy" />`
+                  : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
+              </div>
+              <div class="home-feed-card-copy">
+                <strong>${escapeHtml(listing.title || "Anúncio sem título")}</strong>
+              </div>
+            </a>
+          `;
+        }));
+
+        return `
+          <section class="home-game-section">
+            <div class="home-game-section-head">
+              <div>
+                <h3>
+                  <a class="home-game-title-link" href="game.html?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
+                </h3>
+                <p class="helper">${(groupedListings.get(String(game.id)) || []).length} anúncios ativos</p>
+              </div>
+              <button
+                class="btn btn-ghost home-game-follow-btn${isFollowedGame(game.id) ? " is-following" : ""}"
+                type="button"
+                data-action="toggle-follow"
+                data-game-id="${escapeHtml(game.id)}">
+                ${isFollowedGame(game.id) ? "Seguindo" : "Seguir game"}
+              </button>
+            </div>
+            <div class="home-game-row">
+              ${cards.join("")}
+            </div>
+          </section>
+        `;
+      }));
+
+      homeGameSections.innerHTML = sectionsMarkup.join("");
     }
 
-    function createGameCard(game) {
-      const card = document.createElement("article");
-      card.className = "game-card";
-      card.dataset.gameId = game.id;
+    async function loadHomeLayout() {
+      try {
+        ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        currentUser = sessionData?.session?.user || currentUser;
+        await fetchGamesCatalog();
+        await fetchRecommendationCounts();
+        await fetchSearchablePlayers();
+        await fetchFollowedGames();
+        renderSidebarGames();
 
-      const cover = game.cover_url
-        ? `<div class="game-cover"><img src="${encodeURI(game.cover_url)}" alt="${game.name}" loading="lazy" /></div>`
-        : "";
+        const sellerIds = getTopSellerIds();
+        const featuredIds = getFeaturedListings().map((listing) => listing.user_id);
+        const userMap = await fetchUserProfiles([...sellerIds, ...featuredIds]);
 
-      card.innerHTML = `
-        <div class=\"game-meta\">
-          <span class="pill game-name-pill" title="${game.name}">${game.name}</span>
-        </div>
-        ${cover}
-        <div class="game-footer">
-          ${game.website ? `<a href="${game.website}" target="_blank" rel="noopener" class="pill pill-link">Site oficial</a>` : `<span class="pill">Site indisponível</span>`}
-        </div>
-      `;
-      return card;
-    }
-
-    function handleGamesGridScroll() {
-      if (!gamesGrid || gamesLoading || !gamesHasMore) return;
-      const nearRightEdge = gamesGrid.scrollLeft + gamesGrid.clientWidth >= gamesGrid.scrollWidth - 140;
-      if (nearRightEdge) {
-        fetchGamesPage(false);
+        renderSidebarUsers(userMap);
+        await populateFeaturedCarousel(userMap);
+        await renderHomeGameSections();
+      } catch (err) {
+        console.error(err);
+        if (sidebarGamesEmpty) {
+          sidebarGamesEmpty.style.display = "block";
+          sidebarGamesEmpty.textContent = err?.message || "Erro ao carregar sidebar.";
+        }
+        if (sidebarUsersEmpty) {
+          sidebarUsersEmpty.style.display = "block";
+          sidebarUsersEmpty.textContent = err?.message || "Erro ao carregar usuários.";
+        }
+        if (homeGameSectionsEmpty) {
+          homeGameSectionsEmpty.style.display = "block";
+          homeGameSectionsEmpty.textContent = err?.message || "Erro ao carregar feed.";
+        }
+        renderFeaturedCarousel([]);
+      } finally {
+        await waitForInitialHomeVisuals();
+        markContentReady();
       }
     }
 
@@ -438,19 +1005,63 @@
         searchSuggestions.innerHTML = "";
         return;
       }
-      const matches = games.filter((g) => g.name.toLowerCase().includes(term.toLowerCase()));
-      if (matches.length === 0) {
+      const normalizedTerm = normalizeSearchText(term);
+      const gameMatches = allSortedGames
+        .filter((g) => matchesPrefix(g.name, normalizedTerm))
+        .slice(0, 6);
+      const playerMatches = searchablePlayers
+        .filter((player) => (player.searchTerms || []).some((value) => matchesPrefix(value, normalizedTerm)))
+        .sort((a, b) => {
+          const aUsername = normalizeSearchText(a.username || "");
+          const bUsername = normalizeSearchText(b.username || "");
+          const aStarts = aUsername.startsWith(normalizedTerm) ? 1 : 0;
+          const bStarts = bUsername.startsWith(normalizedTerm) ? 1 : 0;
+          if (bStarts !== aStarts) return bStarts - aStarts;
+          const aIncludes = aUsername.includes(normalizedTerm) ? 1 : 0;
+          const bIncludes = bUsername.includes(normalizedTerm) ? 1 : 0;
+          if (bIncludes !== aIncludes) return bIncludes - aIncludes;
+          return String(a.username || a.name || "").localeCompare(String(b.username || b.name || ""), "pt-BR", { sensitivity: "base" });
+        })
+        .slice(0, 6);
+      if (gameMatches.length === 0 && playerMatches.length === 0) {
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
-            Não encontrou o game que procurava?
+            Não encontramos games ou players para "${escapeHtml(term)}".
             <a class="link-ghost" href="game-submit.html" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
           </div>
         `;
         searchSuggestions.style.display = "block";
         return;
       }
-      const items = matches
-        .map((g) => `<div class=\"suggestion-item\" data-game-id=\"${g.id}\" data-game-name=\"${g.name}\">${g.name}<span class=\"badge\">Ver</span></div>`)
+      const gameItems = gameMatches
+        .map((g) => {
+          const logoUrl = normalizeR2PublicUrl(g.cover_url || "");
+          const websiteLabel = String(g.website || "").replace(/^https?:\/\//i, "").replace(/\/$/, "") || "Sem site oficial";
+          return `<div class="suggestion-item suggestion-item-rich" data-kind="game" data-game-id="${g.id}" data-game-name="${escapeHtml(g.name)}">
+            <span class="suggestion-thumb suggestion-thumb-game">
+              ${logoUrl
+                ? `<img src="${encodeURI(logoUrl)}" alt="${escapeHtml(g.name)}" loading="lazy" />`
+                : `<img src="img/logo.png" alt="" loading="lazy" />`}
+            </span>
+            <span class="suggestion-copy">
+              <strong>${escapeHtml(g.name)}</strong>
+              <small>${escapeHtml(websiteLabel)}</small>
+            </span>
+            <span class="badge">Game</span>
+          </div>`;
+        })
+        .join("");
+      const playerItems = playerMatches
+        .map((player) => `<div class="suggestion-item suggestion-item-rich" data-kind="player" data-user-id="${player.id}" data-user-name="${escapeHtml(player.username || player.name)}">
+          <span class="suggestion-thumb suggestion-thumb-avatar">
+            <img src="${encodeURI(player.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(player.name)}" loading="lazy" referrerpolicy="no-referrer" />
+          </span>
+          <span class="suggestion-copy">
+            <strong>${escapeHtml(player.username || player.name)}</strong>
+            <small>${escapeHtml(player.name)}</small>
+          </span>
+          <span class="badge">Player</span>
+        </div>`)
         .join("");
       const footer = `
         <div class="suggestion-footer">
@@ -458,19 +1069,27 @@
           <a class="link-ghost" href="game-submit.html" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
         </div>
       `;
-      searchSuggestions.innerHTML = `${items}${footer}`;
+      searchSuggestions.innerHTML = `${gameItems}${playerItems}${footer}`;
       searchSuggestions.style.display = "block";
     }
 
     function handleSuggestionClick(event) {
       const item = event.target.closest(".suggestion-item");
       if (!item) return;
+      const kind = item.getAttribute("data-kind");
       const gameId = item.getAttribute("data-game-id");
       const gameName = item.getAttribute("data-game-name");
+      const userId = item.getAttribute("data-user-id");
+      const userName = item.getAttribute("data-user-name");
       if (gameName && searchInput) searchInput.value = gameName;
+      if (userName && searchInput) searchInput.value = userName;
       searchSuggestions.style.display = "none";
-      if (gameId) {
+      if (kind === "game" && gameId) {
         window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+        return;
+      }
+      if (kind === "player" && userId) {
+        window.location.href = `user.html?id=${encodeURIComponent(userId)}`;
       }
     }
 
@@ -478,17 +1097,27 @@
       event.preventDefault();
       const term = searchInput?.value.trim();
       if (!term) {
-        showSuggestionMessage("Digite o nome de um game para começar.");
+        showSuggestionMessage("Digite o nome de um game ou player para começar.");
         return;
       }
-      const match = games.find((g) => g.name.toLowerCase() === term.toLowerCase());
-      if (match) {
-        window.location.href = `game.html?id=${encodeURIComponent(match.id)}`;
+      const normalizedTerm = normalizeSearchText(term);
+      const gameMatch = games.find((g) => normalizeSearchText(g.name) === normalizedTerm);
+      if (gameMatch) {
+        window.location.href = `game.html?id=${encodeURIComponent(gameMatch.id)}`;
+        searchSuggestions.style.display = "none";
+        return;
+      }
+      const playerMatch = searchablePlayers.find((player) => {
+        const username = normalizeSearchText(player.username || "");
+        return username === normalizedTerm || normalizeSearchText(player.name) === normalizedTerm || player.searchText === normalizedTerm;
+      });
+      if (playerMatch) {
+        window.location.href = `user.html?id=${encodeURIComponent(playerMatch.id)}`;
         searchSuggestions.style.display = "none";
       } else {
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
-            Não encontramos "${term}".
+            Não encontramos "${escapeHtml(term)}".
             <a href="game-submit.html" class="link-ghost" data-action="game-submit">Clique aqui</a> para cadastrar um novo game.
           </div>
         `;
@@ -516,16 +1145,18 @@
       window.location.href = "game-submit.html";
     });
 
-    gamesGrid?.addEventListener("click", (event) => {
-      const link = event.target.closest("a");
-      if (link) return;
-      const card = event.target.closest(".game-card");
-      if (!card) return;
-      const gameId = card.dataset.gameId;
-      if (!gameId) return;
-      window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+    heroCarouselPrev?.addEventListener("click", () => {
+      stopFeaturedCarouselAutoplay();
+      scrollFeaturedCarousel(-1);
+      startFeaturedCarouselAutoplay();
     });
-    gamesGrid?.addEventListener("scroll", handleGamesGridScroll, { passive: true });
+    heroCarouselNext?.addEventListener("click", () => {
+      stopFeaturedCarouselAutoplay();
+      scrollFeaturedCarousel(1);
+      startFeaturedCarouselAutoplay();
+    });
+    heroCarousel?.addEventListener("mouseenter", stopFeaturedCarouselAutoplay);
+    heroCarousel?.addEventListener("mouseleave", startFeaturedCarouselAutoplay);
 
     authBtn?.addEventListener("click", handleAuthClick);
     avatarBtn?.addEventListener("click", (event) => {
@@ -561,16 +1192,81 @@
       userMenu?.classList.remove("open");
       goToCreateListing();
     });
+    homeGameSections?.addEventListener("click", async (event) => {
+      const button = event.target.closest('[data-action="toggle-follow"][data-game-id]');
+      if (!button) return;
+      const gameId = button.getAttribute("data-game-id") || "";
+      if (!gameId) return;
+      const originalText = button.textContent;
+      try {
+        button.disabled = true;
+        button.textContent = isFollowedGame(gameId) ? "Removendo..." : "Seguindo...";
+        await toggleFollowGame(gameId);
+        renderSidebarGames();
+        const sellerIds = getTopSellerIds();
+        const featuredIds = getFeaturedListings().map((listing) => listing.user_id);
+        const userMap = await fetchUserProfiles([...sellerIds, ...featuredIds]);
+        renderSidebarUsers(userMap);
+        await populateFeaturedCarousel(userMap);
+        await renderHomeGameSections();
+      } catch (err) {
+        console.error(err);
+        button.disabled = false;
+        button.textContent = originalText || "Seguir game";
+      }
+    });
+    homeSidebarToggle?.addEventListener("click", () => {
+      sidebarAutoManaged = false;
+      setSidebarCollapsed(!sidebarCollapsed);
+    });
+    setSidebarCollapsed(sidebarCollapsed);
+    window.addEventListener("resize", () => {
+      if (!sidebarAutoManaged) return;
+      setSidebarCollapsed(window.innerWidth < 960);
+    });
     bootstrapAuth();
-    fetchGamesPage(true);
+    loadHomeLayout();
+    window.addEventListener("pagehide", stopFeaturedCarouselAutoplay);
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
     let windowLoaded = false;
     let avatarReady = false;
+    let contentReady = false;
+
+    function waitForImageElement(img, timeoutMs = 1800) {
+      if (!img) return Promise.resolve();
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = () => {
+          if (done) return;
+          done = true;
+          img.removeEventListener("load", finish);
+          img.removeEventListener("error", finish);
+          resolve();
+        };
+        const timer = setTimeout(finish, timeoutMs);
+        const wrappedFinish = () => {
+          clearTimeout(timer);
+          finish();
+        };
+        img.addEventListener("load", wrappedFinish, { once: true });
+        img.addEventListener("error", wrappedFinish, { once: true });
+      });
+    }
+
+    async function waitForInitialHomeVisuals() {
+      const images = Array.from(document.querySelectorAll(
+        "#home-sidebar img, .hero-spotlight-card img, #home-game-sections img"
+      ))
+        .filter((img) => !img.classList.contains("brand-logo"))
+        .slice(0, 12);
+      await Promise.all(images.map((img) => waitForImageElement(img)));
+    }
 
     function hideLoader() {
       if (loaderDone || !pageLoader) return;
-      if (!windowLoaded || !avatarReady) return;
+      if (!windowLoaded || !avatarReady || !contentReady) return;
       loaderDone = true;
       pageLoader.classList.add("hidden");
       pageLoader.remove();
@@ -581,10 +1277,22 @@
       hideLoader();
     }
 
+    function markContentReady() {
+      contentReady = true;
+      hideLoader();
+    }
+
     window.addEventListener("load", () => {
       windowLoaded = true;
       hideLoader();
     });
+
+    setTimeout(() => {
+      windowLoaded = true;
+      avatarReady = true;
+      contentReady = true;
+      hideLoader();
+    }, 5000);
   </script>
 </body>
 </html>

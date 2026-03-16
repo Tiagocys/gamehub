@@ -230,6 +230,8 @@ Deno.serve(async (req) => {
       return errorResponse("Fluxo de aprovação inválido. Reenvie sem skipServerInsert.", 400);
     }
 
+    let approvedServerId: string | null = null;
+
     if (body.approved && !body.skipServerInsert) {
       // Checa duplicidade por domínio normalizado.
       const { data: dupServer, error: dupErr } = await supabase
@@ -295,6 +297,17 @@ Deno.serve(async (req) => {
         }
         throw insertErr;
       }
+
+      const { data: createdServer, error: createdServerErr } = await supabase
+        .from("servers")
+        .select("id")
+        .eq("status", "active")
+        .eq("website_domain", finalDomain)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (createdServerErr) throw createdServerErr;
+      approvedServerId = createdServer?.id || null;
     }
 
     const approvedStatus = body.approved ? "approved" : "rejected";
@@ -372,6 +385,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             to: reqData.user_email,
             gameName: finalName,
+            gameId: approvedServerId,
             approved: body.approved,
             note: body.note || "",
           }),

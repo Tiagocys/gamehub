@@ -209,6 +209,22 @@
       if (this.dataset.rendered === "1") return;
       this.dataset.rendered = "1";
       this.style.display = "block";
+      const searchEnabled = this.getAttribute("search-enabled") === "games";
+      const searchMarkup = searchEnabled ? `
+          <div class="nav-search">
+            <form class="search nav-search-form" id="game-search">
+              <div class="search-bar nav-search-bar">
+                <input id="game-search-input" class="search-input nav-search-input" type="search" placeholder="Buscar..." aria-label="Buscar games ou players" autocomplete="off" />
+                <button type="submit" class="btn btn-ghost nav-search-submit" aria-label="Buscar">
+                  <img src="img/lupa.svg" alt="" class="nav-search-submit-icon" aria-hidden="true" />
+                </button>
+              </div>
+              <div class="suggestions nav-search-suggestions">
+                <div id="search-suggestions" class="suggestions-panel" style="display:none;"></div>
+              </div>
+            </form>
+          </div>
+      ` : "";
       this.innerHTML = `
         <header class="site-nav">
           <a href="index.html" class="brand">
@@ -217,6 +233,7 @@
               <span class="brand-tagline">Community marketplace powered by gamers.</span>
             </div>
           </a>
+          ${searchMarkup}
           <div class="nav-actions">
             <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">Criar anúncio</button>
             <button id="auth-btn" class="btn btn-primary"><img src="img/google.svg" alt="" class="btn-google-logo" /> Entrar com Google</button>

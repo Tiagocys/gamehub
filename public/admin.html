@@ -93,6 +93,12 @@ body {
       box-shadow: none;
       border: 1px solid var(--border);
     }
+    #server-submit-btn[disabled] {
+      background: linear-gradient(135deg, #94a3b8, #64748b);
+      box-shadow: none;
+      cursor: wait;
+      opacity: 0.9;
+    }
     button:active, .btn-link:active { transform: translateY(1px); }
     .btn-link {
       display: inline-flex;
@@ -185,7 +191,7 @@ body {
           <img id="server-logo-preview" alt="Pré-visualização da logo" />
         </div>
 
-        <button type="submit">Salvar servidor</button>
+        <button id="server-submit-btn" type="submit">Salvar servidor</button>
         <div class="error" id="form-error"></div>
         <div class="success" id="form-success"></div>
       </form>
@@ -274,6 +280,7 @@ body {
     const statusText = document.getElementById("status-text");
     const sessionStatus = document.getElementById("session-status");
     const serverForm = document.getElementById("server-form");
+    const serverSubmitBtn = document.getElementById("server-submit-btn");
     const formError = document.getElementById("form-error");
     const formSuccess = document.getElementById("form-success");
     const serverNameInput = document.getElementById("server-name");
@@ -315,6 +322,7 @@ body {
     let requestCursor = 0;
     let reportCursor = 0;
     let editingRequest = null;
+    const SERVER_SUBMIT_DEFAULT_TEXT = serverSubmitBtn?.textContent || "Salvar servidor";
     let ownerLookupTimer = null;
     const OWNER_ADMIN_CONFLICT_MESSAGE = "Administradores não podem ser cadastrados como responsáveis pelos jogos.";
 
@@ -510,6 +518,22 @@ body {
         || text.includes("regra antifraude");
     }
 
+    function isDuplicateServerDomainMessage(message) {
+      const text = String(message || "").toLowerCase();
+      return text.includes("servers_active_website_domain_key")
+        || (text.includes("duplicate key value violates unique constraint") && text.includes("website_domain"));
+    }
+
+    function getFriendlyAdminErrorMessage(message, fallbackMessage) {
+      if (isOwnerAdminConflictMessage(message)) {
+        return OWNER_ADMIN_CONFLICT_MESSAGE;
+      }
+      if (isDuplicateServerDomainMessage(message)) {
+        return "Já existe um servidor cadastrado com este site oficial. Revise os dados antes de aprovar ou cadastrar novamente.";
+      }
+      return message || fallbackMessage;
+    }
+
     async function resolveInvokeErrorMessage(invokeError, invokeData, fallbackMessage) {
       let message = invokeData?.error || invokeError?.message || fallbackMessage;
       const context = invokeError?.context;
@@ -527,10 +551,7 @@ body {
           // Ignora erro de parse e mantém mensagem de fallback.
         }
       }
-      if (isOwnerAdminConflictMessage(message)) {
-        return OWNER_ADMIN_CONFLICT_MESSAGE;
-      }
-      return message || fallbackMessage;
+      return getFriendlyAdminErrorMessage(message, fallbackMessage);
     }
 
     function normalizeEmail(raw) {
@@ -724,8 +745,13 @@ body {
           editBannerTitle.textContent = `${req.name || "Solicitação"} (${req.website || "-"})`;
         }
       }
-      serverForm?.scrollIntoView({ behavior: "smooth", block: "start" });
-      formError.textContent = "Revise os dados antes de salvar.";
+      document.querySelector("main")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function setServerSubmitState(processing) {
+      if (!serverSubmitBtn) return;
+      serverSubmitBtn.disabled = !!processing;
+      serverSubmitBtn.textContent = processing ? "Enviando..." : SERVER_SUBMIT_DEFAULT_TEXT;
     }
 
     function handleLogoChange() {
@@ -919,6 +945,7 @@ body {
       formError.textContent = "";
       formSuccess.textContent = "";
       requestsStatus.textContent = "";
+      setServerSubmitState(true);
 
       try {
         ensureClient();
@@ -1105,11 +1132,13 @@ body {
         requestsStatus.textContent ||= "Servidor salvo.";
       } catch (err) {
         console.error(err);
-        formError.textContent = err?.message || "Erro ao criar servidor.";
+        formError.textContent = getFriendlyAdminErrorMessage(err?.message, "Erro ao criar servidor.");
         if (!formError.textContent && typeof err === "object") {
           formError.textContent = JSON.stringify(err);
         }
         requestsStatus.textContent = "Erro ao salvar servidor.";
+      } finally {
+        setServerSubmitState(false);
       }
     });
 
@@ -1196,9 +1225,10 @@ body {
         <div class="muted">Usuário: ${req.user_email || "-"}</div>
         <div class="muted">Tipo de envio: ${submitterLabel}</div>
         <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
+        ${(!String(req.discord_invite || "").trim() || !String(req.displayCoverUrl || req.cover_url || "").trim()) ? `<div class="muted" style="color:#b45309;">Esta solicitação está sem Discord oficial e/ou logo, edite e envie os dados faltantes antes de aprovar.</div>` : ""}
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
-          <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;">Aprovar</button>
+          <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;" ${(!String(req.discord_invite || "").trim() || !String(req.displayCoverUrl || req.cover_url || "").trim()) ? 'disabled title="Adicione Discord oficial e logo antes de aprovar."' : ""}>Aprovar</button>
           <button class="btn secondary" data-action="reject" data-id="${req.id}" style="flex:1;">Recusar</button>
         </div>
       `;
@@ -1212,6 +1242,14 @@ body {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+    }
+
+    function hasRequestLogo(req) {
+      return !!String(req?.displayCoverUrl || req?.cover_url || "").trim();
+    }
+
+    function hasRequestDiscord(req) {
+      return !!String(req?.discord_invite || "").trim();
     }
 
     async function fetchReports() {
@@ -1498,6 +1536,12 @@ body {
       try {
         requestsStatus.textContent = "Processando...";
         const req = requestCache.find((r) => String(r.id) === String(id));
+        if (approved && (!hasRequestLogo(req) || !hasRequestDiscord(req))) {
+          requestsStatus.textContent = "Adicione Discord oficial e logo antes de aprovar a solicitação.";
+          window.alert('Esta solicitação precisa ter Discord oficial e logo. Use "Editar antes de aprovar" para enviar os dados faltantes.');
+          setDecisionButtonsProcessing(card, action, false);
+          return;
+        }
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         const currentUserId = sessionData.session?.user?.id || null;
@@ -1533,7 +1577,7 @@ body {
         window.location.reload();
       } catch (err) {
         console.error(err);
-        const msg = err?.message || "Erro ao processar solicitação.";
+        const msg = getFriendlyAdminErrorMessage(err?.message, "Erro ao processar solicitação.");
         requestsStatus.textContent = msg;
         if (isOwnerAdminConflictMessage(msg) || msg === OWNER_ADMIN_CONFLICT_MESSAGE) {
           window.alert(`${OWNER_ADMIN_CONFLICT_MESSAGE}\n\nAdministradores não podem ser cadastrados como responsáveis pelos jogos.`);

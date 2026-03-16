@@ -16,7 +16,7 @@
     .game-hero-card {
       padding: 16px 18px;
       gap: 14px;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: auto minmax(0, 1fr);
       align-items: center;
       min-height: 126px;
     }
@@ -34,8 +34,14 @@
     .game-hero-head {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
+      justify-content: space-between;
       gap: 10px 14px;
+    }
+
+    .game-title-block {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
     }
 
     .game-hero-copy h1 {
@@ -44,12 +50,45 @@
       line-height: 1.05;
     }
 
+    .game-site-link {
+      width: fit-content;
+      color: var(--accent-2);
+      font-size: 13px;
+      line-height: 1.4;
+      text-decoration: none;
+      word-break: break-all;
+    }
+
+    .game-site-link:hover {
+      text-decoration: underline;
+    }
+
+    .game-site-link.is-unavailable {
+      color: var(--muted);
+      pointer-events: none;
+      text-decoration: none;
+    }
+
     .game-description {
       margin: 0;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.45;
       white-space: pre-wrap;
+    }
+
+    .game-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+
+    .game-follow-btn.is-following {
+      background: rgba(14, 165, 233, 0.14);
+      border-color: rgba(14, 165, 233, 0.28);
+      color: #11506f;
     }
 
     .game-logo-frame {
@@ -309,6 +348,10 @@
         min-height: 0;
       }
 
+      .game-hero-head {
+        align-items: flex-start;
+      }
+
       .game-logo-frame {
         width: 82px;
         margin-left: 0;
@@ -357,15 +400,18 @@
 
     <section class="section game-hero-shell">
       <div class="game-hero-card">
+        <div class="game-logo-frame">
+          <img id="game-logo" alt="Logo do game" />
+        </div>
         <div class="game-hero-copy">
           <div class="game-hero-head">
-            <h1 id="game-title">Carregando...</h1>
+            <div class="game-title-block">
+              <h1 id="game-title">Carregando...</h1>
+              <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+            </div>
             <div id="game-actions" class="game-actions"></div>
           </div>
           <p id="game-description" class="game-description" style="display:none;"></p>
-        </div>
-        <div class="game-logo-frame">
-          <img id="game-logo" alt="Logo do game" />
         </div>
       </div>
     </section>
@@ -437,6 +483,7 @@
     const titleEl = document.getElementById("game-title");
     const descriptionEl = document.getElementById("game-description");
     const logoEl = document.getElementById("game-logo");
+    const siteLinkEl = document.getElementById("game-site-link");
     const actionsEl = document.getElementById("game-actions");
     const listingSearchInput = document.getElementById("listing-search");
     const listingSearchMeta = document.getElementById("listing-search-meta");
@@ -553,6 +600,9 @@
 
     let supabase;
     let currentUser = null;
+    let currentGame = null;
+    let currentGameId = "";
+    let currentGameFollowed = false;
     let avatarLoaded = false;
     let allListings = [];
     let orderedListings = [];
@@ -632,6 +682,9 @@
         }
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
+        if (currentGameId) {
+          loadFollowState(currentGameId);
+        }
         return;
       }
       if (authBtn) authBtn.style.display = "inline-flex";
@@ -639,6 +692,8 @@
       if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
       if (menuCreateListing) menuCreateListing.style.display = "none";
+      currentGameFollowed = false;
+      renderGameActions(currentGame);
       avatarLoaded = false;
       markAvatarReady();
     }
@@ -699,12 +754,25 @@
 
     async function handleAuthClick() {
       try {
-        ensureClient();
-        if (authBtn) authBtn.disabled = true;
-        window.location.href = "index.html";
+        await redirectToGoogleAuth();
       } catch (err) {
         console.error(err);
+        if (authBtn) authBtn.disabled = false;
       }
+    }
+
+    async function redirectToGoogleAuth(targetPath = null) {
+      ensureClient();
+      if (authBtn) authBtn.disabled = true;
+      const normalizedPath = targetPath
+        ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
+        : `${window.location.pathname}${window.location.search || ""}`;
+      const redirectTo = `${window.location.origin}${normalizedPath}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo },
+      });
+      if (error) throw error;
     }
 
     function parseStoragePath(urlString) {
@@ -831,14 +899,42 @@
       }
     }
 
+    function renderGameActions(game) {
+      if (!actionsEl) return;
+      const followMarkup = `
+        <button
+          id="game-follow-btn"
+          class="btn btn-ghost game-follow-btn${currentGameFollowed ? " is-following" : ""}"
+          type="button">
+          ${currentGameFollowed ? "Seguindo" : "Seguir game"}
+        </button>
+      `;
+      actionsEl.innerHTML = followMarkup;
+    }
+
     function renderGame(game) {
       if (!game) {
         titleEl.textContent = "Game não encontrado.";
         logoEl.style.display = "none";
+        if (siteLinkEl) siteLinkEl.style.display = "none";
         if (descriptionEl) descriptionEl.style.display = "none";
+        if (actionsEl) actionsEl.innerHTML = "";
         return;
       }
       titleEl.textContent = game.name;
+      if (siteLinkEl) {
+        if (game.website) {
+          siteLinkEl.href = game.website;
+          siteLinkEl.textContent = game.website;
+          siteLinkEl.style.display = "inline-flex";
+          siteLinkEl.classList.remove("is-unavailable");
+        } else {
+          siteLinkEl.removeAttribute("href");
+          siteLinkEl.textContent = "Site indisponível";
+          siteLinkEl.style.display = "inline-flex";
+          siteLinkEl.classList.add("is-unavailable");
+        }
+      }
       if (descriptionEl) {
         const text = String(game.description || "").trim();
         if (text) {
@@ -855,9 +951,66 @@
       } else {
         logoEl.style.display = "none";
       }
-      actionsEl.innerHTML = game.website
-        ? `<a class="pill pill-link" href="${game.website}" target="_blank" rel="noopener">Site oficial</a>`
-        : `<span class="pill">Site indisponível</span>`;
+      renderGameActions(game);
+    }
+
+    async function loadFollowState(gameId) {
+      currentGameFollowed = false;
+      if (!currentUser || !gameId) {
+        renderGameActions(currentGame);
+        return;
+      }
+      try {
+        ensureClient();
+        const { data, error } = await supabase
+          .from("server_follows")
+          .select("id")
+          .eq("user_id", currentUser.id)
+          .eq("server_id", gameId)
+          .maybeSingle();
+        if (error && error.code !== "PGRST116") throw error;
+        currentGameFollowed = Boolean(data?.id);
+      } catch (err) {
+        console.error(err);
+        currentGameFollowed = false;
+      } finally {
+        renderGameActions(currentGame);
+      }
+    }
+
+    async function toggleFollowGame() {
+      if (!currentGameId) return;
+      if (!currentUser) {
+        await redirectToGoogleAuth(`${window.location.pathname}${window.location.search || ""}`);
+        return;
+      }
+      const followBtn = document.getElementById("game-follow-btn");
+      const nextState = !currentGameFollowed;
+      try {
+        if (followBtn) {
+          followBtn.disabled = true;
+          followBtn.textContent = nextState ? "Seguindo..." : "Removendo...";
+        }
+        ensureClient();
+        if (nextState) {
+          const { error } = await supabase
+            .from("server_follows")
+            .insert({ user_id: currentUser.id, server_id: currentGameId });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("server_follows")
+            .delete()
+            .eq("user_id", currentUser.id)
+            .eq("server_id", currentGameId);
+          if (error) throw error;
+        }
+        currentGameFollowed = nextState;
+      } catch (err) {
+        console.error(err);
+      } finally {
+        renderGameActions(currentGame);
+      }
     }
 
     function escapeHtml(value) {
@@ -1235,20 +1388,22 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         const params = new URLSearchParams(window.location.search);
-        const gameId = params.get("id");
-        if (!gameId) {
+        currentGameId = params.get("id") || "";
+        if (!currentGameId) {
           titleEl.textContent = "Game não encontrado.";
           logoEl.style.display = "none";
           return;
         }
-        const game = await fetchGameById(gameId);
+        const game = await fetchGameById(currentGameId);
         if (game?.cover_url) {
           game.cover_url = await getSignedCoverUrl(game.cover_url);
         }
+        currentGame = game;
         renderGame(game);
+        await loadFollowState(currentGameId);
         renderCategoryFilters();
         setupFeedObserver();
-        await fetchListings(gameId);
+        await fetchListings(currentGameId);
       } catch (err) {
         console.error(err);
         titleEl.textContent = "Erro ao carregar game.";
@@ -1326,6 +1481,11 @@
     menuCreateListing?.addEventListener("click", () => {
       userMenu?.classList.remove("open");
       goToCreateListing();
+    });
+    actionsEl?.addEventListener("click", (event) => {
+      const followBtn = event.target.closest("#game-follow-btn");
+      if (!followBtn) return;
+      toggleFollowGame();
     });
     init();
   </script>

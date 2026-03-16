@@ -27,7 +27,7 @@
         <div id="pending-info" class="pill-status" style="display:none;"></div>
         <form id="game-request-form" class="form-vertical">
           <div class="field">
-            <label for="game-name">Nome do servidor *</label>
+            <label for="game-name">Nome do game ou servidor *</label>
             <input id="game-name" class="input" placeholder="Ex: Miracle 7.4" required />
           </div>
           <div class="field">
@@ -36,8 +36,8 @@
             <span id="website-helper" class="helper"></span>
           </div>
           <div class="field">
-            <label for="game-discord">Convite para discord oficial *</label>
-            <input id="game-discord" class="input" placeholder="https://discord.gg/seu-servidor" required />
+            <label for="game-discord">Convite para discord oficial</label>
+            <input id="game-discord" class="input" placeholder="https://discord.gg/seu-servidor" />
             <span id="discord-helper" class="helper"></span>
           </div>
           <div class="field" style="grid-column: 1 / -1;">
@@ -58,8 +58,8 @@
             </div>
           </div>
           <div class="field">
-            <label for="game-logo">Logo do servidor (png/jpg/webp) *</label>
-            <input id="game-logo" type="file" accept="image/png,image/jpeg,image/webp" required />
+            <label for="game-logo">Logo do servidor (png/jpg/webp)</label>
+            <input id="game-logo" type="file" accept="image/png,image/jpeg,image/webp" />
           </div>
           <div class="field" style="grid-column: 1 / -1;">
             <button type="submit" class="btn btn-primary" id="submit-btn">Enviar solicitação</button>
@@ -366,7 +366,26 @@
     function updateOfficialAdminNote() {
       if (!officialAdminNote) return;
       const selected = document.querySelector('input[name="is-official-admin"]:checked');
-      const shouldShow = selected?.value === "yes" && currentUserProfile && currentUserProfile.phone_verified === false;
+      const isOwner = selected?.value === "yes";
+      const shouldShow = isOwner && currentUserProfile && currentUserProfile.phone_verified === false;
+      if (discordInput) {
+        discordInput.required = isOwner;
+      }
+      if (logoInput) {
+        logoInput.required = isOwner;
+      }
+      const discordLabel = document.querySelector('label[for="game-discord"]');
+      if (discordLabel) {
+        discordLabel.textContent = isOwner
+          ? "Convite para discord oficial *"
+          : "Convite para discord oficial";
+      }
+      const logoLabel = document.querySelector('label[for="game-logo"]');
+      if (logoLabel) {
+        logoLabel.textContent = isOwner
+          ? "Logo do servidor (png/jpg/webp) *"
+          : "Logo do servidor (png/jpg/webp)";
+      }
       officialAdminNote.style.display = shouldShow ? "block" : "none";
     }
 
@@ -463,9 +482,11 @@
         if (website && websiteInput && websiteInput.value !== website) {
           websiteInput.value = website;
         }
-        if (!name || !website || !logoFile) {
+        if (!name || !website || (isOwner && !logoFile)) {
           setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
-          feedback.textContent = "Preencha o nome, site com https:// e selecione a logo (png/jpg/webp até 3MB).";
+          feedback.textContent = isOwner
+            ? "Preencha o nome, o site com https:// e envie a logo do servidor."
+            : "Preencha o nome e o site com https://.";
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
@@ -478,8 +499,15 @@
           return;
         }
 
-        const discordInvite = normalizeDiscordInvite(discordRaw);
-        if (!discordInvite) {
+        const discordInvite = discordRaw ? normalizeDiscordInvite(discordRaw) : null;
+        if (isOwner && !discordInvite) {
+          setDiscordHelper("Use um convite que comece com https://discord.gg/");
+          feedback.textContent = "Convite do Discord inválido.";
+          submitBtn.disabled = false;
+          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          return;
+        }
+        if (discordRaw && !discordInvite) {
           setDiscordHelper("Use um convite que comece com https://discord.gg/");
           feedback.textContent = "Convite do Discord inválido.";
           submitBtn.disabled = false;
@@ -488,7 +516,7 @@
         }
         setDiscordHelper("");
 
-        if (logoFile.size > MAX_LOGO_BYTES) {
+        if (logoFile && logoFile.size > MAX_LOGO_BYTES) {
           feedback.textContent = "Logo deve ter no máximo 3MB.";
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
@@ -509,8 +537,11 @@
           return;
         }
 
-        const compressed = await compressImage(logoFile, MAX_WIDTH);
-        const logoUrl = await uploadLogo(compressed, currentUser.id);
+        let logoUrl = null;
+        if (logoFile) {
+          const compressed = await compressImage(logoFile, MAX_WIDTH);
+          logoUrl = await uploadLogo(compressed, currentUser.id);
+        }
 
         const requestPayload = {
           name,

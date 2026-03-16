@@ -202,6 +202,11 @@
                 <input id="last-name" class="input" placeholder="Seu sobrenome" required />
               </div>
             </div>
+            <div class="field">
+              <label for="profile-username">Nome de usuário</label>
+              <input id="profile-username" class="input" placeholder="ex: player123" minlength="3" maxlength="20" inputmode="text" autocomplete="off" />
+              <div id="profile-username-help" class="helper">Use apenas letras e números. Entre 3 e 20 caracteres.</div>
+            </div>
   
             <div class="field">
               <label for="discord-username">Discord</label>
@@ -338,6 +343,8 @@
 
     const firstNameInput = document.getElementById("first-name");
     const lastNameInput = document.getElementById("last-name");
+    const usernameInput = document.getElementById("profile-username");
+    const usernameHelp = document.getElementById("profile-username-help");
     const phoneField = document.getElementById("phone-field");
     const phoneInput = document.getElementById("phone");
     const discordInput = document.getElementById("discord-username");
@@ -397,6 +404,7 @@
     let publicContactPrefPending = false;
     const pageParams = new URLSearchParams(window.location.search);
     const requiresPhoneCta = pageParams.get("phone_required") === "1";
+    const PROFILE_USERNAME_REGEX = /^[a-z0-9]{3,20}$/;
     const DISCORD_USERNAME_REGEX = /^(?!.*\.\.)[a-z0-9._]{2,32}$/;
     const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
     const MAX_AVATAR_DIMENSION = 1024;
@@ -532,6 +540,30 @@
       return normalized.slice(0, 32);
     }
 
+    function normalizeProfileUsername(value) {
+      if (!value) return "";
+      return String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 20);
+    }
+
+    function validateProfileUsername(value) {
+      if (!value) {
+        if (usernameHelp) {
+          usernameHelp.textContent = "Use apenas letras e números. Entre 3 e 20 caracteres.";
+        }
+        return false;
+      }
+      const ok = PROFILE_USERNAME_REGEX.test(value);
+      if (usernameHelp) {
+        usernameHelp.textContent = ok
+          ? "Use apenas letras e números. Entre 3 e 20 caracteres."
+          : "Use apenas letras e números. Entre 3 e 20 caracteres.";
+      }
+      return ok;
+    }
+
     function validateDiscordUsername(value) {
       if (!value) {
         if (discordHelp) discordHelp.textContent = "";
@@ -566,6 +598,10 @@
       if (!profile) return;
       firstNameInput.value = profile.first_name || "";
       lastNameInput.value = profile.last_name || "";
+      if (usernameInput) {
+        usernameInput.value = normalizeProfileUsername(profile.username || "");
+        validateProfileUsername(usernameInput.value);
+      }
       phoneInput.value = profile.phone || "";
       if (discordInput) {
         discordInput.value = profile.discord_username || "";
@@ -924,6 +960,7 @@
 
         const firstName = firstNameInput.value.trim();
         const lastName = lastNameInput.value.trim();
+        const username = normalizeProfileUsername(usernameInput?.value?.trim() || "");
         const email = (currentUser?.email || currentProfile?.email || "").trim();
         const discordUsername = normalizeDiscordUsername(discordInput?.value?.trim() || "");
         const aboutMe = aboutMeInput?.value?.trim() || null;
@@ -944,6 +981,11 @@
           saveBtn.disabled = false;
           return;
         }
+        if (!validateProfileUsername(username)) {
+          feedback.textContent = "Corrija o nome de usuário antes de salvar.";
+          saveBtn.disabled = false;
+          return;
+        }
         if (discordUsername && !validateDiscordUsername(discordUsername)) {
           feedback.textContent = "Corrija o usuário do Discord antes de salvar.";
           saveBtn.disabled = false;
@@ -957,7 +999,6 @@
           avatarUrl = await uploadProfileAvatar(pendingAvatarFile);
         }
 
-        const username = currentProfile?.username || (currentUser.email || currentUser.id).split("@")[0];
         const userStatus = currentProfile?.status || "active";
         const phoneChanged = false;
         const { error } = await supabase.from("users").upsert({
@@ -982,6 +1023,7 @@
         feedback.textContent = "Perfil salvo com sucesso!";
         currentProfile = {
           ...(currentProfile || {}),
+          username,
           status: userStatus,
           discord_username: discordUsername || null,
           about_me: aboutMe,
@@ -1005,7 +1047,11 @@
         updatePhoneStatus(currentProfile);
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao salvar perfil.";
+        if (String(err?.message || "").includes("users_username_key")) {
+          feedback.textContent = "Esse nome de usuário já está em uso.";
+        } else {
+          feedback.textContent = err?.message || "Erro ao salvar perfil.";
+        }
       } finally {
         saveBtn.disabled = false;
       }
@@ -1040,6 +1086,19 @@
         throw new Error(`Não foi possível excluir ${failures.length} anúncio(s). Tente novamente.`);
       }
     }
+
+    usernameInput?.addEventListener("input", (event) => {
+      const target = event.target;
+      const cleaned = normalizeProfileUsername(target.value);
+      if (cleaned !== target.value) {
+        const cursor = target.selectionStart;
+        target.value = cleaned;
+        if (typeof cursor === "number") {
+          target.setSelectionRange(cursor, cursor);
+        }
+      }
+      validateProfileUsername(target.value);
+    });
 
     discordInput?.addEventListener("input", (event) => {
       const target = event.target;

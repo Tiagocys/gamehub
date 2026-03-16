@@ -514,6 +514,7 @@
 
     let supabase;
     let currentUser = null;
+    let currentUserProfile = null;
     let avatarLoaded = false;
     let currentListing = null;
     let currentGalleryImages = [];
@@ -559,10 +560,22 @@
         });
         supabase.auth.onAuthStateChange((_event, session) => {
           currentUser = session?.user || null;
+          currentUserProfile = null;
           updateAuthUI();
         });
       }
       return supabase;
+    }
+
+    async function fetchCurrentUserProfile() {
+      if (!currentUser?.id) return null;
+      const { data, error } = await supabase
+        .from("users")
+        .select("id,phone_verified")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+      if (error && error.code !== "PGRST116") throw error;
+      return data || null;
     }
 
     function updateAuthUI() {
@@ -1539,6 +1552,15 @@
       try {
         if (!currentUser) {
           await redirectToGoogleLogin();
+          return;
+        }
+        if (!currentUserProfile) {
+          currentUserProfile = await fetchCurrentUserProfile();
+        }
+        if (!currentUserProfile?.phone_verified) {
+          if (reportListingFeedback) {
+            reportListingFeedback.textContent = "Apenas usuários com telefone verificado podem enviar denúncias.";
+          }
           return;
         }
         hideReportSuccess();

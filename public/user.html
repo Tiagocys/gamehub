@@ -56,6 +56,13 @@
       word-break: break-word;
     }
 
+    .user-public-username {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+      word-break: break-word;
+    }
+
     .user-public-reco {
       display: inline-flex;
       align-items: center;
@@ -555,6 +562,7 @@
         </div>
         <div class="user-public-copy">
           <h1 id="public-name" class="user-public-name">Carregando perfil...</h1>
+          <p id="public-username" class="user-public-username" style="display:none;"></p>
           <p id="public-discord" class="helper discord-inline" style="display:none;"></p>
           <div class="inline-actions">
             <button id="recommend-btn" class="recommend-btn" type="button" style="display:none;">
@@ -675,6 +683,7 @@
 
     const publicAvatar = document.getElementById("public-avatar");
     const publicName = document.getElementById("public-name");
+    const publicUsername = document.getElementById("public-username");
     const publicDiscord = document.getElementById("public-discord");
     const publicAbout = document.getElementById("public-about");
     const publicGames = document.getElementById("public-games");
@@ -1064,7 +1073,7 @@
     async function fetchPublicProfile() {
       const { data, error } = await supabase
         .from("users")
-        .select("id,status,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_contacts_on_public_profile")
+        .select("id,status,username,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_contacts_on_public_profile")
         .eq("id", targetUserId)
         .single();
       if (error) throw error;
@@ -1328,11 +1337,21 @@
     function renderProfile(profile) {
       const firstName = (profile?.first_name || "").trim();
       const lastName = (profile?.last_name || "").trim();
+      const username = String(profile?.username || "").trim();
       const displayName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
       const discord = String(profile?.discord_username || "").trim();
       const profileStatus = String(profile?.status || "active");
       shareUrl = `${window.location.origin}/user.html?id=${encodeURIComponent(targetUserId || "")}`;
       publicName.textContent = displayName;
+      if (publicUsername) {
+        if (username) {
+          publicUsername.textContent = username;
+          publicUsername.style.display = "block";
+        } else {
+          publicUsername.textContent = "";
+          publicUsername.style.display = "none";
+        }
+      }
 
       if (reportUserBtn) {
         const ownProfile = !!currentUser && currentUser.id === targetUserId;
@@ -1709,6 +1728,15 @@
       try {
         if (!currentUser) {
           await redirectToGoogleLogin();
+          return;
+        }
+        if (!currentUserProfile) {
+          currentUserProfile = await fetchCurrentUserProfile();
+        }
+        if (!currentUserProfile?.phone_verified) {
+          if (reportUserFeedback) {
+            reportUserFeedback.textContent = "Apenas usuários com telefone verificado podem enviar denúncias.";
+          }
           return;
         }
         if (!targetUserId) return;
