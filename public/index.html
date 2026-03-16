@@ -149,9 +149,9 @@
     function getSidebarToggleIcon() {
       const isMobile = window.matchMedia("(max-width: 900px)").matches;
       if (isMobile) {
-        return sidebarCollapsed ? "img/seta-para-baixo.svg" : "img/seta-para-cima.svg";
+        return sidebarCollapsed ? "icon-down" : "icon-up";
       }
-      return sidebarCollapsed ? "img/seta-para-direita.svg" : "img/seta-para-esquerda.svg";
+      return sidebarCollapsed ? "icon-right" : "icon-left";
     }
 
     function ensureClient() {
@@ -571,7 +571,7 @@
       if (homeSidebarToggle) {
         homeSidebarToggle.setAttribute("aria-expanded", String(!sidebarCollapsed));
         homeSidebarToggle.setAttribute("aria-label", sidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral");
-        homeSidebarToggle.innerHTML = `<img src="${getSidebarToggleIcon()}" alt="" aria-hidden="true" class="home-sidebar-toggle-icon" />`;
+        homeSidebarToggle.innerHTML = `<span aria-hidden="true" class="home-sidebar-toggle-icon ${getSidebarToggleIcon()}"></span>`;
       }
     }
 

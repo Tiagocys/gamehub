@@ -209,6 +209,7 @@ a { color: inherit; text-decoration: none; }
   width: 18px;
   height: 18px;
   display: block;
+  background: center / contain no-repeat url("../img/lupa.svg");
 }
 
 .nav-search-input {
@@ -463,6 +464,25 @@ main.home-layout.sidebar-collapsed {
   width: 16px;
   height: 16px;
   display: block;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.home-sidebar-toggle-icon.icon-down {
+  background-image: url("../img/seta-para-baixo.svg");
+}
+
+.home-sidebar-toggle-icon.icon-up {
+  background-image: url("../img/seta-para-cima.svg");
+}
+
+.home-sidebar-toggle-icon.icon-left {
+  background-image: url("../img/seta-para-esquerda.svg");
+}
+
+.home-sidebar-toggle-icon.icon-right {
+  background-image: url("../img/seta-para-direita.svg");
 }
 
 .home-sidebar-section {

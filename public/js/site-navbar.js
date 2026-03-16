@@ -216,7 +216,7 @@
               <div class="search-bar nav-search-bar">
                 <input id="game-search-input" class="search-input nav-search-input" type="search" placeholder="Buscar..." aria-label="Buscar games ou players" autocomplete="off" />
                 <button type="submit" class="btn btn-ghost nav-search-submit" aria-label="Buscar">
-                  <img src="img/lupa.svg" alt="" class="nav-search-submit-icon" aria-hidden="true" />
+                  <span class="nav-search-submit-icon" aria-hidden="true"></span>
                 </button>
               </div>
               <div class="suggestions nav-search-suggestions">
