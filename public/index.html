@@ -664,7 +664,7 @@
         const followedTag = isFollowedGame(game.id) ? `<span class="sidebar-item-chip">Seguindo</span>` : "";
         const safeGameName = escapeHtml(game.name);
         const gameThumb = game.cover_url
-          ? `<img class="sidebar-item-thumb game-logo" src="${encodeURI(game.cover_url)}" alt="${safeGameName}" loading="lazy" />`
+          ? `<span class="sidebar-item-thumb game-logo"><img src="${encodeURI(game.cover_url)}" alt="${safeGameName}" loading="lazy" /></span>`
           : `<span class="sidebar-item-thumb game">${escapeHtml(String(game.name || "G").slice(0, 1))}</span>`;
         return `
           <a class="sidebar-item" href="game.html?id=${encodeURIComponent(game.id)}">
@@ -693,7 +693,7 @@
         const sellerName = formatSellerName(user);
         return `
           <a class="sidebar-item" href="user.html?id=${encodeURIComponent(userId)}">
-            <img class="sidebar-item-thumb avatar" src="${encodeURI(user.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(sellerName)}" loading="lazy" referrerpolicy="no-referrer" />
+            <span class="sidebar-item-thumb avatar"><img src="${encodeURI(user.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(sellerName)}" loading="lazy" referrerpolicy="no-referrer" /></span>
             <span class="sidebar-item-copy">
               <strong>${escapeHtml(sellerName)}</strong>
               <span>${formatRecommendations(getRecommendationCount(userId))}</span>

@@ -413,6 +413,7 @@ main.home-layout.sidebar-collapsed {
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow);
   transition: width 0.2s ease, padding 0.2s ease;
+  overflow: hidden;
 }
 
 .home-sidebar-head {
@@ -514,6 +515,7 @@ main.home-layout.sidebar-collapsed {
   padding: 8px;
   border-radius: 16px;
   transition: background 0.16s ease;
+  overflow: hidden;
 }
 
 .sidebar-item:hover {
@@ -523,6 +525,10 @@ main.home-layout.sidebar-collapsed {
 .sidebar-item-thumb {
   width: 44px;
   height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 44px;
+  max-height: 44px;
   border-radius: 14px;
   display: grid;
   place-items: center;
@@ -531,22 +537,37 @@ main.home-layout.sidebar-collapsed {
   font-weight: 800;
   font-size: 18px;
   overflow: hidden;
+  flex: 0 0 44px;
+}
+
+.sidebar-item-thumb img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
 }
 
 .sidebar-item-thumb.game-logo {
-  display: block;
-  object-fit: contain;
-  object-position: center;
   background: #fff;
   border: 1px solid var(--border);
+}
+
+.sidebar-item-thumb.game-logo img {
+  object-fit: contain;
+  object-position: center;
   padding: 6px;
 }
 
 .sidebar-item-thumb.avatar {
   border-radius: 999px;
-  object-fit: cover;
   background: #fff;
   border: 1px solid var(--border);
+}
+
+.sidebar-item-thumb.avatar img {
+  object-fit: cover;
+  border-radius: 999px;
 }
 
 .sidebar-item-copy {
@@ -1935,6 +1956,28 @@ main.home-layout.sidebar-collapsed {
     padding: 8px 16px;
     gap: 14px;
     border-radius: 22px;
+  }
+  .sidebar-item {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+  }
+  .sidebar-item-thumb,
+  .sidebar-item-thumb.avatar,
+  .sidebar-item-thumb.game-logo {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
+    flex: 0 0 44px !important;
+  }
+  .sidebar-item-thumb img {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    max-width: 44px !important;
+    max-height: 44px !important;
   }
   .home-sidebar-toggle {
     width: 34px;
