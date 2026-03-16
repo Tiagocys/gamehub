@@ -1103,17 +1103,21 @@ main.home-layout.sidebar-collapsed {
   padding: 16px 16px 18px;
   display: grid;
   gap: 12px;
+  align-content: start;
+  grid-template-rows: auto minmax(46px, auto) auto;
 }
 
 .hero-listing-body h3 {
   font-size: 20px;
   line-height: 1.15;
+  margin: 0;
 }
 
 .hero-listing-seller {
   display: flex;
   align-items: center;
   gap: 10px;
+  align-self: start;
 }
 
 .hero-listing-seller strong,

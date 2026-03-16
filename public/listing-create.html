@@ -14,40 +14,6 @@
   <link rel="stylesheet" href="css/global.css" />
   <style id="listing-guard-style">html{visibility:hidden;}</style>
   <style>
-    .category-picker {
-      display: grid;
-      gap: 10px;
-    }
-
-    .category-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .category-pill {
-      border: 1px solid var(--border);
-      background: rgba(12, 21, 51, 0.04);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.16s ease;
-    }
-
-    .category-pill:hover {
-      border-color: rgba(27, 79, 211, 0.35);
-      background: rgba(27, 79, 211, 0.08);
-    }
-
-    .category-pill.active {
-      border-color: rgba(27, 79, 211, 0.45);
-      background: rgba(27, 79, 211, 0.16);
-      color: #18408a;
-    }
-
     .feedback-link {
       color: var(--accent-2);
       font-weight: 600;
@@ -97,21 +63,6 @@
               <div id="game-suggestions" class="suggestions-panel" style="display:none;"></div>
             </div>
             <span id="game-helper" class="helper">Selecione um game existente da lista.</span>
-          </div>
-
-          <div class="form-grid">
-            <div class="field">
-              <label for="listing-category-pills">Categoria</label>
-              <div class="category-picker">
-                <div id="listing-category-pills" class="category-pills">
-                  <button type="button" class="category-pill" data-value="currency">Moeda do jogo</button>
-                  <button type="button" class="category-pill" data-value="item">Item ou itens</button>
-                  <button type="button" class="category-pill" data-value="account">Conta ou personagem</button>
-                  <button type="button" class="category-pill" data-value="service">Serviço</button>
-                </div>
-                <span class="helper">Selecione uma ou mais categorias (opcional).</span>
-              </div>
-            </div>
           </div>
 
           <div class="field">
@@ -172,7 +123,6 @@
     const imagesInput = document.getElementById("listing-images");
     const imagePreviews = document.getElementById("image-previews");
     const imageCount = document.getElementById("image-count");
-    const categoryPills = document.getElementById("listing-category-pills");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -203,7 +153,6 @@
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     const MAX_IMAGE_DIMENSION = 1600;
     const WEBP_QUALITY = 0.8;
-    const CATEGORY_OPTIONS = ["currency", "item", "account", "service"];
     const urlParams = new URLSearchParams(window.location.search);
     const editListingId = urlParams.get("edit");
 
@@ -214,7 +163,6 @@
     let originalImageUrls = [];
     let existingImageUrls = [];
     let selectedImages = [];
-    let selectedCategories = [];
     let avatarLoaded = false;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
     if (submitBtn && !submitBtn.dataset.defaultText) {
@@ -238,15 +186,6 @@
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("listing-guard-style");
       if (guard) guard.remove();
-    }
-
-    function renderSelectedCategories() {
-      if (!categoryPills) return;
-      const buttons = categoryPills.querySelectorAll(".category-pill");
-      buttons.forEach((button) => {
-        const value = button.getAttribute("data-value") || "";
-        button.classList.toggle("active", selectedCategories.includes(value));
-      });
     }
 
     function ensureClient() {
@@ -508,28 +447,10 @@
       gameInput.dataset.gameId = data.server_id || "";
       gameHelper.textContent = "Game selecionado.";
 
-      const rawCategories = Array.isArray(data.categories)
-        ? data.categories
-        : (data.category ? [String(data.category)] : []);
-      selectedCategories = rawCategories
-        .map((item) => String(item || "").trim())
-        .filter((item) => CATEGORY_OPTIONS.includes(item));
-      renderSelectedCategories();
-
       existingImageUrls = Array.isArray(data.images) ? data.images.slice(0, MAX_IMAGES) : [];
       originalImageUrls = existingImageUrls.slice();
       selectedImages = [];
       renderImagePreviews();
-    }
-
-    function toggleCategory(value) {
-      if (!CATEGORY_OPTIONS.includes(value)) return;
-      if (selectedCategories.includes(value)) {
-        selectedCategories = selectedCategories.filter((item) => item !== value);
-      } else {
-        selectedCategories = [...selectedCategories, value];
-      }
-      renderSelectedCategories();
     }
 
     async function handleAuthClick() {
@@ -767,8 +688,6 @@
         const title = document.getElementById("listing-title").value.trim();
         const gameName = gameInput.value.trim();
         const gameId = gameInput.dataset.gameId;
-        const categories = selectedCategories.filter((item) => CATEGORY_OPTIONS.includes(item));
-        const listingType = categories[0] || "other";
         const description = descInput.value.trim() || null;
         const files = selectedImages;
         const isEditing = Boolean(editingListing?.id);
@@ -812,8 +731,8 @@
 
         const payload = {
           server_id: gameId,
-          category: listingType,
-          categories,
+          category: "other",
+          categories: [],
           title,
           description,
           images: finalImageUrls,
@@ -875,12 +794,6 @@
       addSelectedImages(event.target.files);
       imagesInput.value = "";
     });
-    categoryPills?.addEventListener("click", (event) => {
-      const button = event.target.closest(".category-pill");
-      if (!button) return;
-      const value = button.getAttribute("data-value") || "";
-      toggleCategory(value);
-    });
     suggestionsPanel?.addEventListener("click", handleSuggestionClick);
     descInput?.addEventListener("input", updateDescCounter);
     authBtn?.addEventListener("click", handleAuthClick);
@@ -937,7 +850,6 @@
         }
         await fetchGames();
         updateDescCounter();
-        renderSelectedCategories();
         await loadEditingListing();
         revealPage();
       } catch (err) {

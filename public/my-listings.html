@@ -191,14 +191,6 @@
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
-    const CATEGORY_LABELS = {
-      item: "Item ou itens",
-      currency: "Moeda do jogo",
-      account: "Conta ou personagem",
-      service: "Serviço",
-      other: "Outro"
-    };
-
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("my-listings-guard-style");
@@ -369,10 +361,6 @@
       }
     }
 
-    function formatCategory(category) {
-      return CATEGORY_LABELS[category] || "Anúncio";
-    }
-
     function escapeHtml(value) {
       return String(value || "")
         .replace(/&/g, "&amp;")
@@ -380,16 +368,6 @@
         .replace(/>/g, "&gt;")
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
-    }
-
-    function getListingCategories(listing) {
-      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
-      const normalized = raw
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-      if (normalized.length > 0) return normalized;
-      if (listing?.category) return [String(listing.category)];
-      return [];
     }
 
     function isHighlightActive(listing) {
@@ -420,10 +398,6 @@
           ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${safeTitle}" loading="lazy" /></div>`
           : `<div class="listing-media empty">Sem imagem</div>`;
 
-        const categoriesHtml = getListingCategories(listing)
-          .map((category) => `<span class="pill">${formatCategory(category)}</span>`)
-          .join("");
-
         const promoteLink = (!highlightActive && listing.status === "active")
           ? `<a class="btn btn-primary" href="ad-wallet.html">Destacar anúncio</a>`
           : "";
@@ -433,7 +407,6 @@
           <div class="listing-body">
             <div class="listing-meta">
               ${safeServerName ? `<span class="pill">${safeServerName}</span>` : '<span class="pill">Game: não informado</span>'}
-              ${categoriesHtml || '<span class="pill">Sem categoria</span>'}
             </div>
             <h3>${safeTitle}</h3>
             <p class="listing-description-preserve listing-description-preview">${safeDescription}</p>

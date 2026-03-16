@@ -488,14 +488,6 @@
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
-    const CATEGORY_LABELS = {
-      item: "Item ou itens",
-      currency: "Moeda do jogo",
-      account: "Conta ou personagem",
-      service: "Serviço",
-      other: "Outro"
-    };
-
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("ad-wallet-guard-style");
@@ -711,20 +703,6 @@
       }
     }
 
-    function getListingCategories(listing) {
-      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
-      const normalized = raw
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-      if (normalized.length > 0) return normalized;
-      if (listing?.category) return [String(listing.category)];
-      return [];
-    }
-
-    function formatCategory(category) {
-      return CATEGORY_LABELS[category] || "Categoria";
-    }
-
     function findListingById(id) {
       return myListings.find((item) => String(item.id) === String(id)) || null;
     }
@@ -785,12 +763,8 @@
 
         const meta = document.createElement("div");
         meta.className = "wallet-listing-meta";
-        const categoryPills = getListingCategories(listing)
-          .map((category) => `<span class="pill">${escapeHtml(formatCategory(category))}</span>`)
-          .join("");
         meta.innerHTML = `
           <span class="pill">${escapeHtml(listing.server_name || "Servidor")}</span>
-          ${categoryPills || '<span class="pill">Sem categoria</span>'}
           <span class="pill">${canHighlight ? "Ativo" : "Inativo"}</span>
           <span class="pill">${isHighlighted ? "Destaque ativo" : "Sem destaque"}</span>
         `;

@@ -436,7 +436,6 @@
             </div>
             <div id="listing-search-meta" class="feed-search-meta"></div>
             <div id="sort-filters" class="feed-sort"></div>
-            <div id="category-filters" class="feed-filters"></div>
           </div>
         </div>
       </div>
@@ -488,7 +487,6 @@
     const listingSearchInput = document.getElementById("listing-search");
     const listingSearchMeta = document.getElementById("listing-search-meta");
     const listingFeed = document.getElementById("listing-feed");
-    const categoryFilters = document.getElementById("category-filters");
     const sortFilters = document.getElementById("sort-filters");
     const feedSentinel = document.getElementById("feed-sentinel");
     const listingEmpty = document.getElementById("listing-empty");
@@ -607,7 +605,6 @@
     let allListings = [];
     let orderedListings = [];
     let visibleCount = 0;
-    let activeCategoryFilter = "all";
     let activeSortFilter = "recent";
     let searchQuery = "";
     let feedObserver = null;
@@ -619,13 +616,6 @@
     const FEED_MIN_BATCH_SIZE = 16;
     const FEED_MAX_BATCH_SIZE = 84;
     let feedPageSize = 24;
-    const FILTER_OPTIONS = [
-      { value: "all", label: "Todas" },
-      { value: "currency", label: "Moeda do jogo" },
-      { value: "item", label: "Item ou itens" },
-      { value: "account", label: "Conta ou personagem" },
-      { value: "service", label: "Serviço" },
-    ];
     const SORT_OPTIONS = [
       { value: "relevant", label: "Mais relevantes" },
       { value: "recent", label: "Mais recentes" },
@@ -1022,27 +1012,12 @@
         .replace(/'/g, "&#39;");
     }
 
-    function getListingCategories(listing) {
-      const raw = Array.isArray(listing?.categories) ? listing.categories : [];
-      const normalized = raw
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-      if (normalized.length > 0) return normalized;
-      if (listing?.category) return [String(listing.category)];
-      return [];
-    }
-
     function isHighlightActive(listing) {
       return Boolean(listing && listing.highlight_status === "active");
     }
 
     function getListingRelevanceScore(listing) {
       return Number(listing?.user_recommendations_count || 0);
-    }
-
-    function listingHasCategory(listing, category) {
-      if (category === "all") return true;
-      return getListingCategories(listing).includes(category);
     }
 
     function listingMatchesQuery(listing, query) {
@@ -1119,20 +1094,6 @@
       }
 
       return merged;
-    }
-
-    function renderCategoryFilters() {
-      if (!categoryFilters) return;
-      categoryFilters.innerHTML = FILTER_OPTIONS
-        .map((option) => `
-          <button
-            type="button"
-            class="feed-filter-btn${activeCategoryFilter === option.value ? " active" : ""}"
-            data-category="${option.value}">
-            ${option.label}
-          </button>
-        `)
-        .join("");
     }
 
     function renderSortFilters() {
@@ -1333,15 +1294,11 @@
       }
       try {
         feedPageSize = computeFeedPageSize();
-        const filteredByCategory = activeCategoryFilter === "all"
-          ? allListings
-          : allListings.filter((item) => listingHasCategory(item, activeCategoryFilter));
         const filtered = String(searchQuery || "").trim()
-          ? filteredByCategory.filter((item) => listingMatchesQuery(item, searchQuery))
-          : filteredByCategory;
+          ? allListings.filter((item) => listingMatchesQuery(item, searchQuery))
+          : allListings;
         orderedListings = buildOrderedFeed(filtered);
         updateSearchMeta(filtered.length);
-        renderCategoryFilters();
         renderSortFilters();
         await resetFeed();
       } finally {
@@ -1401,7 +1358,6 @@
         currentGame = game;
         renderGame(game);
         await loadFollowState(currentGameId);
-        renderCategoryFilters();
         setupFeedObserver();
         await fetchListings(currentGameId);
       } catch (err) {
@@ -1430,15 +1386,6 @@
       if (!userMenu.contains(event.target)) {
         userMenu.classList.remove("open");
       }
-    });
-    categoryFilters?.addEventListener("click", (event) => {
-      const button = event.target.closest(".feed-filter-btn");
-      if (!button) return;
-      if (button.hasAttribute("data-sort")) return;
-      const category = button.getAttribute("data-category") || "all";
-      if (category === activeCategoryFilter) return;
-      activeCategoryFilter = category;
-      refreshFeed({ inlineLoader: true });
     });
     sortFilters?.addEventListener("click", (event) => {
       const button = event.target.closest(".feed-filter-btn[data-sort]");
