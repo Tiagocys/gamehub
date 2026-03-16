@@ -27,7 +27,9 @@
             <p class="home-sidebar-kicker">Explorar</p>
             <div class="home-sidebar-titlebar">
               <h2>Descobertas</h2>
-              <button id="home-sidebar-toggle" class="home-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true">‹</button>
+              <button id="home-sidebar-toggle" class="home-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true" data-icon="left">
+                <span class="sr-only">Recolher menu lateral</span>
+              </button>
             </div>
           </div>
         </div>
@@ -146,12 +148,12 @@
       });
     }
 
-    function getSidebarToggleIcon() {
+    function getSidebarToggleIconName() {
       const isMobile = window.matchMedia("(max-width: 900px)").matches;
       if (isMobile) {
-        return sidebarCollapsed ? "icon-down" : "icon-up";
+        return sidebarCollapsed ? "down" : "up";
       }
-      return sidebarCollapsed ? "icon-right" : "icon-left";
+      return sidebarCollapsed ? "right" : "left";
     }
 
     function ensureClient() {
@@ -571,7 +573,7 @@
       if (homeSidebarToggle) {
         homeSidebarToggle.setAttribute("aria-expanded", String(!sidebarCollapsed));
         homeSidebarToggle.setAttribute("aria-label", sidebarCollapsed ? "Expandir menu lateral" : "Recolher menu lateral");
-        homeSidebarToggle.innerHTML = `<span aria-hidden="true" class="home-sidebar-toggle-icon ${getSidebarToggleIcon()}"></span>`;
+        homeSidebarToggle.dataset.icon = getSidebarToggleIconName();
       }
     }
 
