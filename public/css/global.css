@@ -2013,13 +2013,9 @@ main.home-layout.sidebar-collapsed {
   .hero-listing-card {
     grid-template-rows: 180px 1fr;
   }
-  .hero-listing-media {
-    background: #fff;
-  }
   .hero-listing-media img {
-    object-fit: contain;
+    object-fit: cover;
     object-position: center;
-    background: #fff;
   }
   .brand-copy { display: none; }
   .nav-search {
