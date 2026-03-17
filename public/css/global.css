@@ -1136,6 +1136,12 @@ main.home-layout.sidebar-collapsed {
   overflow: hidden;
 }
 
+.hero-listing-media.has-image {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
 .hero-listing-media img {
   width: 100%;
   height: 100%;
@@ -2013,9 +2019,8 @@ main.home-layout.sidebar-collapsed {
   .hero-listing-card {
     grid-template-rows: 180px 1fr;
   }
-  .hero-listing-media img {
-    object-fit: cover;
-    object-position: center;
+  .hero-listing-media.has-image {
+    background-size: cover;
   }
   .brand-copy { display: none; }
   .nav-search {

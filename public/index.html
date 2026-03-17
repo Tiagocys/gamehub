@@ -751,9 +751,12 @@
       card.className = "hero-listing-card";
       card.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
       card.innerHTML = `
-        <div class="hero-listing-media${listing.image_url ? "" : " empty"}">
+        <div
+          class="hero-listing-media${listing.image_url ? " has-image" : " empty"}"
+          ${listing.image_url ? `style="background-image:url('${encodeURI(listing.image_url)}')"` : ""}
+        >
           ${listing.image_url
-            ? `<img src="${encodeURI(listing.image_url)}" alt="${escapeHtml(listing.title || "Anúncio")}" loading="lazy" />`
+            ? ""
             : `<img src="img/logo.png" alt="" class="hero-listing-fallback" loading="lazy" />`}
         </div>
         <div class="hero-listing-body">
