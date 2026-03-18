@@ -831,7 +831,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
-        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
         loadUserAvatar();
@@ -1239,7 +1239,7 @@
       if (!recommendersList) return;
       const link = document.createElement("a");
       link.className = "recommender-item";
-      link.href = `user.html?id=${encodeURIComponent(rating.author_id)}`;
+      link.href = `user?id=${encodeURIComponent(rating.author_id)}`;
 
       const avatar = document.createElement("img");
       avatar.className = "recommender-avatar";
@@ -1364,7 +1364,7 @@
       const displayName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
       const discord = String(profile?.discord_username || "").trim();
       const profileStatus = String(profile?.status || "active");
-      shareUrl = `${window.location.origin}/user.html?id=${encodeURIComponent(targetUserId || "")}`;
+      shareUrl = `${window.location.origin}/user?id=${encodeURIComponent(targetUserId || "")}`;
       publicName.textContent = displayName;
       if (publicUsername) {
         if (username) {

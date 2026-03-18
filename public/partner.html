@@ -642,7 +642,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
-        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
         loadUserAvatar();

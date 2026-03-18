@@ -185,7 +185,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
-        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
         loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
@@ -694,7 +694,7 @@
         const user = userMap.get(String(userId)) || {};
         const sellerName = formatSellerName(user);
         return `
-          <a class="sidebar-item" href="user.html?id=${encodeURIComponent(userId)}">
+          <a class="sidebar-item" href="user?id=${encodeURIComponent(userId)}">
             <span class="sidebar-item-thumb avatar"><img src="${encodeURI(user.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(sellerName)}" loading="lazy" referrerpolicy="no-referrer" /></span>
             <span class="sidebar-item-copy">
               <strong>${escapeHtml(sellerName)}</strong>
@@ -1094,7 +1094,7 @@
         return;
       }
       if (kind === "player" && userId) {
-        window.location.href = `user.html?id=${encodeURIComponent(userId)}`;
+        window.location.href = `user?id=${encodeURIComponent(userId)}`;
       }
     }
 
@@ -1117,7 +1117,7 @@
         return username === normalizedTerm || normalizeSearchText(player.name) === normalizedTerm || player.searchText === normalizedTerm;
       });
       if (playerMatch) {
-        window.location.href = `user.html?id=${encodeURIComponent(playerMatch.id)}`;
+        window.location.href = `user?id=${encodeURIComponent(playerMatch.id)}`;
         searchSuggestions.style.display = "none";
       } else {
         searchSuggestions.innerHTML = `

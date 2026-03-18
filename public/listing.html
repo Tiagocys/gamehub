@@ -576,7 +576,7 @@
       if (currentUser) {
         authBtn.style.display = "none";
         if (userMenu) userMenu.style.display = "inline-flex";
-        if (profileLink) profileLink.href = `user.html?id=${encodeURIComponent(currentUser.id)}`;
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
         loadUserAvatar();
         if (createListingBtn) createListingBtn.style.display = "inline-flex";
         if (menuCreateListing) menuCreateListing.style.display = "";
@@ -695,7 +695,7 @@
       if (!recommendersList) return;
       const link = document.createElement("a");
       link.className = "recommender-item";
-      link.href = `user.html?id=${encodeURIComponent(recommendation.author_id)}`;
+      link.href = `user?id=${encodeURIComponent(recommendation.author_id)}`;
 
       const avatar = document.createElement("img");
       avatar.className = "recommender-avatar";
@@ -1196,7 +1196,7 @@
 
       if (sellerProfileLink) {
         if (listing.user_profile_id) {
-          sellerProfileLink.href = `user.html?id=${encodeURIComponent(listing.user_profile_id)}`;
+          sellerProfileLink.href = `user?id=${encodeURIComponent(listing.user_profile_id)}`;
           sellerProfileLink.innerHTML = "";
           const avatar = document.createElement("img");
           avatar.className = "seller-profile-avatar";
