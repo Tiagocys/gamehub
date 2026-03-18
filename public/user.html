@@ -458,6 +458,7 @@
     }
 
     .user-listings-grid .listing-media {
+      position: relative;
       height: auto;
       aspect-ratio: 1 / 1;
       border-radius: 10px;
@@ -469,6 +470,12 @@
       color: var(--muted);
       font-weight: 700;
       background: radial-gradient(circle at 20% 20%, rgba(27,79,211,0.08), rgba(15,37,87,0.02));
+    }
+
+    .user-listings-grid .listing-media.has-image {
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
     }
 
     .user-listings-grid .listing-media img {
@@ -1497,11 +1504,8 @@
         media.className = "listing-media";
         const firstImage = Array.isArray(listing.images) ? listing.images.find(Boolean) : null;
         if (firstImage) {
-          const image = document.createElement("img");
-          image.src = firstImage;
-          image.alt = listing.title || "Imagem do anúncio";
-          image.loading = "lazy";
-          media.appendChild(image);
+          media.classList.add("has-image");
+          media.style.backgroundImage = `url("${String(firstImage).replace(/"/g, "&quot;")}")`;
         } else {
           media.textContent = "Sem imagem";
         }
