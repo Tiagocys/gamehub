@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Termos de uso</title>
+  <title>Gimerr - Terms of use</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
     .terms-page {
@@ -55,52 +55,52 @@
 
     <main class="section terms-page">
       <section class="hero-card">
-        <h2>Termos de uso</h2>
-        <p class="helper">Ao utilizar a plataforma, você concorda com os termos e políticas aplicáveis.</p>
+        <h2>Terms of use</h2>
+        <p class="helper">By using the platform, you agree to the applicable terms and policies.</p>
       </section>
 
       <article class="terms-card">
-        <h3>1. Conta e acesso</h3>
+        <h3>1. Account and access</h3>
         <ul>
-          <li>Você é responsável pelo uso da sua conta e pela segurança das suas credenciais.</li>
-          <li>Os dados do perfil devem ser verdadeiros e mantidos atualizados.</li>
-          <li>Podemos restringir acesso em caso de abuso, fraude ou violação das regras.</li>
+          <li>You are responsible for the use of your account and the security of your credentials.</li>
+          <li>Profile data must be accurate and kept up to date.</li>
+          <li>We may restrict access in cases of abuse, fraud or rule violations.</li>
         </ul>
       </article>
 
       <article class="terms-card">
-        <h3>2. Anúncios e conteúdo</h3>
+        <h3>2. Listings and content</h3>
         <ul>
-          <li>O usuário é responsável pelas informações publicadas em seus anúncios.</li>
-          <li>É proibido publicar conteúdo enganoso, malicioso, ilegal ou que viole direitos de terceiros.</li>
-          <li>Conteúdos denunciados podem ser revisados, editados ou removidos pela moderação.</li>
+          <li>The user is responsible for the information published in their listings.</li>
+          <li>Publishing misleading, malicious, illegal content or content that violates third-party rights is prohibited.</li>
+          <li>Reported content may be reviewed, edited or removed by moderation.</li>
         </ul>
       </article>
 
       <article class="terms-card">
-        <h3>3. Recursos pagos</h3>
+        <h3>3. Paid features</h3>
         <ul>
-          <li>Os destaques de anúncios são recursos pagos e seguem regras específicas de consumo de saldo.</li>
-          <li>As regras completas de destaque estão na política de anúncios.</li>
+          <li>Listing highlights are paid features and follow specific balance consumption rules.</li>
+          <li>The complete highlight rules are described in the advertising policy.</li>
         </ul>
         <p>
-          Consulte:
-          <a class="link-ghost" href="ads-policy.html">Política de anúncios</a>
+          See:
+          <a class="link-ghost" href="ads-policy.html">Advertising policy</a>
         </p>
       </article>
 
       <article class="terms-card">
-        <h3>4. Moderação e sanções</h3>
+        <h3>4. Moderation and sanctions</h3>
         <ul>
-          <li>Podemos remover anúncios e perfis que violem os termos de uso ou regras da comunidade.</li>
-          <li>Em casos graves ou reincidentes, a conta pode ser suspensa ou banida.</li>
+          <li>We may remove listings and profiles that violate the terms of use or community rules.</li>
+          <li>In serious or repeated cases, the account may be suspended or banned.</li>
         </ul>
       </article>
 
       <article class="terms-card">
-        <h3>5. Suporte</h3>
+        <h3>5. Support</h3>
         <p>
-          E-mail de suporte:
+          Support email:
           <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>
         </p>
       </article>
@@ -108,7 +108,156 @@
 
     <site-footer></site-footer>
   </div>
+  <script src="env.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
+
+    const env = window.__ENV || {};
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
+
+    let supabase;
+    let currentUser = null;
+    let avatarLoaded = false;
+
+    if (avatarImg) {
+      avatarImg.referrerPolicy = "no-referrer";
+      avatarImg.addEventListener("error", () => {
+        avatarImg.src = "img/avatar.svg";
+      });
+    }
+
+    function ensureClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        if (authBtn) authBtn.disabled = true;
+        throw new Error("Supabase is not configured.");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      const finalSrc = src || "img/avatar.svg";
+      avatarImg.src = finalSrc;
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        if (finalSrc !== "img/avatar.svg") {
+          avatarImg.src = "img/avatar.svg";
+        }
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!avatarImg || !currentUser || avatarLoaded) return;
+      try {
+        ensureClient();
+        const { data } = await supabase
+          .from("users")
+          .select("avatar_url")
+          .eq("id", currentUser.id)
+          .single();
+        let avatar = data?.avatar_url;
+        if (!avatar) {
+          const { data: authData } = await supabase.auth.getUser();
+          const meta = authData?.user?.user_metadata || {};
+          avatar = meta.avatar_url || meta.picture || currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+        }
+        await setAvatarImage(avatar);
+      } catch (_err) {
+        await setAvatarImage("img/avatar.svg");
+      } finally {
+        avatarLoaded = true;
+      }
+    }
+
+    async function initAuth() {
+      try {
+        ensureClient();
+        const { data } = await supabase.auth.getSession();
+        currentUser = data?.session?.user || null;
+      } catch (err) {
+        console.error("Failed to initialize session on terms page:", err);
+      } finally {
+        updateAuthUI();
+      }
+    }
+
+    authBtn?.addEventListener("click", () => {
+      window.__NAVBAR_GOOGLE_LOGIN__?.(null, authBtn);
+    });
+    avatarBtn?.addEventListener("click", () => {
+      userMenu?.classList.toggle("open");
+    });
+    document.addEventListener("click", (event) => {
+      if (!userMenu || !avatarBtn) return;
+      if (!userMenu.contains(event.target) && !avatarBtn.contains(event.target)) {
+        userMenu.classList.remove("open");
+      }
+    });
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        ensureClient();
+        await supabase.auth.signOut();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+    createListingBtn?.addEventListener("click", () => {
+      window.location.href = "listing-create.html";
+    });
+    menuCreateListing?.addEventListener("click", () => {
+      window.location.href = "listing-create.html";
+    });
+
+    initAuth();
+  </script>
 </body>
 </html>

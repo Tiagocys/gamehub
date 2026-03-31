@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -458,12 +458,21 @@
   </div>
 
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
     await (window.__NAVBAR_READY__ || Promise.resolve());
+    const i18n = window.__I18N__ || { t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
+    const formatMessage = (key, fallback, params = {}) => Object.entries(params).reduce(
+      (message, [paramKey, value]) => message.replaceAll(`{${paramKey}}`, String(value ?? "")),
+      t(key, fallback),
+    );
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -608,8 +617,21 @@
     let activeSortFilter = "recent";
     let searchQuery = "";
     let feedObserver = null;
+    let gameHighlightImpressionObserver = null;
+    let gameHighlightImpressionFlushTimer = null;
+    const trackedGameHighlightImpressions = new Map();
+    const pendingGameHighlightImpressionIds = new Set();
     let isRenderingBatch = false;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    document.title = t("game.title_default", "Gimerr - Game");
+    if (logoEl) logoEl.alt = t("game.logo_alt", "Logo do game");
+    if (titleEl) titleEl.textContent = t("game.loading", "Carregando...");
+    if (listingSearchInput) listingSearchInput.placeholder = t("game.search_placeholder", "O que você está procurando?");
+    if (feedSentinel) feedSentinel.textContent = t("game.scroll_more", "Role para carregar mais");
+    if (listingEmpty) listingEmpty.textContent = t("game.empty", "Nenhum anúncio para este game ainda.");
+    const loadingOverlayImage = feedLoadingOverlay?.querySelector("img");
+    if (loadingOverlayImage) loadingOverlayImage.alt = t("game.loading_listings", "Carregando anúncios");
 
     const CARD_MIN_WIDTH_DESKTOP = 180;
     const CARD_ESTIMATED_HEIGHT = 238;
@@ -617,8 +639,8 @@
     const FEED_MAX_BATCH_SIZE = 84;
     let feedPageSize = 24;
     const SORT_OPTIONS = [
-      { value: "relevant", label: "Mais relevantes" },
-      { value: "recent", label: "Mais recentes" },
+      { value: "relevant", label: t("game.sort_relevant", "Mais relevantes") },
+      { value: "recent", label: t("game.sort_recent", "Mais recentes") },
     ];
 
     function computeFeedPageSize() {
@@ -638,9 +660,9 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        titleEl.textContent = "Supabase não configurado.";
+        titleEl.textContent = t("game.supabase_not_configured", "Supabase não configurado.");
         if (authBtn) authBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error(t("game.supabase_not_configured", "Supabase não configurado."));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -834,7 +856,7 @@
         if (error) throw error;
         return data?.signedUrl || normalized;
       } catch (err) {
-        console.warn("Falha ao assinar imagem do anuncio", err);
+        console.warn(t("game.feed_signing_warning", "Falha ao assinar imagem do anúncio"), err);
         return normalized;
       }
     }
@@ -850,7 +872,7 @@
         if (error) throw error;
         return data?.signedUrl || urlString;
       } catch (err) {
-        console.warn("Falha ao assinar cover", err);
+        console.warn(t("game.cover_signing_warning", "Falha ao assinar cover"), err);
         return urlString;
       }
     }
@@ -872,7 +894,7 @@
           description: data.description,
         } : null;
       } catch (err) {
-        console.warn("Falha ao buscar em servers, tentando games.", err);
+        console.warn(t("game.servers_fallback_warning", "Falha ao buscar em servers, tentando games."), err);
         const { data, error } = await supabase
           .from("games")
           .select("id,name,website,cover_url")
@@ -896,7 +918,7 @@
           id="game-follow-btn"
           class="btn btn-ghost game-follow-btn${currentGameFollowed ? " is-following" : ""}"
           type="button">
-          ${currentGameFollowed ? "Seguindo" : "Seguir game"}
+          ${currentGameFollowed ? t("game.following", "Seguindo") : t("game.follow_game", "Seguir game")}
         </button>
       `;
       actionsEl.innerHTML = followMarkup;
@@ -904,13 +926,14 @@
 
     function renderGame(game) {
       if (!game) {
-        titleEl.textContent = "Game não encontrado.";
+        titleEl.textContent = t("game.not_found", "Game não encontrado.");
         logoEl.style.display = "none";
         if (siteLinkEl) siteLinkEl.style.display = "none";
         if (descriptionEl) descriptionEl.style.display = "none";
         if (actionsEl) actionsEl.innerHTML = "";
         return;
       }
+      document.title = `${game.name} | Gimerr`;
       titleEl.textContent = game.name;
       if (siteLinkEl) {
         if (game.website) {
@@ -920,7 +943,7 @@
           siteLinkEl.classList.remove("is-unavailable");
         } else {
           siteLinkEl.removeAttribute("href");
-          siteLinkEl.textContent = "Site indisponível";
+          siteLinkEl.textContent = t("game.site_unavailable", "Site indisponível");
           siteLinkEl.style.display = "inline-flex";
           siteLinkEl.classList.add("is-unavailable");
         }
@@ -979,7 +1002,7 @@
       try {
         if (followBtn) {
           followBtn.disabled = true;
-          followBtn.textContent = nextState ? "Seguindo..." : "Removendo...";
+          followBtn.textContent = nextState ? t("game.following_progress", "Seguindo...") : t("game.unfollowing_progress", "Removendo...");
         }
         ensureClient();
         if (nextState) {
@@ -1163,20 +1186,71 @@
       const card = document.createElement("a");
       card.className = "feed-card";
       card.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
+      card.dataset.listingId = String(listing.id || "");
+      if (isHighlightActive(listing)) {
+        card.dataset.highlightTrack = "1";
+      }
       const matched = listingMatchesQuery(listing, searchQuery);
       card.classList.toggle("matched", matched && String(searchQuery || "").trim().length > 0);
       const highlightBadge = isHighlightActive(listing)
-        ? `<span class="feed-highlight-badge">Em destaque</span>`
+        ? `<span class="feed-highlight-badge">${escapeHtml(t("game.highlight_badge", "Em destaque"))}</span>`
         : "";
       const cardImageUrl = listing.cardImage ? encodeURI(listing.cardImage).replace(/'/g, "%27") : "";
       const media = listing.cardImage
-        ? `<div class="feed-media feed-media-image" style="--feed-image:url('${cardImageUrl}');">${highlightBadge}<img src="${cardImageUrl}" alt="Imagem do anúncio ${escapeHtml(listing.title || "Anúncio")}" loading="lazy" /></div>`
+        ? `<div class="feed-media feed-media-image" style="--feed-image:url('${cardImageUrl}');">${highlightBadge}<img src="${cardImageUrl}" alt="${escapeHtml(formatMessage("game.listing_image_alt", "Imagem do anúncio {title}", { title: listing.title || t("game.listing_title_fallback", "Anúncio") }))}" loading="lazy" /></div>`
         : `<div class="feed-media empty">${highlightBadge}<img src="img/logo.png" alt="" class="feed-media-fallback-logo" loading="lazy" /></div>`;
       card.innerHTML = `
         ${media}
-        <h3 class="feed-title">${escapeHtml(listing.title || "Anúncio")}</h3>
+        <h3 class="feed-title">${escapeHtml(listing.title || t("game.listing_title_fallback", "Anúncio"))}</h3>
       `;
       return card;
+    }
+
+    function queueGameHighlightImpression(listingId) {
+      const normalizedId = String(listingId || "").trim();
+      if (!normalizedId) return;
+      pendingGameHighlightImpressionIds.add(normalizedId);
+      if (gameHighlightImpressionFlushTimer) return;
+      gameHighlightImpressionFlushTimer = window.setTimeout(async () => {
+        const ids = Array.from(pendingGameHighlightImpressionIds);
+        pendingGameHighlightImpressionIds.clear();
+        gameHighlightImpressionFlushTimer = null;
+        if (ids.length === 0) return;
+        try {
+          ensureClient();
+          await supabase.functions.invoke("listing_highlight_impression", {
+            body: { listingIds: ids },
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      }, 800);
+    }
+
+    function observeGameHighlightImpressions() {
+      if (gameHighlightImpressionObserver) {
+        gameHighlightImpressionObserver.disconnect();
+        gameHighlightImpressionObserver = null;
+      }
+      if (!listingFeed) return;
+      const cards = [...listingFeed.querySelectorAll(".feed-card[data-highlight-track='1']")];
+      if (cards.length === 0) return;
+      gameHighlightImpressionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.65) return;
+          const listingId = entry.target?.dataset?.listingId;
+          if (!listingId) return;
+          const now = Date.now();
+          const lastTrackedAt = Number(trackedGameHighlightImpressions.get(listingId) || 0);
+          if (now - lastTrackedAt < 30000) return;
+          trackedGameHighlightImpressions.set(listingId, now);
+          queueGameHighlightImpression(listingId);
+        });
+      }, {
+        root: null,
+        threshold: [0.65],
+      });
+      cards.forEach((card) => gameHighlightImpressionObserver.observe(card));
     }
 
     function updateFeedState() {
@@ -1184,17 +1258,17 @@
       if (orderedListings.length === 0) {
         listingEmpty.style.display = "block";
         listingEmpty.textContent = String(searchQuery || "").trim()
-          ? `Nenhum anúncio encontrado para "${searchQuery.trim()}".`
-          : "Nenhum anúncio para este game ainda.";
+          ? formatMessage("game.empty_search", "Nenhum anúncio encontrado para \"{query}\".", { query: searchQuery.trim() })
+          : t("game.empty", "Nenhum anúncio para este game ainda.");
         feedSentinel.style.display = "none";
         return;
       }
       listingEmpty.style.display = "none";
       feedSentinel.style.display = "block";
       if (visibleCount >= orderedListings.length) {
-        feedSentinel.textContent = "Fim dos anúncios.";
+        feedSentinel.textContent = t("game.end_of_listings", "Fim dos anúncios.");
       } else {
-        feedSentinel.textContent = "Role para carregar mais";
+        feedSentinel.textContent = t("game.scroll_more", "Role para carregar mais");
       }
     }
 
@@ -1202,10 +1276,13 @@
       if (!listingSearchMeta) return;
       const normalizedQuery = String(searchQuery || "").trim();
       if (!normalizedQuery) {
-        listingSearchMeta.textContent = `${total} anúncio(s) carregado(s).`;
+        listingSearchMeta.textContent = formatMessage("game.loaded_count", "{count} anúncio(s) carregado(s).", { count: total });
         return;
       }
-      listingSearchMeta.textContent = `${total} resultado(s) para "${normalizedQuery}".`;
+      listingSearchMeta.textContent = formatMessage("game.search_results_count", "{count} resultado(s) para \"{query}\".", {
+        count: total,
+        query: normalizedQuery,
+      });
     }
 
     async function renderNextBatch() {
@@ -1224,6 +1301,7 @@
           fragment.appendChild(createListingCard(item));
         });
         listingFeed.appendChild(fragment);
+        observeGameHighlightImpressions();
         visibleCount += batch.length;
         updateFeedState();
       } finally {
@@ -1250,6 +1328,7 @@
         });
         listingFeed.innerHTML = "";
         listingFeed.appendChild(fragment);
+        observeGameHighlightImpressions();
         visibleCount = initialBatch.length;
         updateFeedState();
         await fillFeedUntilTarget();
@@ -1317,7 +1396,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,category,categories,status,server_id,user_id,created_at,highlight_status,highlight_expires_at")
+          .select("id,title,description,images,status,server_id,user_id,created_at,highlight_status,highlight_expires_at")
           .eq("server_id", gameId)
           .eq("status", "active")
           .order("created_at", { ascending: false });
@@ -1331,7 +1410,7 @@
         if (listingFeed) listingFeed.innerHTML = "";
         if (listingEmpty) {
           listingEmpty.style.display = "block";
-          listingEmpty.textContent = err?.message || "Erro ao carregar anúncios.";
+          listingEmpty.textContent = err?.message || t("game.loading_listings_error", "Erro ao carregar anúncios.");
         }
         if (feedSentinel) feedSentinel.style.display = "none";
         setFeedInlineLoading(false);
@@ -1347,7 +1426,7 @@
         const params = new URLSearchParams(window.location.search);
         currentGameId = params.get("id") || "";
         if (!currentGameId) {
-          titleEl.textContent = "Game não encontrado.";
+          titleEl.textContent = t("game.not_found", "Game não encontrado.");
           logoEl.style.display = "none";
           return;
         }
@@ -1362,9 +1441,9 @@
         await fetchListings(currentGameId);
       } catch (err) {
         console.error(err);
-        titleEl.textContent = "Erro ao carregar game.";
+        titleEl.textContent = t("game.loading_error", "Erro ao carregar game.");
         if (listingSearchMeta) {
-          listingSearchMeta.textContent = err?.message || "Tente novamente.";
+          listingSearchMeta.textContent = err?.message || t("game.try_again", "Tente novamente.");
         }
       } finally {
         try {

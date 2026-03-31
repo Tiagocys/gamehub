@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Conta de anúncios</title>
+  <title>Gimerr - Ad wallet</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="ad-wallet-guard-style">html{visibility:hidden;}</style>
   <style>
@@ -173,19 +173,42 @@
     }
 
     .wallet-amount-input {
-      width: min(220px, 100%);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px 12px;
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      padding: 14px 14px 14px 0;
       font-size: 28px;
       font-weight: 700;
       line-height: 1.1;
-      text-align: center;
-      background: #fff;
+      text-align: left;
+      background: transparent;
       color: var(--text);
     }
 
+    .wallet-amount-field {
+      width: min(260px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
+    .wallet-amount-prefix {
+      flex: 0 0 auto;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
     .wallet-amount-input:focus {
+      outline: none;
+    }
+
+    .wallet-amount-field:focus-within {
       outline: 2px solid rgba(116, 168, 255, 0.34);
       outline-offset: 1px;
     }
@@ -225,6 +248,60 @@
       margin: 0;
     }
 
+    .wallet-inline-helper {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .wallet-inline-term {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .wallet-info-chip {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      flex: 0 0 auto;
+    }
+
+    .wallet-info-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .wallet-inline-tooltip {
+      margin: -4px 0 0;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .wallet-input-feedback {
+      min-height: 18px;
+      margin: -2px 0 0;
+      font-size: 13px;
+      color: #7a4a00;
+    }
+
     .activate-range {
       width: 100%;
       accent-color: var(--accent-2);
@@ -243,6 +320,16 @@
       background: rgba(12, 21, 51, 0.03);
       font-size: 13px;
       color: var(--muted);
+    }
+
+    .activate-options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .activate-date-field {
+      display: grid;
+      gap: 6px;
     }
 
     @media (max-width: 980px) {
@@ -271,7 +358,7 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
 
   <div class="page">
@@ -281,29 +368,30 @@
       <div class="wallet-layout">
         <aside class="wallet-sidebar">
           <section class="wallet-card">
-            <h3 class="wallet-title">Resumo da conta de anúncios</h3>
+            <h3 id="wallet-summary-title" class="wallet-title">Ad account summary</h3>
             <div class="wallet-summary-grid">
               <div class="wallet-summary-item">
-                <span class="helper">Saldo</span>
+                <span id="wallet-balance-label" class="helper">Balance</span>
                 <strong id="wallet-balance-brl">R$ 0,00</strong>
               </div>
               <div class="wallet-summary-item">
-                <span class="helper">Destaques ativos</span>
+                <span id="wallet-active-label" class="helper">Active highlights</span>
                 <strong id="wallet-active-count">0</strong>
               </div>
             </div>
             <div class="inline-actions">
-              <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Adicionar saldo</button>
-              <button id="open-withdraw-modal-btn" class="btn btn-ghost" type="button">Solicitar saque</button>
+              <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Add balance</button>
+              <button id="open-withdraw-modal-btn" class="btn btn-ghost" type="button">Request withdrawal</button>
             </div>
+            <p id="wallet-withdraw-note" class="helper" style="margin:0;"></p>
           </section>
         </aside>
 
         <div class="wallet-content">
           <section class="wallet-card">
-            <h3 class="wallet-title">Gerenciar anúncios</h3>
+            <h3 id="wallet-listings-title" class="wallet-title">Manage listings</h3>
             <div id="wallet-listings" class="wallet-listings"></div>
-            <p id="wallet-listings-empty" class="helper" style="display:none;">Você ainda não possui anúncios.</p>
+            <p id="wallet-listings-empty" class="helper" style="display:none;">No active listings.</p>
           </section>
         </div>
       </div>
@@ -316,14 +404,18 @@
     <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="topup-modal-title">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
-          <h3 id="topup-modal-title">Adicionar saldo</h3>
-          <p class="helper">Deposite qualquer valor a partir de R$ 5,00.</p>
+          <h3 id="topup-modal-title">Add balance</h3>
+          <p id="topup-modal-helper" class="helper">Deposit any amount starting from R$ 5.00.</p>
         </div>
-        <button id="topup-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+        <button id="topup-modal-close" class="btn btn-ghost" type="button">Close</button>
       </div>
 
-      <label for="deposit-amount" class="helper">Valor do depósito (R$)</label>
-      <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="Ex: 5,00" autocomplete="off" />
+      <label id="deposit-amount-label" for="deposit-amount" class="helper">Deposit amount</label>
+      <div class="wallet-amount-field">
+        <span id="deposit-amount-prefix" class="wallet-amount-prefix">R$</span>
+        <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="5.00" autocomplete="off" />
+      </div>
+      <p id="deposit-amount-feedback" class="wallet-input-feedback"></p>
 
       <div class="wallet-suggestions">
         <button class="btn btn-ghost" type="button" data-suggest-amount="5">R$ 5,00</button>
@@ -333,11 +425,13 @@
 
       <label class="wallet-checkbox" for="wallet-policy-accept">
         <input id="wallet-policy-accept" type="checkbox" />
-        <span>Li e estou de acordo com as <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncio</a>.</span>
+        <span id="wallet-policy-text">I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.</span>
       </label>
 
+      <p id="topup-feedback" class="wallet-modal-feedback"></p>
+
       <div class="inline-actions">
-        <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Adicionar saldo e pagar</button>
+        <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Add balance and pay</button>
       </div>
     </div>
   </div>
@@ -346,26 +440,42 @@
     <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="activate-modal-title">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
-          <h3 id="activate-modal-title">Ativar destaque</h3>
-          <p class="helper" id="activate-target-title">Anúncio escolhido</p>
+          <h3 id="activate-modal-title">Activate highlight</h3>
+          <p class="helper" id="activate-target-title">Selected listing</p>
         </div>
-        <button id="activate-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+        <button id="activate-modal-close" class="btn btn-ghost" type="button">Close</button>
       </div>
 
-      <div class="field">
-        <label for="activate-days-range">Período estimado de destaque: <strong id="activate-days-value">1 dia</strong></label>
-        <input id="activate-days-range" class="activate-range" type="range" min="1" max="1" step="1" value="1" />
+      <div class="wallet-inline-helper">
+        <p id="activate-pricing-helper" class="helper" style="margin:0;">When enabled, the listing consumes the <span class="wallet-inline-term">CPM</span> of impressions tracked by the system.</p>
+        <button id="activate-cpm-info-btn" class="wallet-info-chip" type="button" aria-label="What does CPM mean?" title="What does CPM mean?">i</button>
       </div>
+      <p id="activate-cpm-tooltip" class="wallet-inline-tooltip" hidden>CPM means cost per 1,000 views. Example: if CPM is R$ 10,00, every 1,000 tracked views consume R$ 10,00 from your balance.</p>
 
       <div class="activate-info-grid">
-        <div class="activate-info-card">Mínimo: <strong>1 dia</strong></div>
-        <div class="activate-info-card">Máximo pelo saldo atual: <strong id="activate-range-max">1 dia</strong></div>
+        <div class="activate-info-card"><span id="activate-cpm-label">CPM:</span> <strong id="activate-cpm-value">R$ 10,00</strong></div>
+      </div>
+
+      <div class="activate-options">
+        <label class="wallet-checkbox" for="activate-mode-immediate">
+          <input id="activate-mode-immediate" name="activate-mode" type="radio" value="immediate" checked />
+          <span id="activate-mode-immediate-label">Activate highlight immediately</span>
+        </label>
+        <label class="wallet-checkbox" for="activate-mode-period">
+          <input id="activate-mode-period" name="activate-mode" type="radio" value="period" />
+          <span id="activate-mode-period-label">Select highlight period</span>
+        </label>
+        <div id="activate-period-field" class="activate-date-field" hidden>
+          <label for="activate-end-date" id="activate-end-date-label">Highlight until</label>
+          <input id="activate-end-date" type="date" />
+          <span id="activate-period-helper" class="helper">The highlight starts now and stays active until the end of the selected date.</span>
+        </div>
       </div>
 
       <p id="activate-feedback" class="wallet-modal-feedback"></p>
 
       <div class="inline-actions">
-        <button id="activate-confirm-btn" class="btn btn-primary" type="button">Ativar destaque agora</button>
+        <button id="activate-confirm-btn" class="btn btn-primary" type="button">Activate highlight now</button>
       </div>
     </div>
   </div>
@@ -374,32 +484,35 @@
     <div class="wallet-modal" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
         <div>
-          <h3 id="withdraw-modal-title">Solicitar saque</h3>
-          <p class="helper">Seu saldo disponível será pausado imediatamente para análise de reembolso.</p>
+          <h3 id="withdraw-modal-title">Request withdrawal</h3>
+          <p id="withdraw-modal-helper" class="helper">Your available balance will be paused immediately for refund review.</p>
         </div>
-        <button id="withdraw-modal-close" class="btn btn-ghost" type="button">Fechar</button>
+        <button id="withdraw-modal-close" class="btn btn-ghost" type="button">Close</button>
       </div>
 
       <div class="wallet-summary-item">
-        <span class="helper">Valor estimado para saque</span>
+        <span id="withdraw-estimate-label" class="helper">Estimated withdrawal amount</span>
         <strong id="withdraw-estimate-value">R$ 0,00</strong>
       </div>
 
       <label class="wallet-checkbox" for="withdraw-policy-accept">
         <input id="withdraw-policy-accept" type="checkbox" />
-        <span>Li e estou de acordo com as <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncio</a>.</span>
+        <span id="withdraw-policy-text">I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.</span>
       </label>
 
-      <p class="helper">O valor final pode ser menor por causa das taxas de processamento do pagamento (Stripe).</p>
+      <p id="withdraw-fee-helper" class="helper">The final amount may be lower because of payment processing fees (Stripe).</p>
       <p id="withdraw-feedback" class="wallet-modal-feedback"></p>
 
       <div class="inline-actions">
-        <button id="withdraw-confirm-btn" class="btn btn-primary" type="button" disabled>Confirmar solicitação</button>
+        <button id="withdraw-confirm-btn" class="btn btn-primary" type="button" disabled>Confirm request</button>
       </div>
     </div>
   </div>
 
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
   <script type="module">
@@ -408,10 +521,25 @@
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
+    const formatMessage = (key, fallback, params = {}) => Object.entries(params).reduce(
+      (text, [paramKey, value]) => text.replaceAll(`{${paramKey}}`, String(value ?? "")),
+      t(key, fallback),
+    );
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
     const R2_BUCKET = env.R2_BUCKET || "";
+    const USD_BRL_RATE = (() => {
+      const parsed = Number(env.USD_BRL_RATE || 5.5);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
+    })();
+    const MIN_TOPUP_BRL = 5;
+    const MIN_WITHDRAW_BRL = 5;
+    const displayCurrency = String(i18n.currency || "brl").toLowerCase() === "usd" ? "usd" : "brl";
+    const displayCurrencyCode = displayCurrency.toUpperCase();
+    const displayLocale = displayCurrency === "usd" ? "en-US" : (i18n.locale === "en" ? "en-US" : "pt-BR");
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -422,31 +550,58 @@
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
 
+    const walletSummaryTitle = document.getElementById("wallet-summary-title");
+    const walletBalanceLabel = document.getElementById("wallet-balance-label");
+    const walletActiveLabel = document.getElementById("wallet-active-label");
+    const walletListingsTitle = document.getElementById("wallet-listings-title");
     const balanceBrlEl = document.getElementById("wallet-balance-brl");
     const activeCountEl = document.getElementById("wallet-active-count");
 
     const openTopupModalBtn = document.getElementById("open-topup-modal-btn");
     const openWithdrawModalBtn = document.getElementById("open-withdraw-modal-btn");
+    const walletWithdrawNote = document.getElementById("wallet-withdraw-note");
     const topupModalBackdrop = document.getElementById("topup-modal-backdrop");
+    const topupModalTitle = document.getElementById("topup-modal-title");
+    const topupModalHelper = document.getElementById("topup-modal-helper");
     const topupModalClose = document.getElementById("topup-modal-close");
+    const depositAmountLabel = document.getElementById("deposit-amount-label");
+    const depositAmountPrefix = document.getElementById("deposit-amount-prefix");
     const amountInput = document.getElementById("deposit-amount");
+    const depositAmountFeedbackEl = document.getElementById("deposit-amount-feedback");
     const policyAccept = document.getElementById("wallet-policy-accept");
+    const walletPolicyText = document.getElementById("wallet-policy-text");
     const topupFeedbackEl = document.getElementById("topup-feedback");
     const checkoutBtn = document.getElementById("wallet-checkout-btn");
 
     const activateModalBackdrop = document.getElementById("activate-modal-backdrop");
+    const activateModalTitle = document.getElementById("activate-modal-title");
     const activateModalClose = document.getElementById("activate-modal-close");
     const activateTargetTitle = document.getElementById("activate-target-title");
-    const activateDaysRange = document.getElementById("activate-days-range");
-    const activateDaysValue = document.getElementById("activate-days-value");
-    const activateRangeMax = document.getElementById("activate-range-max");
+    const activatePricingHelper = document.getElementById("activate-pricing-helper");
+    const activateCpmInfoBtn = document.getElementById("activate-cpm-info-btn");
+    const activateCpmTooltip = document.getElementById("activate-cpm-tooltip");
+    const activateModeImmediate = document.getElementById("activate-mode-immediate");
+    const activateModeImmediateLabel = document.getElementById("activate-mode-immediate-label");
+    const activateModePeriod = document.getElementById("activate-mode-period");
+    const activateModePeriodLabel = document.getElementById("activate-mode-period-label");
+    const activatePeriodField = document.getElementById("activate-period-field");
+    const activateEndDateLabel = document.getElementById("activate-end-date-label");
+    const activateEndDateInput = document.getElementById("activate-end-date");
+    const activatePeriodHelper = document.getElementById("activate-period-helper");
+    const activateCpmLabel = document.getElementById("activate-cpm-label");
+    const activateCpmValue = document.getElementById("activate-cpm-value");
     const activateFeedbackEl = document.getElementById("activate-feedback");
     const activateConfirmBtn = document.getElementById("activate-confirm-btn");
 
     const withdrawModalBackdrop = document.getElementById("withdraw-modal-backdrop");
+    const withdrawModalTitle = document.getElementById("withdraw-modal-title");
+    const withdrawModalHelper = document.getElementById("withdraw-modal-helper");
     const withdrawModalClose = document.getElementById("withdraw-modal-close");
     const withdrawPolicyAccept = document.getElementById("withdraw-policy-accept");
+    const withdrawPolicyText = document.getElementById("withdraw-policy-text");
     const withdrawFeedbackEl = document.getElementById("withdraw-feedback");
+    const withdrawEstimateLabel = document.getElementById("withdraw-estimate-label");
+    const withdrawFeeHelper = document.getElementById("withdraw-fee-helper");
     const withdrawEstimateValue = document.getElementById("withdraw-estimate-value");
     const withdrawConfirmBtn = document.getElementById("withdraw-confirm-btn");
 
@@ -488,6 +643,84 @@
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
+    function applyStaticTranslations() {
+      document.title = t("ad_wallet.title_default", "Gimerr - Ad wallet");
+      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      const minimumAmount = formatDisplayMoneyFromBRL(MIN_TOPUP_BRL);
+      const loaderImage = pageLoader?.querySelector("img");
+      if (loaderImage) loaderImage.alt = t("ad_wallet.loading", "Carregando");
+      if (walletSummaryTitle) walletSummaryTitle.textContent = t("ad_wallet.summary_title", "Ad account summary");
+      if (walletBalanceLabel) walletBalanceLabel.textContent = t("ad_wallet.balance_label", "Saldo");
+      if (walletActiveLabel) walletActiveLabel.textContent = t("ad_wallet.active_highlights_label", "Destaques ativos");
+      if (openTopupModalBtn) openTopupModalBtn.textContent = t("ad_wallet.open_topup", "Adicionar saldo");
+      if (openWithdrawModalBtn) openWithdrawModalBtn.textContent = t("ad_wallet.open_withdraw", "Solicitar saque");
+      if (walletListingsTitle) walletListingsTitle.textContent = t("ad_wallet.manage_title", "Manage listings");
+      if (listingsEmpty) listingsEmpty.textContent = t("ad_wallet.empty_active", "No active listings.");
+      if (topupModalTitle) topupModalTitle.textContent = t("ad_wallet.topup_title", "Adicionar saldo");
+      if (topupModalHelper) {
+        topupModalHelper.textContent = formatMessage("ad_wallet.topup_helper_dynamic", "Deposite qualquer valor a partir de {amount}.", {
+          amount: minimumAmount,
+        });
+      }
+      if (topupModalClose) topupModalClose.textContent = t("ad_wallet.close", "Fechar");
+      if (depositAmountLabel) {
+        depositAmountLabel.textContent = t("ad_wallet.deposit_label", "Deposit amount");
+      }
+      if (depositAmountPrefix) depositAmountPrefix.textContent = displayCurrency === "usd" ? "$" : "R$";
+      if (amountInput) {
+        amountInput.placeholder = formatMessage("ad_wallet.deposit_placeholder_dynamic", "{amount}", {
+          amount: formatInputAmountFromBRL(MIN_TOPUP_BRL),
+        });
+      }
+      if (walletPolicyText) walletPolicyText.innerHTML = formatMessage("ad_wallet.policy_text", 'I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.');
+      if (checkoutBtn) checkoutBtn.textContent = t("ad_wallet.checkout_balance", "Adicionar saldo e pagar");
+      if (activateModalTitle) activateModalTitle.textContent = t("ad_wallet.activate_title", "Ativar destaque");
+      if (activateTargetTitle) activateTargetTitle.textContent = t("ad_wallet.activate_target_default", "Selected listing");
+      if (activateModalClose) activateModalClose.textContent = t("ad_wallet.close", "Fechar");
+      if (activatePricingHelper) {
+        activatePricingHelper.innerHTML = t("ad_wallet.activate_pricing_helper_html", "When enabled, the listing consumes the <span class=\"wallet-inline-term\">CPM</span> of impressions tracked by the system.");
+      }
+      if (activateCpmInfoBtn) {
+        const infoAria = t("ad_wallet.activate_cpm_info_aria", "What does CPM mean?");
+        activateCpmInfoBtn.setAttribute("aria-label", infoAria);
+        activateCpmInfoBtn.title = infoAria;
+      }
+      if (activateCpmTooltip) {
+        activateCpmTooltip.textContent = formatMessage(
+          "ad_wallet.activate_cpm_info_text",
+          "CPM means cost per 1,000 views. Example: if CPM is {amount}, every 1,000 tracked views consume {amount} from your balance.",
+          { amount: formatDisplayMoneyFromBRL(getCpmBRL()) },
+        );
+      }
+      if (activateModeImmediateLabel) activateModeImmediateLabel.textContent = t("ad_wallet.activate_mode_immediate", "Ativar destaque imediatamente");
+      if (activateModePeriodLabel) activateModePeriodLabel.textContent = t("ad_wallet.activate_mode_period", "Select highlight period");
+      if (activateEndDateLabel) activateEndDateLabel.textContent = t("ad_wallet.activate_end_date_label", "Highlight until");
+      if (activatePeriodHelper) activatePeriodHelper.textContent = t("ad_wallet.activate_period_helper", "The highlight starts now and stays active until the end of the selected date.");
+      if (activateCpmLabel) activateCpmLabel.textContent = t("ad_wallet.activate_cpm_label", "CPM:");
+      if (activateCpmValue) activateCpmValue.textContent = formatDisplayMoneyFromBRL(getCpmBRL());
+      if (activateConfirmBtn) activateConfirmBtn.textContent = activateModePeriod?.checked
+        ? t("ad_wallet.activate_schedule", "Save highlight period")
+        : t("ad_wallet.activate_now", "Activate highlight now");
+      if (withdrawModalTitle) withdrawModalTitle.textContent = t("ad_wallet.withdraw_title", "Solicitar saque");
+      if (withdrawModalHelper) {
+        withdrawModalHelper.textContent = formatMessage(
+          "ad_wallet.withdraw_helper_dynamic",
+          "Your available balance will be paused immediately for refund review. The minimum amount to request withdrawal is {amount}.",
+          { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+        );
+      }
+      if (withdrawModalClose) withdrawModalClose.textContent = t("ad_wallet.close", "Fechar");
+      if (withdrawEstimateLabel) withdrawEstimateLabel.textContent = t("ad_wallet.withdraw_estimate_label", "Valor estimado para saque");
+      if (withdrawPolicyText) withdrawPolicyText.innerHTML = formatMessage("ad_wallet.policy_text", 'I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.');
+      if (withdrawFeeHelper) withdrawFeeHelper.textContent = t("ad_wallet.withdraw_fee_helper", "O valor final pode ser menor por causa das taxas de processamento do pagamento (Stripe).");
+      if (withdrawConfirmBtn) withdrawConfirmBtn.textContent = t("ad_wallet.withdraw_confirm", "Confirm request");
+      document.querySelectorAll("[data-suggest-amount]").forEach((button) => {
+        const amountBRL = Number(button.getAttribute("data-suggest-amount") || 0);
+        if (!Number.isFinite(amountBRL) || amountBRL <= 0) return;
+        button.textContent = formatDisplayMoneyFromBRL(amountBRL);
+      });
+    }
+
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("ad-wallet-guard-style");
@@ -497,7 +730,7 @@
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         authBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error(t("ad_wallet.supabase_not_configured", "Supabase is not configured"));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -522,6 +755,12 @@
       topupFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
     }
 
+    function setDepositAmountFeedback(message, isError = false) {
+      if (!depositAmountFeedbackEl) return;
+      depositAmountFeedbackEl.textContent = message || "";
+      depositAmountFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
     function setActivateFeedback(message, isError = false) {
       if (!activateFeedbackEl) return;
       activateFeedbackEl.textContent = message || "";
@@ -534,30 +773,106 @@
       withdrawFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
     }
 
-    function formatBRL(value) {
-      return `R$ ${Number(value || 0).toFixed(2).replace(".", ",")}`;
+    function formatMoney(value, currency = displayCurrency) {
+      const normalizedCurrency = currency === "usd" ? "USD" : "BRL";
+      const normalizedLocale = currency === "usd" ? "en-US" : displayLocale;
+      return new Intl.NumberFormat(normalizedLocale, {
+        style: "currency",
+        currency: normalizedCurrency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(value || 0));
     }
 
-    function formatDayLabel(days) {
-      const n = Math.max(1, Math.floor(Number(days || 1)));
-      return `${n} ${n === 1 ? "dia" : "dias"}`;
+    function brlToDisplayAmount(valueBRL) {
+      const normalized = Number(valueBRL || 0);
+      if (!Number.isFinite(normalized)) return 0;
+      const converted = displayCurrency === "usd" ? normalized / USD_BRL_RATE : normalized;
+      return Number(converted.toFixed(2));
     }
 
-    function secondsToBRL(secondsRaw) {
-      const seconds = Math.max(0, Number(secondsRaw || 0));
-      const amount = (seconds / 86400) * 5;
-      return Number(amount.toFixed(2));
+    function displayAmountToBRL(value) {
+      const normalized = Number(value || 0);
+      if (!Number.isFinite(normalized)) return NaN;
+      const converted = displayCurrency === "usd" ? normalized * USD_BRL_RATE : normalized;
+      return Number(converted.toFixed(2));
+    }
+
+    function formatDisplayMoneyFromBRL(valueBRL) {
+      return formatMoney(brlToDisplayAmount(valueBRL));
+    }
+
+    function formatInputAmountFromBRL(valueBRL) {
+      const amount = brlToDisplayAmount(valueBRL);
+      return displayCurrency === "usd"
+        ? amount.toFixed(2)
+        : amount.toFixed(2).replace(".", ",");
+    }
+
+    function getCpmBRL() {
+      return Number(walletState?.pricing?.cpmBRL || 10);
     }
 
     function getAvailableBalanceBRL() {
-      return secondsToBRL(getAvailableSeconds());
+      const explicit = Number(walletState?.availableAmountBRL);
+      if (Number.isFinite(explicit)) return explicit;
+      const cents = Number(walletState?.availableCents || 0);
+      return Number((Math.max(0, cents) / 100).toFixed(2));
     }
 
-    function parseAmountBRL(raw) {
+    function isHighlightCurrentlyActive(listing) {
+      if (!listing || String(listing.highlight_status || "").toLowerCase() !== "active") return false;
+      const expiresAt = String(listing.highlight_expires_at || "").trim();
+      if (!expiresAt) return true;
+      const expiresMs = new Date(expiresAt).getTime();
+      if (!Number.isFinite(expiresMs)) return true;
+      return expiresMs >= Date.now();
+    }
+
+    function getTodayInputDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function buildActivateEndAtIso() {
+      const raw = String(activateEndDateInput?.value || "").trim();
+      if (!raw) return null;
+      const [year, month, day] = raw.split("-").map((part) => Number(part));
+      if (!year || !month || !day) return null;
+      const localEnd = new Date(year, month - 1, day, 23, 59, 59, 999);
+      if (Number.isNaN(localEnd.getTime())) return null;
+      return localEnd.toISOString();
+    }
+
+    function syncActivateModeUI() {
+      const usePeriod = Boolean(activateModePeriod?.checked);
+      if (activatePeriodField) activatePeriodField.hidden = !usePeriod;
+      if (activateEndDateInput) {
+        activateEndDateInput.disabled = !usePeriod;
+        activateEndDateInput.required = usePeriod;
+      }
+      if (activateConfirmBtn) {
+        activateConfirmBtn.textContent = usePeriod
+          ? t("ad_wallet.activate_schedule", "Save highlight period")
+          : t("ad_wallet.activate_now", "Activate highlight now");
+      }
+    }
+
+    function parseDisplayAmount(raw) {
       let text = String(raw || "").trim();
       if (!text) return NaN;
-      text = text.replace(/\s+/g, "").replace(/R\$/gi, "");
-      if (text.includes(",")) {
+      text = text.replace(/\s+/g, "");
+      if (displayCurrency === "usd") {
+        text = text.replace(/\$/g, "").replace(/USD/gi, "");
+        if (text.includes(",") && !text.includes(".")) {
+          text = text.replace(",", ".");
+        }
+        text = text.replace(/,/g, "");
+      } else {
+        text = text.replace(/R\$/gi, "");
         text = text.replace(/\./g, "").replace(",", ".");
       }
       text = text.replace(/[^0-9.]/g, "");
@@ -565,6 +880,26 @@
       const amount = Number(text);
       if (!Number.isFinite(amount)) return NaN;
       return Math.round(amount * 100) / 100;
+    }
+
+    function formatDisplayAmountInputValue(value) {
+      const normalized = Number(value || 0);
+      if (!Number.isFinite(normalized) || normalized < 0) return "";
+      return displayCurrency === "usd"
+        ? normalized.toFixed(2)
+        : normalized.toFixed(2).replace(".", ",");
+    }
+
+    function normalizeAmountInputOnBlur() {
+      if (!amountInput) return;
+      const parsed = parseDisplayAmount(amountInput.value);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        amountInput.value = "";
+        updateCheckoutButtonState();
+        return;
+      }
+      amountInput.value = formatDisplayAmountInputValue(parsed);
+      updateCheckoutButtonState();
     }
 
     function escapeHtml(value) {
@@ -707,48 +1042,57 @@
       return myListings.find((item) => String(item.id) === String(id)) || null;
     }
 
-    function getAvailableSeconds() {
-      return Math.max(0, Number(walletState?.availableSeconds || 0));
-    }
-
-    function getMaxDaysByBalance() {
-      const byBalance = Math.floor(getAvailableSeconds() / 86400);
-      return Math.max(1, byBalance);
-    }
-
     function updateCheckoutButtonState() {
-      const amount = parseAmountBRL(amountInput?.value || "");
-      const canPay = Number.isFinite(amount) && amount >= 5 && Boolean(policyAccept?.checked);
+      const displayAmount = parseDisplayAmount(amountInput?.value || "");
+      const amountBRL = displayAmountToBRL(displayAmount);
+      const canPay = Number.isFinite(displayAmount) && Number.isFinite(amountBRL) && amountBRL >= MIN_TOPUP_BRL && Boolean(policyAccept?.checked);
+      if (!String(amountInput?.value || "").trim()) {
+        setDepositAmountFeedback("");
+      } else if (!Number.isFinite(displayAmount) || !Number.isFinite(amountBRL) || amountBRL < MIN_TOPUP_BRL) {
+        setDepositAmountFeedback(formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
+          amount: formatDisplayMoneyFromBRL(MIN_TOPUP_BRL),
+        }), true);
+      } else {
+        setDepositAmountFeedback("");
+      }
       checkoutBtn.disabled = !canPay;
     }
 
     function updateWithdrawButtonState() {
-      const hasBalance = getAvailableBalanceBRL() > 0;
+      const availableBalance = getAvailableBalanceBRL();
+      const hasMinimumBalance = availableBalance >= MIN_WITHDRAW_BRL;
       if (openWithdrawModalBtn) {
-        openWithdrawModalBtn.disabled = !hasBalance;
+        openWithdrawModalBtn.disabled = !hasMinimumBalance;
       }
       if (withdrawEstimateValue) {
-        withdrawEstimateValue.textContent = formatBRL(getAvailableBalanceBRL());
+        withdrawEstimateValue.textContent = formatDisplayMoneyFromBRL(availableBalance);
       }
       if (withdrawConfirmBtn) {
-        withdrawConfirmBtn.disabled = !hasBalance || !Boolean(withdrawPolicyAccept?.checked);
+        withdrawConfirmBtn.disabled = !hasMinimumBalance || !Boolean(withdrawPolicyAccept?.checked);
       }
-    }
-
-    function updateActivateRangePreview() {
-      const days = Number(activateDaysRange?.value || 1);
-      activateDaysValue.textContent = formatDayLabel(days);
+      if (walletWithdrawNote) {
+        walletWithdrawNote.textContent = hasMinimumBalance
+          ? ""
+          : formatMessage(
+            "ad_wallet.withdraw_entry_minimum_note",
+            "To request a refund, you need at least {amount} in your ad wallet. Refund fees are deducted during review.",
+            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+          );
+      }
     }
 
     function renderListings() {
       listingsWrap.innerHTML = "";
-      if (!Array.isArray(myListings) || myListings.length === 0) {
+      const activeListings = Array.isArray(myListings)
+        ? myListings.filter((item) => String(item?.status || "").toLowerCase() === "active")
+        : [];
+      if (activeListings.length === 0) {
         listingsEmpty.style.display = "block";
         return;
       }
       listingsEmpty.style.display = "none";
 
-      myListings.forEach((listing) => {
+      activeListings.forEach((listing) => {
         const canHighlight = listing.status === "active";
         const isHighlighted = listing.highlight_status === "active";
         const card = document.createElement("article");
@@ -759,14 +1103,14 @@
 
         const title = document.createElement("div");
         title.className = "wallet-listing-title";
-        title.textContent = listing.title || "Sem título";
+        title.textContent = listing.title || t("ad_wallet.no_title", "Untitled");
 
         const meta = document.createElement("div");
         meta.className = "wallet-listing-meta";
         meta.innerHTML = `
-          <span class="pill">${escapeHtml(listing.server_name || "Servidor")}</span>
-          <span class="pill">${canHighlight ? "Ativo" : "Inativo"}</span>
-          <span class="pill">${isHighlighted ? "Destaque ativo" : "Sem destaque"}</span>
+          <span class="pill">${escapeHtml(listing.server_name || t("ad_wallet.server_fallback", "Servidor"))}</span>
+          <span class="pill">${canHighlight ? escapeHtml(t("ad_wallet.status_active", "Ativo")) : escapeHtml(t("ad_wallet.status_inactive", "Inativo"))}</span>
+          <span class="pill">${isHighlighted ? escapeHtml(t("ad_wallet.highlight_active", "Destaque ativo")) : escapeHtml(t("ad_wallet.highlight_inactive", "Sem destaque"))}</span>
         `;
 
         const images = document.createElement("div");
@@ -775,13 +1119,13 @@
         if (imageUrls.length === 0) {
           const noImage = document.createElement("span");
           noImage.className = "helper";
-          noImage.textContent = "Sem imagens";
+          noImage.textContent = t("ad_wallet.no_images", "Sem imagens");
           images.appendChild(noImage);
         } else {
           imageUrls.slice(0, 6).forEach((src) => {
             const img = document.createElement("img");
             img.src = src;
-            img.alt = listing.title || "Imagem do anúncio";
+            img.alt = listing.title || t("ad_wallet.listing_image_alt", "Listing image");
             img.loading = "lazy";
             images.appendChild(img);
           });
@@ -789,7 +1133,7 @@
 
         const description = document.createElement("p");
         description.className = "wallet-listing-description";
-        description.textContent = listing.description || "Sem descrição.";
+        description.textContent = listing.description || t("ad_wallet.no_description", "No description.");
 
         const actions = document.createElement("div");
         actions.className = "wallet-listing-actions";
@@ -800,7 +1144,7 @@
           activateBtn.type = "button";
           activateBtn.dataset.action = "activate";
           activateBtn.dataset.id = listing.id;
-          activateBtn.textContent = "Ativar destaque";
+          activateBtn.textContent = t("ad_wallet.activate_button", "Ativar destaque");
           actions.appendChild(activateBtn);
         }
 
@@ -810,14 +1154,14 @@
           deactivateBtn.type = "button";
           deactivateBtn.dataset.action = "deactivate";
           deactivateBtn.dataset.id = listing.id;
-          deactivateBtn.textContent = "Pausar destaque";
+          deactivateBtn.textContent = t("ad_wallet.pause_button", "Pausar destaque");
           actions.appendChild(deactivateBtn);
         }
 
         const viewLink = document.createElement("a");
         viewLink.className = "btn btn-ghost";
         viewLink.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
-        viewLink.textContent = "Ver anúncio";
+        viewLink.textContent = t("ad_wallet.view_listing", "View listing");
         actions.appendChild(viewLink);
 
         head.appendChild(title);
@@ -835,11 +1179,13 @@
       checkoutReferenceListingId = referenceListingId || null;
       topupIntent = intent;
       if (intent === "activate" && checkoutReferenceListingId) {
-        setTopupFeedback("Após o pagamento, o anúncio será destacado automaticamente.");
+        setTopupFeedback(t("ad_wallet.topup_auto_activate_notice", "After payment, the listing will be highlighted automatically."));
       } else {
         setTopupFeedback("");
       }
-      checkoutBtn.textContent = intent === "activate" ? "Pagar e destacar anúncio" : "Adicionar saldo e pagar";
+      checkoutBtn.textContent = intent === "activate"
+        ? t("ad_wallet.checkout_activate", "Pay and highlight listing")
+        : t("ad_wallet.checkout_balance", "Add balance and pay");
       topupModalBackdrop.style.display = "grid";
       topupModalBackdrop.setAttribute("aria-hidden", "false");
       updateCheckoutButtonState();
@@ -853,7 +1199,18 @@
     }
 
     function openWithdrawModal() {
-      setWithdrawFeedback("");
+      if (getAvailableBalanceBRL() < MIN_WITHDRAW_BRL) {
+        setWithdrawFeedback(
+          formatMessage(
+            "ad_wallet.withdraw_minimum_error",
+            "The minimum amount to request withdrawal is {amount}.",
+            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+          ),
+          true,
+        );
+      } else {
+        setWithdrawFeedback("");
+      }
       updateWithdrawButtonState();
       withdrawModalBackdrop.style.display = "grid";
       withdrawModalBackdrop.setAttribute("aria-hidden", "false");
@@ -869,15 +1226,12 @@
       if (!listing) return;
       pendingActivateListingId = listing.id;
       checkoutReferenceListingId = listing.id;
-      const maxDays = getMaxDaysByBalance();
 
-      activateTargetTitle.textContent = `Anúncio: ${listing.title || "Sem título"}`;
-      activateDaysRange.min = "1";
-      activateDaysRange.max = String(maxDays);
-      activateDaysRange.value = "1";
-      activateRangeMax.textContent = formatDayLabel(maxDays);
+      activateTargetTitle.textContent = formatMessage("ad_wallet.activate_target", "Listing: {title}", {
+        title: listing.title || t("ad_wallet.no_title", "Untitled"),
+      });
+      if (activateCpmValue) activateCpmValue.textContent = formatDisplayMoneyFromBRL(getCpmBRL());
       setActivateFeedback("");
-      updateActivateRangePreview();
 
       activateModalBackdrop.style.display = "grid";
       activateModalBackdrop.setAttribute("aria-hidden", "false");
@@ -903,20 +1257,20 @@
           : {},
       });
       if (error) throw error;
-      if (!data?.ok) throw new Error(data?.error || "Erro ao consultar saldo.");
+      if (!data?.ok) throw new Error(data?.error || t("ad_wallet.status_error", "Erro ao consultar saldo."));
       walletState = data.wallet || null;
 
-      const seconds = Number(walletState?.availableSeconds || 0);
-      balanceBrlEl.textContent = formatBRL(secondsToBRL(seconds));
+      balanceBrlEl.textContent = formatDisplayMoneyFromBRL(getAvailableBalanceBRL());
       activeCountEl.textContent = String(Number(walletState?.activeListingCount || 0));
       updateWithdrawButtonState();
+      applyStaticTranslations();
     }
 
     async function fetchListings() {
       ensureClient();
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,description,images,category,categories,status,highlight_status,server_id,created_at")
+        .select("id,title,description,images,status,highlight_status,highlight_expires_at,server_id,created_at")
         .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -931,7 +1285,7 @@
           .in("id", serverIds);
         if (!serverErr && Array.isArray(servers)) {
           serverNameById = servers.reduce((acc, item) => {
-            if (item?.id) acc[item.id] = item.name || "Servidor";
+            if (item?.id) acc[item.id] = item.name || t("ad_wallet.server_fallback", "Servidor");
             return acc;
           }, {});
         }
@@ -943,7 +1297,7 @@
         return {
           ...item,
           imageUrls,
-          server_name: item.server_id ? (serverNameById[item.server_id] || "Servidor") : "Servidor",
+          server_name: item.server_id ? (serverNameById[item.server_id] || t("ad_wallet.server_fallback", "Servidor")) : t("ad_wallet.server_fallback", "Servidor"),
         };
       }));
 
@@ -976,20 +1330,23 @@
 
       if (error) throw error;
       if (!data?.ok) {
-        throw new Error(data?.error || "Não foi possível atualizar o destaque.");
+        throw new Error(data?.error || t("ad_wallet.highlight_update_error", "Could not update highlight."));
       }
     }
 
     async function startCheckout() {
-      const amount = parseAmountBRL(amountInput?.value || "");
+      const displayAmount = parseDisplayAmount(amountInput?.value || "");
+      const amount = displayAmountToBRL(displayAmount);
       const shouldAutoActivate = topupIntent === "activate" && Boolean(checkoutReferenceListingId);
       const referenceListingId = shouldAutoActivate ? checkoutReferenceListingId : null;
-      if (!Number.isFinite(amount) || amount < 5) {
-        setTopupFeedback("Informe um valor válido de no mínimo R$ 5,00.", true);
+      if (!Number.isFinite(displayAmount) || !Number.isFinite(amount) || amount < MIN_TOPUP_BRL) {
+        setDepositAmountFeedback(formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
+          amount: formatDisplayMoneyFromBRL(MIN_TOPUP_BRL),
+        }), true);
         return;
       }
       if (!policyAccept?.checked) {
-        setTopupFeedback("Você precisa aceitar as políticas antes de continuar.", true);
+        setTopupFeedback(t("ad_wallet.accept_policy_required", "You must accept the policies before continuing."), true);
         return;
       }
 
@@ -1003,13 +1360,14 @@
         }
 
         checkoutBtn.disabled = true;
-        checkoutBtn.textContent = "Aguarde...";
+        checkoutBtn.textContent = t("ad_wallet.please_wait", "Aguarde...");
 
         const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
           body: {
             listingId: referenceListingId,
             autoActivate: shouldAutoActivate,
             amountBRL: amount,
+            currency: displayCurrency,
             returnBaseUrl: window.location.origin,
           },
           headers: {
@@ -1020,26 +1378,35 @@
 
         if (error) throw error;
         if (!data?.ok || !data?.checkoutUrl) {
-          throw new Error(data?.error || "Não foi possível iniciar o checkout.");
+          throw new Error(data?.error || t("ad_wallet.checkout_start_error", "Could not start checkout."));
         }
 
         window.location.href = data.checkoutUrl;
       } catch (err) {
         console.error(err);
-        setTopupFeedback(err?.message || "Erro ao iniciar checkout.", true);
+        setTopupFeedback(err?.message || t("ad_wallet.checkout_error", "Erro ao iniciar checkout."), true);
         checkoutBtn.disabled = false;
-        checkoutBtn.textContent = topupIntent === "activate" ? "Pagar e destacar anúncio" : "Adicionar saldo e pagar";
+        checkoutBtn.textContent = topupIntent === "activate"
+          ? t("ad_wallet.checkout_activate", "Pay and highlight listing")
+          : t("ad_wallet.checkout_balance", "Add balance and pay");
         updateCheckoutButtonState();
       }
     }
 
     async function requestWithdraw() {
       if (!withdrawPolicyAccept?.checked) {
-        setWithdrawFeedback("Você precisa aceitar as políticas antes de continuar.", true);
+        setWithdrawFeedback(t("ad_wallet.accept_policy_required", "You must accept the policies before continuing."), true);
         return;
       }
-      if (getAvailableBalanceBRL() <= 0) {
-        setWithdrawFeedback("Você não possui saldo disponível para saque.", true);
+      if (getAvailableBalanceBRL() < MIN_WITHDRAW_BRL) {
+        setWithdrawFeedback(
+          formatMessage(
+            "ad_wallet.withdraw_minimum_error",
+            "The minimum amount to request withdrawal is {amount}.",
+            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+          ),
+          true,
+        );
         updateWithdrawButtonState();
         return;
       }
@@ -1054,8 +1421,8 @@
         }
 
         withdrawConfirmBtn.disabled = true;
-        withdrawConfirmBtn.textContent = "Enviando...";
-        setWithdrawFeedback("Registrando solicitação...");
+        withdrawConfirmBtn.textContent = t("ad_wallet.sending", "Enviando...");
+        setWithdrawFeedback(t("ad_wallet.withdraw_registering", "Registering request..."));
 
         const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
           body: {
@@ -1070,7 +1437,7 @@
 
         if (error) throw error;
         if (!data?.ok) {
-          throw new Error(data?.error || "Não foi possível solicitar o saque.");
+          throw new Error(data?.error || t("ad_wallet.withdraw_request_error", "Could not request withdrawal."));
         }
 
         closeWithdrawModal();
@@ -1078,9 +1445,9 @@
         await fetchListings();
       } catch (err) {
         console.error(err);
-        setWithdrawFeedback(err?.message || "Erro ao solicitar saque.", true);
+        setWithdrawFeedback(err?.message || t("ad_wallet.withdraw_error", "Erro ao solicitar saque."), true);
       } finally {
-        withdrawConfirmBtn.textContent = "Confirmar solicitação";
+        withdrawConfirmBtn.textContent = t("ad_wallet.withdraw_confirm", "Confirm request");
         updateWithdrawButtonState();
       }
     }
@@ -1089,8 +1456,8 @@
       if (!pendingActivateListingId) return;
       try {
         activateConfirmBtn.disabled = true;
-        activateConfirmBtn.textContent = "Ativando...";
-        setActivateFeedback("Ativando destaque...");
+        activateConfirmBtn.textContent = t("ad_wallet.activating", "Ativando...");
+        setActivateFeedback(t("ad_wallet.activating_feedback", "Ativando destaque..."));
 
         await toggleHighlight(pendingActivateListingId, "activate");
         await syncWallet();
@@ -1099,9 +1466,9 @@
         closeActivateModal();
       } catch (err) {
         console.error(err);
-        setActivateFeedback(err?.message || "Erro ao ativar destaque.", true);
+        setActivateFeedback(err?.message || t("ad_wallet.activate_error", "Erro ao ativar destaque."), true);
         activateConfirmBtn.disabled = false;
-        activateConfirmBtn.textContent = "Ativar destaque agora";
+        activateConfirmBtn.textContent = t("ad_wallet.activate_now", "Ativar destaque agora");
       }
     }
 
@@ -1172,11 +1539,18 @@
       }
     });
 
-    activateDaysRange?.addEventListener("input", updateActivateRangePreview);
+    activateCpmInfoBtn?.addEventListener("click", () => {
+      if (!activateCpmTooltip) return;
+      activateCpmTooltip.hidden = !activateCpmTooltip.hidden;
+    });
 
     amountInput?.addEventListener("input", () => {
       updateCheckoutButtonState();
       if (topupFeedbackEl?.textContent) setTopupFeedback("");
+    });
+
+    amountInput?.addEventListener("blur", () => {
+      normalizeAmountInputOnBlur();
     });
 
     policyAccept?.addEventListener("change", () => {
@@ -1193,7 +1567,7 @@
       button.addEventListener("click", () => {
         const value = Number(button.getAttribute("data-suggest-amount") || 0);
         if (!Number.isFinite(value) || value <= 0) return;
-        amountInput.value = value.toFixed(2).replace(".", ",");
+        amountInput.value = formatInputAmountFromBRL(value);
         updateCheckoutButtonState();
       });
     });
@@ -1211,8 +1585,8 @@
         checkoutReferenceListingId = listingId;
 
         if (action === "activate") {
-          if (getAvailableSeconds() <= 0) {
-            setTopupFeedback("Você não possui saldo para destacar. Adicione saldo para continuar.", true);
+          if (getAvailableBalanceBRL() <= 0) {
+            setTopupFeedback(t("ad_wallet.no_balance_to_highlight", "You do not have enough balance to highlight. Add balance to continue."), true);
             openTopupModal(listingId, "activate");
           } else {
             openActivateModal(listingId);
@@ -1221,7 +1595,7 @@
         }
 
         if (action === "deactivate") {
-          target.textContent = "Pausando...";
+          target.textContent = t("ad_wallet.pausing", "Pausando...");
           await toggleHighlight(listingId, "deactivate");
           await syncWallet();
           await fetchListings();
@@ -1289,6 +1663,7 @@
 
     (async function init() {
       try {
+        applyStaticTranslations();
         ensureClient();
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
@@ -1322,7 +1697,7 @@
         }
       } catch (err) {
         console.error(err);
-        setTopupFeedback(err?.message || "Erro ao carregar conta de anúncios.", true);
+        setTopupFeedback(err?.message || t("ad_wallet.load_error", "Failed to load ad account."), true);
         checkoutBtn.disabled = true;
       } finally {
         if (!authRedirectInFlight) {

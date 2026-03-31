@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -176,8 +176,8 @@ body {
         <label for="server-site">Site oficial *</label>
         <input id="server-site" placeholder="https://seuservidor.com" required />
 
-        <label for="server-discord">Convite do Discord oficial *</label>
-        <input id="server-discord" placeholder="https://discord.gg/seu-servidor" required />
+        <label for="server-discord">Convite do Discord oficial (opcional)</label>
+        <input id="server-discord" placeholder="https://discord.gg/seu-servidor" />
 
         <label for="server-owner-email">E-mail do owner (opcional)</label>
         <input id="server-owner-email" type="email" placeholder="Ex: owner@servidor.com" list="server-owner-email-list" autocomplete="off" />
@@ -208,6 +208,14 @@ body {
       </div>
       <div id="requests-empty" class="muted" style="display:none;">Nenhuma solicitação pendente.</div>
       <div id="requests-list" class="list"></div>
+    </section>
+
+    <section class="card">
+      <h1>Saques de parceiros</h1>
+      <p>Solicitações pendentes de saque para conferência manual e processamento.</p>
+      <div class="notice" id="withdraws-status">Carregando...</div>
+      <div id="withdraws-empty" class="muted" style="display:none;">Nenhuma solicitação pendente.</div>
+      <div id="withdraws-list" class="list"></div>
     </section>
 
     <section class="card">
@@ -303,6 +311,9 @@ body {
     const requestsPrevBtn = document.getElementById("requests-prev");
     const requestsNextBtn = document.getElementById("requests-next");
     const requestsCounter = document.getElementById("requests-counter");
+    const withdrawsList = document.getElementById("withdraws-list");
+    const withdrawsEmpty = document.getElementById("withdraws-empty");
+    const withdrawsStatus = document.getElementById("withdraws-status");
     const reportsList = document.getElementById("reports-list");
     const reportsEmpty = document.getElementById("reports-empty");
     const reportsStatus = document.getElementById("reports-status");
@@ -318,6 +329,7 @@ body {
     let avatarLoaded = false;
     let profile = null;
     let requestCache = [];
+    let withdrawCache = [];
     let reportCache = [];
     let requestCursor = 0;
     let reportCursor = 0;
@@ -452,6 +464,30 @@ body {
       if (!trimmed) return "";
       const withoutProtocol = trimmed.replace(/^https?:\/\//i, "");
       return `https://${withoutProtocol}`;
+    }
+
+    function normalizeWebsite(raw) {
+      const withProtocol = ensureHttpsPrefix(raw);
+      if (!withProtocol) return null;
+      try {
+        const url = new URL(withProtocol);
+        url.protocol = "https:";
+        url.hash = "";
+        const pathname = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/, "");
+        const search = url.search || "";
+        return `${url.origin}${pathname}${search}`;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function extractDomainKey(raw) {
+      try {
+        const url = new URL(ensureHttpsPrefix(raw));
+        return url.hostname.toLowerCase().replace(/^www\./, "");
+      } catch (_err) {
+        return null;
+      }
     }
 
     function normalizeOptionalUrl(raw) {
@@ -882,9 +918,10 @@ body {
             : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
           if (profile?.is_admin) {
             revealAdminPage();
-            await Promise.all([fetchRequests(), fetchReports()]);
+            await Promise.all([fetchRequests(), fetchWithdrawRequests(), fetchReports()]);
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
+            withdrawsStatus.textContent = "Restrito aos admins.";
             reportsStatus.textContent = "Restrito aos admins.";
             redirectToIndex();
             return;
@@ -899,6 +936,9 @@ body {
           if (requestsNav) requestsNav.style.display = "none";
           requestsEmpty.style.display = "block";
           requestsEmpty.textContent = "Faça login para ver solicitações.";
+          withdrawsList.innerHTML = "";
+          withdrawsEmpty.style.display = "block";
+          withdrawsEmpty.textContent = "Faça login para ver saques.";
           reportsList.innerHTML = "";
           if (reportsNav) reportsNav.style.display = "none";
           reportsEmpty.style.display = "block";
@@ -911,6 +951,7 @@ body {
         setStatus(false, "Erro");
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
+        withdrawsStatus.textContent = "Erro ao checar sessão.";
         reportsStatus.textContent = "Erro ao checar sessão.";
         if (!currentUser || !profile?.is_admin) {
           redirectToIndex();
@@ -972,8 +1013,8 @@ body {
           return;
         }
 
-        const discordInvite = normalizeOptionalUrl(discordInviteRaw);
-        if (!discordInvite) {
+        const discordInvite = discordInviteRaw ? normalizeOptionalUrl(discordInviteRaw) : null;
+        if (discordInviteRaw && !discordInvite) {
           formError.textContent = "Use um convite que comece com https://discord.gg/";
           return;
         }
@@ -1013,7 +1054,7 @@ body {
         const summary = [
           `Servidor: ${name}`,
           `Site: ${site}`,
-          `Discord: ${discordInvite}`,
+          `Discord: ${discordInvite || "não informado"}`,
           `Owner: ${ownerRecord?.email || "não definido"}`,
           `Logo: ${logoSummary}`,
           `Status: ativo`
@@ -1068,6 +1109,7 @@ body {
           }
           await fetchRequests();
         } else {
+          let createdServerId = null;
           let insertPayload = {
             name,
             game_type: "general",
@@ -1083,9 +1125,12 @@ body {
 
           let insertErr = null;
           for (let attempt = 0; attempt < 8; attempt += 1) {
-            const insertResult = await supabase.from("servers").insert(insertPayload);
+            const insertResult = await supabase.from("servers").insert(insertPayload).select("id").single();
             insertErr = insertResult.error;
-            if (!insertErr) break;
+            if (!insertErr) {
+              createdServerId = insertResult.data?.id || null;
+              break;
+            }
 
             let removedAnyColumn = false;
             if (isMissingDiscordInviteColumnError(insertErr) && Object.prototype.hasOwnProperty.call(insertPayload, "discord_invite")) {
@@ -1213,6 +1258,8 @@ body {
       const submitterLabel = req.is_owner
         ? "Administrador do game"
         : "Player da comunidade";
+      const missingFieldsMessage = getRequestMissingFieldsMessage(req);
+      const missingFieldsTitle = getRequestMissingFieldsTitle(req);
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
           <div>
@@ -1225,10 +1272,10 @@ body {
         <div class="muted">Usuário: ${req.user_email || "-"}</div>
         <div class="muted">Tipo de envio: ${submitterLabel}</div>
         <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
-        ${(!String(req.discord_invite || "").trim() || !String(req.displayCoverUrl || req.cover_url || "").trim()) ? `<div class="muted" style="color:#b45309;">Esta solicitação está sem Discord oficial e/ou logo, edite e envie os dados faltantes antes de aprovar.</div>` : ""}
+        ${missingFieldsMessage ? `<div class="muted" style="color:#b45309;">${missingFieldsMessage}</div>` : ""}
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn secondary" data-action="prefill" data-id="${req.id}" style="flex:1;">Editar antes de aprovar</button>
-          <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;" ${(!String(req.discord_invite || "").trim() || !String(req.displayCoverUrl || req.cover_url || "").trim()) ? 'disabled title="Adicione Discord oficial e logo antes de aprovar."' : ""}>Aprovar</button>
+          <button class="btn secondary" data-action="approve" data-id="${req.id}" style="flex:1;" ${missingFieldsMessage ? `disabled title="${escapeHtml(missingFieldsTitle)}"` : ""}>Aprovar</button>
           <button class="btn secondary" data-action="reject" data-id="${req.id}" style="flex:1;">Recusar</button>
         </div>
       `;
@@ -1248,8 +1295,146 @@ body {
       return !!String(req?.displayCoverUrl || req?.cover_url || "").trim();
     }
 
-    function hasRequestDiscord(req) {
-      return !!String(req?.discord_invite || "").trim();
+    function getRequestMissingFieldsMessage(req) {
+      const missingLogo = !hasRequestLogo(req);
+      if (missingLogo) {
+        return "Esta solicitação está sem logo, edite e envie o dado faltante antes de aprovar.";
+      }
+      return "";
+    }
+
+    function getRequestMissingFieldsTitle(req) {
+      const missingLogo = !hasRequestLogo(req);
+      if (missingLogo) {
+        return "Adicione a logo antes de aprovar.";
+      }
+      return "";
+    }
+
+    function getWithdrawUserLabel(row) {
+      const first = String(row?.users?.first_name || "").trim();
+      const last = String(row?.users?.last_name || "").trim();
+      const fullName = `${first} ${last}`.trim();
+      return fullName || row?.users?.email || row?.user_id || "Usuário";
+    }
+
+    function getWithdrawDestinationLabel(row) {
+      const provider = String(row?.provider || "").trim().toLowerCase();
+      const snapshot = row?.account_snapshot || {};
+      if (provider === "pix") {
+        const type = String(snapshot?.pix_key_type || "").trim().toLowerCase();
+        const value = String(snapshot?.pix_key_value || "").trim();
+        const typeLabelMap = {
+          cpf: "CPF",
+          cnpj: "CNPJ",
+          email: "E-mail",
+          phone: "Telefone",
+          random: "Aleatória",
+        };
+        const typeLabel = typeLabelMap[type] || "Pix";
+        return `${typeLabel}: ${value || snapshot?.account_summary || "Chave não informada"}`;
+      }
+      return String(snapshot?.long_account_summary || snapshot?.account_summary || "Conta bancária cadastrada");
+    }
+
+    async function fetchWithdrawRequests() {
+      try {
+        withdrawsStatus.textContent = "Carregando...";
+        const { data, error } = await supabase
+          .from("partner_withdraw_requests")
+          .select("id,user_id,provider,requested_amount,status,country_code,target_currency,created_at,account_snapshot")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        const rows = data || [];
+        const userIds = Array.from(new Set(rows.map((row) => row.user_id).filter(Boolean)));
+        let userMap = new Map();
+        if (userIds.length > 0) {
+          const { data: usersData, error: usersError } = await supabase
+            .from("users")
+            .select("id,email,first_name,last_name")
+            .in("id", userIds);
+          if (usersError) throw usersError;
+          userMap = new Map((usersData || []).map((user) => [user.id, user]));
+        }
+        withdrawCache = rows.map((row) => ({
+          ...row,
+          users: userMap.get(row.user_id) || null,
+        }));
+        renderWithdrawRequests(withdrawCache);
+        withdrawsStatus.textContent = "Pronto";
+      } catch (err) {
+        console.error(err);
+        withdrawsList.innerHTML = "";
+        withdrawsEmpty.style.display = "block";
+        withdrawsEmpty.textContent = "Erro ao carregar saques pendentes.";
+        withdrawsStatus.textContent = err?.message || "Erro ao carregar saques pendentes.";
+      }
+    }
+
+    function renderWithdrawRequests(list) {
+      withdrawsList.innerHTML = "";
+      if (!list || list.length === 0) {
+        withdrawsEmpty.style.display = "block";
+        return;
+      }
+      withdrawsEmpty.style.display = "none";
+      list.forEach((row) => {
+        const card = document.createElement("div");
+        card.className = "notice";
+        card.style.display = "grid";
+        card.style.gap = "8px";
+        const providerLabel = String(row?.provider || "").trim().toLowerCase() === "pix" ? "Pix" : "Conta bancária";
+        const pixKeyValue = String(row?.account_snapshot?.pix_key_value || "").trim();
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+            <div>
+              <strong>${escapeHtml(getWithdrawUserLabel(row))}</strong>
+              <div class="muted">${escapeHtml(row?.users?.email || "")}</div>
+            </div>
+            <span class="pill">${escapeHtml(providerLabel)}</span>
+          </div>
+          <div class="muted">Valor solicitado: ${escapeHtml(`R$ ${Number(row?.requested_amount || 0).toFixed(2).replace(".", ",")}`)}</div>
+          <div class="muted">Destino: ${escapeHtml(getWithdrawDestinationLabel(row))}</div>
+          <div class="muted">Criado em ${escapeHtml(formatDateTime(row?.created_at))}</div>
+          ${providerLabel === "Pix" && pixKeyValue ? `
+            <div style="display:grid;gap:8px;justify-items:start;">
+              <button class="chip-btn" type="button" data-action="copy-pix-key" data-key="${escapeHtml(pixKeyValue)}">Copiar chave Pix</button>
+            </div>
+          ` : ""}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="chip-btn" type="button" data-action="withdraw-review" data-status="approved" data-id="${row.id}">Aprovar</button>
+            <button class="chip-btn" type="button" data-action="withdraw-review" data-status="paid" data-id="${row.id}">Pago</button>
+            <button class="chip-btn" type="button" data-action="withdraw-review" data-status="rejected" data-id="${row.id}">Rejeitar</button>
+          </div>
+        `;
+        withdrawsList.appendChild(card);
+      });
+    }
+
+    async function reviewWithdrawRequest(requestId, status) {
+      ensureClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || "";
+      if (!accessToken) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      const { data, error } = await supabase.functions.invoke("partner_withdraw_review", {
+        body: {
+          requestId,
+          status,
+          userToken: accessToken,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !data?.ok) {
+        const message = await resolveInvokeErrorMessage(error, data, "Erro ao revisar saque.");
+        throw new Error(message);
+      }
+      return data.request;
     }
 
     async function fetchReports() {
@@ -1536,9 +1721,9 @@ body {
       try {
         requestsStatus.textContent = "Processando...";
         const req = requestCache.find((r) => String(r.id) === String(id));
-        if (approved && (!hasRequestLogo(req) || !hasRequestDiscord(req))) {
-          requestsStatus.textContent = "Adicione Discord oficial e logo antes de aprovar a solicitação.";
-          window.alert('Esta solicitação precisa ter Discord oficial e logo. Use "Editar antes de aprovar" para enviar os dados faltantes.');
+        if (approved && !hasRequestLogo(req)) {
+          requestsStatus.textContent = "Adicione a logo antes de aprovar a solicitação.";
+          window.alert('Esta solicitação precisa ter logo. Use "Editar antes de aprovar" para enviar o dado faltante.');
           setDecisionButtonsProcessing(card, action, false);
           return;
         }
@@ -1583,6 +1768,56 @@ body {
           window.alert(`${OWNER_ADMIN_CONFLICT_MESSAGE}\n\nAdministradores não podem ser cadastrados como responsáveis pelos jogos.`);
         }
         setDecisionButtonsProcessing(card, action, false);
+      }
+    });
+
+    withdrawsList?.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const action = String(button.dataset.action || "");
+      if (action === "copy-pix-key") {
+        const pixKey = String(button.dataset.key || "");
+        if (!pixKey) return;
+        try {
+          await navigator.clipboard.writeText(pixKey);
+          withdrawsStatus.textContent = "Chave Pix copiada.";
+        } catch (err) {
+          console.error(err);
+          withdrawsStatus.textContent = "Não foi possível copiar a chave Pix.";
+        }
+        return;
+      }
+
+      if (action !== "withdraw-review") return;
+      if (!profile?.is_admin) {
+        withdrawsStatus.textContent = "Apenas admins podem revisar saques.";
+        return;
+      }
+
+      const requestId = String(button.dataset.id || "");
+      const nextStatus = String(button.dataset.status || "");
+      if (!requestId || !nextStatus) return;
+
+      const labelMap = {
+        approved: "aprovar",
+        paid: "marcar como pago",
+        rejected: "rejeitar",
+      };
+      const confirmed = window.confirm(`Deseja ${labelMap[nextStatus] || "atualizar"} esta solicitação?`);
+      if (!confirmed) return;
+
+      try {
+        button.disabled = true;
+        withdrawsStatus.textContent = "Atualizando...";
+        await reviewWithdrawRequest(requestId, nextStatus);
+        await fetchWithdrawRequests();
+        withdrawsStatus.textContent = "Solicitação atualizada.";
+      } catch (err) {
+        console.error(err);
+        withdrawsStatus.textContent = err?.message || "Erro ao atualizar solicitação.";
+      } finally {
+        button.disabled = false;
       }
     });
 

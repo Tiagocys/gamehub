@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Área de parceiros</title>
+  <title>Gimerr - Partner area</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="partner-guard-style">html{visibility:hidden;}</style>
   <script>
@@ -31,14 +31,51 @@
       gap: 16px;
     }
 
+    .partner-sections {
+      display: grid;
+      gap: 16px;
+    }
+
     .partner-grid .hero-card {
       display: grid;
       gap: 10px;
     }
 
+    .partner-account-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .partner-account-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .partner-account-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .partner-account-summary {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      flex: 1 1 420px;
+      min-width: 0;
+    }
+
+    .partner-account-details {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+      flex: 1.35 1 560px;
+    }
+
     .partner-status-list {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 10px;
     }
 
@@ -105,6 +142,86 @@
       min-height: 18px;
       color: var(--muted);
       font-size: 13px;
+    }
+
+    .partner-wise-grid {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .partner-wise-field,
+    .partner-wise-requirements {
+      display: grid;
+      gap: 12px;
+    }
+
+    .partner-wise-field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .partner-wise-field input,
+    .partner-wise-field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-height: 46px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .partner-wise-field input[readonly] {
+      background: rgba(12, 21, 51, 0.04);
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .partner-wise-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .partner-wise-field .helper {
+      min-height: 18px;
+    }
+
+    .partner-wise-methods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .partner-wise-method-btn {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .partner-wise-method-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(118, 168, 255, 0.12);
+    }
+
+    .partner-wise-fields-grid {
+      display: grid;
+      gap: 18px 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    .partner-wise-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
     }
 
     .partner-server-actions {
@@ -218,14 +335,89 @@
       flex-wrap: wrap;
     }
 
+    .partner-inline-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .partner-link-btn {
+      border: 0;
+      background: transparent;
+      color: var(--brand);
+      font: inherit;
+      font-weight: 700;
+      padding: 0;
+      cursor: pointer;
+    }
+
     .partner-edit-feedback {
       font-size: 13px;
       min-height: 18px;
       color: var(--muted);
     }
 
+    .partner-withdraw-modal-body {
+      display: grid;
+      gap: 14px;
+      padding: 16px 18px 18px;
+    }
+
+    .partner-withdraw-preview-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .partner-withdraw-preview-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .partner-withdraw-preview-item small {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .partner-withdraw-preview-item strong {
+      color: var(--ink);
+      font-size: 16px;
+    }
+
+    @media (min-width: 1180px) {
+      .partner-server-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1480px) {
+      .partner-server-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 760px) {
+      .partner-account-layout {
+        display: block;
+      }
+
       .partner-status-list {
+        grid-template-columns: 1fr;
+      }
+
+      .partner-wise-grid,
+      .partner-wise-fields-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -233,99 +425,207 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
     <main class="section partner-grid">
       <section class="hero-card">
-        <h2>Painel de parceiro</h2>
-        <p class="helper">Gerencie seus games e acompanhe seus ganhos.</p>
+        <h2 id="partner-page-title">Partner dashboard</h2>
       </section>
 
-      <section class="hero-card">
-        <div class="partner-status-list">
-          <div class="partner-status-item">
-            <small>Conta Connect</small>
-            <strong id="partner-account-id">Ainda não criada</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Recebimentos habilitados</small>
-            <strong id="partner-payouts">Não</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Esperado para recebimento</small>
-            <strong id="partner-expected-amount">R$ 0,00</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Disponível para repasse</small>
-            <strong id="partner-available-amount">R$ 0,00</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Em período ativo</small>
-            <strong id="partner-pending-amount">R$ 0,00</strong>
-          </div>
-          <div class="partner-status-item">
-            <small>Destaques ativos</small>
-            <strong id="partner-active-highlights-count">0</strong>
-          </div>
-        </div>
-        <div class="inline-actions">
-          <button id="start-connect-btn" class="btn btn-primary" type="button">Iniciar onboarding Connect</button>
-          <button id="refresh-connect-btn" class="btn btn-ghost" type="button">Atualizar status</button>
-          <a class="btn btn-ghost" href="politica-parceiros.html">Políticas de parceiros</a>
-          <a class="btn btn-ghost" href="terms.html">Termos de uso</a>
-        </div>
-        <p id="connect-feedback" class="partner-feedback"></p>
-      </section>
+      <div class="partner-sections">
+        <div class="partner-account-panel account-panel">
+          <section class="hero-card partner-account-card">
+            <div class="partner-account-layout">
+              <div class="partner-account-summary">
+                <div class="partner-status-list">
+                  <div class="partner-status-item">
+                    <small id="partner-account-label">Account</small>
+                    <div class="partner-inline-meta">
+                      <strong id="partner-account-id">Not registered</strong>
+                      <button id="partner-account-id-toggle" class="partner-link-btn" type="button" hidden>Show</button>
+                    </div>
+                  </div>
+                  <div class="partner-status-item">
+                    <small id="partner-account-registered-label">Account registered</small>
+                    <strong id="partner-payouts">No</strong>
+                  </div>
+                  <div class="partner-status-item">
+                    <small id="partner-balance-label">Balance</small>
+                    <strong id="partner-available-amount">R$ 0,00</strong>
+                  </div>
+                  <div class="partner-status-item">
+                    <small id="partner-highlights-label">Active highlights</small>
+                    <strong id="partner-active-highlights-count">0</strong>
+                  </div>
+                </div>
+                <div class="inline-actions">
+                  <button id="partner-account-action-btn" class="btn btn-primary" type="button">Register payout account</button>
+                  <button id="partner-withdraw-btn" class="btn btn-primary" type="button" disabled>Request withdrawal</button>
+                </div>
+                <p id="partner-withdraw-note" class="partner-feedback"></p>
+                <p id="connect-feedback" class="partner-feedback"></p>
+              </div>
 
-      <section class="hero-card">
-        <div class="partner-server-head">
-          <h3>Servidores vinculados</h3>
-          <span id="partner-servers-count" class="pill">0 servidores</span>
+              <div class="partner-account-details">
+                <div id="wise-form-shell">
+                  <div class="partner-server-head">
+                    <h3 id="partner-account-section-title">Payout account</h3>
+                    <div class="partner-inline-meta">
+                      <span id="wise-account-status" class="pill">Not registered</span>
+                      <button id="wise-edit-btn" class="partner-link-btn" type="button" hidden>Edit</button>
+                    </div>
+                  </div>
+                  <p id="partner-account-section-helper" class="partner-wise-note">Register your account to receive platform withdrawals. Conversion and transfer fees may be deducted from the requested amount.</p>
+                  <div class="partner-wise-grid">
+                    <div class="partner-wise-field">
+                      <label id="wise-country-code-label" for="wise-country-code">Bank country</label>
+                      <select id="wise-country-code">
+                        <option id="wise-country-code-placeholder" value="">-- Select a country --</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div id="wise-account-setup" class="partner-wise-grid" hidden>
+                    <div class="partner-wise-field">
+                      <label id="wise-target-currency-label" for="wise-target-currency">Payout currency</label>
+                      <input id="wise-target-currency" maxlength="3" placeholder="Defined by country" readonly />
+                    </div>
+                    <div class="partner-wise-field">
+                      <label id="wise-legal-type-label" for="wise-legal-type">Account holder type</label>
+                      <select id="wise-legal-type">
+                        <option id="wise-legal-type-private" value="PRIVATE">Individual</option>
+                        <option id="wise-legal-type-business" value="BUSINESS">Business</option>
+                      </select>
+                    </div>
+                    <div id="wise-br-account-kind-field" class="partner-wise-field" hidden>
+                      <label id="wise-br-account-kind-label" for="wise-br-account-kind">Registration type</label>
+                      <select id="wise-br-account-kind">
+                        <option id="wise-br-account-kind-bank" value="bank">Bank account</option>
+                        <option id="wise-br-account-kind-pix" value="pix">Pix key</option>
+                      </select>
+                    </div>
+                    <div id="wise-account-holder-name-field" class="partner-wise-field" hidden>
+                      <label id="wise-account-holder-name-label" for="wise-account-holder-name">Account holder name</label>
+                      <input id="wise-account-holder-name" maxlength="160" placeholder="Full name or business name" />
+                    </div>
+                  </div>
+                  <div id="wise-pix-fields" class="partner-wise-fields-grid" style="display:none;">
+                    <label class="partner-wise-field">
+                      <span id="wise-pix-key-type-label">Pix key type *</span>
+                      <select id="wise-pix-key-type">
+                        <option id="wise-pix-key-type-placeholder" value="">-- Select an option --</option>
+                        <option id="wise-pix-key-type-cpf" value="cpf">CPF</option>
+                        <option id="wise-pix-key-type-cnpj" value="cnpj">CNPJ</option>
+                        <option id="wise-pix-key-type-email" value="email">Email</option>
+                        <option id="wise-pix-key-type-phone" value="phone">Phone</option>
+                        <option id="wise-pix-key-type-random" value="random">Random key</option>
+                      </select>
+                    </label>
+                    <label class="partner-wise-field">
+                      <span id="wise-pix-key-value-label">Pix key *</span>
+                      <input id="wise-pix-key-value" maxlength="160" placeholder="Enter your Pix key" />
+                    </label>
+                  </div>
+                  <div id="wise-methods" class="partner-wise-methods" style="display:none;"></div>
+                  <div id="wise-requirements-empty" class="helper" style="display:none;">Loading bank fields...</div>
+                  <div id="wise-requirements" class="partner-wise-requirements" style="display:none;"></div>
+                  <div id="wise-actions" class="inline-actions" hidden>
+                    <button id="wise-save-btn" class="btn btn-primary" type="button" disabled>Save bank details</button>
+                  </div>
+                  <p id="wise-payout-note" class="partner-wise-note" hidden>Withdrawals remain pending until approval and are not paid automatically.</p>
+                  <p id="wise-feedback" class="partner-feedback"></p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-        <div id="partner-server-list" class="partner-server-list"></div>
-        <p id="partner-servers-empty" class="helper" style="display:none;">Nenhum servidor vinculado ao seu usuário no momento.</p>
-      </section>
+
+        <div class="partner-account-panel servers-panel">
+          <section class="hero-card">
+            <div class="partner-server-head">
+              <h3 id="partner-servers-title">Linked servers</h3>
+              <span id="partner-servers-count" class="pill">0 servers</span>
+            </div>
+            <div id="partner-server-list" class="partner-server-list"></div>
+            <p id="partner-servers-empty" class="helper" style="display:none;">No servers linked to your user at the moment.</p>
+          </section>
+        </div>
+      </div>
     </main>
 
     <div id="partner-edit-modal" class="partner-edit-modal" aria-hidden="true">
       <div class="partner-edit-card">
         <div class="partner-edit-head">
-          <h3>Editar servidor</h3>
-          <button id="partner-edit-close" class="partner-edit-close" type="button" aria-label="Fechar">×</button>
+          <h3 id="partner-edit-title">Edit server</h3>
+          <button id="partner-edit-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
         </div>
         <form id="partner-edit-form" class="partner-edit-form">
           <input id="partner-edit-server-id" type="hidden" />
           <div class="partner-edit-field">
-            <label for="partner-edit-name">Nome do servidor</label>
+            <label id="partner-edit-name-label" for="partner-edit-name">Server name</label>
             <input id="partner-edit-name" maxlength="120" required />
           </div>
           <div class="partner-edit-field">
-            <label for="partner-edit-site">Site oficial</label>
-            <input id="partner-edit-site" placeholder="https://seu-servidor.com" required />
+            <label id="partner-edit-site-label" for="partner-edit-site">Official website</label>
+            <input id="partner-edit-site" placeholder="https://your-server.com" required />
           </div>
           <div class="partner-edit-field">
-            <label for="partner-edit-discord">Discord oficial</label>
-            <input id="partner-edit-discord" placeholder="https://discord.gg/seu-servidor" />
+            <label id="partner-edit-discord-label" for="partner-edit-discord">Official Discord</label>
+            <input id="partner-edit-discord" placeholder="https://discord.gg/your-server" />
           </div>
           <div class="partner-edit-field">
-            <label for="partner-edit-description">Descrição</label>
-            <textarea id="partner-edit-description" rows="4" maxlength="2000" placeholder="Descreva rapidamente o servidor."></textarea>
+            <label id="partner-edit-description-label" for="partner-edit-description">Description</label>
+            <textarea id="partner-edit-description" rows="4" maxlength="2000" placeholder="Briefly describe the server."></textarea>
           </div>
           <div class="partner-edit-field">
-            <label for="partner-edit-logo-file">Logo (opcional)</label>
+            <label id="partner-edit-logo-label" for="partner-edit-logo-file">Logo (optional)</label>
             <input id="partner-edit-logo-file" type="file" accept="image/png,image/jpeg,image/webp" />
-            <span class="helper">A imagem será convertida para WebP antes do envio.</span>
+            <span id="partner-edit-logo-helper" class="helper">The image will be converted to WebP before upload.</span>
           </div>
-          <img id="partner-edit-logo-preview" class="partner-edit-preview" alt="Prévia da logo do servidor" style="display:none;" />
+          <img id="partner-edit-logo-preview" class="partner-edit-preview" alt="Server logo preview" style="display:none;" />
           <div class="partner-edit-actions">
-            <button id="partner-edit-submit" class="btn btn-primary" type="submit">Salvar alterações</button>
-            <button id="partner-edit-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+            <button id="partner-edit-submit" class="btn btn-primary" type="submit">Save changes</button>
+            <button id="partner-edit-cancel" class="btn btn-ghost" type="button">Cancel</button>
           </div>
           <div id="partner-edit-feedback" class="partner-edit-feedback"></div>
         </form>
+      </div>
+    </div>
+
+    <div id="partner-withdraw-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3 id="partner-withdraw-modal-title">Confirm withdrawal</h3>
+          <button id="partner-withdraw-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <p id="partner-withdraw-modal-helper" class="partner-wise-note">Review the estimated fees and net amount before confirming the withdrawal.</p>
+          <div class="partner-withdraw-preview-list">
+            <div class="partner-withdraw-preview-item">
+              <div>
+                <small id="partner-withdraw-fee-label">Estimated fee</small>
+                <strong id="partner-withdraw-preview-fee">R$ 0,00</strong>
+              </div>
+            </div>
+            <div class="partner-withdraw-preview-item">
+              <div>
+                <small id="partner-withdraw-net-label">Estimated net amount</small>
+                <strong id="partner-withdraw-preview-net">R$ 0,00</strong>
+              </div>
+            </div>
+          </div>
+          <p id="partner-withdraw-policy-note" class="partner-wise-note">
+            By confirming, you agree to the
+            <a class="link-ghost" href="partner-policy.html" target="_blank" rel="noopener">partner policies</a>.
+          </p>
+          <p id="partner-withdraw-modal-feedback" class="partner-feedback"></p>
+          <div class="inline-actions">
+            <button id="partner-withdraw-confirm-btn" class="btn btn-primary" type="button">Request withdrawal</button>
+            <button id="partner-withdraw-cancel-btn" class="btn btn-ghost" type="button">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -333,6 +633,9 @@
   </div>
 
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
   <script type="module">
@@ -341,6 +644,8 @@
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
@@ -353,18 +658,18 @@
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
-
+    const partnerAccountLabel = document.getElementById("partner-account-label");
     const partnerAccountId = document.getElementById("partner-account-id");
+    const partnerAccountIdToggle = document.getElementById("partner-account-id-toggle");
+    const partnerAccountActionBtn = document.getElementById("partner-account-action-btn");
     const partnerPayouts = document.getElementById("partner-payouts");
+    const partnerWithdrawBtn = document.getElementById("partner-withdraw-btn");
+    const partnerWithdrawNote = document.getElementById("partner-withdraw-note");
     const connectFeedback = document.getElementById("connect-feedback");
-    const startConnectBtn = document.getElementById("start-connect-btn");
-    const refreshConnectBtn = document.getElementById("refresh-connect-btn");
     const partnerServersCount = document.getElementById("partner-servers-count");
     const partnerServerList = document.getElementById("partner-server-list");
     const partnerServersEmpty = document.getElementById("partner-servers-empty");
-    const partnerExpectedAmount = document.getElementById("partner-expected-amount");
     const partnerAvailableAmount = document.getElementById("partner-available-amount");
-    const partnerPendingAmount = document.getElementById("partner-pending-amount");
     const partnerActiveHighlightsCount = document.getElementById("partner-active-highlights-count");
     const partnerEditModal = document.getElementById("partner-edit-modal");
     const partnerEditForm = document.getElementById("partner-edit-form");
@@ -379,12 +684,116 @@
     const partnerEditLogoPreview = document.getElementById("partner-edit-logo-preview");
     const partnerEditFeedback = document.getElementById("partner-edit-feedback");
     const partnerEditSubmit = document.getElementById("partner-edit-submit");
+    const wiseAccountStatus = document.getElementById("wise-account-status");
+    const wiseEditBtn = document.getElementById("wise-edit-btn");
+    const wiseFormShell = document.getElementById("wise-form-shell");
+    const wiseCountryCode = document.getElementById("wise-country-code");
+    const wiseAccountSetup = document.getElementById("wise-account-setup");
+    const wiseTargetCurrency = document.getElementById("wise-target-currency");
+    const wiseLegalType = document.getElementById("wise-legal-type");
+    const wiseBrAccountKindField = document.getElementById("wise-br-account-kind-field");
+    const wiseBrAccountKind = document.getElementById("wise-br-account-kind");
+    const wiseAccountHolderNameField = document.getElementById("wise-account-holder-name-field");
+    const wiseAccountHolderName = document.getElementById("wise-account-holder-name");
+    const wisePixFields = document.getElementById("wise-pix-fields");
+    const wisePixKeyType = document.getElementById("wise-pix-key-type");
+    const wisePixKeyValue = document.getElementById("wise-pix-key-value");
+    const wiseActions = document.getElementById("wise-actions");
+    const wiseSaveBtn = document.getElementById("wise-save-btn");
+    const wiseMethods = document.getElementById("wise-methods");
+    const wiseRequirementsEmpty = document.getElementById("wise-requirements-empty");
+    const wiseRequirements = document.getElementById("wise-requirements");
+    const wisePayoutNote = document.getElementById("wise-payout-note");
+    const wiseFeedback = document.getElementById("wise-feedback");
+    const partnerWithdrawModal = document.getElementById("partner-withdraw-modal");
+    const partnerWithdrawClose = document.getElementById("partner-withdraw-close");
+    const partnerWithdrawCancel = document.getElementById("partner-withdraw-cancel-btn");
+    const partnerWithdrawConfirmBtn = document.getElementById("partner-withdraw-confirm-btn");
+    const partnerWithdrawPreviewFee = document.getElementById("partner-withdraw-preview-fee");
+    const partnerWithdrawPreviewNet = document.getElementById("partner-withdraw-preview-net");
+    const partnerWithdrawModalFeedback = document.getElementById("partner-withdraw-modal-feedback");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
     let windowLoaded = false;
     let avatarReady = false;
     let contentReady = false;
+
+    function applyStaticTranslations() {
+      document.title = t("partner_page.title_default", "Gimerr - Partner area");
+      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      const setText = (id, key, fallback) => {
+        const node = document.getElementById(id);
+        if (node) node.textContent = t(key, fallback);
+      };
+      const setHtml = (id, key, fallback) => {
+        const node = document.getElementById(id);
+        if (node) node.innerHTML = t(key, fallback);
+      };
+      const setAttr = (id, attr, key, fallback) => {
+        const node = document.getElementById(id);
+        if (node) node.setAttribute(attr, t(key, fallback));
+      };
+      setText("partner-page-title", "partner_page.title", "Painel de parceiro");
+      setText("partner-account-label", "partner_page.account_label", "Conta");
+      setText("partner-account-registered-label", "partner_page.account_registered_label", "Conta cadastrada");
+      setText("partner-balance-label", "partner_page.balance_label", "Saldo");
+      setText("partner-highlights-label", "partner_page.highlights_label", "Destaques ativos");
+      setText("partner-account-action-btn", "partner_page.register_account", "Cadastrar conta de recebimento");
+      setText("partner-withdraw-btn", "partner_page.request_withdraw", "Solicitar saque");
+      setText("partner-account-id-toggle", "partner_page.show", "Mostrar");
+      setText("partner-account-section-title", "partner_page.account_section_title", "Conta de recebimento");
+      setText("partner-account-section-helper", "partner_page.account_section_helper", "Register your account to receive platform withdrawals. Conversion and transfer fees may be deducted from the requested amount.");
+      setText("wise-edit-btn", "partner_page.edit", "Edit");
+      setText("wise-country-code-label", "partner_page.bank_country_label", "Bank country");
+      setText("wise-country-code-placeholder", "partner_page.bank_country_placeholder", "-- Select a country --");
+      setText("wise-target-currency-label", "partner_page.target_currency_label", "Moeda de recebimento");
+      if (wiseTargetCurrency) wiseTargetCurrency.placeholder = t("partner_page.country_defined_placeholder", "Defined by country");
+      setText("wise-legal-type-label", "partner_page.legal_type_label", "Tipo de titular");
+      setText("wise-legal-type-private", "partner_page.private", "Individual");
+      setText("wise-legal-type-business", "partner_page.business", "Business");
+      setText("wise-br-account-kind-label", "partner_page.account_kind_label", "Tipo de cadastro");
+      setText("wise-br-account-kind-bank", "partner_page.bank_account", "Bank account");
+      setText("wise-br-account-kind-pix", "partner_page.pix_key", "Pix key");
+      setText("wise-account-holder-name-label", "partner_page.account_holder_name_label", "Account holder name");
+      if (wiseAccountHolderName) wiseAccountHolderName.placeholder = t("partner_page.account_holder_name_placeholder", "Full name or business name");
+      setText("wise-pix-key-type-label", "partner_page.pix_key_type_label", "Pix key type *");
+      setText("wise-pix-key-type-placeholder", "common.select_option", "-- Select an option --");
+      setText("wise-pix-key-type-cpf", "partner_page.pix_key_type_cpf", "CPF");
+      setText("wise-pix-key-type-cnpj", "partner_page.pix_key_type_cnpj", "CNPJ");
+      setText("wise-pix-key-type-email", "partner_page.pix_key_type_email", "Email");
+      setText("wise-pix-key-type-phone", "partner_page.pix_key_type_phone", "Phone");
+      setText("wise-pix-key-type-random", "partner_page.pix_key_type_random", "Random key");
+      setText("wise-pix-key-value-label", "partner_page.pix_key_value_label", "Pix key *");
+      if (wisePixKeyValue) wisePixKeyValue.placeholder = t("partner_page.pix_key_value_placeholder", "Enter your Pix key");
+      setText("wise-requirements-empty", "partner_page.loading_bank_fields", "Loading bank fields...");
+      setText("wise-save-btn", "partner_page.save_bank_data", "Save bank details");
+      setText("wise-payout-note", "partner_page.payout_pending_note", "Withdrawals remain pending until approval and are not paid automatically.");
+      setText("partner-servers-title", "partner_page.servers_title", "Servidores vinculados");
+      setText("partner-servers-empty", "partner_page.servers_empty", "No servers linked to your user at the moment.");
+      setText("partner-edit-title", "partner_page.edit_server_title", "Editar servidor");
+      setText("partner-edit-name-label", "partner_page.edit_name_label", "Nome do servidor");
+      setText("partner-edit-site-label", "partner_page.edit_site_label", "Site oficial");
+      if (partnerEditSite) partnerEditSite.placeholder = t("partner_page.edit_site_placeholder", "https://your-server.com");
+      setText("partner-edit-discord-label", "partner_page.edit_discord_label", "Discord oficial");
+      if (partnerEditDiscord) partnerEditDiscord.placeholder = t("partner_page.edit_discord_placeholder", "https://discord.gg/your-server");
+      setText("partner-edit-description-label", "partner_page.edit_description_label", "Description");
+      if (partnerEditDescription) partnerEditDescription.placeholder = t("partner_page.edit_description_placeholder", "Briefly describe the server.");
+      setText("partner-edit-logo-label", "partner_page.edit_logo_label", "Logo (opcional)");
+      setText("partner-edit-logo-helper", "partner_page.edit_logo_helper", "The image will be converted to WebP before upload.");
+      setAttr("partner-edit-logo-preview", "alt", "partner_page.server_logo_preview_alt", "Server logo preview");
+      setText("partner-edit-submit", "partner_page.save_changes", "Save changes");
+      setText("partner-edit-cancel", "partner_page.cancel", "Cancelar");
+      setText("partner-withdraw-modal-title", "partner_page.withdraw_modal_title", "Confirmar saque");
+      setText("partner-withdraw-modal-helper", "partner_page.withdraw_modal_helper", "Review the estimated fees and net amount before confirming the withdrawal.");
+      setText("partner-withdraw-fee-label", "partner_page.estimated_fee", "Taxa estimada");
+      setText("partner-withdraw-net-label", "partner_page.estimated_net", "Estimated net amount");
+      setHtml("partner-withdraw-policy-note", "partner_page.withdraw_policy_html", "By confirming, you agree to the <a class=\"link-ghost\" href=\"partner-policy.html\" target=\"_blank\" rel=\"noopener\">partner policies</a>.");
+      setText("partner-withdraw-confirm-btn", "partner_page.request_withdraw", "Solicitar saque");
+      setText("partner-withdraw-cancel-btn", "partner_page.cancel", "Cancelar");
+      setAttr("partner-edit-close", "aria-label", "common.close", "Close");
+      setAttr("partner-withdraw-close", "aria-label", "common.close", "Close");
+    }
 
     function hideLoader() {
       if (loaderDone || !pageLoader) return;
@@ -416,15 +825,62 @@
     let currentServers = [];
     let currentEditBannerUrl = "";
     let editLogoPreviewObjectUrl = null;
+    let currentWiseAccount = null;
+    let currentPartnerPayoutSummary = null;
+    let wiseEditMode = false;
+    let wiseAccountIdVisible = false;
+    let currentWiseRequirements = [];
+    let currentWiseMethodType = "";
+    let currentWiseFieldValues = {};
+    let lastWiseRequirementsSignature = "";
+    let partnerPayoutRefreshTimer = null;
+    let currentPartnerWithdrawPreview = null;
+    const SESSION_STORAGE_KEY = "gimerr-auth-session";
     const LOGO_MAX_BYTES = 5 * 1024 * 1024;
     const LOGO_MAX_DIMENSION = 1400;
     const LOGO_WEBP_QUALITY = 0.84;
+    const PARTNER_WITHDRAW_MIN_BRL = (() => {
+      const parsed = Number(env.PARTNER_WITHDRAW_MIN_BRL || 50);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
+    })();
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("partner-guard-style");
       if (guard) guard.remove();
+    }
+
+    function getProjectRef() {
+      try {
+        return new URL(SUPABASE_URL).hostname.split(".")[0];
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function decodeJwtPart(token, index) {
+      if (!token) return null;
+      const parts = String(token).split(".");
+      if (parts.length <= index) return null;
+      const base64 = parts[index].replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "===".slice((base64.length + 3) % 4);
+      try {
+        return JSON.parse(atob(padded));
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function decodeJwtPayload(token) {
+      return decodeJwtPart(token, 1);
+    }
+
+    function isTokenForProject(token) {
+      const payload = decodeJwtPayload(token);
+      const projectRef = getProjectRef();
+      if (!payload?.iss || !projectRef) return false;
+      return String(payload.iss).includes(projectRef);
     }
 
     function escapeHtml(value) {
@@ -559,6 +1015,500 @@
       partnerEditFeedback.style.color = isError ? "#c62828" : "var(--muted)";
     }
 
+    function setWiseFeedback(message, isError = false) {
+      if (!wiseFeedback) return;
+      wiseFeedback.textContent = message || "";
+      wiseFeedback.style.color = isError ? "#c62828" : "var(--muted)";
+    }
+
+    function setPartnerWithdrawFeedback(message, isError = false) {
+      if (!partnerWithdrawNote) return;
+      partnerWithdrawNote.textContent = message || "";
+      partnerWithdrawNote.style.color = isError ? "#c62828" : "var(--muted)";
+    }
+
+    function setPartnerWithdrawModalFeedback(message, isError = false) {
+      if (!partnerWithdrawModalFeedback) return;
+      partnerWithdrawModalFeedback.textContent = message || "";
+      partnerWithdrawModalFeedback.style.color = isError ? "#c62828" : "var(--muted)";
+    }
+
+    function normalizeWiseCountryCode(value) {
+      return String(value || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2);
+    }
+
+    function normalizeWiseCurrencyCode(value) {
+      return String(value || "").trim().toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3);
+    }
+
+    const WISE_CURRENCY_BY_COUNTRY = {
+      AR: "ARS",
+      AU: "AUD",
+      BO: "BOB",
+      BR: "BRL",
+      BG: "BGN",
+      CA: "CAD",
+      CH: "CHF",
+      CL: "CLP",
+      CO: "COP",
+      CZ: "CZK",
+      DK: "DKK",
+      GB: "GBP",
+      HK: "HKD",
+      HU: "HUF",
+      IL: "ILS",
+      JP: "JPY",
+      MX: "MXN",
+      NO: "NOK",
+      NZ: "NZD",
+      PE: "PEN",
+      PL: "PLN",
+      PT: "EUR",
+      PY: "PYG",
+      RO: "RON",
+      SE: "SEK",
+      SG: "SGD",
+      TR: "TRY",
+      UY: "UYU",
+      US: "USD",
+      ZA: "ZAR",
+      AE: "AED",
+      EU: "EUR",
+    };
+
+    const WISE_COUNTRY_OPTIONS = [
+      "BR", "PT", "PL", "US", "GB", "AR", "BO", "BG", "CA", "CL", "CO", "CZ", "DK", "HK", "HU",
+      "IL", "JP", "MX", "NO", "NZ", "PE", "PY", "RO", "SE", "SG", "CH", "TR", "UY", "AE", "AU", "ZA",
+    ];
+
+    function populateWiseCountryOptions() {
+      if (!wiseCountryCode) return;
+      const currentValue = normalizeWiseCountryCode(wiseCountryCode.value || "");
+      const existingValues = new Set(Array.from(wiseCountryCode.options).map((option) => option.value));
+      const regionNames = typeof Intl.DisplayNames === "function"
+        ? new Intl.DisplayNames([i18n.locale === "en" ? "en" : "pt-BR"], { type: "region" })
+        : null;
+      WISE_COUNTRY_OPTIONS.forEach((code) => {
+        if (existingValues.has(code)) return;
+        const option = document.createElement("option");
+        option.value = code;
+        option.textContent = regionNames?.of(code) || code;
+        wiseCountryCode.appendChild(option);
+      });
+      if (currentValue) {
+        wiseCountryCode.value = currentValue;
+      }
+    }
+
+    function getWiseCurrencyForCountry(countryCode) {
+      const normalized = normalizeWiseCountryCode(countryCode);
+      return WISE_CURRENCY_BY_COUNTRY[normalized] || "";
+    }
+
+    function syncWiseCurrencyFromCountry() {
+      if (!wiseTargetCurrency) return "";
+      const currency = getWiseCurrencyForCountry(wiseCountryCode?.value || "");
+      wiseTargetCurrency.value = currency;
+      return currency;
+    }
+
+    function isBrazilWiseCountry() {
+      return normalizeWiseCountryCode(wiseCountryCode?.value || "") === "BR";
+    }
+
+    function syncWiseCountrySpecificFields() {
+      const isBrazil = isBrazilWiseCountry();
+      const accountKind = getSelectedWiseAccountKind();
+      if (wiseBrAccountKindField) wiseBrAccountKindField.hidden = !isBrazil;
+      if (wiseBrAccountKind && !isBrazil) wiseBrAccountKind.value = "bank";
+      if (wiseAccountHolderNameField) {
+        wiseAccountHolderNameField.hidden = !(isBrazil && accountKind === "pix");
+      }
+      if (wisePixFields) {
+        wisePixFields.style.display = isBrazil && accountKind === "pix" ? "grid" : "none";
+      }
+    }
+
+    function getSelectedWiseAccountKind() {
+      if (!isBrazilWiseCountry()) return "bank";
+      return String(wiseBrAccountKind?.value || "bank").trim().toLowerCase() === "pix" ? "pix" : "bank";
+    }
+
+    function setWiseSetupVisible(visible) {
+      if (wiseFormShell) wiseFormShell.hidden = !visible;
+      if (wiseAccountSetup) wiseAccountSetup.hidden = !visible;
+      if (wiseActions) wiseActions.hidden = !visible;
+      if (wisePayoutNote) wisePayoutNote.hidden = !visible;
+      if (!visible) {
+        if (wiseMethods) wiseMethods.style.display = "none";
+        if (wiseRequirements) wiseRequirements.style.display = "none";
+        if (wiseRequirementsEmpty) wiseRequirementsEmpty.style.display = "none";
+      }
+    }
+
+    function maskWiseDisplayValue(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return t("partner_page.not_registered", "Not registered");
+      if (raw.includes("@")) {
+        const [local, domain = ""] = raw.split("@");
+        if (!local) return raw;
+        const start = local.slice(0, 2);
+        const end = local.slice(-1);
+        const maskedLocal = `${start}${"*".repeat(Math.max(1, local.length - 3))}${end}`;
+        return `${maskedLocal}@${domain}`;
+      }
+      if (!/\d/.test(raw)) {
+        return `${"*".repeat(Math.max(0, raw.length - 4))}${raw.slice(-4)}`;
+      }
+      let digitIndex = 0;
+      const totalDigits = (raw.match(/\d/g) || []).length;
+      return raw.replace(/\d/g, (digit) => {
+        digitIndex += 1;
+        return digitIndex <= Math.max(0, totalDigits - 4) ? "*" : digit;
+      });
+    }
+
+    function getWiseAccountDisplayValue(account, reveal = false) {
+      const isPixAccount = String(account?.metadata?.account_kind || account?.provider || "").trim().toLowerCase() === "pix";
+      const raw = reveal && isPixAccount
+        ? String(account?.pix_key_value || "").trim() || getWiseAccountSummary(account)
+        : getWiseAccountSummary(account);
+      if (!account) return raw;
+      return reveal ? raw : maskWiseDisplayValue(raw);
+    }
+
+    function getWiseAccountKindLabel(account) {
+      const kind = String(account?.metadata?.account_kind || "").trim().toLowerCase();
+      return kind === "pix"
+        ? t("partner_page.pix_key", "Pix")
+        : t("partner_page.account_label", "Account");
+    }
+
+    function renderWiseAccountId(account) {
+      if (partnerAccountLabel) {
+        partnerAccountLabel.textContent = getWiseAccountKindLabel(account);
+      }
+      if (partnerAccountId) {
+        partnerAccountId.textContent = getWiseAccountDisplayValue(account, wiseAccountIdVisible);
+      }
+      if (partnerAccountIdToggle) {
+        const hasAccount = Boolean(
+          account
+          && getWiseAccountDisplayValue(account, true)
+          && getWiseAccountDisplayValue(account, true) !== t("partner_page.registered", "Registered account"),
+        );
+        partnerAccountIdToggle.hidden = !hasAccount;
+        partnerAccountIdToggle.textContent = wiseAccountIdVisible
+          ? t("partner_page.hide", "Hide")
+          : t("partner_page.show", "Show");
+      }
+    }
+
+    function prettyWiseLabel(key) {
+      const normalized = String(key || "").trim();
+      const friendlyMap = i18n.locale === "en"
+        ? {
+            type: "Recipient type",
+            bankCode: "Bank",
+            bankName: "Bank",
+            accountNumber: "Account number",
+            iban: "IBAN",
+            bic: "BIC / SWIFT",
+            branchCode: "Branch code",
+            cpf: "CPF",
+            cnpj: "CNPJ",
+            legalType: "Recipient type",
+            accountType: "Account type",
+            accountHolderName: "Account holder full name",
+            "address.country": "Country",
+            "address.city": "City",
+            "address.postCode": "Postal code",
+            "address.firstLine": "Address",
+            "address.state": "State",
+          }
+        : {
+            type: "Tipo de destinatário",
+            bankCode: "Banco",
+            bankName: "Banco",
+            accountNumber: "Número da conta",
+            iban: "IBAN",
+            bic: "BIC / SWIFT",
+            branchCode: "Agência",
+            cpf: "CPF",
+            cnpj: "CNPJ",
+            legalType: "Tipo de destinatário",
+            accountType: "Tipo de conta",
+            accountHolderName: "Nome completo do titular",
+            "address.country": "País",
+            "address.city": "Cidade",
+            "address.postCode": "CEP",
+            "address.firstLine": "Endereço",
+            "address.state": "Estado",
+          };
+      if (friendlyMap[normalized]) return friendlyMap[normalized];
+      return normalized
+        .split(".")
+        .pop()
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    function translateWiseText(value) {
+      const normalized = String(value || "").trim();
+      const translatedMap = i18n.locale === "en"
+        ? {
+            "Conta bancária local": "Local bank account",
+            "Conta empresarial no Brasil": "Brazil local business",
+            "E-mail": "Email",
+            "E-mail (opcional)": "Email (Optional)",
+            "Tipo de destinatário": "Recipient type",
+            "Nome completo do titular": "Full name of the account holder",
+            "Banco": "Bank",
+            "Agência": "Branch code",
+            "Número da conta": "Account number",
+            "Tipo de conta": "Account type",
+            "País": "Country",
+            "Cidade": "City",
+            "CEP": "Postal code",
+            "Endereço": "Address",
+            "Estado": "State",
+            "Selecione o banco": "Choose recipient's bank",
+            "Selecione um país": "Choose a country",
+            "Pessoa física": "Individual",
+            "Pessoa jurídica": "Business",
+            "Conta corrente": "Checking",
+            "Conta poupança": "Savings",
+          }
+        : {
+            "Local bank account": "Conta bancária local",
+            "Brazil local business": "Conta empresarial no Brasil",
+            "Email": "E-mail",
+            "Email (Optional)": "E-mail (opcional)",
+            "Recipient type": "Tipo de destinatário",
+            "Full name of the account holder": "Nome completo do titular",
+            "Bank name": "Banco",
+            "Branch code": "Agência",
+            "Account number": "Número da conta",
+            "Account type": "Tipo de conta",
+            "Tax registration number (CPF)": "CPF",
+            "Tax registration number (CNPJ)": "CNPJ",
+            "Country": "País",
+            "City": "Cidade",
+            "Post code": "CEP",
+            "Postal code": "CEP",
+            "Recipient address": "Endereço",
+            "Address": "Endereço",
+            "First line of address": "Endereço",
+            "State": "Estado",
+            "Choose recipient's bank": "Selecione o banco",
+            "Choose a country": "Selecione um país",
+            "Person": "Pessoa física",
+            "Business": "Pessoa jurídica",
+            "Checking": "Conta corrente",
+            "Savings": "Conta poupança",
+          };
+      return translatedMap[normalized] || normalized;
+    }
+
+    function getWiseAccountSummary(account) {
+      if (!account) return t("partner_page.not_registered", "Not registered");
+      return account.account_summary
+        || account.long_account_summary
+        || account.target_currency
+        || t("partner_page.registered", "Registered account");
+    }
+
+    function getDerivedWiseAccountHolderName() {
+      const first = String(currentProfile?.first_name || "").trim();
+      const last = String(currentProfile?.last_name || "").trim();
+      const fullName = `${first} ${last}`.trim();
+      if (fullName) return fullName.replace(/\s+/g, " ");
+
+      const meta = currentUser?.user_metadata || {};
+      const fallback = String(meta.full_name || meta.name || "").trim();
+      return fallback.replace(/\s+/g, " ");
+    }
+
+    function getCurrentWiseAccountHolderName() {
+      const typed = String(wiseAccountHolderName?.value || "").trim().replace(/\s+/g, " ");
+      return typed || getDerivedWiseAccountHolderName();
+    }
+
+    function setDeepValue(target, path, value) {
+      const keys = String(path || "").split(".").filter(Boolean);
+      if (!keys.length) return target;
+      let cursor = target;
+      keys.forEach((key, index) => {
+        if (index === keys.length - 1) {
+          cursor[key] = value;
+          return;
+        }
+        if (!cursor[key] || typeof cursor[key] !== "object" || Array.isArray(cursor[key])) {
+          cursor[key] = {};
+        }
+        cursor = cursor[key];
+      });
+      return target;
+    }
+
+    function getDeepValue(target, path) {
+      const keys = String(path || "").split(".").filter(Boolean);
+      let cursor = target;
+      for (const key of keys) {
+        if (!cursor || typeof cursor !== "object") return "";
+        cursor = cursor[key];
+      }
+      return cursor ?? "";
+    }
+
+    function normalizeRequirementGroups(method) {
+      if (!method) return [];
+      if (Array.isArray(method.fields)) return method.fields;
+      if (Array.isArray(method.groups)) return method.groups;
+      if (Array.isArray(method.fieldGroups)) return method.fieldGroups;
+      return [];
+    }
+
+    function normalizeRequirementFields(group) {
+      if (!group) return [];
+      if (Array.isArray(group.group)) return group.group;
+      if (Array.isArray(group.fields)) return group.fields;
+      if (Array.isArray(group.items)) return group.items;
+      return [];
+    }
+
+    function getRequirementOptions(field) {
+      const values = Array.isArray(field?.values)
+        ? field.values
+        : Array.isArray(field?.options)
+        ? field.options
+        : Array.isArray(field?.valuesAllowed)
+        ? field.valuesAllowed
+        : Array.isArray(field?.allowedValues)
+        ? field.allowedValues
+        : Array.isArray(field?.enumValues)
+        ? field.enumValues
+        : [];
+      return values.map((item) => {
+        if (item == null) return { value: "", label: "" };
+        if (typeof item === "string" || typeof item === "number" || typeof item === "boolean") {
+          const scalar = String(item);
+          return { value: scalar, label: scalar };
+        }
+
+        const value = String(
+          item?.key
+            ?? item?.value
+            ?? item?.id
+            ?? item?.code
+            ?? item?.bankCode
+            ?? item?.bank_code
+            ?? item?.swift
+            ?? item?.bic
+            ?? item?.name
+            ?? "",
+        );
+        const label = String(
+          item?.label
+            ?? item?.name
+            ?? item?.title
+            ?? item?.displayName
+            ?? item?.display_name
+            ?? item?.bankName
+            ?? item?.bank_name
+            ?? item?.description
+            ?? value,
+        );
+        return { value, label: translateWiseText(label) };
+      }).filter((item) => item.value);
+    }
+
+    function isWiseEmailField(key, fieldType, label) {
+      const haystack = `${String(key || "")} ${String(fieldType || "")} ${String(label || "")}`.toLowerCase();
+      return haystack.includes("email");
+    }
+
+    function isWiseHiddenDuplicateField(key) {
+      const normalized = String(key || "").trim().toLowerCase();
+      return normalized === "legaltype"
+        || normalized === "accountholdername"
+        || normalized === "address.country";
+    }
+
+    function getWiseAutofillValue(key, fieldType, label) {
+      const normalizedKey = String(key || "").trim().toLowerCase();
+      if (normalizedKey === "legaltype") {
+        return String(wiseLegalType?.value || "PRIVATE").trim();
+      }
+      if (normalizedKey === "accountholdername") {
+        return String(wiseAccountHolderName?.value || "").trim();
+      }
+      if (normalizedKey === "address.country") {
+        return normalizeWiseCountryCode(wiseCountryCode?.value || "");
+      }
+      if (isWiseEmailField(key, fieldType, label)) {
+        return String(currentUser?.email || "").trim();
+      }
+      return "";
+    }
+
+    function buildWiseRecipientPayload() {
+      if (getSelectedWiseAccountKind() === "pix") {
+        return {
+          pixKeyType: String(wisePixKeyType?.value || "").trim().toLowerCase(),
+          pixKeyValue: String(wisePixKeyValue?.value || "").trim(),
+        };
+      }
+      const payload = {
+        type: currentWiseMethodType || undefined,
+      };
+      Object.entries(currentWiseFieldValues || {}).forEach(([key, value]) => {
+        if (value == null || value === "") return;
+        setDeepValue(payload, key, value);
+      });
+      return payload;
+    }
+
+    function getFilteredWiseMethods() {
+      if (getSelectedWiseAccountKind() === "pix") {
+        return [];
+      }
+      const methods = Array.isArray(currentWiseRequirements) ? currentWiseRequirements : [];
+      const legalType = String(wiseLegalType?.value || "PRIVATE").toUpperCase();
+      const countryCode = normalizeWiseCountryCode(wiseCountryCode?.value || "");
+      const bankMethods = methods.filter((method) => {
+        const type = String(method?.type || "").toLowerCase();
+        const title = String(method?.title || method?.name || "").toLowerCase();
+        return !type.includes("pix") && !title.includes("pix") && type !== "email" && !title.includes("email");
+      });
+
+      let filtered = bankMethods;
+      if (countryCode === "BR") {
+        filtered = bankMethods.filter((method) => {
+          const text = `${String(method?.type || "")} ${String(method?.title || method?.name || "")}`.toLowerCase();
+          const isBusinessMethod = text.includes("business") || text.includes("empresa") || text.includes("company");
+          return legalType === "BUSINESS" ? isBusinessMethod : !isBusinessMethod;
+        });
+      }
+      if (filtered.length === 0) {
+        filtered = bankMethods.filter((method) => {
+          const text = `${String(method?.type || "")} ${String(method?.title || method?.name || "")}`.toLowerCase();
+          return !text.includes("email");
+        });
+      }
+
+      return filtered.length > 0 ? filtered : bankMethods;
+    }
+
+    function getActiveWiseMethod() {
+      const methods = getFilteredWiseMethods();
+      if (methods.length === 0) return null;
+      return methods.find((item) => String(item?.type || "") === String(currentWiseMethodType || ""))
+        || methods[0]
+        || null;
+    }
+
     function clearLogoPreviewObjectUrl() {
       if (editLogoPreviewObjectUrl) {
         URL.revokeObjectURL(editLogoPreviewObjectUrl);
@@ -607,7 +1557,7 @@
       setLogoPreview(currentEditBannerUrl);
       setModalFeedback("");
       partnerEditSubmit.disabled = false;
-      partnerEditSubmit.textContent = "Salvar alterações";
+      partnerEditSubmit.textContent = t("partner_page.save_changes", "Save changes");
       partnerEditModal.classList.add("open");
       partnerEditModal.setAttribute("aria-hidden", "false");
       setTimeout(() => partnerEditName?.focus(), 0);
@@ -615,9 +1565,9 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        connectFeedback.textContent = "Supabase não configurado.";
+        connectFeedback.textContent = t("partner_page.supabase_not_configured", "Supabase is not configured.");
         authBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error(t("partner_page.supabase_not_configured", "Supabase is not configured."));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -629,11 +1579,52 @@
           },
         });
         supabase.auth.onAuthStateChange((_event, session) => {
+          persistLocalSession(session);
           currentUser = session?.user || null;
           updateAuthUI();
         });
       }
       return supabase;
+    }
+
+    function persistLocalSession(session) {
+      if (session) {
+        localStorage.setItem(
+          SESSION_STORAGE_KEY,
+          JSON.stringify({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+          }),
+        );
+      } else {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+      }
+    }
+
+    async function restoreSessionFromStorage() {
+      const raw = localStorage.getItem(SESSION_STORAGE_KEY);
+      if (!raw) return null;
+      try {
+        const saved = JSON.parse(raw);
+        if (!saved.access_token || !saved.refresh_token) return null;
+        if (!isTokenForProject(saved.access_token)) {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          localStorage.removeItem("gimerr-auth-token");
+          return null;
+        }
+        const { data, error } = await supabase.auth.setSession({
+          access_token: saved.access_token,
+          refresh_token: saved.refresh_token,
+        });
+        if (error) {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          return null;
+        }
+        return data.session;
+      } catch (_err) {
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        return null;
+      }
     }
 
     function updateAuthUI() {
@@ -655,6 +1646,62 @@
       if (menuCreateListing) menuCreateListing.style.display = "none";
       avatarLoaded = false;
       markAvatarReady();
+    }
+
+    async function getValidAccessToken() {
+      ensureClient();
+      let { data: sessionData } = await supabase.auth.getSession();
+      let session = sessionData?.session || null;
+      if (!session) {
+        session = await restoreSessionFromStorage();
+      }
+      if (!session) {
+        throw new Error(t("partner_page.session_expired", "Session expired. Please sign in again."));
+      }
+      if (!isTokenForProject(session.access_token)) {
+        localStorage.removeItem("gimerr-auth-token");
+        localStorage.removeItem(SESSION_STORAGE_KEY);
+        await supabase.auth.signOut();
+        throw new Error(t("partner_page.invalid_project_session", "Invalid session for this project. Please sign in again."));
+      }
+
+      const expiresAt = Number(session.expires_at || 0);
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+      if (!expiresAt || expiresAt - nowInSeconds < 90) {
+        const refreshed = await supabase.auth.refreshSession();
+        if (refreshed?.data?.session) {
+          session = refreshed.data.session;
+        } else if (refreshed?.error) {
+          throw new Error(t("partner_page.session_expired", "Session expired. Please sign in again."));
+        }
+      }
+
+      let token = String(session.access_token || "").trim();
+      let { data: authData, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !authData?.user) {
+        const refreshed = await supabase.auth.refreshSession();
+        if (refreshed?.error || !refreshed?.data?.session) {
+          localStorage.removeItem("gimerr-auth-token");
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          await supabase.auth.signOut();
+          throw new Error(t("partner_page.invalid_session", "Invalid session. Please sign in again."));
+        }
+        session = refreshed.data.session;
+        token = String(session.access_token || "").trim();
+        const retried = await supabase.auth.getUser(token);
+        authData = retried.data;
+        authError = retried.error;
+        if (authError || !authData?.user) {
+          localStorage.removeItem("gimerr-auth-token");
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+          await supabase.auth.signOut();
+          throw new Error(t("partner_page.invalid_session", "Invalid session. Please sign in again."));
+        }
+      }
+
+      currentUser = authData.user || session.user || currentUser;
+      updateAuthUI();
+      return token;
     }
 
     async function setAvatarImage(src) {
@@ -720,28 +1767,451 @@
     function formatDateTime(value) {
       if (!value) return "-";
       try {
-        return new Date(value).toLocaleString("pt-BR");
+        return new Date(value).toLocaleString(i18n.locale === "en" ? "en-US" : "pt-BR");
       } catch (_err) {
         return String(value);
       }
     }
 
     function formatBRL(value) {
-      return new Intl.NumberFormat("pt-BR", {
+      return new Intl.NumberFormat(i18n.locale === "en" ? "en-US" : "pt-BR", {
         style: "currency",
         currency: "BRL",
       }).format(Number(value || 0));
     }
 
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
+    function formatCurrency(value, currency) {
+      const code = String(currency || "BRL").trim().toUpperCase() || "BRL";
+      try {
+        return new Intl.NumberFormat(i18n.locale === "en" ? "en-US" : "pt-BR", {
+          style: "currency",
+          currency: code,
+        }).format(Number(value || 0));
+      } catch (_err) {
+        return `${Number(value || 0).toFixed(2)} ${code}`.trim();
+      }
     }
 
-    function toSafeDate(value) {
-      if (!value) return null;
-      const parsed = new Date(value);
-      if (Number.isNaN(parsed.getTime())) return null;
-      return parsed;
+    function resetPartnerWithdrawPreview() {
+      currentPartnerWithdrawPreview = null;
+      if (partnerWithdrawBtn) {
+        partnerWithdrawBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
+      }
+      if (partnerWithdrawModal) {
+        partnerWithdrawModal.classList.remove("open");
+        partnerWithdrawModal.setAttribute("aria-hidden", "true");
+      }
+      setPartnerWithdrawModalFeedback("");
+    }
+
+    function getPartnerWithdrawPreviewNet(preview) {
+      if (!preview) return 0;
+      const grossAmount = Number(preview.grossAmount || 0);
+      const feeAmount = Number(preview.feeAmount || 0);
+      return Math.max(0, Number((grossAmount - feeAmount).toFixed(2)));
+    }
+
+    function renderPartnerWithdrawPreview(preview) {
+      if (!partnerWithdrawPreviewFee || !partnerWithdrawPreviewNet) return;
+      const feeText = formatCurrency(preview?.feeAmount || 0, preview?.feeCurrency || preview?.grossCurrency || "BRL");
+      const netText = formatCurrency(
+        getPartnerWithdrawPreviewNet(preview),
+        preview?.grossCurrency || preview?.netCurrency || "BRL",
+      );
+      partnerWithdrawPreviewFee.textContent = feeText;
+      partnerWithdrawPreviewNet.textContent = netText;
+    }
+
+    function openPartnerWithdrawModal() {
+      if (!partnerWithdrawModal) return;
+      renderPartnerWithdrawPreview(currentPartnerWithdrawPreview);
+      setPartnerWithdrawModalFeedback("");
+      partnerWithdrawModal.classList.add("open");
+      partnerWithdrawModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closePartnerWithdrawModal({ preservePreview = false } = {}) {
+      if (!partnerWithdrawModal) return;
+      partnerWithdrawModal.classList.remove("open");
+      partnerWithdrawModal.setAttribute("aria-hidden", "true");
+      if (!preservePreview) {
+        resetPartnerWithdrawPreview();
+        if (currentPartnerPayoutSummary) {
+          renderPartnerPayoutSummary(currentPartnerPayoutSummary);
+        }
+      }
+    }
+
+    function normalizeConnectCountry(value) {
+      return String(value || "").trim().toUpperCase() === "PT" ? "PT" : "BR";
+    }
+
+    function syncPartnerWithdrawButtonStyle(isPrimary) {
+      if (!partnerWithdrawBtn) return;
+      partnerWithdrawBtn.classList.toggle("btn-primary", Boolean(isPrimary));
+      partnerWithdrawBtn.classList.toggle("btn-ghost", !isPrimary);
+    }
+
+    function renderWiseAccount(account) {
+      currentWiseAccount = account || null;
+      resetPartnerWithdrawPreview();
+      if (!account) {
+        wiseAccountIdVisible = false;
+        wiseEditMode = false;
+      }
+      renderWiseAccountId(account);
+      if (partnerPayouts) {
+        partnerPayouts.textContent = account?.status === "active"
+          ? t("partner_page.yes", "Yes")
+          : t("partner_page.no", "No");
+      }
+      if (partnerAccountActionBtn) {
+        partnerAccountActionBtn.hidden = false;
+        partnerAccountActionBtn.textContent = account
+          ? t("partner_page.edit_bank_data", "Edit bank details")
+          : t("partner_page.register_account", "Register payout account");
+      }
+      if (partnerWithdrawBtn) {
+        partnerWithdrawBtn.hidden = !Boolean(account && account.status === "active");
+      }
+      syncPartnerWithdrawButtonStyle(true);
+      if (wiseAccountStatus) {
+        wiseAccountStatus.textContent = account?.status === "active"
+          ? t("partner_page.registered", "Registered account")
+          : t("partner_page.not_registered", "Not registered");
+      }
+      if (wiseEditBtn) wiseEditBtn.hidden = !account;
+      setWiseSetupVisible(wiseEditMode);
+      if (account) {
+        if (wiseCountryCode) wiseCountryCode.value = String(account.country_code || "");
+        if (wiseTargetCurrency) wiseTargetCurrency.value = String(account.target_currency || "");
+        if (wiseLegalType) wiseLegalType.value = String(account.legal_type || "PRIVATE");
+        if (wiseBrAccountKind) {
+          wiseBrAccountKind.value = String(account?.metadata?.account_kind || account?.provider || "bank").toLowerCase() === "pix" ? "pix" : "bank";
+        }
+        if (wiseAccountHolderName) wiseAccountHolderName.value = String(account.account_holder_name || getDerivedWiseAccountHolderName());
+        if (wisePixKeyType) wisePixKeyType.value = String(account.pix_key_type || "");
+        if (wisePixKeyValue) wisePixKeyValue.value = String(account.pix_key_value || "");
+        syncWiseCountrySpecificFields();
+      } else {
+        if (wisePixKeyType) wisePixKeyType.value = "";
+        if (wisePixKeyValue) wisePixKeyValue.value = "";
+        syncWiseCountrySpecificFields();
+        syncWiseCurrencyFromCountry();
+        if (wiseAccountHolderName) wiseAccountHolderName.value = getDerivedWiseAccountHolderName();
+      }
+      if (currentPartnerPayoutSummary) {
+        renderPartnerPayoutSummary(currentPartnerPayoutSummary);
+      }
+    }
+
+    async function fetchWiseAccount() {
+      let { data, error } = await supabase
+        .from("partner_payout_accounts")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      if (error && (error.code === "42P01" || error.code === "42703")) {
+        return { unsupported: true };
+      }
+      if (error) throw error;
+      return data || null;
+    }
+
+    function resetWiseRequirements(message = t("partner_page.load_fields_prompt", "Select the bank country to load the payout fields.")) {
+      currentWiseRequirements = [];
+      currentWiseMethodType = "";
+      currentWiseFieldValues = {};
+      lastWiseRequirementsSignature = "";
+      if (wiseMethods) {
+        wiseMethods.innerHTML = "";
+        wiseMethods.style.display = "none";
+      }
+      if (wiseRequirements) {
+        wiseRequirements.innerHTML = "";
+        wiseRequirements.style.display = "none";
+      }
+      if (wiseRequirementsEmpty) {
+        wiseRequirementsEmpty.textContent = message;
+        wiseRequirementsEmpty.style.display = "block";
+      }
+      if (wiseSaveBtn) wiseSaveBtn.disabled = true;
+    }
+
+    function renderWiseMethods() {
+      if (!wiseMethods) return;
+      if (getSelectedWiseAccountKind() === "pix") {
+        wiseMethods.innerHTML = "";
+        wiseMethods.style.display = "none";
+        return;
+      }
+      const methods = getFilteredWiseMethods();
+      wiseMethods.innerHTML = "";
+      if (methods.length <= 1) {
+        wiseMethods.style.display = "none";
+        return;
+      }
+      wiseMethods.style.display = "flex";
+      methods.forEach((method, index) => {
+        const type = String(method?.type || `method-${index}`);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `partner-wise-method-btn${type === currentWiseMethodType ? " active" : ""}`;
+        button.dataset.type = type;
+        button.textContent = translateWiseText(String(method?.title || method?.name || type));
+        wiseMethods.appendChild(button);
+      });
+    }
+
+    function renderWiseRequirementFields() {
+      if (!wiseRequirements || !wiseRequirementsEmpty) return;
+      if (getSelectedWiseAccountKind() === "pix") {
+        wiseRequirements.innerHTML = "";
+        wiseRequirements.style.display = "none";
+        wiseRequirementsEmpty.style.display = "none";
+        if (wiseSaveBtn) {
+          const hasHolderName = Boolean(String(wiseAccountHolderName?.value || "").trim());
+          const hasPixType = Boolean(String(wisePixKeyType?.value || "").trim());
+          const hasPixValue = Boolean(String(wisePixKeyValue?.value || "").trim());
+          wiseSaveBtn.disabled = !(hasHolderName && hasPixType && hasPixValue);
+        }
+        return;
+      }
+      const method = getActiveWiseMethod();
+      if (!method) {
+        resetWiseRequirements();
+        return;
+      }
+
+      const groups = normalizeRequirementGroups(method);
+      wiseRequirements.innerHTML = "";
+      if (groups.length === 0) {
+        wiseRequirements.style.display = "none";
+        wiseRequirementsEmpty.style.display = "block";
+        wiseRequirementsEmpty.textContent = t("partner_page.no_additional_fields", "No additional fields were returned for this account.");
+        if (wiseSaveBtn) wiseSaveBtn.disabled = false;
+        return;
+      }
+
+      const grid = document.createElement("div");
+      grid.className = "partner-wise-fields-grid";
+
+      groups.forEach((group, groupIndex) => {
+        const fields = normalizeRequirementFields(group);
+        fields.forEach((field, fieldIndex) => {
+          const key = String(field?.key || field?.name || `field-${groupIndex}-${fieldIndex}`);
+          const label = translateWiseText(String(field?.name || field?.title || prettyWiseLabel(key)));
+          const required = field?.required !== false;
+          const refreshOnChange = Boolean(field?.refreshRequirementsOnChange);
+          const fieldType = String(field?.type || "").toLowerCase();
+          const helper = translateWiseText(String(field?.example || field?.hint || field?.description || "").trim());
+          const autoValue = getWiseAutofillValue(key, fieldType, label);
+          const value = getDeepValue(currentWiseFieldValues, key) || autoValue || String(field?.value || "");
+
+          if (autoValue && !getDeepValue(currentWiseFieldValues, key)) {
+            setDeepValue(currentWiseFieldValues, key, autoValue);
+          }
+
+          if ((isWiseEmailField(key, fieldType, label) && autoValue) || isWiseHiddenDuplicateField(key)) {
+            return;
+          }
+
+          const wrapper = document.createElement("label");
+          wrapper.className = "partner-wise-field";
+          if (String(field?.width || "").toLowerCase() === "full" || field?.fullWidth === true || fieldType === "textarea") {
+            wrapper.classList.add("full");
+          }
+
+          const labelNode = document.createElement("span");
+          labelNode.textContent = `${label}${required ? " *" : ""}`;
+          wrapper.appendChild(labelNode);
+
+          const options = getRequirementOptions(field);
+          let input;
+          if (options.length > 0 || fieldType === "select") {
+            input = document.createElement("select");
+            const empty = document.createElement("option");
+            empty.value = "";
+            empty.textContent = t("common.select_option", "-- Select an option --");
+            input.appendChild(empty);
+            options.forEach((option) => {
+              const optionNode = document.createElement("option");
+              optionNode.value = option.value;
+              optionNode.textContent = option.label;
+              input.appendChild(optionNode);
+            });
+            input.value = String(value || input.value || "");
+            if (!value) {
+              input.value = "";
+            }
+          } else {
+            input = document.createElement("input");
+            input.type = fieldType === "email" ? "email" : fieldType === "number" ? "text" : "text";
+            input.value = String(value || "");
+            if (helper) input.placeholder = helper;
+          }
+
+          input.dataset.key = key;
+          input.dataset.refresh = refreshOnChange ? "1" : "";
+          input.required = required;
+          wrapper.appendChild(input);
+
+          grid.appendChild(wrapper);
+        });
+      });
+
+      wiseRequirements.appendChild(grid);
+      wiseRequirements.style.display = "grid";
+      wiseRequirementsEmpty.style.display = "none";
+      if (wiseSaveBtn) wiseSaveBtn.disabled = false;
+    }
+
+    async function loadWiseRequirements(useCurrentValues = false) {
+      try {
+        ensureClient();
+        const countryCode = normalizeWiseCountryCode(wiseCountryCode?.value || "");
+        const targetCurrency = normalizeWiseCurrencyCode(syncWiseCurrencyFromCountry() || wiseTargetCurrency?.value || "");
+        const legalType = String(wiseLegalType?.value || "PRIVATE");
+        const accountKind = getSelectedWiseAccountKind();
+        const signature = `${countryCode}|${targetCurrency}|${legalType}|${accountKind}`;
+
+        if (!countryCode || countryCode.length !== 2) {
+          throw new Error(t("partner_page.invalid_bank_country", "Enter the bank country with 2 letters."));
+        }
+        if (!targetCurrency || targetCurrency.length !== 3) {
+          throw new Error(t("partner_page.no_default_currency", "We do not yet have a default currency for this country. Adjust the mapping before continuing."));
+        }
+
+        if (!useCurrentValues && accountKind !== "pix" && signature === lastWiseRequirementsSignature && currentWiseRequirements.length > 0) {
+          setWiseSetupVisible(true);
+          return;
+        }
+
+        setWiseSetupVisible(true);
+        if (accountKind === "pix") {
+          currentWiseRequirements = [];
+          currentWiseMethodType = "";
+          lastWiseRequirementsSignature = signature;
+          renderWiseMethods();
+          renderWiseRequirementFields();
+          setWiseFeedback(t("partner_page.fill_pix_note", "Fill in the Pix key and save the payout account."));
+          return;
+        }
+        if (!useCurrentValues) {
+          resetWiseRequirements(t("partner_page.loading_bank_fields", "Loading bank fields..."));
+        }
+        setWiseFeedback("");
+
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("wise_recipient_requirements", {
+          body: {
+            countryCode,
+            targetCurrency,
+            legalType,
+            locale: navigator.language || "en",
+            recipientPayload: useCurrentValues ? buildWiseRecipientPayload() : null,
+            userToken: token,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+
+        if (error || !data?.ok) {
+          const errorMessage = await resolveFunctionErrorMessage(error, data, t("partner_page.load_bank_fields_error", "Could not load the bank fields."));
+          throw new Error(errorMessage);
+        }
+
+        currentWiseRequirements = Array.isArray(data.requirements) ? data.requirements : [];
+        lastWiseRequirementsSignature = signature;
+        const filteredMethods = getFilteredWiseMethods();
+        currentWiseMethodType = currentWiseMethodType
+          && filteredMethods.some((item) => String(item?.type || "") === currentWiseMethodType)
+          ? currentWiseMethodType
+          : String(filteredMethods[0]?.type || "");
+        renderWiseMethods();
+        renderWiseRequirementFields();
+        setWiseFeedback(t("partner_page.bank_fields_loaded", "Bank fields loaded. Complete the data and save the payout account."));
+      } catch (err) {
+        console.error(err);
+        resetWiseRequirements(t("partner_page.load_fields_prompt", "Select the bank country to load the payout fields."));
+        setWiseFeedback(err?.message || t("partner_page.load_bank_fields_error", "Could not load the bank fields."), true);
+      }
+    }
+
+    async function saveWiseAccount() {
+      try {
+        ensureClient();
+        const countryCode = normalizeWiseCountryCode(wiseCountryCode?.value || "");
+        const targetCurrency = normalizeWiseCurrencyCode(syncWiseCurrencyFromCountry() || wiseTargetCurrency?.value || "");
+        const legalType = String(wiseLegalType?.value || "PRIVATE");
+        const accountKind = getSelectedWiseAccountKind();
+        const accountHolderName = getCurrentWiseAccountHolderName();
+        const recipientPayload = buildWiseRecipientPayload();
+
+        if (!countryCode || countryCode.length !== 2) {
+          throw new Error(t("partner_page.invalid_bank_country", "Enter the bank country with 2 letters."));
+        }
+        if (!targetCurrency || targetCurrency.length !== 3) {
+          throw new Error(t("partner_page.no_default_currency", "We do not yet have a default currency for this country. Adjust the mapping before continuing."));
+        }
+        if (!accountHolderName) {
+          throw new Error(t("partner_page.complete_profile_name", "Complete your first and last name in the profile before registering the payout account."));
+        }
+        if (accountKind !== "pix" && !currentWiseMethodType) {
+          throw new Error(t("partner_page.load_fields_before_save", "Load the bank fields before saving the account."));
+        }
+        if (accountKind === "pix") {
+          if (!String(wisePixKeyType?.value || "").trim()) {
+            throw new Error(t("partner_page.select_pix_type", "Select the Pix key type."));
+          }
+          if (!String(wisePixKeyValue?.value || "").trim()) {
+            throw new Error(t("partner_page.enter_pix_key", "Enter your Pix key."));
+          }
+        }
+
+        wiseSaveBtn.disabled = true;
+        wiseSaveBtn.textContent = t("common.saving", "Saving...");
+        setWiseFeedback("");
+
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("wise_recipient_account", {
+          body: {
+            countryCode,
+            targetCurrency,
+            legalType,
+            accountKind,
+            accountHolderName,
+            recipientPayload,
+            userToken: token,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+
+        if (error || !data?.ok || !data?.account) {
+          const errorMessage = await resolveFunctionErrorMessage(error, data, t("partner_page.save_account_error", "Could not save the payout account."));
+          throw new Error(errorMessage);
+        }
+
+        wiseEditMode = false;
+        renderWiseAccount(data.account);
+        setWiseFeedback(t("partner_page.account_saved", "Your account was saved successfully."));
+      } catch (err) {
+        console.error(err);
+        setWiseFeedback(err?.message || t("partner_page.save_account_error", "Could not save the payout account."), true);
+      } finally {
+        wiseSaveBtn.disabled = false;
+        wiseSaveBtn.textContent = t("partner_page.save_bank_data", "Save bank details");
+      }
     }
 
     async function resolveFunctionErrorMessage(error, data, fallbackMessage) {
@@ -766,7 +2236,7 @@
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        throw new Error("Sessão expirada. Faça login novamente.");
+        throw new Error(t("partner_page.session_expired", "Session expired. Please sign in again."));
       }
 
       const extension = (file.name.split(".").pop() || "").toLowerCase();
@@ -786,7 +2256,7 @@
       });
 
       if (!response.ok) {
-        let message = "Erro ao solicitar upload da logo.";
+        let message = t("partner_page.logo_upload_request_error", "Could not request logo upload.");
         try {
           const payload = await response.json();
           message = payload?.error || message;
@@ -801,7 +2271,7 @@
 
     async function convertLogoToWebp(file) {
       if (!file.type || !file.type.startsWith("image/")) {
-        throw new Error("Selecione uma imagem válida para a logo.");
+        throw new Error(t("partner_page.invalid_logo_image", "Select a valid image for the logo."));
       }
       const bitmap = await createImageBitmap(file);
       const maxSide = Math.max(bitmap.width, bitmap.height);
@@ -810,10 +2280,10 @@
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Falha ao processar imagem.");
+      if (!ctx) throw new Error(t("partner_page.image_processing_error", "Failed to process the image."));
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", LOGO_WEBP_QUALITY));
-      if (!blob) throw new Error("Falha ao converter imagem para WebP.");
+      if (!blob) throw new Error(t("partner_page.image_webp_error", "Failed to convert the image to WebP."));
       const baseName = file.name.replace(/\.[^.]+$/, "") || "logo";
       return new File([blob], `${baseName}.webp`, { type: "image/webp" });
     }
@@ -821,7 +2291,7 @@
     async function uploadServerLogo(file) {
       const webpFile = await convertLogoToWebp(file);
       if (webpFile.size > LOGO_MAX_BYTES) {
-        throw new Error("A logo excede 5MB após conversão.");
+        throw new Error(t("partner_page.logo_max_size_after_conversion", "The logo exceeds 5MB after conversion."));
       }
       const signed = await requestServerLogoSignedUpload(webpFile);
       const uploadRes = await fetch(signed.uploadUrl, {
@@ -833,7 +2303,7 @@
       });
       if (!uploadRes.ok) {
         const body = await uploadRes.text().catch(() => "");
-        throw new Error(body || "Falha ao enviar logo para o storage.");
+        throw new Error(body || t("partner_page.logo_storage_error", "Failed to upload the logo to storage."));
       }
       return signed.publicUrl;
     }
@@ -844,7 +2314,7 @@
         ensureClient();
         setModalFeedback("");
         partnerEditSubmit.disabled = true;
-        partnerEditSubmit.textContent = "Salvando...";
+        partnerEditSubmit.textContent = t("common.saving", "Saving...");
 
         const serverId = String(partnerEditServerId.value || "").trim();
         const name = String(partnerEditName.value || "").trim();
@@ -854,21 +2324,20 @@
         const description = String(partnerEditDescription.value || "").trim();
         const logoFile = partnerEditLogoFile.files?.[0] || null;
 
-        if (!serverId) throw new Error("Servidor inválido.");
-        if (!name) throw new Error("Informe o nome do servidor.");
-        if (!officialSite) throw new Error("Informe um site oficial válido.");
-        if (discordRaw && !discordInvite) throw new Error("Convite Discord inválido. Use https://discord.gg/...");
-        if (logoFile && logoFile.size > LOGO_MAX_BYTES) throw new Error("A logo deve ter no máximo 5MB.");
+        if (!serverId) throw new Error(t("partner_page.invalid_server", "Invalid server."));
+        if (!name) throw new Error(t("partner_page.server_name_required", "Enter the server name."));
+        if (!officialSite) throw new Error(t("partner_page.valid_official_site_required", "Enter a valid official website."));
+        if (discordRaw && !discordInvite) throw new Error(t("partner_page.invalid_discord_invite", "Invalid Discord invite. Use https://discord.gg/..."));
+        if (logoFile && logoFile.size > LOGO_MAX_BYTES) throw new Error(t("partner_page.logo_max_size", "The logo must be at most 5MB."));
 
         let bannerUrl = currentEditBannerUrl || "";
         if (logoFile) {
-          setModalFeedback("Enviando nova logo...");
+          setModalFeedback(t("partner_page.uploading_new_logo", "Uploading new logo..."));
           bannerUrl = await uploadServerLogo(logoFile);
         }
 
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token || "";
-        if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+        const token = await getValidAccessToken();
+        if (!token) throw new Error(t("partner_page.session_expired", "Session expired. Please sign in again."));
 
         const updateBody = {
           serverId,
@@ -889,20 +2358,20 @@
           },
         });
         if (error || !data?.ok) {
-          const message = await resolveFunctionErrorMessage(error, data, "Erro ao salvar servidor.");
+          const message = await resolveFunctionErrorMessage(error, data, t("partner_page.save_server_error", "Failed to save server."));
           throw new Error(message);
         }
 
-        connectFeedback.textContent = "Servidor atualizado com sucesso.";
+        connectFeedback.textContent = t("partner_page.server_updated", "Server updated successfully.");
         const refreshedServers = await fetchOwnedServers();
         renderServers(refreshedServers);
         closeEditModal();
       } catch (err) {
         console.error(err);
-        setModalFeedback(err?.message || "Erro ao salvar servidor.", true);
+        setModalFeedback(err?.message || t("partner_page.save_server_error", "Failed to save server."), true);
       } finally {
         partnerEditSubmit.disabled = false;
-        partnerEditSubmit.textContent = "Salvar alterações";
+        partnerEditSubmit.textContent = t("partner_page.save_changes", "Save changes");
       }
     }
 
@@ -951,33 +2420,34 @@
 
     function renderPartnerProfile(profile) {
       currentProfile = profile;
-      partnerAccountId.textContent = profile?.stripe_connect_account_id || "Ainda não criada";
-      partnerPayouts.textContent = profile?.stripe_connect_payouts_enabled ? "Sim" : "Não";
+      if (partnerAccountLabel) partnerAccountLabel.textContent = t("partner_page.account_label", "Account");
+      partnerAccountId.textContent = t("partner_page.not_registered", "Not registered");
+      partnerPayouts.textContent = t("partner_page.no", "No");
+      if (wiseAccountHolderName) {
+        wiseAccountHolderName.value = getDerivedWiseAccountHolderName();
+      }
     }
 
     async function fetchPartnerPayoutSummary() {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token || "";
+        const token = await getValidAccessToken();
         const { data, error } = await supabase.functions.invoke("partner_payout_summary", {
-          body: {},
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                apikey: SUPABASE_ANON_KEY,
-              }
-            : {},
+          body: {
+            userToken: token || null,
+          },
         });
         if (!error && data?.ok && data?.summary) {
           return data.summary;
         }
+        console.warn("[partner] partner_payout_summary fallback triggered", { data, error });
       } catch (_err) {
+        console.warn("[partner] partner_payout_summary request failed, using fallback", _err);
         // Fallback para cálculo legado abaixo.
       }
 
       const { data, error } = await supabase
         .from("partner_payout_events")
-        .select("expected_net_amount,refunded_net_amount,payout_status,highlight_started_at,highlight_expires_at,currency")
+        .select("expected_net_amount,refunded_net_amount,payout_status")
         .eq("owner_user_id", currentUser.id)
         .neq("payout_status", "paid");
 
@@ -986,10 +2456,7 @@
       }
       if (error) throw error;
 
-      const now = new Date();
-      let totalExpected = 0;
       let availableAmount = 0;
-      let pendingAmount = 0;
       const count = (data || []).length;
 
       (data || []).forEach((row) => {
@@ -1000,66 +2467,157 @@
         const effective = Math.max(0, Number((expected - refunded).toFixed(2)));
         if (effective <= 0) return;
 
-        totalExpected += effective;
         if (payoutStatus === "eligible") {
           availableAmount += effective;
-          return;
-        }
-
-        const startedAt = toSafeDate(row?.highlight_started_at);
-        const expiresAt = toSafeDate(row?.highlight_expires_at);
-        if (startedAt && expiresAt && expiresAt > startedAt) {
-          if (now >= expiresAt) {
-            availableAmount += effective;
-            return;
-          }
-          if (now <= startedAt) {
-            pendingAmount += effective;
-            return;
-          }
-          const progress = clamp(
-            (now.getTime() - startedAt.getTime()) / (expiresAt.getTime() - startedAt.getTime()),
-            0,
-            1,
-          );
-          const accrued = Number((effective * progress).toFixed(2));
-          const pending = Number(Math.max(0, effective - accrued).toFixed(2));
-          availableAmount += accrued;
-          pendingAmount += pending;
-          return;
-        }
-
-        if (expiresAt && expiresAt <= now) {
-          availableAmount += effective;
-        } else {
-          pendingAmount += effective;
         }
       });
 
       return {
         unsupported: false,
-        totalExpected: Number(totalExpected.toFixed(2)),
         availableAmount: Number(availableAmount.toFixed(2)),
-        pendingAmount: Number(pendingAmount.toFixed(2)),
         count,
       };
     }
 
+    async function refreshPartnerPayoutSummary({ silent = true } = {}) {
+      if (!currentUser) return null;
+      try {
+        const summary = await fetchPartnerPayoutSummary();
+        renderPartnerPayoutSummary(summary);
+        return summary;
+      } catch (err) {
+        if (!silent) {
+          throw err;
+        }
+        return null;
+      }
+    }
+
     function renderPartnerPayoutSummary(summary) {
-      if (!partnerExpectedAmount || !partnerAvailableAmount || !partnerPendingAmount || !partnerActiveHighlightsCount) return;
+      if (!partnerAvailableAmount || !partnerActiveHighlightsCount) return;
+      currentPartnerPayoutSummary = summary || null;
 
       if (!summary || summary.unsupported) {
-        partnerExpectedAmount.textContent = "-";
         partnerAvailableAmount.textContent = "-";
-        partnerPendingAmount.textContent = "-";
         partnerActiveHighlightsCount.textContent = "-";
+        if (partnerWithdrawBtn) {
+          partnerWithdrawBtn.hidden = !Boolean(currentWiseAccount && currentWiseAccount.status === "active");
+          partnerWithdrawBtn.disabled = true;
+        }
+        syncPartnerWithdrawButtonStyle(true);
+        setPartnerWithdrawFeedback("");
         return;
       }
 
-      partnerExpectedAmount.textContent = formatBRL(summary.totalExpected);
       partnerAvailableAmount.textContent = formatBRL(summary.availableAmount);
-      partnerPendingAmount.textContent = formatBRL(summary.pendingAmount);
       // Este indicador é calculado em renderServers() com base nos servidores vinculados.
+      const pendingRequest = summary.withdrawRequest;
+      const hasActiveWiseAccount = Boolean(currentWiseAccount && currentWiseAccount.status === "active");
+      const hasMinimumBalance = Number(summary.availableAmount || 0) >= PARTNER_WITHDRAW_MIN_BRL;
+      if (
+        currentPartnerWithdrawPreview
+        && (
+          !hasActiveWiseAccount
+          || !hasMinimumBalance
+          || Math.abs(Number(currentPartnerWithdrawPreview.grossAmount || 0) - Number(summary.availableAmount || 0)) > 0.01
+        )
+      ) {
+        resetPartnerWithdrawPreview();
+      }
+      if (partnerWithdrawBtn) {
+        partnerWithdrawBtn.hidden = !hasActiveWiseAccount;
+        partnerWithdrawBtn.disabled = Boolean(!hasActiveWiseAccount || !hasMinimumBalance);
+        partnerWithdrawBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
+      }
+      syncPartnerWithdrawButtonStyle(Boolean(hasActiveWiseAccount && hasMinimumBalance));
+      setPartnerWithdrawFeedback("");
+    }
+
+    function startPartnerPayoutAutoRefresh() {
+      if (partnerPayoutRefreshTimer) {
+        clearInterval(partnerPayoutRefreshTimer);
+      }
+      partnerPayoutRefreshTimer = setInterval(() => {
+        if (document.hidden || !currentUser || currentPartnerWithdrawPreview) return;
+        refreshPartnerPayoutSummary();
+      }, 15000);
+    }
+
+    async function requestPartnerWithdraw({ confirm = false } = {}) {
+      try {
+        ensureClient();
+        const isConfirmingWithdraw = Boolean(confirm && currentPartnerWithdrawPreview);
+        if (isConfirmingWithdraw) {
+          if (partnerWithdrawConfirmBtn) {
+            partnerWithdrawConfirmBtn.disabled = true;
+            partnerWithdrawConfirmBtn.textContent = t("common.sending", "Sending...");
+          }
+          setPartnerWithdrawModalFeedback("");
+        } else {
+          partnerWithdrawBtn.disabled = true;
+          partnerWithdrawBtn.textContent = t("partner_page.please_wait", "Please wait...");
+        }
+        setPartnerWithdrawFeedback("");
+
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("partner_withdraw_request", {
+          body: {
+            userToken: token || null,
+            action: isConfirmingWithdraw ? "create" : "preview",
+          },
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(error, data, t("partner_page.calculate_withdraw_error", "Could not calculate the withdrawal."));
+          throw new Error(message);
+        }
+
+        if (!isConfirmingWithdraw) {
+          if (!data?.preview) {
+            throw new Error(t("partner_page.withdraw_preview_missing", "The withdrawal preview could not be loaded."));
+          }
+          currentPartnerWithdrawPreview = data.preview;
+          openPartnerWithdrawModal();
+          return;
+        }
+
+        if (!data?.request) {
+          throw new Error(t("partner_page.withdraw_request_missing", "The confirmed withdrawal request was not returned."));
+        }
+
+        closePartnerWithdrawModal({ preservePreview: true });
+        resetPartnerWithdrawPreview();
+        if (currentPartnerPayoutSummary && typeof currentPartnerPayoutSummary === "object") {
+          currentPartnerPayoutSummary = {
+            ...currentPartnerPayoutSummary,
+            availableAmount: Math.max(0, Number(currentPartnerPayoutSummary.availableAmount || 0) - Number(data.request.requested_amount || 0)),
+            withdrawRequest: data.request,
+          };
+          renderPartnerPayoutSummary(currentPartnerPayoutSummary);
+        }
+        setPartnerWithdrawFeedback(t("partner_page.withdraw_request_success", "Withdrawal request sent successfully."));
+      } catch (err) {
+        console.error(err);
+        if (isConfirmingWithdraw) {
+          setPartnerWithdrawModalFeedback(err?.message || t("partner_page.withdraw_request_error", "Failed to request withdrawal."), true);
+        } else {
+          setPartnerWithdrawFeedback("");
+          setPartnerWithdrawModalFeedback("");
+        }
+      } finally {
+        if (partnerWithdrawBtn && !isConfirmingWithdraw) {
+          if (!partnerWithdrawBtn.hidden) {
+            partnerWithdrawBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
+          }
+          partnerWithdrawBtn.disabled = false;
+        }
+        if (partnerWithdrawConfirmBtn && isConfirmingWithdraw) {
+          partnerWithdrawConfirmBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
+          partnerWithdrawConfirmBtn.disabled = false;
+        }
+        if (currentPartnerPayoutSummary) {
+          renderPartnerPayoutSummary(currentPartnerPayoutSummary);
+        }
+      }
     }
 
     async function fetchOwnedServers() {
@@ -1079,7 +2637,7 @@
         error = fallback.error;
       }
       if (error && error.code === "42703") {
-        connectFeedback.textContent = "As colunas de vínculo do servidor ainda não existem. Aplique as migrations mais recentes.";
+        connectFeedback.textContent = t("partner_page.missing_server_link_columns", "The server link columns do not exist yet. Apply the latest migrations.");
         return [];
       }
       if (error) throw error;
@@ -1121,7 +2679,7 @@
       currentServers = Array.isArray(servers) ? servers : [];
       partnerServerList.innerHTML = "";
       const total = currentServers.length;
-      partnerServersCount.textContent = `${total} ${total === 1 ? "servidor" : "servidores"}`;
+      partnerServersCount.textContent = `${total} ${total === 1 ? t("partner_page.server_one", "server") : t("partner_page.server_many", "servers")}`;
       const activeHighlightsTotal = (currentServers || []).reduce((sum, server) => {
         return sum + Number(server?.highlight_active_count || 0);
       }, 0);
@@ -1134,7 +2692,7 @@
       }
       partnerServersEmpty.style.display = "none";
       currentServers.forEach((server) => {
-        const safeName = escapeHtml(server.name || "Servidor sem nome");
+        const safeName = escapeHtml(server.name || t("partner_page.untitled_server", "Untitled server"));
         const safeStatus = escapeHtml(server.status || "active");
         const gameUrl = `game.html?id=${encodeURIComponent(String(server.id || ""))}`;
         const safeSite = server.official_site ? String(server.official_site) : "";
@@ -1155,15 +2713,15 @@
             <span class="pill">${safeStatus}</span>
           </div>
           <div class="partner-server-meta">
-            <span class="pill">Anúncios: ${server.listing_count}</span>
+            <span class="pill">${escapeHtml(t("partner_page.listings_count", "Listings"))}: ${server.listing_count}</span>
           </div>
-          ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">Site oficial</a>` : ""}
-          ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">Discord oficial</a>` : ""}
+          ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}</a>` : ""}
+          ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}</a>` : ""}
           ${descHtml}
-          <p class="helper">Criado em ${formatDateTime(server.created_at)}</p>
+          <p class="helper">${escapeHtml(t("partner_page.created_at", "Created on"))} ${formatDateTime(server.created_at)}</p>
           <div class="partner-server-actions">
-            <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">Ver anúncios</a>
-            <button class="btn btn-ghost partner-edit-server-btn" type="button" data-server-id="${escapeHtml(server.id)}">Editar</button>
+            <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">${escapeHtml(t("partner_page.view_listings", "View listings"))}</a>
+            <button class="btn btn-ghost partner-edit-server-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.edit", "Edit"))}</button>
           </div>
         `;
         const cardLogo = card.querySelector(".partner-server-logo");
@@ -1178,84 +2736,6 @@
       });
     }
 
-    async function refreshConnectStatus() {
-      try {
-        ensureClient();
-        connectFeedback.textContent = "Atualizando status do Connect...";
-        refreshConnectBtn.disabled = true;
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token || "";
-        const { data, error } = await supabase.functions.invoke("partner_connect_onboarding", {
-          body: {
-            action: "status",
-            userToken: token,
-          },
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                apikey: SUPABASE_ANON_KEY,
-              }
-            : {},
-        });
-        if (error || !data?.ok) {
-          const errorMessage = await resolveFunctionErrorMessage(error, data, "Erro ao consultar status Connect.");
-          throw new Error(errorMessage);
-        }
-        currentProfile = {
-          ...currentProfile,
-          is_partner: true,
-          stripe_connect_account_id: data.accountId,
-          stripe_connect_charges_enabled: data.chargesEnabled,
-          stripe_connect_payouts_enabled: data.payoutsEnabled,
-          stripe_connect_details_submitted: data.detailsSubmitted,
-          stripe_connect_onboarded_at: data.onboarded
-            ? (currentProfile?.stripe_connect_onboarded_at || new Date().toISOString())
-            : null,
-        };
-        renderPartnerProfile(currentProfile);
-        connectFeedback.textContent = data.onboarded
-          ? "Conta Connect pronta para recebimentos."
-          : "Conta Connect ainda pendente de conclusão.";
-      } catch (err) {
-        console.error(err);
-        connectFeedback.textContent = err?.message || "Erro ao atualizar status do Connect.";
-      } finally {
-        refreshConnectBtn.disabled = false;
-      }
-    }
-
-    async function startOnboarding() {
-      try {
-        ensureClient();
-        connectFeedback.textContent = "Gerando link de onboarding...";
-        startConnectBtn.disabled = true;
-        const { data: sessionData } = await supabase.auth.getSession();
-        const token = sessionData.session?.access_token || "";
-        const { data, error } = await supabase.functions.invoke("partner_connect_onboarding", {
-          body: {
-            action: "onboard",
-            returnBaseUrl: window.location.origin,
-            userToken: token,
-          },
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-                apikey: SUPABASE_ANON_KEY,
-              }
-            : {},
-        });
-        if (error || !data?.ok || !data?.onboardingUrl) {
-          const errorMessage = await resolveFunctionErrorMessage(error, data, "Erro ao iniciar onboarding.");
-          throw new Error(errorMessage);
-        }
-        window.location.href = data.onboardingUrl;
-      } catch (err) {
-        console.error(err);
-        connectFeedback.textContent = err?.message || "Erro ao iniciar onboarding Connect.";
-        startConnectBtn.disabled = false;
-      }
-    }
-
     async function init() {
       try {
         ensureClient();
@@ -1267,10 +2747,11 @@
           return;
         }
 
-        const [profile, servers, payoutSummary] = await Promise.all([
+        const [profile, servers, payoutSummary, wiseAccount] = await Promise.all([
           fetchPartnerProfile(),
           fetchOwnedServers(),
           fetchPartnerPayoutSummary(),
+          fetchWiseAccount(),
         ]);
         const hasPartnerAccess = Boolean(profile?.is_partner || profile?.is_admin || (servers || []).length > 0);
         if (!hasPartnerAccess) {
@@ -1278,29 +2759,25 @@
           return;
         }
         renderPartnerProfile(profile);
+        renderWiseAccount(wiseAccount?.unsupported ? null : wiseAccount);
         renderServers(servers);
         renderPartnerPayoutSummary(payoutSummary);
-
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("connect") === "return") {
-          connectFeedback.textContent = "Retorno do Stripe recebido. Atualize o status para confirmar a ativação.";
-        } else if (params.get("connect") === "retry") {
-          connectFeedback.textContent = "Onboarding não concluído. Tente novamente.";
+        startPartnerPayoutAutoRefresh();
+        if (wiseAccount?.unsupported) {
+          setWiseFeedback(t("partner_page.missing_payout_accounts_table", "The payout accounts table does not exist yet. Apply the latest migrations."), true);
         }
 
         markContentReady();
         revealPage();
       } catch (err) {
         console.error(err);
-        connectFeedback.textContent = err?.message || "Erro ao carregar área de parceiros.";
+        connectFeedback.textContent = err?.message || t("partner_page.load_area_error", "Failed to load partner area.");
         markContentReady();
         revealPage();
       }
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
-    startConnectBtn?.addEventListener("click", startOnboarding);
-    refreshConnectBtn?.addEventListener("click", refreshConnectStatus);
     avatarBtn?.addEventListener("click", (event) => {
       event.stopPropagation();
       userMenu?.classList.toggle("open");
@@ -1351,10 +2828,24 @@
         closeEditModal();
       }
     });
+    partnerWithdrawClose?.addEventListener("click", () => closePartnerWithdrawModal());
+    partnerWithdrawCancel?.addEventListener("click", () => closePartnerWithdrawModal());
+    partnerWithdrawModal?.addEventListener("click", (event) => {
+      if (event.target === partnerWithdrawModal) {
+        closePartnerWithdrawModal();
+      }
+    });
+    partnerWithdrawConfirmBtn?.addEventListener("click", () => {
+      requestPartnerWithdraw({ confirm: true });
+    });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && partnerEditModal?.classList.contains("open")) {
         closeEditModal();
+        return;
+      }
+      if (event.key === "Escape" && partnerWithdrawModal?.classList.contains("open")) {
+        closePartnerWithdrawModal();
       }
     });
 
@@ -1376,8 +2867,132 @@
       partnerEditLogoPreview.style.display = "block";
     });
 
+    partnerWithdrawBtn?.addEventListener("click", () => {
+      requestPartnerWithdraw({ confirm: false });
+    });
+
+    partnerAccountActionBtn?.addEventListener("click", async () => {
+      wiseEditMode = true;
+      setWiseSetupVisible(true);
+      setWiseFeedback(t("partner_page.start_account_setup", "Fill in the bank details to register your payout account."));
+      if (!currentWiseRequirements.length && normalizeWiseCountryCode(wiseCountryCode?.value || "")) {
+        await loadWiseRequirements(false);
+      }
+    });
+
+    wiseSaveBtn?.addEventListener("click", () => {
+      saveWiseAccount();
+    });
+
+    partnerAccountIdToggle?.addEventListener("click", () => {
+      wiseAccountIdVisible = !wiseAccountIdVisible;
+      renderWiseAccountId(currentWiseAccount);
+    });
+
+    wiseEditBtn?.addEventListener("click", async () => {
+      wiseEditMode = true;
+      setWiseSetupVisible(true);
+      setWiseFeedback(t("partner_page.edit_account_note", "Edit the bank details and save to replace the current account."));
+      if (!currentWiseRequirements.length && normalizeWiseCountryCode(wiseCountryCode?.value || "")) {
+        await loadWiseRequirements(false);
+      }
+    });
+
+    wiseMethods?.addEventListener("click", (event) => {
+      const button = event.target?.closest?.(".partner-wise-method-btn");
+      if (!button) return;
+      const nextType = String(button.getAttribute("data-type") || "");
+      if (!nextType || nextType === currentWiseMethodType) return;
+      currentWiseMethodType = nextType;
+      renderWiseMethods();
+      renderWiseRequirementFields();
+    });
+
+    wiseRequirements?.addEventListener("input", (event) => {
+      const input = event.target;
+      if (!input?.dataset?.key) return;
+      setDeepValue(currentWiseFieldValues, input.dataset.key, input.value);
+    });
+
+    wiseRequirements?.addEventListener("change", async (event) => {
+      const input = event.target;
+      if (!input?.dataset?.key) return;
+      setDeepValue(currentWiseFieldValues, input.dataset.key, input.value);
+      if (input.dataset.refresh === "1") {
+        await loadWiseRequirements(true);
+      }
+    });
+
+    let wiseCountryLoadTimer = null;
+
+    function scheduleWiseCountryLoad() {
+      const countryCode = normalizeWiseCountryCode(wiseCountryCode?.value || "");
+      syncWiseCurrencyFromCountry();
+      syncWiseCountrySpecificFields();
+      setWiseFeedback("");
+      if (!countryCode || countryCode.length < 2) {
+        setWiseSetupVisible(wiseEditMode);
+        if (!currentWiseAccount) {
+          if (wiseTargetCurrency) wiseTargetCurrency.value = "";
+          resetWiseRequirements();
+        }
+        return;
+      }
+      if (wiseCountryLoadTimer) {
+        clearTimeout(wiseCountryLoadTimer);
+      }
+      wiseCountryLoadTimer = setTimeout(() => {
+        loadWiseRequirements(false);
+      }, 180);
+    }
+
+    wiseCountryCode?.addEventListener("input", scheduleWiseCountryLoad);
+    wiseCountryCode?.addEventListener("change", scheduleWiseCountryLoad);
+
+    wiseBrAccountKind?.addEventListener("change", () => {
+      setWiseFeedback("");
+      currentWiseMethodType = "";
+      syncWiseCountrySpecificFields();
+      if (getSelectedWiseAccountKind() === "pix") {
+        renderWiseMethods();
+        renderWiseRequirementFields();
+        return;
+      }
+      loadWiseRequirements(false);
+    });
+
+    wiseLegalType?.addEventListener("change", () => {
+      setWiseFeedback("");
+      if (!normalizeWiseCountryCode(wiseCountryCode?.value || "")) {
+        resetWiseRequirements();
+        return;
+      }
+      loadWiseRequirements(true);
+    });
+
+    wiseAccountHolderName?.addEventListener("input", () => {
+      setWiseFeedback("");
+      if (getSelectedWiseAccountKind() === "pix") {
+        renderWiseRequirementFields();
+      }
+    });
+
+    wisePixKeyType?.addEventListener("change", () => {
+      setWiseFeedback("");
+      renderWiseRequirementFields();
+    });
+
+    wisePixKeyValue?.addEventListener("input", () => {
+      setWiseFeedback("");
+      renderWiseRequirementFields();
+    });
+
     partnerEditForm?.addEventListener("submit", saveServerSettings);
 
+    populateWiseCountryOptions();
+    syncWiseCountrySpecificFields();
+    syncWiseCurrencyFromCountry();
+    applyStaticTranslations();
     init();
   </script>
 </body>

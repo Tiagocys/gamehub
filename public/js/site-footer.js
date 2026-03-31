@@ -1,4 +1,6 @@
 (() => {
+  const i18n = window.__I18N__ || { t: (_key, fallback = "") => fallback };
+  const t = (key, fallback = "") => i18n.t(key, fallback);
   async function updateFooterPartnerVisibility(scope) {
     const nodes = Array.from((scope || document).querySelectorAll("[data-partner-link]"));
     if (nodes.length === 0) return;
@@ -30,11 +32,12 @@
               <p>Community marketplace powered by gamers.</p>
             </div>
             <nav class="site-footer-links" aria-label="Links úteis">
-              <a href="ad-wallet.html">Conta de anúncios</a>
-              <a href="partner.html" data-partner-link style="display:none;">Área de parceiros</a>
-              <a href="ads-policy.html">Políticas de anúncios</a>
-              <a href="privacy-policy.html">Políticas de privacidade</a>
-              <a href="terms.html">Termos de uso</a>
+              <a href="ad-wallet.html">${t("footer.ad_wallet", "Conta de anúncios")}</a>
+              <a href="partner.html" data-partner-link style="display:none;">${t("footer.partner_area", "Área de parceiros")}</a>
+              <a href="partner-policy.html">${t("footer.partner_policy", "Políticas de parceiros")}</a>
+              <a href="ads-policy.html">${t("footer.ads_policy", "Políticas de anúncios")}</a>
+              <a href="privacy-policy.html">${t("footer.privacy_policy", "Políticas de privacidade")}</a>
+              <a href="terms.html">${t("footer.terms", "Termos de uso")}</a>
             </nav>
           </div>
         </footer>

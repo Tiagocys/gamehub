@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -19,6 +19,8 @@
       gap: 18px;
       grid-template-columns: minmax(0, 1fr);
       align-items: start;
+      width: min(100%, 1180px);
+      margin: 0 auto;
     }
 
     .user-public-card {
@@ -48,6 +50,7 @@
       display: grid;
       gap: 8px;
       min-width: 0;
+      align-content: start;
     }
 
     .user-public-name {
@@ -235,13 +238,13 @@
     }
 
     .user-card-actions {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      z-index: 2;
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      justify-self: end;
+      align-self: start;
+      flex-wrap: wrap;
+      min-width: 0;
     }
 
     .user-contact-corner {
@@ -356,7 +359,7 @@
     }
 
     .share-modal-card {
-      width: min(460px, 100%);
+      width: min(620px, 100%);
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -394,20 +397,20 @@
     }
 
     .share-qr {
-      width: min(220px, 100%);
+      width: min(420px, 100%);
       aspect-ratio: 1 / 1;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: #fff;
       object-fit: contain;
-      padding: 10px;
+      padding: 12px;
       margin-inline: auto;
       display: block;
     }
 
     .share-link-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 8px;
       align-items: center;
     }
@@ -420,6 +423,12 @@
       min-height: 18px;
       font-size: 12px;
       color: var(--muted);
+    }
+
+    @media (max-width: 560px) {
+      .share-link-row {
+        grid-template-columns: 1fr;
+      }
     }
 
     .user-listings-header {
@@ -525,7 +534,7 @@
     @media (min-width: 980px) {
       .user-public-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 16px;
+        gap: 18px;
       }
 
       .user-public-card,
@@ -540,6 +549,51 @@
 
       .user-games-card {
         grid-column: 2;
+      }
+
+      .user-public-card {
+        grid-template-columns: 112px minmax(0, 1fr) auto;
+        gap: 20px;
+        align-items: start;
+        padding: 22px;
+      }
+
+      .user-public-avatar {
+        width: 112px;
+        height: 112px;
+      }
+
+      .user-public-copy {
+        gap: 10px;
+      }
+
+      .user-card-actions {
+        justify-content: flex-end;
+        max-width: 220px;
+      }
+
+      .user-about-card,
+      .user-games-card {
+        height: 100%;
+      }
+
+      .user-listings-grid {
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 12px;
+      }
+    }
+
+    @media (min-width: 1240px) {
+      .user-public-grid {
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+      }
+
+      .user-public-card {
+        padding: 24px;
+      }
+
+      .user-public-name {
+        font-size: clamp(24px, 2.2vw, 34px);
       }
     }
 
@@ -556,8 +610,9 @@
       .user-card-actions {
         position: static;
         margin-top: 4px;
-        justify-content: flex-start;
+        justify-content: center;
         flex-wrap: wrap;
+        justify-self: stretch;
       }
 
       .user-public-copy {
@@ -673,6 +728,7 @@
       <div class="share-link-row">
         <input id="share-link-input" class="input" type="text" readonly />
         <button id="share-copy-btn" class="btn btn-ghost" type="button">Copiar</button>
+        <button id="share-copy-qr-btn" class="btn btn-ghost" type="button">Copiar QR</button>
       </div>
       <div class="inline-actions">
         <button id="share-native-btn" class="btn btn-primary" type="button">Compartilhar</button>
@@ -682,12 +738,28 @@
   </div>
 
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+    import QRCode from "https://esm.sh/qrcode@1.5.4";
 
     await (window.__NAVBAR_READY__ || Promise.resolve());
+    const i18n = window.__I18N__ || { t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
+    const formatMessage = (key, fallback, params = {}) => Object.entries(params).reduce(
+      (message, [paramKey, value]) => message.replaceAll(`{${paramKey}}`, String(value ?? "")),
+      t(key, fallback),
+    );
+    const escapeHtml = (value) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
@@ -740,6 +812,7 @@
     const shareQrImg = document.getElementById("share-qr-img");
     const shareLinkInput = document.getElementById("share-link-input");
     const shareCopyBtn = document.getElementById("share-copy-btn");
+    const shareCopyQrBtn = document.getElementById("share-copy-qr-btn");
     const shareNativeBtn = document.getElementById("share-native-btn");
     const shareFeedback = document.getElementById("share-feedback");
     const selfProfileHint = document.getElementById("self-profile-hint");
@@ -787,6 +860,7 @@
     let contactPanelVisible = false;
     let currentPublicProfile = null;
     let shareUrl = "";
+    let shareCardDataUrl = "";
     const RECOMMENDERS_PAGE_SIZE = 8;
     const REPORT_MAX_ATTACHMENTS = 4;
     const REPORT_MAX_FILE_BYTES = 6 * 1024 * 1024;
@@ -794,6 +868,52 @@
     const REPORT_WEBP_QUALITY = 0.82;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
     if (publicAvatar) publicAvatar.referrerPolicy = "no-referrer";
+
+    document.title = t("user.title_default", "Gimerr - Perfil público");
+    const loaderImage = pageLoader?.querySelector("img");
+    if (loaderImage) loaderImage.alt = t("user.page_loading", "Carregando");
+    if (publicAvatar) publicAvatar.alt = t("user.public_avatar_alt", "Foto do usuário");
+    if (contactToggleBtn) contactToggleBtn.textContent = t("user.chat", "conversar");
+    if (shareUserBtn) shareUserBtn.textContent = t("user.share_title", "Compartilhar perfil");
+    if (reportUserBtn) reportUserBtn.setAttribute("aria-label", t("user.report_profile_aria", "Denunciar perfil"));
+    if (publicName) publicName.textContent = t("user.loading_profile", "Carregando perfil...");
+    if (recommendBtn) recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${t("user.recommend_user", "Recomendar usuário")}`;
+    if (recommendCount) recommendCount.textContent = t("user.recommendations_zero", "0 recomendações");
+    const reportUserReasonLabel = document.querySelector('label[for="report-user-reason"]');
+    if (reportUserReasonLabel) reportUserReasonLabel.textContent = t("user.report_problem_label", "Descreva o problema");
+    if (reportUserReason) reportUserReason.placeholder = t("user.report_problem_placeholder", "Explique por que este perfil deve ser analisado.");
+    const reportUserFilesLabel = document.querySelector('label[for="report-user-files"]');
+    if (reportUserFilesLabel) reportUserFilesLabel.textContent = t("user.report_files_label", "Anexos (opcional, até 4 imagens)");
+    if (reportUserFilesInfo) reportUserFilesInfo.textContent = t("user.report_files_empty", "Nenhuma imagem selecionada.");
+    if (reportUserSubmit) reportUserSubmit.textContent = t("user.report_submit", "Enviar denúncia");
+    if (reportUserCancel) reportUserCancel.textContent = t("user.cancel", "Cancelar");
+    if (contactTelegram) contactTelegram.childNodes[0].textContent = t("user.contact_telegram", "Conversar via Telegram");
+    if (contactWhatsapp) contactWhatsapp.childNodes[0].textContent = t("user.contact_whatsapp", "Conversar via WhatsApp");
+    if (selfProfileHint) selfProfileHint.textContent = t("user.self_public_hint", "Este é seu perfil público.");
+    if (editProfileBtn) editProfileBtn.textContent = t("user.edit_profile", "Editar perfil");
+    const aboutTitle = document.querySelector(".user-about-card h3");
+    if (aboutTitle) aboutTitle.textContent = t("user.about_title", "Sobre mim");
+    if (publicAbout) publicAbout.textContent = t("user.about_empty", "Sem informações adicionais.");
+    const gamesTitle = document.querySelector(".user-games-card h3");
+    if (gamesTitle) gamesTitle.textContent = t("user.games_title", "Games com anúncios deste usuário");
+    if (publicGamesEmpty) publicGamesEmpty.textContent = t("user.games_empty", "Nenhum game vinculado ainda.");
+    const listingsTitle = document.querySelector(".user-listings-header h3");
+    if (listingsTitle) listingsTitle.textContent = t("user.active_listings_title", "Anúncios ativos");
+    if (publicListingsEmpty) publicListingsEmpty.textContent = t("user.active_listings_empty", "Este usuário ainda não possui anúncios ativos.");
+    const recommendersTitle = document.querySelector(".recommenders-modal-head h3");
+    if (recommendersTitle) recommendersTitle.textContent = t("user.recommenders_title", "Usuários que recomendaram");
+    if (recommendersModalClose) recommendersModalClose.setAttribute("aria-label", t("user.close", "Fechar"));
+    if (recommendersLoadingEl) recommendersLoadingEl.textContent = t("user.recommenders_loading", "Carregando mais perfis...");
+    if (recommendersEmpty) recommendersEmpty.textContent = t("user.recommenders_empty", "Nenhuma recomendação ainda.");
+    const shareTitle = document.querySelector(".share-modal-head h3");
+    if (shareTitle) shareTitle.textContent = t("user.share_title", "Compartilhar perfil");
+    if (shareModalClose) shareModalClose.setAttribute("aria-label", t("user.close", "Fechar"));
+    if (shareQrImg) shareQrImg.alt = t("user.share_qr_alt", "QR Code do perfil");
+    const shareLinkLabel = document.querySelector('label[for="share-link-input"]');
+    if (shareLinkLabel) shareLinkLabel.textContent = t("user.share_link_label", "Link do perfil");
+    if (shareCopyBtn) shareCopyBtn.textContent = t("user.copy", "Copiar");
+    if (shareCopyQrBtn) shareCopyQrBtn.textContent = t("user.copy_qr", "Copiar QR");
+    if (shareNativeBtn) shareNativeBtn.textContent = t("user.share_native", "Compartilhar");
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
@@ -803,9 +923,9 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        feedback.textContent = "Supabase não configurado.";
+        feedback.textContent = t("user.supabase_not_configured", "Supabase não configurado.");
         authBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error(t("user.supabase_not_configured", "Supabase não configurado."));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -854,22 +974,22 @@
       if (!reportUserFilesInfo) return;
       const rawCount = reportUserFiles?.files?.length || 0;
       if (rawCount === 0) {
-        reportUserFilesInfo.textContent = "Nenhuma imagem selecionada.";
+        reportUserFilesInfo.textContent = t("user.report_files_empty", "Nenhuma imagem selecionada.");
         return;
       }
       if (rawCount > REPORT_MAX_ATTACHMENTS) {
-        reportUserFilesInfo.textContent = `Você selecionou ${rawCount} imagens. Serão enviadas apenas ${REPORT_MAX_ATTACHMENTS}.`;
+        reportUserFilesInfo.textContent = formatMessage("user.report_files_truncated", "Você selecionou {count} imagens. Serão enviadas apenas 4.", { count: rawCount });
         return;
       }
-      reportUserFilesInfo.textContent = `${rawCount} imagem(ns) selecionada(s).`;
+      reportUserFilesInfo.textContent = formatMessage("user.report_files_selected", "{count} imagem(ns) selecionada(s).", { count: rawCount });
     }
 
     async function convertImageToWebp(file) {
       if (!file?.type || !file.type.startsWith("image/")) {
-        throw new Error("Selecione apenas imagens válidas nos anexos.");
+        throw new Error(t("user.report_invalid_file", "Selecione apenas imagens válidas nos anexos."));
       }
       if (file.size > REPORT_MAX_FILE_BYTES) {
-        throw new Error("Cada imagem anexa deve ter no máximo 6MB.");
+        throw new Error(t("user.report_max_file_size", "Cada imagem anexa deve ter no máximo 6MB."));
       }
       const bitmap = await createImageBitmap(file);
       const maxSide = Math.max(bitmap.width, bitmap.height);
@@ -878,10 +998,10 @@
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Falha ao processar imagem anexa.");
+      if (!ctx) throw new Error(t("user.report_process_image_error", "Falha ao processar imagem anexa."));
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", REPORT_WEBP_QUALITY));
-      if (!blob) throw new Error("Falha ao converter anexo para WebP.");
+      if (!blob) throw new Error(t("user.report_convert_webp_error", "Falha ao converter anexo para WebP."));
       const baseName = file.name.replace(/\.[^.]+$/, "") || "report";
       return new File([blob], `${baseName}.webp`, { type: "image/webp" });
     }
@@ -890,7 +1010,7 @@
       ensureClient();
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+      if (!token) throw new Error(t("user.session_expired", "Sessão expirada. Faça login novamente."));
 
       const extension = (file.name.split(".").pop() || "").toLowerCase();
       const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
@@ -909,7 +1029,7 @@
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error || "Erro ao solicitar upload de anexo.");
+        throw new Error(payload?.error || t("user.report_signed_upload_error", "Erro ao solicitar upload de anexo."));
       }
       return response.json();
     }
@@ -926,7 +1046,7 @@
           },
           body: webp,
         });
-        if (!uploadRes.ok) throw new Error("Falha ao enviar anexo da denúncia.");
+        if (!uploadRes.ok) throw new Error(t("user.report_upload_error", "Falha ao enviar anexo da denúncia."));
         uploaded.push(signed.publicUrl);
         if (typeof onProgress === "function") onProgress(index + 1, files.length);
       }
@@ -1118,7 +1238,7 @@
       try {
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,status,created_at,server_id,categories,category,servers(id,name)")
+          .select("id,title,description,images,status,created_at,server_id,servers(id,name)")
           .eq("user_id", targetUserId)
           .order("created_at", { ascending: false });
         if (error) throw error;
@@ -1130,7 +1250,7 @@
       } catch (_err) {
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,status,created_at,server_id,categories,category")
+          .select("id,title,description,images,status,created_at,server_id")
           .eq("user_id", targetUserId)
           .order("created_at", { ascending: false });
         if (error) throw error;
@@ -1209,11 +1329,101 @@
       shareFeedback.textContent = message;
     }
 
-    function openShareModal() {
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function drawWrappedText(ctx, text, x, startY, maxWidth, lineHeight) {
+      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const lines = [];
+      let currentLine = "";
+      words.forEach((word) => {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        if (ctx.measureText(testLine).width <= maxWidth || !currentLine) {
+          currentLine = testLine;
+        } else {
+          lines.push(currentLine);
+          currentLine = word;
+        }
+      });
+      if (currentLine) lines.push(currentLine);
+      lines.forEach((line, index) => {
+        ctx.fillText(line, x, startY + (index * lineHeight));
+      });
+      return lines.length;
+    }
+
+    async function buildShareCard(url) {
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 420,
+        margin: 1,
+        color: {
+          dark: "#0f172a",
+          light: "#ffffff",
+        },
+      });
+      const [logoImg, qrImg] = await Promise.all([
+        loadImage("img/logo.png"),
+        loadImage(qrDataUrl),
+      ]);
+      const canvas = document.createElement("canvas");
+      canvas.width = 960;
+      canvas.height = 1120;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas unavailable");
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#f8fafc";
+      ctx.strokeStyle = "#dbe2ef";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 28);
+      ctx.fill();
+      ctx.stroke();
+
+      const logoMaxWidth = 420;
+      const logoMaxHeight = 120;
+      const logoRatio = Math.min(
+        logoMaxWidth / (logoImg.naturalWidth || logoImg.width || logoMaxWidth),
+        logoMaxHeight / (logoImg.naturalHeight || logoImg.height || logoMaxHeight),
+      );
+      const logoWidth = Math.round((logoImg.naturalWidth || logoImg.width || logoMaxWidth) * logoRatio);
+      const logoHeight = Math.round((logoImg.naturalHeight || logoImg.height || logoMaxHeight) * logoRatio);
+      const logoX = Math.round((canvas.width - logoWidth) / 2);
+      ctx.drawImage(logoImg, logoX, 96, logoWidth, logoHeight);
+
+      const brandText = t("common.brand_tagline", "Community marketplace powered by gamers.");
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "600 36px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      const lineCount = drawWrappedText(ctx, brandText, canvas.width / 2, 246, 560, 42);
+
+      const qrSize = 520;
+      const qrX = Math.round((canvas.width - qrSize) / 2);
+      const qrY = 246 + (lineCount * 42) + 52;
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "600 34px Arial, sans-serif";
+      ctx.fillText("gimerr.com", canvas.width / 2, qrY + qrSize + 44);
+
+      return canvas.toDataURL("image/png");
+    }
+
+    async function openShareModal() {
       if (!shareModal || !shareUrl) return;
       if (shareLinkInput) shareLinkInput.value = shareUrl;
       if (shareQrImg) {
-        shareQrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`;
+        shareCardDataUrl = await buildShareCard(shareUrl);
+        shareQrImg.src = shareCardDataUrl;
       }
       setShareFeedback("");
       shareModal.classList.add("open");
@@ -1244,7 +1454,9 @@
       const avatar = document.createElement("img");
       avatar.className = "recommender-avatar";
       avatar.src = user?.avatar_url || "img/avatar.svg";
-      avatar.alt = "Avatar do usuário";
+      avatar.alt = formatMessage("user.avatar_alt", "Avatar de {name}", {
+        name: [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() || t("user.community_user", "Usuário da comunidade"),
+      });
       avatar.referrerPolicy = "no-referrer";
       avatar.loading = "lazy";
       avatar.addEventListener("error", () => {
@@ -1254,7 +1466,7 @@
       const copy = document.createElement("div");
       const firstName = (user?.first_name || "").trim();
       const lastName = (user?.last_name || "").trim();
-      const fullName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
+      const fullName = `${firstName} ${lastName}`.trim() || t("user.community_user", "Usuário da comunidade");
       const nameEl = document.createElement("div");
       nameEl.className = "recommender-name";
       nameEl.textContent = fullName;
@@ -1317,7 +1529,7 @@
         });
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao carregar recomendações.";
+        feedback.textContent = err?.message || t("user.recommendations_load_error", "Erro ao carregar recomendações.");
       } finally {
         recommendersLoading = false;
         setRecommendersLoading(false);
@@ -1328,8 +1540,8 @@
       const state = await fetchRecommendationState();
       recommendationGiven = state.didRecommend;
       recommendCount.textContent = state.total === 1
-        ? "1 recomendação"
-        : `${state.total} recomendações`;
+        ? t("user.recommendation_one", "1 recomendação")
+        : formatMessage("user.recommendation_many", "{count} recomendações", { count: state.total });
       if (!recommendBtn) return;
       if (!currentUser || currentUser.id === targetUserId) {
         recommendBtn.style.display = "none";
@@ -1346,22 +1558,22 @@
       recommendBtn.style.display = "inline-flex";
       recommendBtn.disabled = !canRecommend;
       if (!canRecommend) {
-        recommendBtn.title = "Apenas usuários com telefone verificado podem recomendar.";
-        recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> Verifique seu telefone para recomendar`;
+        recommendBtn.title = t("user.phone_required_title", "Apenas usuários com telefone verificado podem recomendar.");
+        recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.phone_required_recommend", "Verifique seu telefone para recomendar"))}`;
         return;
       }
       recommendBtn.title = "";
       recommendBtn.disabled = false;
       recommendBtn.innerHTML = state.didRecommend
-        ? `<img src="img/rec.png" alt="" class="recommend-icon" /> Não recomendar usuário`
-        : `<img src="img/rec.png" alt="" class="recommend-icon" /> Recomendar usuário`;
+        ? `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.unrecommend_user", "Não recomendar usuário"))}`
+        : `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.recommend_user_cta", "Recomendar usuário"))}`;
     }
 
     function renderProfile(profile) {
       const firstName = (profile?.first_name || "").trim();
       const lastName = (profile?.last_name || "").trim();
       const username = String(profile?.username || "").trim();
-      const displayName = `${firstName} ${lastName}`.trim() || "Usuário da comunidade";
+      const displayName = `${firstName} ${lastName}`.trim() || t("user.community_user", "Usuário da comunidade");
       const discord = String(profile?.discord_username || "").trim();
       const profileStatus = String(profile?.status || "active");
       shareUrl = `${window.location.origin}/user?id=${encodeURIComponent(targetUserId || "")}`;
@@ -1405,7 +1617,7 @@
       if (profile?.about_me) {
         publicAbout.textContent = profile.about_me;
       } else {
-        publicAbout.textContent = "Este usuário ainda não adicionou uma descrição.";
+        publicAbout.textContent = t("user.profile_about_missing", "Este usuário ainda não adicionou uma descrição.");
       }
     }
 
@@ -1420,7 +1632,9 @@
       const hasDiscord = !!discord;
       const hasAny = hasDiscord || hasTelegram || hasWhatsapp;
       const showOnPublicProfile = profile?.show_contacts_on_public_profile !== false;
-      const baseLabel = `conversar com ${firstName || "usuário"}`;
+      const baseLabel = formatMessage("user.chat_with", "conversar com {name}", {
+        name: firstName || t("user.community_user", "Usuário da comunidade").toLowerCase(),
+      });
 
       contactPanelVisible = false;
       contactPanel.style.display = "none";
@@ -1453,7 +1667,7 @@
       if (!contactToggleBtn || !contactPanel || contactToggleBtn.style.display === "none") return;
       contactPanelVisible = !contactPanelVisible;
       contactPanel.style.display = contactPanelVisible ? "grid" : "none";
-      contactToggleBtn.textContent = contactPanelVisible ? "Fechar contato" : (contactToggleBtn.dataset.baseLabel || "Conversar");
+      contactToggleBtn.textContent = contactPanelVisible ? t("user.close_contact", "Fechar contato") : (contactToggleBtn.dataset.baseLabel || t("user.conversation", "Conversar"));
     }
 
     async function renderPublicAvatar(profile) {
@@ -1486,7 +1700,7 @@
     function renderListings(listings) {
       publicListings.innerHTML = "";
       const activeListings = listings.filter((listing) => listing.status === "active");
-      publicListingsCount.textContent = `${activeListings.length} anúncio${activeListings.length === 1 ? "" : "s"} ativo${activeListings.length === 1 ? "" : "s"}`;
+      publicListingsCount.textContent = formatMessage("user.active_listings_count", "{count} anúncio(s) ativo(s)", { count: activeListings.length });
 
       if (activeListings.length === 0) {
         publicListingsEmpty.style.display = "block";
@@ -1507,25 +1721,25 @@
           media.classList.add("has-image");
           media.style.backgroundImage = `url("${String(firstImage).replace(/"/g, "&quot;")}")`;
         } else {
-          media.textContent = "Sem imagem";
+          media.textContent = t("user.no_image", "Sem imagem");
         }
 
         const body = document.createElement("div");
         body.className = "listing-body";
 
         const title = document.createElement("h3");
-        title.textContent = listing.title || "Sem título";
+        title.textContent = listing.title || t("user.no_title", "Sem título");
         body.appendChild(title);
 
         const server = getServerFromListing(listing);
         const serverLine = document.createElement("p");
         serverLine.className = "listing-server";
-        serverLine.textContent = `${server?.name || "Não informado"}`;
+        serverLine.textContent = `${server?.name || t("user.not_informed", "Não informado")}`;
         body.appendChild(serverLine);
 
         const published = document.createElement("p");
         published.className = "helper";
-        published.textContent = `Publicado em ${formatDate(listing.created_at)}`;
+        published.textContent = formatMessage("user.published_at", "Publicado em {date}", { date: formatDate(listing.created_at) });
         body.appendChild(published);
 
         card.appendChild(media);
@@ -1534,17 +1748,24 @@
       });
     }
 
+    function isExpectedReportDuplicateError(error) {
+      if (!error) return false;
+      const code = String(error.code || "").trim();
+      const message = String(error.message || "").toLowerCase();
+      return code === "23505" || message.includes("pending report") || message.includes("denúncia pendente");
+    }
+
     async function handleRecommend() {
       if (!currentUser || !targetUserId || currentUser.id === targetUserId) return;
       if (!currentUserProfile) {
         currentUserProfile = await fetchCurrentUserProfile();
       }
       if (!currentUserProfile?.phone_verified) {
-        feedback.textContent = "Apenas usuários com telefone verificado podem recomendar outros usuários.";
+        feedback.textContent = t("user.phone_verified_required_recommend", "Apenas usuários com telefone verificado podem recomendar outros usuários.");
         return;
       }
       recommendBtn.disabled = true;
-      recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> Processando...`;
+      recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.processing", "Processando..."))}`;
       try {
         if (recommendationGiven) {
           const { error } = await supabase
@@ -1586,7 +1807,7 @@
         renderRecommendersEmpty(!recommendersHasMore && (!recommendersList || recommendersList.childElementCount === 0));
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao registrar recomendação.";
+        feedback.textContent = err?.message || t("user.recommendations_load_public_error", "Erro ao carregar recomendações.");
       } finally {
         recommendBtn.disabled = false;
       }
@@ -1603,7 +1824,7 @@
         renderRecommendersEmpty(shouldShowEmpty);
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao carregar recomendações.";
+        feedback.textContent = err?.message || t("user.recommendations_load_public_error", "Erro ao carregar recomendações.");
       }
     }
 
@@ -1642,14 +1863,14 @@
         await renderPublicAvatar(profile);
         if (String(profile?.status || "active") !== "active") {
           const isBanned = String(profile?.status) === "banned";
-          publicName.textContent = isBanned ? "Perfil banido" : "Perfil desativado";
+          publicName.textContent = isBanned ? t("user.profile_banned", "Perfil banido") : t("user.profile_disabled", "Perfil desativado");
           publicAbout.textContent = isBanned
-            ? "Este perfil foi banido pela moderação."
-            : "Este perfil está temporariamente desativado.";
+            ? t("user.profile_banned_message", "Este perfil foi banido pela moderação.")
+            : t("user.profile_disabled_message", "Este perfil está temporariamente desativado.");
           if (recommendBtn) recommendBtn.style.display = "none";
           if (reportUserBtn) reportUserBtn.style.display = "none";
           if (contactToggleBtn) contactToggleBtn.style.display = "none";
-          if (recommendCount) recommendCount.textContent = "0 recomendações";
+          if (recommendCount) recommendCount.textContent = t("user.recommendations_zero", "0 recomendações");
           renderGames([]);
           renderListings([]);
           if (publicGamesEmpty) publicGamesEmpty.style.display = "block";
@@ -1674,8 +1895,8 @@
         revealPage();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao carregar perfil público.";
-        publicName.textContent = "Perfil não encontrado.";
+        feedback.textContent = err?.message || t("user.profile_load_error", "Erro ao carregar perfil público.");
+        publicName.textContent = t("user.profile_not_found", "Perfil não encontrado.");
         markContentReady();
         revealPage();
       }
@@ -1706,7 +1927,10 @@
       updateReportFilesInfo();
     });
     shareUserBtn?.addEventListener("click", () => {
-      openShareModal();
+      openShareModal().catch((err) => {
+        console.error(err);
+        setShareFeedback(t("user.share_error", "Não foi possível compartilhar agora."));
+      });
     });
     shareModalClose?.addEventListener("click", closeShareModal);
     shareModal?.addEventListener("click", (event) => {
@@ -1718,9 +1942,33 @@
       try {
         if (!shareUrl) return;
         await navigator.clipboard.writeText(shareUrl);
-        setShareFeedback("Link copiado.");
+        setShareFeedback(t("user.copy_success", "Link copiado."));
       } catch (_err) {
-        setShareFeedback("Nao foi possivel copiar automaticamente.");
+        setShareFeedback(t("user.copy_auto_error", "Não foi possível copiar automaticamente."));
+      }
+    });
+    shareCopyQrBtn?.addEventListener("click", async () => {
+      try {
+        if (!shareCardDataUrl) return;
+        const blob = await fetch(shareCardDataUrl).then((response) => response.blob());
+        if (navigator.clipboard?.write && window.ClipboardItem) {
+          await navigator.clipboard.write([
+            new window.ClipboardItem({
+              [blob.type]: blob,
+            }),
+          ]);
+          setShareFeedback(t("user.copy_qr_success", "QR copiado como imagem."));
+          return;
+        }
+        const downloadLink = document.createElement("a");
+        downloadLink.href = shareCardDataUrl;
+        downloadLink.download = "gimerr-profile-qr.png";
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        downloadLink.remove();
+        setShareFeedback(t("user.copy_qr_download", "Imagem do QR baixada."));
+      } catch (_err) {
+        setShareFeedback(t("user.copy_qr_error", "Não foi possível copiar a imagem do QR automaticamente."));
       }
     });
     shareNativeBtn?.addEventListener("click", async () => {
@@ -1729,18 +1977,18 @@
         if (navigator.share) {
           await navigator.share({
             title: currentPublicProfile?.first_name
-              ? `${currentPublicProfile.first_name} no Gimerr`
-              : "Perfil no Gimerr",
-            text: "Confira este perfil no Gimerr:",
+              ? formatMessage("user.share_title_native_with_name", "{name} no Gimerr", { name: currentPublicProfile.first_name })
+              : t("user.share_title_native", "Perfil no Gimerr"),
+            text: t("user.share_text_native", "Confira este perfil no Gimerr:"),
             url: shareUrl,
           });
-          setShareFeedback("Compartilhado com sucesso.");
+          setShareFeedback(t("user.share_success", "Compartilhado com sucesso."));
           return;
         }
         await navigator.clipboard.writeText(shareUrl);
-        setShareFeedback("Link copiado. Cole no app que deseja compartilhar.");
+        setShareFeedback(t("user.share_copy_fallback", "Link copiado. Cole no app que deseja compartilhar."));
       } catch (_err) {
-        setShareFeedback("Nao foi possivel compartilhar agora.");
+        setShareFeedback(t("user.share_error", "Não foi possível compartilhar agora."));
       }
     });
     reportUserFiles?.addEventListener("change", updateReportFilesInfo);
@@ -1755,32 +2003,32 @@
         }
         if (!currentUserProfile?.phone_verified) {
           if (reportUserFeedback) {
-            reportUserFeedback.textContent = "Apenas usuários com telefone verificado podem enviar denúncias.";
+            reportUserFeedback.textContent = t("user.phone_verified_required_report", "Apenas usuários com telefone verificado podem enviar denúncias.");
           }
           return;
         }
         if (!targetUserId) return;
         if (currentUser.id === targetUserId) {
-          if (reportUserFeedback) reportUserFeedback.textContent = "Você não pode denunciar seu próprio perfil.";
+          if (reportUserFeedback) reportUserFeedback.textContent = t("user.own_report_blocked", "Você não pode denunciar seu próprio perfil.");
           return;
         }
         const reason = String(reportUserReason?.value || "").trim();
         if (reason.length < 10) {
-          if (reportUserFeedback) reportUserFeedback.textContent = "Descreva o problema com pelo menos 10 caracteres.";
+          if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_min_reason", "Descreva o problema com pelo menos 10 caracteres.");
           return;
         }
         const files = getReportFiles();
         reportUserSubmit.disabled = true;
-        if (reportUserFeedback) reportUserFeedback.textContent = "Enviando denúncia...";
+        if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_sending", "Enviando denúncia...");
         let evidenceImages = [];
         if (files.length > 0) {
           evidenceImages = await uploadReportEvidence(files, (done, total) => {
             if (reportUserFeedback) {
-              reportUserFeedback.textContent = `Enviando anexos ${done}/${total}...`;
+              reportUserFeedback.textContent = formatMessage("user.report_uploading_progress", "Enviando anexos {done}/{total}...", { done, total });
             }
           });
         }
-        if (reportUserFeedback) reportUserFeedback.textContent = "Registrando denúncia...";
+        if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_registering", "Registrando denúncia...");
         const { error } = await supabase.from("reports").insert({
           reporter_id: currentUser.id,
           target_type: "user",
@@ -1790,19 +2038,21 @@
         });
         if (error) {
           if (error.code === "23505") {
-            throw new Error("Você já possui uma denúncia pendente para este perfil.");
+            throw new Error(t("user.report_duplicate", "Você já possui uma denúncia pendente para este perfil."));
           }
           throw error;
         }
-        if (reportUserFeedback) reportUserFeedback.textContent = "Denúncia enviada para análise.";
+        if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_sent", "Denúncia enviada para análise.");
         if (reportUserReason) reportUserReason.value = "";
         if (reportUserFiles) reportUserFiles.value = "";
         updateReportFilesInfo();
         if (reportUserForm) reportUserForm.style.display = "none";
       } catch (err) {
-        console.error(err);
+        if (!isExpectedReportDuplicateError(err)) {
+          console.error(err);
+        }
         if (reportUserFeedback) {
-          reportUserFeedback.textContent = err?.message || "Erro ao enviar denúncia.";
+          reportUserFeedback.textContent = err?.message || t("user.report_send_error", "Erro ao enviar denúncia.");
         }
       } finally {
         if (reportUserSubmit) reportUserSubmit.disabled = false;

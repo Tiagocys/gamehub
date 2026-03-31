@@ -5,6 +5,7 @@ type Payload = {
   listingId?: string;
   autoActivate?: boolean;
   amountBRL?: number | string;
+  currency?: string;
   days?: number;
   returnBaseUrl?: string;
   userToken?: string;
@@ -22,7 +23,8 @@ const corsHeaders = {
 
 const MIN_TOPUP_BRL = 5;
 const DAY_SECONDS = 24 * 60 * 60;
-const PRICE_PER_DAY_CENTS = 500;
+const PRICE_PER_DAY_CENTS = 600;
+const DEFAULT_USD_BRL_RATE = 5.5;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -39,6 +41,15 @@ function normalizeBaseUrl(input?: string) {
   } catch (_err) {
     return null;
   }
+}
+
+function normalizeCheckoutCurrency(value: unknown) {
+  return String(value || "").trim().toLowerCase() === "usd" ? "usd" : "brl";
+}
+
+function getUsdBrlRate() {
+  const parsed = Number(Deno.env.get("USD_BRL_RATE") || DEFAULT_USD_BRL_RATE);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_USD_BRL_RATE;
 }
 
 function normalizeAmountBRL(value: unknown): number | null {
@@ -96,6 +107,15 @@ Deno.serve(async (req) => {
     const totalCents = Math.round(amountBRL * 100);
     const purchasedSeconds = amountToSeconds(totalCents);
     const equivalentDays = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
+    const checkoutCurrency = normalizeCheckoutCurrency(payload.currency);
+    const usdBrlRate = getUsdBrlRate();
+    const checkoutTotalCents = checkoutCurrency === "usd"
+      ? Math.round((amountBRL / usdBrlRate) * 100)
+      : totalCents;
+
+    if (!Number.isFinite(checkoutTotalCents) || checkoutTotalCents <= 0) {
+      return errorResponse("Valor inválido para checkout.", 400);
+    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
@@ -139,8 +159,8 @@ Deno.serve(async (req) => {
     body.set("allow_promotion_codes", "true");
     body.set("payment_method_types[0]", "card");
     body.set("line_items[0][quantity]", "1");
-    body.set("line_items[0][price_data][currency]", "brl");
-    body.set("line_items[0][price_data][unit_amount]", String(totalCents));
+    body.set("line_items[0][price_data][currency]", checkoutCurrency);
+    body.set("line_items[0][price_data][unit_amount]", String(checkoutTotalCents));
     body.set("line_items[0][price_data][product_data][name]", "Saldo da conta de anúncios");
     body.set("line_items[0][price_data][product_data][description]", listing?.title || "Crédito de destaque Gimerr");
 
@@ -148,7 +168,10 @@ Deno.serve(async (req) => {
     body.set("metadata[days]", String(equivalentDays));
     body.set("metadata[purchased_seconds]", String(purchasedSeconds));
     body.set("metadata[total_cents]", String(totalCents));
+    body.set("metadata[checkout_total_cents]", String(checkoutTotalCents));
+    body.set("metadata[checkout_currency]", checkoutCurrency.toUpperCase());
     body.set("metadata[amount_brl]", amountBRL.toFixed(2));
+    body.set("metadata[fx_rate]", usdBrlRate.toFixed(4));
     body.set("metadata[auto_activate]", shouldAutoActivate ? "1" : "0");
     if (listing?.id) {
       body.set("metadata[listing_id]", listing.id);
@@ -176,6 +199,8 @@ Deno.serve(async (req) => {
         checkoutUrl: stripeData.url,
         amountBRL,
         totalCents,
+        checkoutCurrency: checkoutCurrency.toUpperCase(),
+        checkoutTotalCents,
         purchasedSeconds,
         referenceListingId: listing?.id || null,
         autoActivate: shouldAutoActivate,

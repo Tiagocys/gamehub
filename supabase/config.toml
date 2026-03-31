@@ -298,6 +298,11 @@ verify_jwt = false
 import_map = "./functions/listing_highlight_wallet/deno.json"
 entrypoint = "./functions/listing_highlight_wallet/index.ts"
 
+[functions.listing_highlight_impression]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/listing_highlight_impression/index.ts"
+
 [functions.stripe_webhook]
 enabled = true
 verify_jwt = false
@@ -321,3 +326,39 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/server_update_settings/deno.json"
 entrypoint = "./functions/server_update_settings/index.ts"
+
+[functions.partner_payout_summary]
+enabled = true
+verify_jwt = false
+import_map = "./functions/partner_payout_summary/deno.json"
+entrypoint = "./functions/partner_payout_summary/index.ts"
+
+[functions.wise_recipient_requirements]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/wise_recipient_requirements/index.ts"
+
+[functions.wise_recipient_account]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/wise_recipient_account/index.ts"
+
+[functions.partner_withdraw_request]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/partner_withdraw_request/index.ts"
+
+[functions.partner_withdraw_email]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/partner_withdraw_email/index.ts"
+
+[functions.wise_webhook]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/wise_webhook/index.ts"
+
+[functions.partner_withdraw_review]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/partner_withdraw_review/index.ts"

@@ -1,5 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import {
+  DAY_SECONDS,
+  isMissingWalletTableError,
+  safeInt,
+  syncHighlightWallet,
+} from "../_shared/highlight_wallet.ts";
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
@@ -15,8 +21,8 @@ const corsHeaders = {
 const NET_ESTIMATE_RATIO = 0.921;
 const PARTNER_SHARE_RATIO = 0.5;
 const ADMIN_SHARE_RATIO = 0.25;
-const DAY_SECONDS = 24 * 60 * 60;
-const PRICE_PER_DAY_CENTS = 500;
+const PRICE_PER_DAY_CENTS = 600;
+const DEFAULT_USD_BRL_RATE = 5.5;
 
 const textEncoder = new TextEncoder();
 
@@ -86,8 +92,31 @@ function normalizeMoney(value: unknown) {
   return Number(parsed.toFixed(2));
 }
 
+function normalizePositiveNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value || 0);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+}
+
 function centsToMoney(cents: number) {
   return Number((Math.max(0, cents) / 100).toFixed(2));
+}
+
+function getUsdBrlRate(value?: unknown) {
+  const envRate = Number(Deno.env.get("USD_BRL_RATE") || DEFAULT_USD_BRL_RATE);
+  const fallback = Number.isFinite(envRate) && envRate > 0 ? envRate : DEFAULT_USD_BRL_RATE;
+  return normalizePositiveNumber(value, fallback);
+}
+
+function normalizeBusinessCurrency(value: unknown) {
+  return String(value || "").trim().toUpperCase() === "USD" ? "USD" : "BRL";
+}
+
+function normalizeToBrlCents(cents: number, currency: string, usdBrlRate: number) {
+  if (currency === "USD") {
+    return Math.max(0, Math.round(cents * usdBrlRate));
+  }
+  return Math.max(0, Math.round(cents));
 }
 
 function isMissingPartnerPayoutTableError(err: { code?: string; message?: string } | null | undefined) {
@@ -110,157 +139,6 @@ function isMissingShareRatioColumnError(err: { code?: string; message?: string }
 function isMissingAdminBeneficiaryColumnError(err: { code?: string; message?: string } | null | undefined) {
   if (!err) return false;
   return String(err.message || "").includes("admin_beneficiary_id");
-}
-
-function isMissingWalletTableError(err: { code?: string; message?: string } | null | undefined) {
-  if (!err) return false;
-  if (err.code === "42P01" || err.code === "42703") return true;
-  const msg = String(err.message || "").toLowerCase();
-  return msg.includes("wallets") || msg.includes("wallet_events");
-}
-
-type WalletRow = {
-  user_id: string;
-  available_seconds: number;
-  total_purchased_seconds: number;
-  total_consumed_seconds: number;
-  active_listing_count: number;
-  last_consumed_at: string;
-};
-
-function safeInt(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(0, Math.floor(parsed));
-}
-
-async function countActiveHighlights(supabase: any, userId: string) {
-  const { count, error } = await supabase
-    .from("listings")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .eq("highlight_status", "active");
-  if (error) throw error;
-  return safeInt(count, 0);
-}
-
-async function ensureWallet(supabase: any, userId: string, nowIso: string) {
-  let { data, error } = await supabase
-    .from("wallets")
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (isMissingWalletTableError(error)) {
-    throw new Error("Tabela de wallet de destaque não encontrada. Aplique as migrations mais recentes.");
-  }
-  if (error) throw error;
-  if (data) return data as WalletRow;
-
-  const activeCount = await countActiveHighlights(supabase, userId);
-  const { data: inserted, error: insertErr } = await supabase
-    .from("wallets")
-    .insert({
-      user_id: userId,
-      available_seconds: 0,
-      total_purchased_seconds: 0,
-      total_consumed_seconds: 0,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (insertErr) throw insertErr;
-  return inserted as WalletRow;
-}
-
-async function deactivateAllHighlights(supabase: any, userId: string) {
-  const { error } = await supabase
-    .from("listings")
-    .update({
-      highlight_status: "none",
-      highlight_expires_at: null,
-      highlight_days: 0,
-    })
-    .eq("user_id", userId)
-    .eq("highlight_status", "active");
-  if (error) throw error;
-}
-
-async function appendWalletEvent(
-  supabase: any,
-  payload: Record<string, unknown>,
-) {
-  const { error } = await supabase.from("wallet_events").insert(payload);
-  if (isMissingWalletTableError(error)) return;
-  if (error) throw error;
-}
-
-async function syncWallet(
-  supabase: any,
-  userId: string,
-  reason: string,
-) {
-  const now = new Date();
-  const nowIso = now.toISOString();
-  const wallet = await ensureWallet(supabase, userId, nowIso);
-  let activeCount = await countActiveHighlights(supabase, userId);
-  let available = safeInt(wallet.available_seconds);
-  let totalConsumed = safeInt(wallet.total_consumed_seconds);
-  const lastConsumedAt = wallet.last_consumed_at ? new Date(wallet.last_consumed_at) : now;
-  const elapsedSec = Math.max(
-    0,
-    Math.floor((now.getTime() - (Number.isNaN(lastConsumedAt.getTime()) ? now.getTime() : lastConsumedAt.getTime())) / 1000),
-  );
-  let consumedNow = 0;
-
-  if (activeCount > 0) {
-    if (available <= 0) {
-      await deactivateAllHighlights(supabase, userId);
-      activeCount = 0;
-    } else if (elapsedSec > 0) {
-      const requestedConsume = elapsedSec * activeCount;
-      if (requestedConsume >= available) {
-        consumedNow = available;
-        available = 0;
-        totalConsumed += consumedNow;
-        await deactivateAllHighlights(supabase, userId);
-        activeCount = 0;
-      } else {
-        consumedNow = requestedConsume;
-        available -= consumedNow;
-        totalConsumed += consumedNow;
-      }
-    }
-  }
-
-  const { data: updated, error: updateErr } = await supabase
-    .from("wallets")
-    .update({
-      available_seconds: available,
-      total_consumed_seconds: totalConsumed,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .eq("user_id", userId)
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (updateErr) throw updateErr;
-
-  if (consumedNow > 0) {
-    await appendWalletEvent(supabase, {
-      user_id: userId,
-      event_type: "consume",
-      seconds_delta: -consumedNow,
-      balance_after: available,
-      metadata: {
-        reason,
-        elapsed_seconds: elapsedSec,
-      },
-    });
-  }
-
-  return updated as WalletRow;
 }
 
 type StripeNetDetails = {
@@ -358,7 +236,11 @@ Deno.serve(async (req) => {
       const listingIdRaw = typeof metadata.listing_id === "string" ? metadata.listing_id.trim() : "";
       const listingId = listingIdRaw || null;
       const userId = typeof metadata.user_id === "string" ? metadata.user_id : "";
-      const totalCents = normalizeAmountCents(metadata.total_cents || session?.amount_total || 0);
+      const amountBRL = normalizeMoney(metadata.amount_brl);
+      const totalCents = amountBRL > 0
+        ? Math.round(amountBRL * 100)
+        : normalizeAmountCents(metadata.total_cents || session?.amount_total || 0);
+      const checkoutTotalCents = normalizeAmountCents(metadata.checkout_total_cents || session?.amount_total || totalCents);
       const metadataDays = normalizeDays(metadata.days);
       const fallbackSecondsByAmount = Math.max(1, Math.round((totalCents * DAY_SECONDS) / PRICE_PER_DAY_CENTS));
       const fallbackSecondsByDays = metadataDays * DAY_SECONDS;
@@ -369,7 +251,8 @@ Deno.serve(async (req) => {
       const daysEquivalent = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
       const sessionId = session?.id;
       const paymentIntentId = typeof session?.payment_intent === "string" ? session.payment_intent : null;
-      const stripeCurrency = typeof session?.currency === "string" ? session.currency.toUpperCase() : "BRL";
+      const checkoutCurrency = normalizeBusinessCurrency(metadata.checkout_currency || session?.currency);
+      const usdBrlRate = getUsdBrlRate(metadata.fx_rate);
       if (!userId || !sessionId) {
         return errorResponse("Metadata incompleta no checkout", 400);
       }
@@ -404,17 +287,20 @@ Deno.serve(async (req) => {
       const baseEventPayload = {
         user_id: userId,
         event_type: "topup",
-        seconds_delta: purchasedSeconds,
-        balance_after: 0,
+        amount_delta_cents: totalCents,
+        balance_after_cents: 0,
         listing_id: listing?.id || null,
         checkout_session_id: sessionId,
         payment_intent_id: paymentIntentId,
         amount_paid: Number((totalCents / 100).toFixed(2)),
-        currency: stripeCurrency || "BRL",
+        currency: "BRL",
         metadata: {
           days: daysEquivalent,
           purchased_seconds: purchasedSeconds,
           source: "stripe_webhook",
+          checkout_currency: checkoutCurrency,
+          checkout_amount_paid: Number((checkoutTotalCents / 100).toFixed(2)),
+          fx_rate: checkoutCurrency === "USD" ? usdBrlRate : null,
         },
       };
       let topupReserved = false;
@@ -436,23 +322,27 @@ Deno.serve(async (req) => {
           topupReserved = true;
         }
 
-        const beforeTopup = await syncWallet(supabase, userId, "stripe-webhook-before-topup");
+        const beforeTopup = await syncHighlightWallet(supabase, userId, "stripe-webhook-before-topup");
+        const nextAvailableCents = safeInt(beforeTopup.availableCents) + totalCents;
+        const nextTotalPurchasedCents = safeInt(beforeTopup.totalPurchasedCents) + totalCents;
         const { data: toppedWallet, error: topupErr } = await supabase
           .from("wallets")
           .update({
-            available_seconds: safeInt(beforeTopup.available_seconds) + purchasedSeconds,
-            total_purchased_seconds: safeInt(beforeTopup.total_purchased_seconds) + purchasedSeconds,
+            available_cents: nextAvailableCents,
+            total_purchased_cents: nextTotalPurchasedCents,
             last_consumed_at: nowIso,
           })
           .eq("user_id", userId)
-          .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
+          .select("user_id,available_cents,total_purchased_cents,total_consumed_cents,active_listing_count,last_consumed_at")
           .single();
         if (topupErr) throw topupErr;
         topupApplied = true;
 
         const { error: confirmEventErr } = await supabase
           .from("wallet_events")
-          .update({ balance_after: safeInt(toppedWallet?.available_seconds) })
+          .update({
+            balance_after_cents: safeInt(toppedWallet?.available_cents),
+          })
           .eq("checkout_session_id", sessionId)
           .eq("event_type", "topup");
         if (confirmEventErr && !isMissingWalletTableError(confirmEventErr)) throw confirmEventErr;
@@ -463,14 +353,14 @@ Deno.serve(async (req) => {
             .delete()
             .eq("checkout_session_id", sessionId)
             .eq("event_type", "topup")
-            .eq("balance_after", 0);
+            .eq("balance_after_cents", 0);
         }
         throw topupFlowErr;
       }
 
-      const walletAfterTopup = await syncWallet(supabase, userId, "stripe-webhook-after-topup");
+      const walletAfterTopup = await syncHighlightWallet(supabase, userId, "stripe-webhook-after-topup");
       const now = new Date();
-      const activeStreams = Math.max(1, safeInt(walletAfterTopup.active_listing_count, 1));
+      const activeStreams = Math.max(1, safeInt(walletAfterTopup.activeListingCount, 1));
       const projectedSeconds = Math.max(1, Math.floor(purchasedSeconds / activeStreams));
       const projectedExpire = new Date(now.getTime() + projectedSeconds * 1000);
 
@@ -503,7 +393,9 @@ Deno.serve(async (req) => {
 
       if ((ownerId || adminBeneficiaryId) && listing) {
         const stripeNetDetails = await fetchStripeNetDetails(paymentIntentId);
-        const platformNetCents = stripeNetDetails.netCents ?? Math.round(totalCents * NET_ESTIMATE_RATIO);
+        const platformNetCents = stripeNetDetails.netCents == null
+          ? Math.round(totalCents * NET_ESTIMATE_RATIO)
+          : normalizeToBrlCents(stripeNetDetails.netCents, checkoutCurrency, usdBrlRate);
         const grossAmount = centsToMoney(totalCents);
         const payoutStatus = projectedExpire <= now ? "eligible" : "pending";
 
@@ -532,7 +424,7 @@ Deno.serve(async (req) => {
             highlight_days: daysEquivalent,
             highlight_started_at: nowIso,
             highlight_expires_at: projectedExpire.toISOString(),
-            currency: stripeCurrency || "BRL",
+            currency: "BRL",
             gross_amount: grossAmount,
             expected_net_amount: expectedNetAmount,
             refunded_gross_amount: 0,
@@ -540,7 +432,9 @@ Deno.serve(async (req) => {
             payout_status: payoutStatus,
             notes: stripeNetDetails.netCents == null
               ? `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido estimado. Modelo wallet: expiração projetada (${projectedSeconds}s).`
-              : `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe. Modelo wallet: expiração projetada (${projectedSeconds}s).`,
+              : checkoutCurrency === "USD"
+                ? `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe convertido de USD para BRL pela taxa fixa ${usdBrlRate.toFixed(2)}. Modelo wallet: expiração projetada (${projectedSeconds}s).`
+                : `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe. Modelo wallet: expiração projetada (${projectedSeconds}s).`,
           };
 
           let onConflict = "checkout_session_id,payout_role";

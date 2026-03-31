@@ -1,35 +1,30 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import {
+  appendWalletEvent,
+  centsToMoney,
+  safeInt,
+  safeSignedInt,
+  syncHighlightWallet,
+} from "../_shared/highlight_wallet.ts";
 
 type Payload = {
   action?: "status" | "activate" | "deactivate" | "withdraw_request";
   listingId?: string;
   policyAccepted?: boolean;
+  activateMode?: "immediate" | "period";
+  endAt?: string | null;
   userToken?: string;
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
+const MIN_WITHDRAW_CENTS = 500;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "*",
   "Access-Control-Allow-Methods": "POST,OPTIONS",
-};
-
-const DAY_SECONDS = 24 * 60 * 60;
-const BASE_DAY_PRICE = 5;
-const DAY_DISCOUNT = 0;
-const CONSUME_EVENT_MIN_SECONDS = 300;
-const CONSUME_EVENT_COALESCE_WINDOW_SECONDS = 60 * 60;
-
-type WalletRow = {
-  user_id: string;
-  available_seconds: number;
-  total_purchased_seconds: number;
-  total_consumed_seconds: number;
-  active_listing_count: number;
-  last_consumed_at: string;
 };
 
 function errorResponse(message: string, status = 400) {
@@ -39,277 +34,12 @@ function errorResponse(message: string, status = 400) {
   });
 }
 
-function safeInt(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(0, Math.floor(parsed));
-}
-
-function safeSignedInt(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.trunc(parsed);
-}
-
-function secondsToHuman(seconds: number) {
-  const total = Math.max(0, safeInt(seconds));
-  const days = Math.floor(total / DAY_SECONDS);
-  const hours = Math.floor((total % DAY_SECONDS) / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  return { days, hours, minutes };
-}
-
-function perSecondPrice(dayIndex: number) {
-  const dayPrice = BASE_DAY_PRICE * ((1 - DAY_DISCOUNT) ** dayIndex);
-  return Number((dayPrice / DAY_SECONDS).toFixed(8));
-}
-
-function isMissingWalletTableError(err: { code?: string; message?: string } | null | undefined) {
-  if (!err) return false;
-  if (err.code === "42P01" || err.code === "42703") return true;
-  const msg = String(err.message || "").toLowerCase();
-  return msg.includes("wallets") || msg.includes("wallet_events");
-}
-
-async function countActiveHighlights(supabase: any, userId: string) {
-  const { count, error } = await supabase
-    .from("listings")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .eq("highlight_status", "active");
-  if (error) throw error;
-  return safeInt(count, 0);
-}
-
-async function ensureWallet(supabase: any, userId: string, nowIso: string) {
-  let { data, error } = await supabase
-    .from("wallets")
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (isMissingWalletTableError(error)) {
-    throw new Error("Tabela de wallet de destaque não encontrada. Aplique as migrations mais recentes.");
-  }
-  if (error) throw error;
-  if (data) return data as WalletRow;
-
-  const activeCount = await countActiveHighlights(supabase, userId);
-  const { data: inserted, error: insertErr } = await supabase
-    .from("wallets")
-    .insert({
-      user_id: userId,
-      available_seconds: 0,
-      total_purchased_seconds: 0,
-      total_consumed_seconds: 0,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (insertErr) throw insertErr;
-  return inserted as WalletRow;
-}
-
-async function deactivateAllHighlights(supabase: any, userId: string) {
-  const { error } = await supabase
-    .from("listings")
-    .update({
-      highlight_status: "none",
-      highlight_expires_at: null,
-      highlight_days: 0,
-    })
-    .eq("user_id", userId)
-    .eq("highlight_status", "active");
-  if (error) throw error;
-}
-
-async function appendWalletEvent(
-  supabase: any,
-  payload: Record<string, unknown>,
-) {
-  const { error } = await supabase.from("wallet_events").insert(payload);
-  if (isMissingWalletTableError(error)) return;
-  if (error) throw error;
-}
-
-async function appendConsumeWalletEvent(
-  supabase: any,
-  {
-    userId,
-    consumedNow,
-    balanceAfter,
-    reason,
-    elapsedSec,
-  }: {
-    userId: string;
-    consumedNow: number;
-    balanceAfter: number;
-    reason: string;
-    elapsedSec: number;
-  },
-) {
-  if (consumedNow <= 0) return;
-  if (consumedNow < CONSUME_EVENT_MIN_SECONDS) return;
-
-  const { data: lastEvent, error: lastEventErr } = await supabase
-    .from("wallet_events")
-    .select("id,seconds_delta,metadata,created_at")
-    .eq("user_id", userId)
-    .eq("event_type", "consume")
-    .is("listing_id", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (isMissingWalletTableError(lastEventErr)) return;
-  if (lastEventErr) throw lastEventErr;
-
-  const nowMs = Date.now();
-  const lastCreatedMs = lastEvent?.created_at ? new Date(String(lastEvent.created_at)).getTime() : 0;
-  const canCoalesce = Boolean(
-    lastEvent?.id
-      && Number.isFinite(lastCreatedMs)
-      && lastCreatedMs > 0
-      && (nowMs - lastCreatedMs) <= (CONSUME_EVENT_COALESCE_WINDOW_SECONDS * 1000),
-  );
-
-  if (canCoalesce) {
-    const previousDelta = safeSignedInt(lastEvent.seconds_delta, 0);
-    const previousMeta = lastEvent?.metadata && typeof lastEvent.metadata === "object" && !Array.isArray(lastEvent.metadata)
-      ? lastEvent.metadata
-      : {};
-    const aggregatedCalls = safeInt((previousMeta as Record<string, unknown>)?.aggregated_calls, 1) + 1;
-    const consumedTotal = safeInt((previousMeta as Record<string, unknown>)?.consumed_seconds_total, Math.abs(previousDelta)) + consumedNow;
-
-    const { error: updateErr } = await supabase
-      .from("wallet_events")
-      .update({
-        seconds_delta: previousDelta - consumedNow,
-        balance_after: balanceAfter,
-        metadata: {
-          ...(previousMeta as Record<string, unknown>),
-          reason,
-          elapsed_seconds: elapsedSec,
-          aggregated: true,
-          aggregated_calls: aggregatedCalls,
-          consumed_seconds_total: consumedTotal,
-          last_reason: reason,
-          last_elapsed_seconds: elapsedSec,
-        },
-      })
-      .eq("id", lastEvent.id);
-    if (isMissingWalletTableError(updateErr)) return;
-    if (updateErr) throw updateErr;
-    return;
-  }
-
-  await appendWalletEvent(supabase, {
-    user_id: userId,
-    event_type: "consume",
-    seconds_delta: -consumedNow,
-    balance_after: balanceAfter,
-    metadata: {
-      reason,
-      elapsed_seconds: elapsedSec,
-      aggregated: false,
-      aggregated_calls: 1,
-      consumed_seconds_total: consumedNow,
-    },
-  });
-}
-
-async function syncWallet(
-  supabase: any,
-  userId: string,
-  reason: string,
-) {
-  const now = new Date();
-  const nowIso = now.toISOString();
-  const wallet = await ensureWallet(supabase, userId, nowIso);
-  let activeCount = await countActiveHighlights(supabase, userId);
-  let available = safeInt(wallet.available_seconds);
-  let totalConsumed = safeInt(wallet.total_consumed_seconds);
-  const lastConsumedAt = wallet.last_consumed_at ? new Date(wallet.last_consumed_at) : now;
-  const elapsedSec = Math.max(
-    0,
-    Math.floor((now.getTime() - (Number.isNaN(lastConsumedAt.getTime()) ? now.getTime() : lastConsumedAt.getTime())) / 1000),
-  );
-
-  let consumedNow = 0;
-  let depleted = false;
-
-  if (activeCount > 0) {
-    if (available <= 0) {
-      await deactivateAllHighlights(supabase, userId);
-      activeCount = 0;
-      depleted = true;
-    } else if (elapsedSec > 0) {
-      const requestedConsume = elapsedSec * activeCount;
-      if (requestedConsume >= available) {
-        consumedNow = available;
-        available = 0;
-        totalConsumed += consumedNow;
-        await deactivateAllHighlights(supabase, userId);
-        activeCount = 0;
-        depleted = true;
-      } else {
-        consumedNow = requestedConsume;
-        available -= consumedNow;
-        totalConsumed += consumedNow;
-      }
-    }
-  }
-
-  const { data: updated, error: updateErr } = await supabase
-    .from("wallets")
-    .update({
-      available_seconds: available,
-      total_consumed_seconds: totalConsumed,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .eq("user_id", userId)
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (updateErr) throw updateErr;
-
-  await appendConsumeWalletEvent(supabase, {
-    userId,
-    consumedNow,
-    balanceAfter: available,
-    reason,
-    elapsedSec,
-  });
-
-  if (depleted) {
-    await appendWalletEvent(supabase, {
-      user_id: userId,
-      event_type: "expire",
-      seconds_delta: 0,
-      balance_after: 0,
-      metadata: {
-        reason,
-        message: "Saldo esgotado durante destaque ativo.",
-      },
-    });
-  }
-
-  const safe = updated as WalletRow;
-  return {
-    userId: safe.user_id,
-    availableSeconds: safeInt(safe.available_seconds),
-    totalPurchasedSeconds: safeInt(safe.total_purchased_seconds),
-    totalConsumedSeconds: safeInt(safe.total_consumed_seconds),
-    activeListingCount: safeInt(safe.active_listing_count),
-    lastConsumedAt: safe.last_consumed_at,
-    human: secondsToHuman(safeInt(safe.available_seconds)),
-    rate: {
-      day1PerSecond: perSecondPrice(0),
-      day30PerSecond: perSecondPrice(29),
-    },
-    depleted,
-    consumedNow,
-  };
+function normalizeHighlightEndAt(raw: string | null | undefined) {
+  const trimmed = String(raw || "").trim();
+  if (!trimmed) return null;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString();
 }
 
 Deno.serve(async (req) => {
@@ -334,7 +64,7 @@ Deno.serve(async (req) => {
     const userId = authData.user.id;
 
     if (action === "status") {
-      const wallet = await syncWallet(supabase, userId, "status");
+      const wallet = await syncHighlightWallet(supabase, userId, "status");
       return new Response(JSON.stringify({ ok: true, wallet }), {
         headers: { "content-type": "application/json", ...corsHeaders },
       });
@@ -346,21 +76,37 @@ Deno.serve(async (req) => {
       }
 
       const nowIso = new Date().toISOString();
-      const wallet = await syncWallet(supabase, userId, "withdraw-request-pre");
-      const availableSeconds = safeInt(wallet.availableSeconds);
+      const wallet = await syncHighlightWallet(supabase, userId, "withdraw-request-pre");
+      const availableCents = safeInt(wallet.availableCents);
 
-      if (availableSeconds <= 0) {
+      if (availableCents <= 0) {
         return errorResponse("Você não possui saldo disponível para saque.", 409);
       }
+      if (availableCents < MIN_WITHDRAW_CENTS) {
+        return errorResponse("O valor mínimo para solicitar saque é R$ 5,00.", 409);
+      }
 
-      const requestedRefundBRL = Number(((availableSeconds / DAY_SECONDS) * BASE_DAY_PRICE).toFixed(2));
+      await supabase
+        .from("listings")
+        .update({
+          highlight_status: "none",
+          highlight_expires_at: null,
+        })
+        .eq("user_id", userId)
+        .eq("highlight_status", "active");
 
-      await deactivateAllHighlights(supabase, userId);
+      const requestedRefundBRL = centsToMoney(availableCents);
+
+      const normalizedPurchased = safeSignedInt(wallet.totalPurchasedCents, availableCents);
+      const normalizedConsumed = safeSignedInt(wallet.totalConsumedCents, 0);
+      const nextTotalConsumedCents = normalizedConsumed + availableCents;
 
       const { error: resetErr } = await supabase
         .from("wallets")
         .update({
-          available_seconds: 0,
+          available_cents: 0,
+          total_purchased_cents: normalizedPurchased,
+          total_consumed_cents: nextTotalConsumedCents,
           active_listing_count: 0,
           last_consumed_at: nowIso,
         })
@@ -370,18 +116,18 @@ Deno.serve(async (req) => {
       await appendWalletEvent(supabase, {
         user_id: userId,
         event_type: "adjust",
-        seconds_delta: -availableSeconds,
-        balance_after: 0,
+        amount_delta_cents: -availableCents,
+        balance_after_cents: 0,
         metadata: {
           reason: "withdraw_request",
           status: "pending",
           policy_accepted: true,
           requested_refund_brl: requestedRefundBRL,
-          requested_seconds: availableSeconds,
+          requested_cents: availableCents,
         },
       });
 
-      const refreshed = await syncWallet(supabase, userId, "withdraw-request-post");
+      const refreshed = await syncHighlightWallet(supabase, userId, "withdraw-request-post");
       return new Response(JSON.stringify({
         ok: true,
         withdrawRequested: true,
@@ -396,7 +142,7 @@ Deno.serve(async (req) => {
       return errorResponse("listingId é obrigatório para esta ação", 400);
     }
 
-    let wallet = await syncWallet(supabase, userId, action);
+    let wallet = await syncHighlightWallet(supabase, userId, action);
 
     const { data: listing, error: listingErr } = await supabase
       .from("listings")
@@ -411,23 +157,28 @@ Deno.serve(async (req) => {
         return errorResponse("Apenas anúncios ativos podem ser destacados.", 409);
       }
       if (listing.highlight_status === "active") {
-        const refreshed = await syncWallet(supabase, userId, "activate-noop");
+        const refreshed = await syncHighlightWallet(supabase, userId, "activate-noop");
         return new Response(JSON.stringify({ ok: true, activated: false, wallet: refreshed }), {
           headers: { "content-type": "application/json", ...corsHeaders },
         });
       }
-      if (safeInt(wallet.availableSeconds) <= 0) {
-        return errorResponse("Saldo de destaque insuficiente. Compre mais saldo para ativar.", 409);
-      }
-
       const nowIso = new Date().toISOString();
+      const activateMode = payload.activateMode === "period" ? "period" : "immediate";
+      const normalizedEndAt = activateMode === "period" ? normalizeHighlightEndAt(payload.endAt) : null;
+      if (activateMode === "period") {
+        if (!normalizedEndAt) {
+          return errorResponse("Selecione uma data final válida para o destaque.", 400);
+        }
+        if (normalizedEndAt <= nowIso) {
+          return errorResponse("A data final do destaque precisa ser futura.", 400);
+        }
+      }
       const { error: activateErr } = await supabase
         .from("listings")
         .update({
           highlight_status: "active",
           highlight_started_at: nowIso,
-          highlight_expires_at: null,
-          highlight_days: 0,
+          highlight_expires_at: normalizedEndAt,
         })
         .eq("id", payload.listingId)
         .eq("user_id", userId);
@@ -436,11 +187,11 @@ Deno.serve(async (req) => {
       await appendWalletEvent(supabase, {
         user_id: userId,
         event_type: "activate",
-        seconds_delta: 0,
-        balance_after: safeInt(wallet.availableSeconds),
+        amount_delta_cents: 0,
+        balance_after_cents: safeInt(wallet.availableCents),
         listing_id: payload.listingId,
       });
-      wallet = await syncWallet(supabase, userId, "activate-post");
+      wallet = await syncHighlightWallet(supabase, userId, "activate-post");
       return new Response(JSON.stringify({ ok: true, activated: true, wallet }), {
         headers: { "content-type": "application/json", ...corsHeaders },
       });
@@ -453,7 +204,6 @@ Deno.serve(async (req) => {
           .update({
             highlight_status: "none",
             highlight_expires_at: null,
-            highlight_days: 0,
           })
           .eq("id", payload.listingId)
           .eq("user_id", userId);
@@ -462,12 +212,12 @@ Deno.serve(async (req) => {
         await appendWalletEvent(supabase, {
           user_id: userId,
           event_type: "deactivate",
-          seconds_delta: 0,
-          balance_after: safeInt(wallet.availableSeconds),
+          amount_delta_cents: 0,
+          balance_after_cents: safeInt(wallet.availableCents),
           listing_id: payload.listingId,
         });
       }
-      wallet = await syncWallet(supabase, userId, "deactivate-post");
+      wallet = await syncHighlightWallet(supabase, userId, "deactivate-post");
       return new Response(JSON.stringify({ ok: true, deactivated: true, wallet }), {
         headers: { "content-type": "application/json", ...corsHeaders },
       });

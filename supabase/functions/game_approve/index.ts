@@ -17,6 +17,15 @@ type Payload = {
   };
 };
 
+type ListingRequestRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  images: string[] | null;
+  user_email?: string | null;
+};
+
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
 const corsHeaders = {
@@ -66,6 +75,11 @@ function isMissingAdminBeneficiaryIdColumnError(err: { code?: string; message?: 
 function isMissingAdminBeneficiaryEmailColumnError(err: { code?: string; message?: string } | null | undefined) {
   if (!err) return false;
   return String(err.message || "").includes("admin_beneficiary_email");
+}
+
+function isMissingLocaleColumnError(err: { code?: string; message?: string } | null | undefined) {
+  if (!err) return false;
+  return String(err.message || "").includes("locale");
 }
 
 function ensureHttpsPrefix(raw: string) {
@@ -118,6 +132,40 @@ function normalizeOptionalUrl(raw: string | null | undefined) {
 
 function isSameUser(a: string | null | undefined, b: string | null | undefined) {
   return Boolean(a && b && String(a) === String(b));
+}
+
+async function insertListingForRequest(
+  supabase: any,
+  request: ListingRequestRow,
+  serverId: string,
+) {
+  let insertPayload: Record<string, unknown> = {
+    server_id: serverId,
+    user_id: request.user_id,
+    title: request.title,
+    description: request.description || null,
+    images: Array.isArray(request.images) ? request.images : [],
+    status: "active",
+  };
+
+  let insertedListingId: string | null = null;
+  let insertError: { code?: string; message?: string } | null = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const insertResult = await supabase
+      .from("listings")
+      .insert(insertPayload)
+      .select("id")
+      .single();
+    insertError = insertResult.error;
+    if (!insertError) {
+      insertedListingId = (insertResult.data?.id as string | undefined) || null;
+      break;
+    }
+
+    break;
+  }
+
+  return { insertedListingId, insertError };
 }
 
 Deno.serve(async (req) => {
@@ -218,9 +266,6 @@ Deno.serve(async (req) => {
 
     if (!finalWebsite || !finalDomain) {
       return errorResponse("Website inválido para aprovação", 400);
-    }
-    if (body.approved && !finalDiscordInvite) {
-      return errorResponse("Convite do Discord inválido. Use https://discord.gg/...", 400);
     }
     if (body.approved && isSameUser(finalOwnerId, authData.user.id)) {
       return errorResponse("Regra antifraude: o owner do servidor não pode ser o mesmo usuário que aprovou.", 409);
@@ -374,8 +419,88 @@ Deno.serve(async (req) => {
       if (clearDupPendingErr) throw clearDupPendingErr;
     }
 
+    let linkedListingId: string | null = null;
+    if (body.approved && approvedServerId) {
+      const { data: pendingListingRequests, error: pendingListingErr } = await supabase
+        .from("listing_requests")
+        .select("id,user_id,user_email,title,description,images")
+        .eq("website_domain", finalDomain)
+        .eq("status", "pending");
+      if (pendingListingErr) throw pendingListingErr;
+
+      for (const listingRequest of pendingListingRequests || []) {
+        const { insertedListingId, insertError } = await insertListingForRequest(
+          supabase,
+          listingRequest as ListingRequestRow,
+          approvedServerId,
+        );
+
+        if (insertError) {
+          const isDuplicateListing = insertError.code === "23505"
+            && String(insertError.message || "").includes("listings_user_server_unique");
+          if (isDuplicateListing) {
+            const { error: rejectListingErr } = await supabase
+              .from("listing_requests")
+              .update({
+                status: "rejected",
+                server_id: approvedServerId,
+                review_note: "Este usuário já possui um anúncio para este game.",
+                reviewed_by_admin_id: authData.user.id,
+                reviewed_at: new Date().toISOString(),
+              })
+              .eq("id", listingRequest.id);
+            if (rejectListingErr) throw rejectListingErr;
+            continue;
+          }
+          throw insertError;
+        }
+
+        const { error: approveListingErr } = await supabase
+          .from("listing_requests")
+          .update({
+            status: "approved",
+            server_id: approvedServerId,
+            listing_id: insertedListingId,
+            review_note: "Anúncio publicado automaticamente após aprovação do game.",
+            reviewed_by_admin_id: authData.user.id,
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", listingRequest.id);
+        if (approveListingErr) throw approveListingErr;
+
+        if (String(listingRequest.user_id || "") === String(reqData.user_id || "") && !linkedListingId) {
+          linkedListingId = insertedListingId;
+        }
+      }
+    } else if (!body.approved) {
+      const rejectListingNote = "Solicitação de game reprovada. O anúncio vinculado também foi recusado.";
+      const { error: rejectLinkedListingsErr } = await supabase
+        .from("listing_requests")
+        .update({
+          status: "rejected",
+          review_note: rejectListingNote,
+          reviewed_by_admin_id: authData.user.id,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq("website_domain", finalDomain)
+        .eq("user_id", reqData.user_id)
+        .eq("status", "pending");
+      if (rejectLinkedListingsErr) throw rejectLinkedListingsErr;
+    }
+
     if (reqData.user_email && EMAIL_ENDPOINT) {
       try {
+        let userLocale = "pt-BR";
+        const localeLookup = await supabase
+          .from("users")
+          .select("locale")
+          .eq("id", reqData.user_id)
+          .maybeSingle();
+        if (!localeLookup.error) {
+          userLocale = String(localeLookup.data?.locale || userLocale);
+        } else if (!isMissingLocaleColumnError(localeLookup.error)) {
+          throw localeLookup.error;
+        }
         await fetch(EMAIL_ENDPOINT, {
           method: "POST",
           headers: {
@@ -386,8 +511,10 @@ Deno.serve(async (req) => {
             to: reqData.user_email,
             gameName: finalName,
             gameId: approvedServerId,
+            listingId: linkedListingId,
             approved: body.approved,
             note: body.note || "",
+            locale: userLocale,
           }),
         });
       } catch (mailErr) {

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import { appendWalletEvent, safeInt, syncHighlightWallet } from "../_shared/highlight_wallet.ts";
 
 type Payload = {
   listingId?: string;
@@ -174,156 +175,10 @@ async function buildDeleteUrl(key: string) {
 async function deleteR2Object(key: string) {
   const url = await buildDeleteUrl(key);
   const response = await fetch(url, { method: "DELETE" });
-  // 204 is expected; 404 also means "already gone" for our flow.
   if (!response.ok && response.status !== 404) {
     const body = await response.text().catch(() => "");
     throw new Error(`Falha ao excluir objeto R2 (${response.status}): ${body}`);
   }
-}
-
-type WalletRow = {
-  user_id: string;
-  available_seconds: number;
-  total_purchased_seconds: number;
-  total_consumed_seconds: number;
-  active_listing_count: number;
-  last_consumed_at: string;
-};
-
-function safeInt(value: unknown, fallback = 0) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return fallback;
-  return Math.max(0, Math.floor(parsed));
-}
-
-function isMissingWalletTableError(err: { code?: string; message?: string } | null | undefined) {
-  if (!err) return false;
-  if (err.code === "42P01" || err.code === "42703") return true;
-  const msg = String(err.message || "").toLowerCase();
-  return msg.includes("wallets") || msg.includes("wallet_events");
-}
-
-async function countActiveHighlights(supabase: any, userId: string) {
-  const { count, error } = await supabase
-    .from("listings")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .eq("highlight_status", "active");
-  if (error) throw error;
-  return safeInt(count, 0);
-}
-
-async function ensureWallet(supabase: any, userId: string, nowIso: string) {
-  let { data, error } = await supabase
-    .from("wallets")
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (isMissingWalletTableError(error)) return null;
-  if (error) throw error;
-  if (data) return data as WalletRow;
-
-  const activeCount = await countActiveHighlights(supabase, userId);
-  const { data: inserted, error: insertErr } = await supabase
-    .from("wallets")
-    .insert({
-      user_id: userId,
-      available_seconds: 0,
-      total_purchased_seconds: 0,
-      total_consumed_seconds: 0,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (insertErr) throw insertErr;
-  return inserted as WalletRow;
-}
-
-async function deactivateAllHighlights(supabase: any, userId: string) {
-  const { error } = await supabase
-    .from("listings")
-    .update({
-      highlight_status: "none",
-      highlight_expires_at: null,
-      highlight_days: 0,
-    })
-    .eq("user_id", userId)
-    .eq("highlight_status", "active");
-  if (error) throw error;
-}
-
-async function appendWalletEvent(supabase: any, payload: Record<string, unknown>) {
-  const { error } = await supabase.from("wallet_events").insert(payload);
-  if (isMissingWalletTableError(error)) return;
-  if (error) throw error;
-}
-
-async function syncWallet(
-  supabase: any,
-  userId: string,
-  reason: string,
-) {
-  const now = new Date();
-  const nowIso = now.toISOString();
-  const wallet = await ensureWallet(supabase, userId, nowIso);
-  if (!wallet) return null;
-
-  let activeCount = await countActiveHighlights(supabase, userId);
-  let available = safeInt(wallet.available_seconds);
-  let totalConsumed = safeInt(wallet.total_consumed_seconds);
-  const lastConsumedAt = wallet.last_consumed_at ? new Date(wallet.last_consumed_at) : now;
-  const elapsedSec = Math.max(
-    0,
-    Math.floor((now.getTime() - (Number.isNaN(lastConsumedAt.getTime()) ? now.getTime() : lastConsumedAt.getTime())) / 1000),
-  );
-  let consumedNow = 0;
-
-  if (activeCount > 0) {
-    if (available <= 0) {
-      await deactivateAllHighlights(supabase, userId);
-      activeCount = 0;
-    } else if (elapsedSec > 0) {
-      const requestedConsume = elapsedSec * activeCount;
-      if (requestedConsume >= available) {
-        consumedNow = available;
-        available = 0;
-        totalConsumed += consumedNow;
-        await deactivateAllHighlights(supabase, userId);
-        activeCount = 0;
-      } else {
-        consumedNow = requestedConsume;
-        available -= consumedNow;
-        totalConsumed += consumedNow;
-      }
-    }
-  }
-
-  const { data: updated, error: updateErr } = await supabase
-    .from("wallets")
-    .update({
-      available_seconds: available,
-      total_consumed_seconds: totalConsumed,
-      active_listing_count: activeCount,
-      last_consumed_at: nowIso,
-    })
-    .eq("user_id", userId)
-    .select("user_id,available_seconds,total_purchased_seconds,total_consumed_seconds,active_listing_count,last_consumed_at")
-    .single();
-  if (updateErr) throw updateErr;
-
-  if (consumedNow > 0) {
-    await appendWalletEvent(supabase, {
-      user_id: userId,
-      event_type: "consume",
-      seconds_delta: -consumedNow,
-      balance_after: available,
-      metadata: { reason, elapsed_seconds: elapsedSec },
-    });
-  }
-
-  return updated as WalletRow;
 }
 
 Deno.serve(async (req) => {
@@ -388,7 +243,7 @@ Deno.serve(async (req) => {
       ));
     }
 
-    const walletBeforeDelete = await syncWallet(supabase, authData.user.id, "listing-delete-before");
+    const walletBeforeDelete = await syncHighlightWallet(supabase, authData.user.id, "listing-delete-before");
 
     const { error: delErr } = await supabase
       .from("listings")
@@ -401,13 +256,14 @@ Deno.serve(async (req) => {
       await appendWalletEvent(supabase, {
         user_id: authData.user.id,
         event_type: "deactivate",
-        seconds_delta: 0,
-        balance_after: safeInt(walletBeforeDelete?.available_seconds, 0),
+        amount_delta_cents: 0,
+        balance_after_cents: safeInt(walletBeforeDelete?.availableCents, 0),
         listing_id: listing.id,
         metadata: { reason: "listing_delete" },
       });
     }
-    const walletAfterDelete = await syncWallet(supabase, authData.user.id, "listing-delete-after");
+
+    const walletAfterDelete = await syncHighlightWallet(supabase, authData.user.id, "listing-delete-after");
 
     let deletedKeys = 0;
     let failedKeys = 0;
@@ -420,6 +276,7 @@ Deno.serve(async (req) => {
         console.error(`Falha ao excluir objeto R2 ${key}`, deleteErr);
       }
     }
+
     let deletedReportEvidenceKeys = 0;
     let failedReportEvidenceKeys = 0;
     for (const key of reportEvidenceKeys) {
@@ -442,10 +299,13 @@ Deno.serve(async (req) => {
         refundedAmount: 0,
         wallet: walletAfterDelete
           ? {
-              availableSeconds: safeInt(walletAfterDelete.available_seconds, 0),
-              totalPurchasedSeconds: safeInt(walletAfterDelete.total_purchased_seconds, 0),
-              totalConsumedSeconds: safeInt(walletAfterDelete.total_consumed_seconds, 0),
-              activeListingCount: safeInt(walletAfterDelete.active_listing_count, 0),
+              availableCents: safeInt(walletAfterDelete.availableCents, 0),
+              totalPurchasedCents: safeInt(walletAfterDelete.totalPurchasedCents, 0),
+              totalConsumedCents: safeInt(walletAfterDelete.totalConsumedCents, 0),
+              availableAmountBRL: Number(walletAfterDelete.availableAmountBRL || 0),
+              totalPurchasedAmountBRL: Number(walletAfterDelete.totalPurchasedAmountBRL || 0),
+              totalConsumedAmountBRL: Number(walletAfterDelete.totalConsumedAmountBRL || 0),
+              activeListingCount: safeInt(walletAfterDelete.activeListingCount, 0),
             }
           : null,
       }),

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -21,44 +21,27 @@
     <main class="section">
       <div class="form-card">
         <div>
-          <h2>Cadastre um novo game</h2>
-          <p class="helper">Envie uma solicitação por vez.</p>
+          <h2 id="game-submit-title">Cadastre um novo game</h2>
+          <p id="game-submit-helper" class="helper">Envie uma solicitação por vez.</p>
         </div>
         <div id="pending-info" class="pill-status" style="display:none;"></div>
         <form id="game-request-form" class="form-vertical">
           <div class="field">
-            <label for="game-name">Nome do game ou servidor *</label>
+            <label id="game-name-label" for="game-name">Nome do game ou servidor *</label>
             <input id="game-name" class="input" placeholder="Ex: Miracle 7.4" required />
           </div>
           <div class="field">
-            <label for="game-website">Site oficial *</label>
+            <label id="game-website-label" for="game-website">Site oficial *</label>
             <input id="game-website" class="input" placeholder="https://miracle74.com" required />
             <span id="website-helper" class="helper"></span>
           </div>
           <div class="field">
-            <label for="game-discord">Convite para discord oficial</label>
+            <label id="game-discord-label" for="game-discord">Convite para discord oficial</label>
             <input id="game-discord" class="input" placeholder="https://discord.gg/seu-servidor" />
             <span id="discord-helper" class="helper"></span>
           </div>
-          <div class="field" style="grid-column: 1 / -1;">
-            <label>Você é administrador do game? *</label>
-            <div class="inline-actions">
-              <label style="display:inline-flex;align-items:center;gap:8px;">
-                <input type="radio" name="is-official-admin" value="yes" required />
-                Sim
-              </label>
-              <label style="display:inline-flex;align-items:center;gap:8px;">
-                <input type="radio" name="is-official-admin" value="no" required />
-                Não
-              </label>
-            </div>
-            <div id="official-admin-note" class="notice" style="display:none;">
-              Antes de finalizar o cadastro como administrador, é importante verificar seu número telefônico para facilitar o próximo contato com nossa equipe.
-              <a class="link-ghost" href="profile.html">Ir para perfil</a>
-            </div>
-          </div>
           <div class="field">
-            <label for="game-logo">Logo do servidor (png/jpg/webp)</label>
+            <label id="game-logo-label" for="game-logo">Logo do servidor (png/jpg/webp)</label>
             <input id="game-logo" type="file" accept="image/png,image/jpeg,image/webp" />
           </div>
           <div class="field" style="grid-column: 1 / -1;">
@@ -73,6 +56,9 @@
   </div>
 
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script src="js/site-footer.js"></script>
   <script type="module">
@@ -81,6 +67,8 @@
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
@@ -98,16 +86,20 @@
     const submitBtn = document.getElementById("submit-btn");
     const websiteInput = document.getElementById("game-website");
     const discordInput = document.getElementById("game-discord");
+    const titleNode = document.getElementById("game-submit-title");
+    const helperNode = document.getElementById("game-submit-helper");
+    const gameNameLabel = document.getElementById("game-name-label");
+    const gameWebsiteLabel = document.getElementById("game-website-label");
+    const gameDiscordLabel = document.getElementById("game-discord-label");
+    const gameLogoLabel = document.getElementById("game-logo-label");
     const websiteHelper = document.getElementById("website-helper");
     const discordHelper = document.getElementById("discord-helper");
     const logoInput = document.getElementById("game-logo");
-    const officialAdminNote = document.getElementById("official-admin-note");
-    const officialAdminRadios = Array.from(document.querySelectorAll('input[name="is-official-admin"]'));
     const MAX_LOGO_BYTES = 3 * 1024 * 1024;
     const MAX_WIDTH = 512;
     const WEBSITE_PREFIX_REGEX = /^https:\/\/.+/i;
     const DISCORD_INVITE_PREFIX = "https://discord.gg/";
-    const SUBMIT_DEFAULT_TEXT = submitBtn?.textContent || "Enviar solicitação";
+    const SUBMIT_DEFAULT_TEXT = submitBtn?.textContent || t("game_submit.submit", "Enviar solicitação");
 
     let supabase;
     let currentUser = null;
@@ -116,6 +108,21 @@
     let pageRevealed = false;
     let avatarLoaded = false;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
+
+    function applyStaticTranslations() {
+      document.title = t("game_submit.title_default", "Gimerr - Submit game");
+      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      if (titleNode) titleNode.textContent = t("game_submit.title", "Cadastre um novo game");
+      if (helperNode) helperNode.textContent = t("game_submit.helper", "Envie uma solicitação por vez.");
+      if (gameNameLabel) gameNameLabel.textContent = t("game_submit.name_label", "Nome do game ou servidor *");
+      if (document.getElementById("game-name")) document.getElementById("game-name").placeholder = t("game_submit.name_placeholder", "Ex: Miracle 7.4");
+      if (gameWebsiteLabel) gameWebsiteLabel.textContent = t("game_submit.website_label", "Site oficial *");
+      if (websiteInput) websiteInput.placeholder = t("game_submit.website_placeholder", "https://miracle74.com");
+      if (gameDiscordLabel) gameDiscordLabel.textContent = t("game_submit.discord_label", "Convite para discord oficial");
+      if (discordInput) discordInput.placeholder = t("game_submit.discord_placeholder", "https://discord.gg/seu-servidor");
+      if (gameLogoLabel) gameLogoLabel.textContent = t("game_submit.logo_label", "Logo do servidor (png/jpg/webp)");
+      if (submitBtn) submitBtn.textContent = t("game_submit.submit", "Enviar solicitação");
+    }
 
     function revealPage() {
       if (pageRevealed) return;
@@ -127,10 +134,10 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        feedback.textContent = "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.";
+        feedback.textContent = t("game_submit.configure_env", "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.");
         if (authBtn) authBtn.disabled = true;
         submitBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error(t("game_submit.supabase_not_configured", "Supabase não configurado"));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -169,7 +176,7 @@
         return;
       }
       authBtn.style.display = "inline-flex";
-      authBtn.innerHTML = '<img src="img/google.svg" alt="" class="btn-google-logo" /> Entrar com Google';
+      authBtn.innerHTML = `<img src="img/google.svg" alt="" class="btn-google-logo" /> ${t("game_submit.google_login", "Entrar com Google")}`;
       if (userMenu) userMenu.style.display = "none";
       if (profileLink) profileLink.href = "profile.html";
       if (createListingBtn) createListingBtn.style.display = "none";
@@ -232,7 +239,7 @@
         await redirectToGoogleOAuth();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao autenticar.";
+        feedback.textContent = err?.message || t("game_submit.auth_error", "Erro ao autenticar.");
         authBtn.disabled = false;
       }
     }
@@ -324,7 +331,7 @@
         setWebsiteHelper("");
         return;
       }
-      setWebsiteHelper(WEBSITE_PREFIX_REGEX.test(value) ? "" : "Adicione https:// no início do site.");
+      setWebsiteHelper(WEBSITE_PREFIX_REGEX.test(value) ? "" : t("game_submit.website_helper_https", "Adicione https:// no início do site."));
     }
 
     function handleWebsiteBlur() {
@@ -344,7 +351,7 @@
         return;
       }
       const normalized = normalizeDiscordInvite(value);
-      setDiscordHelper(normalized ? "" : "Use um convite que comece com https://discord.gg/");
+      setDiscordHelper(normalized ? "" : t("game_submit.discord_helper_invalid", "Use um convite que comece com https://discord.gg/"));
     }
 
     function handleDiscordBlur() {
@@ -359,35 +366,11 @@
         discordInput.value = normalized;
         setDiscordHelper("");
       } else {
-        setDiscordHelper("Use um convite que comece com https://discord.gg/");
+        setDiscordHelper(t("game_submit.discord_helper_invalid", "Use um convite que comece com https://discord.gg/"));
       }
     }
 
-    function updateOfficialAdminNote() {
-      if (!officialAdminNote) return;
-      const selected = document.querySelector('input[name="is-official-admin"]:checked');
-      const isOwner = selected?.value === "yes";
-      const shouldShow = isOwner && currentUserProfile && currentUserProfile.phone_verified === false;
-      if (discordInput) {
-        discordInput.required = isOwner;
-      }
-      if (logoInput) {
-        logoInput.required = isOwner;
-      }
-      const discordLabel = document.querySelector('label[for="game-discord"]');
-      if (discordLabel) {
-        discordLabel.textContent = isOwner
-          ? "Convite para discord oficial *"
-          : "Convite para discord oficial";
-      }
-      const logoLabel = document.querySelector('label[for="game-logo"]');
-      if (logoLabel) {
-        logoLabel.textContent = isOwner
-          ? "Logo do servidor (png/jpg/webp) *"
-          : "Logo do servidor (png/jpg/webp)";
-      }
-      officialAdminNote.style.display = shouldShow ? "block" : "none";
-    }
+    function updateOfficialAdminNote() {}
 
     async function fetchUserProfile() {
       if (!currentUser) {
@@ -425,7 +408,7 @@
         renderPending();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao checar solicitações.";
+        feedback.textContent = err?.message || t("game_submit.pending_error", "Erro ao checar solicitações.");
       }
     }
 
@@ -438,7 +421,7 @@
         return;
       }
       pendingInfo.style.display = "inline-flex";
-      pendingInfo.textContent = `Você já tem uma solicitação pendente: ${hasPending.name}`;
+      pendingInfo.textContent = t("game_submit.pending_info", "Você já tem uma solicitação pendente: {name}").replace("{name}", hasPending.name);
       submitBtn.disabled = true;
       submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
     }
@@ -455,7 +438,7 @@
       event.preventDefault();
       feedback.textContent = "";
       submitBtn.disabled = true;
-      submitBtn.textContent = "Enviando...";
+      submitBtn.textContent = t("game_submit.submitting", "Enviando...");
 
       try {
         ensureClient();
@@ -465,7 +448,7 @@
           return;
         }
         if (hasPending) {
-          feedback.textContent = "Você já possui uma solicitação pendente.";
+          feedback.textContent = t("game_submit.already_pending", "Você já possui uma solicitação pendente.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
@@ -475,41 +458,32 @@
         const websiteRaw = document.getElementById("game-website").value.trim();
         const discordRaw = discordInput?.value?.trim() || "";
         const logoFile = logoInput.files[0];
-        const isOwner = document.querySelector('input[name="is-official-admin"]:checked')?.value === "yes";
+        const isOwner = false;
 
         const website = normalizeWebsite(websiteRaw);
         const domainKey = extractDomainKey(website || websiteRaw);
         if (website && websiteInput && websiteInput.value !== website) {
           websiteInput.value = website;
         }
-        if (!name || !website || (isOwner && !logoFile)) {
-          setWebsiteHelper(!website ? "Use um endereço que comece com https://." : "");
-          feedback.textContent = isOwner
-            ? "Preencha o nome, o site com https:// e envie a logo do servidor."
-            : "Preencha o nome e o site com https://.";
+        if (!name || !website) {
+          setWebsiteHelper(!website ? t("game_submit.website_helper_invalid", "Use um endereço que comece com https://.") : "");
+          feedback.textContent = t("game_submit.fill_name_site", "Preencha o nome e o site com https://.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
         if (!domainKey) {
-          feedback.textContent = "Não foi possível ler o domínio do site. Verifique o formato.";
+          feedback.textContent = t("game_submit.domain_error", "Não foi possível ler o domínio do site. Verifique o formato.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
 
         const discordInvite = discordRaw ? normalizeDiscordInvite(discordRaw) : null;
-        if (isOwner && !discordInvite) {
-          setDiscordHelper("Use um convite que comece com https://discord.gg/");
-          feedback.textContent = "Convite do Discord inválido.";
-          submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          return;
-        }
         if (discordRaw && !discordInvite) {
-          setDiscordHelper("Use um convite que comece com https://discord.gg/");
-          feedback.textContent = "Convite do Discord inválido.";
+          setDiscordHelper(t("game_submit.discord_helper_invalid", "Use um convite que comece com https://discord.gg/"));
+          feedback.textContent = t("game_submit.discord_invalid", "Convite do Discord inválido.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
@@ -517,7 +491,7 @@
         setDiscordHelper("");
 
         if (logoFile && logoFile.size > MAX_LOGO_BYTES) {
-          feedback.textContent = "Logo deve ter no máximo 3MB.";
+          feedback.textContent = t("game_submit.logo_max_size", "Logo deve ter no máximo 3MB.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
@@ -525,13 +499,13 @@
 
         const websiteRecord = await findWebsiteRecord(website, domainKey);
         if (websiteRecord.inServers) {
-          feedback.textContent = "Este jogo já está cadastrado ou em análise.";
+          feedback.textContent = t("game_submit.game_exists", "Este jogo já está cadastrado ou em análise.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
         if (websiteRecord.request && ["pending", "under_review", "approved"].includes(websiteRecord.request.status)) {
-          feedback.textContent = "Este jogo já está cadastrado ou em análise.";
+          feedback.textContent = t("game_submit.game_exists", "Este jogo já está cadastrado ou em análise.");
           submitBtn.disabled = false;
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
@@ -574,7 +548,7 @@
         }
         if (error) throw error;
 
-        feedback.textContent = "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.";
+        feedback.textContent = t("game_submit.success", "Sua solicitação será analisada, obrigado por ajudar a comunidade Gimerr.");
         hasPending = { name, website, status: "pending" };
         renderPending();
         form.reset();
@@ -583,7 +557,7 @@
         updateOfficialAdminNote();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || "Erro ao enviar solicitação.";
+        feedback.textContent = err?.message || t("game_submit.submit_error", "Erro ao enviar solicitação.");
         submitBtn.disabled = false;
         submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
       }
@@ -616,7 +590,7 @@
       return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (!blob) {
-            reject(new Error("Falha ao comprimir a imagem."));
+            reject(new Error(t("game_submit.compress_error", "Falha ao comprimir a imagem.")));
             return;
           }
           resolve(blob);
@@ -682,9 +656,6 @@
     websiteInput?.addEventListener("blur", handleWebsiteBlur);
     discordInput?.addEventListener("input", handleDiscordInput);
     discordInput?.addEventListener("blur", handleDiscordBlur);
-    officialAdminRadios.forEach((radio) => {
-      radio.addEventListener("change", updateOfficialAdminNote);
-    });
 
     (async function init() {
       try {
@@ -702,7 +673,7 @@
         revealPage();
       } catch (err) {
         console.error(err);
-        feedback.textContent = "Erro ao iniciar página.";
+        feedback.textContent = t("game_submit.init_error", "Erro ao iniciar página.");
         revealPage();
       }
     })();
