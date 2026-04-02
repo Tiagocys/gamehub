@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Anúncio</title>
+  <title>Gimerr - Listing</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
     .seller-profile-link {
@@ -347,7 +347,7 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
@@ -355,7 +355,7 @@
     <main class="section listing-page">
       <div class="listing-hero-card">
         <div class="listing-hero-copy">
-          <h1 id="listing-title">Carregando...</h1>
+          <h1 id="listing-title">Loading...</h1>
           <div class="seller-meta-row">
             <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
             <button id="seller-recommendations" class="seller-recommendations" type="button" style="display:none;" aria-expanded="false"></button>
@@ -372,7 +372,7 @@
             </a>
           </div>
           <div id="listing-meta" class="pill-trail"></div>
-          <p id="listing-description" class="listing-description-preserve">Carregando descrição...</p>
+          <p id="listing-description" class="listing-description-preserve">Loading description...</p>
         </div>
         <div class="listing-gallery">
           <div id="listing-main" class="listing-gallery-main"></div>
@@ -380,20 +380,20 @@
           <section id="report-listing-card" class="hero-card listing-report-card">
             <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
               <img src="img/flag.png" alt="" class="report-icon" />
-              Denunciar anúncio
+              Report listing
             </button>
             <button id="listing-share-btn" class="btn btn-ghost report-trigger" type="button">
-              Compartilhar anúncio
+              Share listing
             </button>
             <div id="report-listing-form" class="report-form" style="display:none;">
-              <label for="report-listing-reason">Descreva o problema</label>
-              <textarea id="report-listing-reason" placeholder="Explique por que este anúncio deve ser analisado."></textarea>
-              <label for="report-listing-files">Anexos (opcional, até 4 imagens)</label>
+              <label for="report-listing-reason">Describe the issue</label>
+              <textarea id="report-listing-reason" placeholder="Explain why this listing should be reviewed."></textarea>
+              <label for="report-listing-files">Attachments (optional, up to 4 images)</label>
               <input id="report-listing-files" class="input" type="file" accept="image/*" multiple />
-              <div id="report-listing-files-info" class="helper">Nenhuma imagem selecionada.</div>
+              <div id="report-listing-files-info" class="helper">No images selected.</div>
               <div class="inline-actions">
-                <button id="report-listing-submit" class="btn btn-primary" type="button">Enviar denúncia</button>
-                <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+                <button id="report-listing-submit" class="btn btn-primary" type="button">Submit report</button>
+                <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancel</button>
               </div>
               <div id="report-listing-feedback" class="report-feedback"></div>
             </div>
@@ -403,36 +403,35 @@
       </div>
     </main>
 
-    <site-footer></site-footer>
   </div>
   <div id="recommenders-modal" class="recommenders-modal" aria-hidden="true">
     <div class="recommenders-modal-card">
       <div class="recommenders-modal-head">
-        <h3>Usuários que recomendaram</h3>
-        <button id="recommenders-modal-close" class="recommenders-modal-close" type="button" aria-label="Fechar">×</button>
+        <h3>Users who recommended</h3>
+        <button id="recommenders-modal-close" class="recommenders-modal-close" type="button" aria-label="Close">×</button>
       </div>
       <div id="recommenders-wrap" class="recommenders-wrap">
         <div id="recommenders-list"></div>
-        <div id="recommenders-loading" class="recommenders-loading" style="display:none;">Carregando mais perfis...</div>
+        <div id="recommenders-loading" class="recommenders-loading" style="display:none;">Loading more profiles...</div>
       </div>
-      <p id="recommenders-empty" class="recommenders-empty" style="display:none;">Nenhuma recomendação ainda.</p>
+      <p id="recommenders-empty" class="recommenders-empty" style="display:none;">No recommendations yet.</p>
     </div>
   </div>
   <div id="share-modal" class="recommenders-modal" aria-hidden="true">
     <div class="share-modal-card">
       <div class="share-modal-head">
-        <h3>Compartilhar anúncio</h3>
-        <button id="share-modal-close" class="share-modal-close" type="button" aria-label="Fechar">×</button>
+        <h3>Share listing</h3>
+        <button id="share-modal-close" class="share-modal-close" type="button" aria-label="Close">×</button>
       </div>
-      <img id="share-qr-img" class="share-qr" src="" alt="QR Code do anúncio" />
-      <label for="share-link-input">Link do anúncio</label>
+      <img id="share-qr-img" class="share-qr" src="" alt="Listing QR code" />
+      <label for="share-link-input">Listing link</label>
       <div class="share-link-row">
         <input id="share-link-input" class="input" type="text" readonly />
         <button id="share-copy-btn" class="btn btn-ghost" type="button">Copiar</button>
         <button id="share-copy-qr-btn" class="btn btn-ghost" type="button">Copiar QR</button>
       </div>
       <div class="inline-actions">
-        <button id="share-native-btn" class="btn btn-primary" type="button">Compartilhar</button>
+        <button id="share-native-btn" class="btn btn-primary" type="button">Share</button>
       </div>
       <div id="share-feedback" class="share-feedback"></div>
     </div>
@@ -443,7 +442,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
     import QRCode from "https://esm.sh/qrcode@1.5.4";
@@ -554,47 +552,47 @@
     let shareCardDataUrl = "";
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
-    document.title = t("listing.title_default", "Gimerr - Anúncio");
-    if (titleEl) titleEl.textContent = t("listing.loading", "Carregando...");
-    if (descriptionEl) descriptionEl.textContent = t("listing.loading_description", "Carregando descrição...");
+    document.title = t("listing.title_default", "Gimerr - Listing");
+    if (titleEl) titleEl.textContent = t("listing.loading", "Loading...");
+    if (descriptionEl) descriptionEl.textContent = t("listing.loading_description", "Loading description...");
     const loaderImage = pageLoader?.querySelector("img");
-    if (loaderImage) loaderImage.alt = t("listing.page_loading", "Carregando");
+    if (loaderImage) loaderImage.alt = t("listing.page_loading", "Loading");
     if (telegramChat) {
-      telegramChat.childNodes[0].textContent = t("listing.telegram_cta", "Conversar no Telegram");
+      telegramChat.childNodes[0].textContent = t("listing.telegram_cta", "Chat on Telegram");
     }
     if (whatsappChat) {
-      whatsappChat.childNodes[0].textContent = t("listing.whatsapp_cta", "Conversar no WhatsApp");
+      whatsappChat.childNodes[0].textContent = t("listing.whatsapp_cta", "Chat on WhatsApp");
     }
-    if (reportListingBtn) reportListingBtn.lastChild.textContent = ` ${t("listing.report_button", "Denunciar anúncio")}`;
-    if (shareBtn) shareBtn.textContent = t("listing.share_button", "Compartilhar anúncio");
+    if (reportListingBtn) reportListingBtn.lastChild.textContent = ` ${t("listing.report_button", "Report listing")}`;
+    if (shareBtn) shareBtn.textContent = t("listing.share_button", "Share listing");
     const reportReasonLabel = document.querySelector('label[for="report-listing-reason"]');
-    if (reportReasonLabel) reportReasonLabel.textContent = t("listing.report_problem_label", "Descreva o problema");
-    if (reportListingReason) reportListingReason.placeholder = t("listing.report_problem_placeholder", "Explique por que este anúncio deve ser analisado.");
+    if (reportReasonLabel) reportReasonLabel.textContent = t("listing.report_problem_label", "Describe the issue");
+    if (reportListingReason) reportListingReason.placeholder = t("listing.report_problem_placeholder", "Explain why this listing should be reviewed.");
     const reportFilesLabel = document.querySelector('label[for="report-listing-files"]');
-    if (reportFilesLabel) reportFilesLabel.textContent = t("listing.report_files_label", "Anexos (opcional, até 4 imagens)");
-    if (reportListingFilesInfo) reportListingFilesInfo.textContent = t("listing.report_files_empty", "Nenhuma imagem selecionada.");
-    if (reportListingSubmit) reportListingSubmit.textContent = t("listing.report_submit", "Enviar denúncia");
-    if (reportListingCancel) reportListingCancel.textContent = t("listing.cancel", "Cancelar");
+    if (reportFilesLabel) reportFilesLabel.textContent = t("listing.report_files_label", "Attachments (optional, up to 4 images)");
+    if (reportListingFilesInfo) reportListingFilesInfo.textContent = t("listing.report_files_empty", "No images selected.");
+    if (reportListingSubmit) reportListingSubmit.textContent = t("listing.report_submit", "Submit report");
+    if (reportListingCancel) reportListingCancel.textContent = t("listing.cancel", "Cancel");
     const recommendersTitle = document.querySelector(".recommenders-modal-head h3");
-    if (recommendersTitle) recommendersTitle.textContent = t("listing.recommenders_title", "Usuários que recomendaram");
-    if (recommendersModalClose) recommendersModalClose.setAttribute("aria-label", t("listing.close", "Fechar"));
-    if (recommendersLoadingEl) recommendersLoadingEl.textContent = t("listing.recommenders_loading", "Carregando mais perfis...");
-    if (recommendersEmpty) recommendersEmpty.textContent = t("listing.recommenders_empty", "Nenhuma recomendação ainda.");
+    if (recommendersTitle) recommendersTitle.textContent = t("listing.recommenders_title", "Users who recommended");
+    if (recommendersModalClose) recommendersModalClose.setAttribute("aria-label", t("listing.close", "Close"));
+    if (recommendersLoadingEl) recommendersLoadingEl.textContent = t("listing.recommenders_loading", "Loading more profiles...");
+    if (recommendersEmpty) recommendersEmpty.textContent = t("listing.recommenders_empty", "No recommendations yet.");
     const shareTitle = document.querySelector(".share-modal-head h3");
-    if (shareTitle) shareTitle.textContent = t("listing.share_title", "Compartilhar anúncio");
-    if (shareModalClose) shareModalClose.setAttribute("aria-label", t("listing.close", "Fechar"));
-    if (shareQrImg) shareQrImg.alt = t("listing.share_qr_alt", "QR Code do anúncio");
+    if (shareTitle) shareTitle.textContent = t("listing.share_title", "Share listing");
+    if (shareModalClose) shareModalClose.setAttribute("aria-label", t("listing.close", "Close"));
+    if (shareQrImg) shareQrImg.alt = t("listing.share_qr_alt", "Listing QR code");
     const shareLinkLabel = document.querySelector('label[for="share-link-input"]');
-    if (shareLinkLabel) shareLinkLabel.textContent = t("listing.share_link_label", "Link do anúncio");
-    if (shareCopyBtn) shareCopyBtn.textContent = t("listing.copy", "Copiar");
-    if (shareCopyQrBtn) shareCopyQrBtn.textContent = t("listing.copy_qr", "Copiar QR");
-    if (shareNativeBtn) shareNativeBtn.textContent = t("listing.share_native", "Compartilhar");
+    if (shareLinkLabel) shareLinkLabel.textContent = t("listing.share_link_label", "Listing link");
+    if (shareCopyBtn) shareCopyBtn.textContent = t("listing.copy", "Copy");
+    if (shareCopyQrBtn) shareCopyQrBtn.textContent = t("listing.copy_qr", "Copy QR");
+    if (shareNativeBtn) shareNativeBtn.textContent = t("listing.share_native", "Share");
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        titleEl.textContent = t("listing.supabase_not_configured", "Supabase não configurado.");
+        titleEl.textContent = t("listing.supabase_not_configured", "Supabase is not configured.");
         authBtn.disabled = true;
-        throw new Error(t("listing.supabase_not_configured", "Supabase não configurado."));
+        throw new Error(t("listing.supabase_not_configured", "Supabase is not configured."));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -654,14 +652,14 @@
       if (!reportListingFilesInfo) return;
       const rawCount = reportListingFiles?.files?.length || 0;
       if (rawCount === 0) {
-        reportListingFilesInfo.textContent = t("listing.report_files_empty", "Nenhuma imagem selecionada.");
+        reportListingFilesInfo.textContent = t("listing.report_files_empty", "No images selected.");
         return;
       }
       if (rawCount > REPORT_MAX_ATTACHMENTS) {
-        reportListingFilesInfo.textContent = formatMessage("listing.report_files_truncated", "Você selecionou {count} imagens. Serão enviadas apenas 4.", { count: rawCount });
+        reportListingFilesInfo.textContent = formatMessage("listing.report_files_truncated", "You selected {count} images. Only 4 will be sent.", { count: rawCount });
         return;
       }
-      reportListingFilesInfo.textContent = formatMessage("listing.report_files_selected", "{count} imagem(ns) selecionada(s).", { count: rawCount });
+      reportListingFilesInfo.textContent = formatMessage("listing.report_files_selected", "{count} image(s) selected.", { count: rawCount });
     }
 
     function hideReportSuccess() {
@@ -795,28 +793,25 @@
       const logoX = Math.round((canvas.width - logoWidth) / 2);
       ctx.drawImage(logoImg, logoX, 96, logoWidth, logoHeight);
 
-      const brandText = t("common.brand_tagline", "Community marketplace powered by gamers.");
-      ctx.fillStyle = "#0f172a";
-      ctx.font = "600 36px Arial, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      const lineCount = drawWrappedText(ctx, brandText, canvas.width / 2, 246, 560, 42, 2);
-
       const listingTitle = String(currentListing?.title || "").trim();
       let titleLineCount = 0;
       if (listingTitle) {
         ctx.fillStyle = "#0f172a";
         ctx.font = "700 44px Arial, sans-serif";
-        titleLineCount = drawWrappedText(ctx, listingTitle, canvas.width / 2, 246 + (lineCount * 42) + 30, 760, 50, 2);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        titleLineCount = drawWrappedText(ctx, listingTitle, canvas.width / 2, 266, 760, 50, 2);
       }
 
       const qrSize = 520;
       const qrX = Math.round((canvas.width - qrSize) / 2);
-      const qrY = 246 + (lineCount * 42) + (titleLineCount * 50) + 78;
+      const qrY = 266 + (titleLineCount * 50) + 78;
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
       ctx.fillStyle = "#64748b";
       ctx.font = "600 34px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
       ctx.fillText("gimerr.com", canvas.width / 2, qrY + qrSize + 44);
 
       return canvas.toDataURL("image/png");
@@ -859,7 +854,7 @@
       avatar.className = "recommender-avatar";
       avatar.src = user?.avatar_url || "img/avatar.svg";
       avatar.alt = formatMessage("listing.avatar_alt", "Avatar de {name}", {
-        name: [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() || t("listing.community_user", "Usuário da comunidade"),
+        name: [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() || t("listing.community_user", "Community member"),
       });
       avatar.referrerPolicy = "no-referrer";
       avatar.loading = "lazy";
@@ -870,7 +865,7 @@
       const copy = document.createElement("div");
       const firstName = (user?.first_name || "").trim();
       const lastName = (user?.last_name || "").trim();
-      const fullName = `${firstName} ${lastName}`.trim() || t("listing.community_user", "Usuário da comunidade");
+      const fullName = `${firstName} ${lastName}`.trim() || t("listing.community_user", "Community member");
       const nameEl = document.createElement("div");
       nameEl.className = "recommender-name";
       nameEl.textContent = fullName;
@@ -941,10 +936,10 @@
 
     async function convertImageToWebp(file) {
       if (!file?.type || !file.type.startsWith("image/")) {
-        throw new Error(t("listing.report_invalid_file", "Selecione apenas imagens válidas nos anexos."));
+        throw new Error(t("listing.report_invalid_file", "Select only valid images for the attachments."));
       }
       if (file.size > REPORT_MAX_FILE_BYTES) {
-        throw new Error(t("listing.report_max_file_size", "Cada imagem anexa deve ter no máximo 6MB."));
+        throw new Error(t("listing.report_max_file_size", "Each attachment image must be at most 6MB."));
       }
       const bitmap = await createImageBitmap(file);
       const maxSide = Math.max(bitmap.width, bitmap.height);
@@ -953,10 +948,10 @@
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error(t("listing.report_process_image_error", "Falha ao processar imagem anexa."));
+      if (!ctx) throw new Error(t("listing.report_process_image_error", "Failed to process the attachment image."));
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", REPORT_WEBP_QUALITY));
-      if (!blob) throw new Error(t("listing.report_convert_webp_error", "Falha ao converter anexo para WebP."));
+      if (!blob) throw new Error(t("listing.report_convert_webp_error", "Failed to convert the attachment to WebP."));
       const baseName = file.name.replace(/\.[^.]+$/, "") || "report";
       return new File([blob], `${baseName}.webp`, { type: "image/webp" });
     }
@@ -965,7 +960,7 @@
       ensureClient();
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
-      if (!token) throw new Error(t("listing.session_expired", "Sessão expirada. Faça login novamente."));
+      if (!token) throw new Error(t("listing.session_expired", "Session expired. Sign in again."));
 
       const extension = (file.name.split(".").pop() || "").toLowerCase();
       const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
@@ -984,7 +979,7 @@
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        throw new Error(payload?.error || t("listing.report_signed_upload_error", "Erro ao solicitar upload de anexo."));
+        throw new Error(payload?.error || t("listing.report_signed_upload_error", "Error requesting attachment upload."));
       }
       return response.json();
     }
@@ -1001,7 +996,7 @@
           },
           body: webp,
         });
-        if (!uploadRes.ok) throw new Error(t("listing.report_upload_error", "Falha ao enviar anexo da denúncia."));
+        if (!uploadRes.ok) throw new Error(t("listing.report_upload_error", "Failed to upload the report attachment."));
         uploaded.push(signed.publicUrl);
         if (typeof onProgress === "function") onProgress(index + 1, files.length);
       }
@@ -1068,13 +1063,7 @@
     }
 
     async function redirectToGoogleLogin() {
-      ensureClient();
-      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo },
-      });
-      if (error) throw error;
+      window.__OPEN_AUTH_GATEWAY__?.(`${window.location.pathname}${window.location.search || ""}`);
     }
 
     function escapeHtml(value) {
@@ -1155,7 +1144,7 @@
         if (error) throw error;
         return data?.signedUrl || normalized;
       } catch (err) {
-        console.warn("Falha ao assinar imagem do anuncio", err);
+        console.warn("Failed to sign listing image", err);
         return normalized;
       }
     }
@@ -1172,12 +1161,12 @@
       lightboxRoot.className = "image-lightbox";
       lightboxRoot.innerHTML = `
         <div class="image-lightbox-frame">
-          <button type="button" class="image-lightbox-btn image-lightbox-close" data-action="close" aria-label="Fechar">×</button>
-          <img class="image-lightbox-img" alt="Imagem ampliada" />
+          <button type="button" class="image-lightbox-btn image-lightbox-close" data-action="close" aria-label="Close">×</button>
+          <img class="image-lightbox-img" alt="Expanded image" />
           <div class="image-lightbox-controls">
-            <button type="button" class="image-lightbox-btn" data-action="prev" aria-label="Anterior">‹</button>
+            <button type="button" class="image-lightbox-btn" data-action="prev" aria-label="Previous">‹</button>
             <span class="image-lightbox-count"></span>
-            <button type="button" class="image-lightbox-btn" data-action="next" aria-label="Próxima">›</button>
+            <button type="button" class="image-lightbox-btn" data-action="next" aria-label="Next">›</button>
           </div>
         </div>
       `;
@@ -1247,9 +1236,9 @@
     }
 
     function setNotFound(message) {
-      titleEl.textContent = message || t("listing.not_found", "Anúncio não encontrado.");
-      document.title = t("listing.title_default", "Gimerr - Anúncio");
-      descriptionEl.textContent = t("listing.deleted_or_unavailable", "Este anúncio foi excluído ou não está mais disponível.");
+      titleEl.textContent = message || t("listing.not_found", "Listing not found.");
+      document.title = t("listing.title_default", "Gimerr - Listing");
+      descriptionEl.textContent = t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available.");
       currentGalleryImages = [];
       currentListing = null;
       recommendersTargetUserId = null;
@@ -1265,7 +1254,7 @@
       if (reportListingCard) reportListingCard.style.display = "none";
       if (reportListingForm) reportListingForm.style.display = "none";
       if (metaEl) metaEl.innerHTML = "";
-      if (mainMedia) mainMedia.textContent = t("listing.unavailable", "Anúncio indisponível.");
+      if (mainMedia) mainMedia.textContent = t("listing.unavailable", "Listing unavailable.");
       if (thumbGrid) {
         thumbGrid.innerHTML = "";
         thumbGrid.style.display = "none";
@@ -1291,7 +1280,7 @@
         mainMedia.style.display = "";
         mainMedia.innerHTML = `
           <div class="listing-gallery-fallback">
-            <img src="img/logo.png" alt="${escapeHtml(t("listing.no_image_alt", "Sem imagem do anúncio"))}" loading="lazy" />
+            <img src="img/logo.png" alt="${escapeHtml(t("listing.no_image_alt", "No listing image"))}" loading="lazy" />
           </div>
         `;
         thumbGrid.innerHTML = "";
@@ -1306,7 +1295,7 @@
 
       function renderState() {
         const mainUrl = encodeURI(mainItem.src);
-        mainMedia.innerHTML = `<img src="${mainUrl}" alt="${escapeHtml(t("listing.main_image_alt", "Imagem principal do anúncio"))}" loading="lazy" data-image-index="${mainItem.index}" style="width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center center;display:block;background:#ffffff;" />`;
+        mainMedia.innerHTML = `<img src="${mainUrl}" alt="${escapeHtml(t("listing.main_image_alt", "Main listing image"))}" loading="lazy" data-image-index="${mainItem.index}" style="width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center center;display:block;background:#ffffff;" />`;
 
         thumbGrid.innerHTML = "";
         if (thumbItems.length === 0) {
@@ -1320,7 +1309,7 @@
           button.type = "button";
           button.className = "listing-thumb";
           const thumbUrl = encodeURI(item.src);
-          button.innerHTML = `<img src="${thumbUrl}" alt="${escapeHtml(formatMessage("listing.thumb_alt", "Miniatura {index}", { index: thumbIndex + 1 }))}" loading="lazy" />`;
+          button.innerHTML = `<img src="${thumbUrl}" alt="${escapeHtml(formatMessage("listing.thumb_alt", "Thumbnail {index}", { index: thumbIndex + 1 }))}" loading="lazy" />`;
           button.addEventListener("click", () => {
             const previousMain = mainItem;
             mainItem = item;
@@ -1343,13 +1332,13 @@
       shareUrl = `${window.location.origin}/listing?id=${encodeURIComponent(listing.id)}`;
       const firstName = (listing.user_first_name || "").trim();
       const lastName = (listing.user_last_name || "").trim();
-      const fullName = `${firstName} ${lastName}`.trim() || t("listing.seller_default", "Anunciante");
-      const displayFirstName = firstName || t("listing.seller_default_lower", "anunciante");
+      const fullName = `${firstName} ${lastName}`.trim() || t("listing.seller_default", "Seller");
+      const displayFirstName = firstName || t("listing.seller_default_lower", "seller");
       const discordUsername = String(listing.user_discord_username || "").trim();
 
       document.title = `${listing.title} | Gimerr`;
       titleEl.textContent = listing.title;
-      descriptionEl.textContent = listing.description || t("listing.no_description", "Sem descrição informada.");
+      descriptionEl.textContent = listing.description || t("listing.no_description", "No description provided.");
 
       if (metaEl) {
         metaEl.innerHTML = "";
@@ -1399,8 +1388,8 @@
       if (sellerRecommendations) {
         const totalRecommendations = Number(listing.user_recommendations_count || 0);
         const label = totalRecommendations === 1
-          ? t("listing.recommendation_one", "1 recomendação")
-          : formatMessage("listing.recommendation_many", "{count} recomendações", { count: totalRecommendations });
+          ? t("listing.recommendation_one", "1 recommendation")
+          : formatMessage("listing.recommendation_many", "{count} recommendations", { count: totalRecommendations });
         sellerRecommendations.innerHTML = `<img src="img/rec.png" alt="" /> ${escapeHtml(label)}`;
         sellerRecommendations.style.display = listing.user_profile_id ? "inline-flex" : "none";
         sellerRecommendations.setAttribute("aria-expanded", "false");
@@ -1409,10 +1398,10 @@
       recommendersFetched = false;
 
       if (telegramChat) {
-        if (listing.user_phone) {
+        if (listing.user_phone && listing.user_show_telegram !== false) {
           const phone = String(listing.user_phone).replace(/\D/g, "");
           telegramChat.href = `https://t.me/+${phone}`;
-          telegramChat.innerHTML = `${escapeHtml(formatMessage("listing.telegram_cta_with_name", "Conversar com {name} no telegram", { name: displayFirstName }))} <img src="img/telegram.webp" alt="" class="btn-icon" />`;
+          telegramChat.innerHTML = `${escapeHtml(formatMessage("listing.telegram_cta_with_name", "Chat with {name} on Telegram", { name: displayFirstName }))} <img src="img/telegram.webp" alt="" class="btn-icon" />`;
           telegramChat.style.display = "inline-flex";
         } else {
           telegramChat.style.display = "none";
@@ -1423,7 +1412,7 @@
         const digits = listing.user_phone ? String(listing.user_phone).replace(/\D/g, "") : "";
         if (listing.user_show_whatsapp && digits) {
           whatsappChat.href = `https://wa.me/${digits}`;
-          whatsappChat.innerHTML = `${escapeHtml(formatMessage("listing.whatsapp_cta_with_name", "Conversar com {name} no whatsapp", { name: displayFirstName }))} <img src="img/wtsp.png" alt="" class="btn-icon" />`;
+          whatsappChat.innerHTML = `${escapeHtml(formatMessage("listing.whatsapp_cta_with_name", "Chat with {name} on WhatsApp", { name: displayFirstName }))} <img src="img/wtsp.png" alt="" class="btn-icon" />`;
           whatsappChat.style.display = "inline-flex";
         } else {
           whatsappChat.style.display = "none";
@@ -1473,7 +1462,7 @@
         if (error) throw error;
         return count || 0;
       } catch (err) {
-        console.warn("Falha ao carregar recomendações do anunciante.", err);
+        console.warn("Failed to load seller recommendations.", err);
         return 0;
       }
     }
@@ -1483,7 +1472,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,first_name,last_name,avatar_url,discord_username)")
+          .select("id,title,description,images,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username)")
           .eq("id", listingId)
           .single();
         if (error) {
@@ -1500,7 +1489,8 @@
           : "";
         const phone = data?.users?.phone || null;
         const userShowWhatsapp = !!data?.users?.show_whatsapp_button;
-        const userFirstName = data?.users?.first_name || "anunciante";
+        const userShowTelegram = data?.users?.show_telegram_button !== false;
+        const userFirstName = data?.users?.first_name || "seller";
         const userLastName = data?.users?.last_name || "";
         const userAvatarUrl = resolvedAvatarUrl || "";
         const userDiscordUsername = data?.users?.discord_username || "";
@@ -1511,6 +1501,7 @@
             ...data,
             user_phone: phone,
             user_show_whatsapp: userShowWhatsapp,
+            user_show_telegram: userShowTelegram,
             user_first_name: userFirstName,
             user_last_name: userLastName,
             user_avatar_url: userAvatarUrl,
@@ -1520,7 +1511,7 @@
           },
         };
       } catch (err) {
-        console.warn("Falha ao buscar anuncio com join, tentando separado.", err);
+        console.warn("Failed to fetch listing with join, trying fallback.", err);
         const { data, error } = await supabase
           .from("listings")
           .select("id,title,description,images,status,server_id,created_at,user_id")
@@ -1537,7 +1528,8 @@
         }
         let userPhone = null;
         let userShowWhatsapp = false;
-        let userFirstName = "anunciante";
+        let userShowTelegram = true;
+        let userFirstName = "seller";
         let userLastName = "";
         let userAvatarUrl = "";
         let userDiscordUsername = "";
@@ -1545,13 +1537,14 @@
         if (data?.user_id) {
           const { data: userData } = await supabase
             .from("users")
-            .select("id,phone,show_whatsapp_button,first_name,last_name,avatar_url,discord_username")
+            .select("id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username")
             .eq("id", data.user_id)
             .single();
           userProfileId = userData?.id || userProfileId;
           userPhone = userData?.phone || null;
           userShowWhatsapp = !!userData?.show_whatsapp_button;
-          userFirstName = userData?.first_name || "anunciante";
+          userShowTelegram = userData?.show_telegram_button !== false;
+          userFirstName = userData?.first_name || "seller";
           userLastName = userData?.last_name || "";
           userAvatarUrl = userData?.avatar_url
             ? await resolveImageUrl(userData.avatar_url)
@@ -1564,6 +1557,7 @@
             ...data,
             user_phone: userPhone,
             user_show_whatsapp: userShowWhatsapp,
+            user_show_telegram: userShowTelegram,
             user_first_name: userFirstName,
             user_last_name: userLastName,
             user_avatar_url: userAvatarUrl,
@@ -1585,22 +1579,22 @@
         const params = new URLSearchParams(window.location.search);
         const listingId = params.get("id");
         if (!listingId) {
-          setNotFound(t("listing.not_found", "Anúncio não encontrado."));
+          setNotFound(t("listing.not_found", "Listing not found."));
           return;
         }
         const result = await fetchListing(listingId);
         if (!result?.listing) {
-          setNotFound(t("listing.deleted_or_unavailable", "Este anúncio foi excluído ou não está mais disponível."));
+          setNotFound(t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available."));
           return;
         }
         renderListing(result.listing);
       } catch (err) {
         console.error(err);
         if (isMissingListingError(err)) {
-          setNotFound(t("listing.deleted_or_unavailable", "Este anúncio foi excluído ou não está mais disponível."));
+          setNotFound(t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available."));
           return;
         }
-        setNotFound(t("listing.deleted_or_unavailable", "Este anúncio foi excluído ou não está mais disponível."));
+        setNotFound(t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available."));
       }
     }
 
@@ -1622,7 +1616,7 @@
       hideReportSuccess();
       if (!currentListing) return;
       if (currentListing.user_profile_id && currentUser.id === currentListing.user_profile_id) {
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.own_report_blocked", "Você não pode denunciar seu próprio anúncio.");
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.own_report_blocked", "You cannot report your own listing.");
         return;
       }
       if (reportListingForm) {
@@ -1657,7 +1651,7 @@
     shareBtn?.addEventListener("click", () => {
       openShareModal().catch((err) => {
         console.error(err);
-        setShareFeedback(t("listing.share_error", "Não foi possível compartilhar agora."));
+        setShareFeedback(t("listing.share_error", "Could not share right now."));
       });
     });
     shareModalClose?.addEventListener("click", () => {
@@ -1672,9 +1666,9 @@
       try {
         if (!shareUrl) return;
         await navigator.clipboard.writeText(shareUrl);
-        setShareFeedback(t("listing.copy_success", "Link copiado."));
+        setShareFeedback(t("listing.copy_success", "Link copied."));
       } catch (_err) {
-        setShareFeedback(t("listing.copy_auto_error", "Não foi possível copiar automaticamente."));
+        setShareFeedback(t("listing.copy_auto_error", "Could not copy automatically."));
       }
     });
     shareCopyQrBtn?.addEventListener("click", async () => {
@@ -1687,7 +1681,7 @@
               [blob.type]: blob,
             }),
           ]);
-          setShareFeedback(t("listing.copy_qr_success", "QR copiado como imagem."));
+          setShareFeedback(t("listing.copy_qr_success", "QR copied as an image."));
           return;
         }
         const downloadLink = document.createElement("a");
@@ -1696,9 +1690,9 @@
         document.body.appendChild(downloadLink);
         downloadLink.click();
         downloadLink.remove();
-        setShareFeedback(t("listing.copy_qr_download", "Imagem do QR baixada."));
+        setShareFeedback(t("listing.copy_qr_download", "QR image downloaded."));
       } catch (_err) {
-        setShareFeedback(t("listing.copy_qr_error", "Não foi possível copiar a imagem do QR automaticamente."));
+        setShareFeedback(t("listing.copy_qr_error", "Could not copy the QR image automatically."));
       }
     });
     shareNativeBtn?.addEventListener("click", async () => {
@@ -1706,17 +1700,17 @@
         if (!shareUrl) return;
         if (navigator.share) {
           await navigator.share({
-            title: currentListing?.title || t("listing.share_title_native", "Anúncio no Gimerr"),
-            text: t("listing.share_text_native", "Confira este anúncio no Gimerr:"),
+            title: currentListing?.title || t("listing.share_title_native", "Listing on Gimerr"),
+            text: t("listing.share_text_native", "Check out this listing on Gimerr:"),
             url: shareUrl,
           });
-          setShareFeedback(t("listing.share_success", "Compartilhado com sucesso."));
+          setShareFeedback(t("listing.share_success", "Shared successfully."));
           return;
         }
         await navigator.clipboard.writeText(shareUrl);
-        setShareFeedback(t("listing.share_copy_fallback", "Link copiado. Cole no app que deseja compartilhar."));
+        setShareFeedback(t("listing.share_copy_fallback", "Link copied. Paste it into the app you want to share to."));
       } catch (_err) {
-        setShareFeedback(t("listing.share_error", "Não foi possível compartilhar agora."));
+        setShareFeedback(t("listing.share_error", "Could not share right now."));
       }
     });
     reportListingFiles?.addEventListener("change", updateReportFilesInfo);
@@ -1731,7 +1725,7 @@
         }
         if (!currentUserProfile?.phone_verified) {
           if (reportListingFeedback) {
-            reportListingFeedback.textContent = t("listing.phone_verified_required", "Apenas usuários com telefone verificado podem enviar denúncias.");
+            reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a verified phone number can submit reports.");
           }
           return;
         }
@@ -1739,21 +1733,21 @@
         if (!currentListing?.id) return;
         const reason = String(reportListingReason?.value || "").trim();
         if (reason.length < 10) {
-          if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_min_reason", "Descreva o problema com pelo menos 10 caracteres.");
+          if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_min_reason", "Describe the issue using at least 10 characters.");
           return;
         }
         const files = getReportFiles();
         reportListingSubmit.disabled = true;
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sending", "Enviando denúncia...");
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sending", "Sending report...");
         let evidenceImages = [];
         if (files.length > 0) {
           evidenceImages = await uploadReportEvidence(files, (done, total) => {
             if (reportListingFeedback) {
-              reportListingFeedback.textContent = formatMessage("listing.report_uploading_progress", "Enviando anexos {done}/{total}...", { done, total });
+              reportListingFeedback.textContent = formatMessage("listing.report_uploading_progress", "Uploading attachments {done}/{total}...", { done, total });
             }
           });
         }
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_registering", "Registrando denúncia...");
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_registering", "Registering report...");
         ensureClient();
         const { error } = await supabase.from("reports").insert({
           reporter_id: currentUser.id,
@@ -1764,12 +1758,12 @@
         });
         if (error) {
           if (error.code === "23505") {
-            throw new Error(t("listing.report_duplicate", "Você já possui uma denúncia pendente para este anúncio."));
+            throw new Error(t("listing.report_duplicate", "You already have a pending report for this listing."));
           }
           throw error;
         }
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sent", "Denúncia enviada para análise.");
-        showReportSuccess(t("listing.report_success_banner", "Sua denúncia foi enviada com sucesso. Nossa equipe vai analisar o caso."));
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sent", "Report sent for review.");
+        showReportSuccess(t("listing.report_success_banner", "Your report was sent successfully. Our team will review the case."));
         if (reportListingReason) reportListingReason.value = "";
         if (reportListingFiles) reportListingFiles.value = "";
         updateReportFilesInfo();
@@ -1779,7 +1773,7 @@
           console.error(err);
         }
         if (reportListingFeedback) {
-          reportListingFeedback.textContent = err?.message || t("listing.report_send_error", "Erro ao enviar denúncia.");
+          reportListingFeedback.textContent = err?.message || t("listing.report_send_error", "Error sending report.");
         }
       } finally {
         if (reportListingSubmit) reportListingSubmit.disabled = false;

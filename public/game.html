@@ -393,7 +393,7 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
@@ -401,12 +401,12 @@
     <section class="section game-hero-shell">
       <div class="game-hero-card">
         <div class="game-logo-frame">
-          <img id="game-logo" alt="Logo do game" />
+          <img id="game-logo" alt="Game logo" />
         </div>
         <div class="game-hero-copy">
           <div class="game-hero-head">
             <div class="game-title-block">
-              <h1 id="game-title">Carregando...</h1>
+              <h1 id="game-title">Loading...</h1>
               <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
             </div>
             <div id="game-actions" class="game-actions"></div>
@@ -430,7 +430,7 @@
               <input
                 id="listing-search"
                 type="search"
-                placeholder="O que você está procurando?"
+                placeholder="What are you looking for?"
                 autocomplete="off"
               />
             </div>
@@ -445,16 +445,15 @@
       <section class="section">
         <div id="game-feed-shell" class="game-feed-shell">
           <div id="listing-feed" class="listing-feed"></div>
-          <div id="feed-sentinel" class="feed-sentinel" style="display:none;">Role para carregar mais</div>
-          <p id="listing-empty" class="search-feedback" style="display:none;">Nenhum anúncio para este game ainda.</p>
+          <div id="feed-sentinel" class="feed-sentinel" style="display:none;">Scroll to load more</div>
+          <p id="listing-empty" class="search-feedback" style="display:none;">No listings for this game yet.</p>
           <div id="feed-loading-overlay" class="feed-loading-overlay" aria-hidden="true">
-            <img src="img/logo.png" alt="Carregando anúncios" />
+            <img src="img/logo.png" alt="Loading listings" />
           </div>
         </div>
       </section>
     </main>
 
-    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
@@ -462,7 +461,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -625,13 +623,13 @@
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     document.title = t("game.title_default", "Gimerr - Game");
-    if (logoEl) logoEl.alt = t("game.logo_alt", "Logo do game");
-    if (titleEl) titleEl.textContent = t("game.loading", "Carregando...");
-    if (listingSearchInput) listingSearchInput.placeholder = t("game.search_placeholder", "O que você está procurando?");
-    if (feedSentinel) feedSentinel.textContent = t("game.scroll_more", "Role para carregar mais");
-    if (listingEmpty) listingEmpty.textContent = t("game.empty", "Nenhum anúncio para este game ainda.");
+    if (logoEl) logoEl.alt = t("game.logo_alt", "Game logo");
+    if (titleEl) titleEl.textContent = t("game.loading", "Loading...");
+    if (listingSearchInput) listingSearchInput.placeholder = t("game.search_placeholder", "What are you looking for?");
+    if (feedSentinel) feedSentinel.textContent = t("game.scroll_more", "Scroll to load more");
+    if (listingEmpty) listingEmpty.textContent = t("game.empty", "No listings for this game yet.");
     const loadingOverlayImage = feedLoadingOverlay?.querySelector("img");
-    if (loadingOverlayImage) loadingOverlayImage.alt = t("game.loading_listings", "Carregando anúncios");
+    if (loadingOverlayImage) loadingOverlayImage.alt = t("game.loading_listings", "Loading listings");
 
     const CARD_MIN_WIDTH_DESKTOP = 180;
     const CARD_ESTIMATED_HEIGHT = 238;
@@ -639,8 +637,8 @@
     const FEED_MAX_BATCH_SIZE = 84;
     let feedPageSize = 24;
     const SORT_OPTIONS = [
-      { value: "relevant", label: t("game.sort_relevant", "Mais relevantes") },
-      { value: "recent", label: t("game.sort_recent", "Mais recentes") },
+      { value: "relevant", label: t("game.sort_relevant", "Most relevant") },
+      { value: "recent", label: t("game.sort_recent", "Most recent") },
     ];
 
     function computeFeedPageSize() {
@@ -660,9 +658,9 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        titleEl.textContent = t("game.supabase_not_configured", "Supabase não configurado.");
+        titleEl.textContent = t("game.supabase_not_configured", "Supabase is not configured.");
         if (authBtn) authBtn.disabled = true;
-        throw new Error(t("game.supabase_not_configured", "Supabase não configurado."));
+        throw new Error(t("game.supabase_not_configured", "Supabase is not configured."));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -774,17 +772,11 @@
     }
 
     async function redirectToGoogleAuth(targetPath = null) {
-      ensureClient();
       if (authBtn) authBtn.disabled = true;
       const normalizedPath = targetPath
         ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
         : `${window.location.pathname}${window.location.search || ""}`;
-      const redirectTo = `${window.location.origin}${normalizedPath}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo },
-      });
-      if (error) throw error;
+      window.__OPEN_AUTH_GATEWAY__?.(normalizedPath);
     }
 
     function parseStoragePath(urlString) {
@@ -856,7 +848,7 @@
         if (error) throw error;
         return data?.signedUrl || normalized;
       } catch (err) {
-        console.warn(t("game.feed_signing_warning", "Falha ao assinar imagem do anúncio"), err);
+        console.warn(t("game.feed_signing_warning", "Failed to sign listing image"), err);
         return normalized;
       }
     }
@@ -872,7 +864,7 @@
         if (error) throw error;
         return data?.signedUrl || urlString;
       } catch (err) {
-        console.warn(t("game.cover_signing_warning", "Falha ao assinar cover"), err);
+        console.warn(t("game.cover_signing_warning", "Failed to sign cover image"), err);
         return urlString;
       }
     }
@@ -894,7 +886,7 @@
           description: data.description,
         } : null;
       } catch (err) {
-        console.warn(t("game.servers_fallback_warning", "Falha ao buscar em servers, tentando games."), err);
+        console.warn(t("game.servers_fallback_warning", "Failed to fetch from servers, trying games."), err);
         const { data, error } = await supabase
           .from("games")
           .select("id,name,website,cover_url")
@@ -918,7 +910,7 @@
           id="game-follow-btn"
           class="btn btn-ghost game-follow-btn${currentGameFollowed ? " is-following" : ""}"
           type="button">
-          ${currentGameFollowed ? t("game.following", "Seguindo") : t("game.follow_game", "Seguir game")}
+          ${currentGameFollowed ? t("game.following", "Following") : t("game.follow_game", "Follow game")}
         </button>
       `;
       actionsEl.innerHTML = followMarkup;
@@ -926,7 +918,7 @@
 
     function renderGame(game) {
       if (!game) {
-        titleEl.textContent = t("game.not_found", "Game não encontrado.");
+        titleEl.textContent = t("game.not_found", "Game not found.");
         logoEl.style.display = "none";
         if (siteLinkEl) siteLinkEl.style.display = "none";
         if (descriptionEl) descriptionEl.style.display = "none";
@@ -943,7 +935,7 @@
           siteLinkEl.classList.remove("is-unavailable");
         } else {
           siteLinkEl.removeAttribute("href");
-          siteLinkEl.textContent = t("game.site_unavailable", "Site indisponível");
+          siteLinkEl.textContent = t("game.site_unavailable", "Official site unavailable");
           siteLinkEl.style.display = "inline-flex";
           siteLinkEl.classList.add("is-unavailable");
         }
@@ -1002,7 +994,7 @@
       try {
         if (followBtn) {
           followBtn.disabled = true;
-          followBtn.textContent = nextState ? t("game.following_progress", "Seguindo...") : t("game.unfollowing_progress", "Removendo...");
+          followBtn.textContent = nextState ? t("game.following_progress", "Following...") : t("game.unfollowing_progress", "Removing...");
         }
         ensureClient();
         if (nextState) {
@@ -1193,15 +1185,15 @@
       const matched = listingMatchesQuery(listing, searchQuery);
       card.classList.toggle("matched", matched && String(searchQuery || "").trim().length > 0);
       const highlightBadge = isHighlightActive(listing)
-        ? `<span class="feed-highlight-badge">${escapeHtml(t("game.highlight_badge", "Em destaque"))}</span>`
+        ? `<span class="feed-highlight-badge">${escapeHtml(t("game.highlight_badge", "Featured"))}</span>`
         : "";
       const cardImageUrl = listing.cardImage ? encodeURI(listing.cardImage).replace(/'/g, "%27") : "";
       const media = listing.cardImage
-        ? `<div class="feed-media feed-media-image" style="--feed-image:url('${cardImageUrl}');">${highlightBadge}<img src="${cardImageUrl}" alt="${escapeHtml(formatMessage("game.listing_image_alt", "Imagem do anúncio {title}", { title: listing.title || t("game.listing_title_fallback", "Anúncio") }))}" loading="lazy" /></div>`
+        ? `<div class="feed-media feed-media-image" style="--feed-image:url('${cardImageUrl}');">${highlightBadge}<img src="${cardImageUrl}" alt="${escapeHtml(formatMessage("game.listing_image_alt", "Listing image {title}", { title: listing.title || t("game.listing_title_fallback", "Listing") }))}" loading="lazy" /></div>`
         : `<div class="feed-media empty">${highlightBadge}<img src="img/logo.png" alt="" class="feed-media-fallback-logo" loading="lazy" /></div>`;
       card.innerHTML = `
         ${media}
-        <h3 class="feed-title">${escapeHtml(listing.title || t("game.listing_title_fallback", "Anúncio"))}</h3>
+        <h3 class="feed-title">${escapeHtml(listing.title || t("game.listing_title_fallback", "Listing"))}</h3>
       `;
       return card;
     }
@@ -1258,17 +1250,17 @@
       if (orderedListings.length === 0) {
         listingEmpty.style.display = "block";
         listingEmpty.textContent = String(searchQuery || "").trim()
-          ? formatMessage("game.empty_search", "Nenhum anúncio encontrado para \"{query}\".", { query: searchQuery.trim() })
-          : t("game.empty", "Nenhum anúncio para este game ainda.");
+          ? formatMessage("game.empty_search", "No listings found for \"{query}\".", { query: searchQuery.trim() })
+          : t("game.empty", "No listings for this game yet.");
         feedSentinel.style.display = "none";
         return;
       }
       listingEmpty.style.display = "none";
       feedSentinel.style.display = "block";
       if (visibleCount >= orderedListings.length) {
-        feedSentinel.textContent = t("game.end_of_listings", "Fim dos anúncios.");
+        feedSentinel.textContent = t("game.end_of_listings", "End of listings.");
       } else {
-        feedSentinel.textContent = t("game.scroll_more", "Role para carregar mais");
+        feedSentinel.textContent = t("game.scroll_more", "Scroll to load more");
       }
     }
 
@@ -1276,10 +1268,10 @@
       if (!listingSearchMeta) return;
       const normalizedQuery = String(searchQuery || "").trim();
       if (!normalizedQuery) {
-        listingSearchMeta.textContent = formatMessage("game.loaded_count", "{count} anúncio(s) carregado(s).", { count: total });
+        listingSearchMeta.textContent = formatMessage("game.loaded_count", "{count} listing(s) loaded.", { count: total });
         return;
       }
-      listingSearchMeta.textContent = formatMessage("game.search_results_count", "{count} resultado(s) para \"{query}\".", {
+      listingSearchMeta.textContent = formatMessage("game.search_results_count", "{count} result(s) for \"{query}\".", {
         count: total,
         query: normalizedQuery,
       });
@@ -1410,7 +1402,7 @@
         if (listingFeed) listingFeed.innerHTML = "";
         if (listingEmpty) {
           listingEmpty.style.display = "block";
-          listingEmpty.textContent = err?.message || t("game.loading_listings_error", "Erro ao carregar anúncios.");
+          listingEmpty.textContent = err?.message || t("game.loading_listings_error", "Error loading listings.");
         }
         if (feedSentinel) feedSentinel.style.display = "none";
         setFeedInlineLoading(false);
@@ -1426,7 +1418,7 @@
         const params = new URLSearchParams(window.location.search);
         currentGameId = params.get("id") || "";
         if (!currentGameId) {
-          titleEl.textContent = t("game.not_found", "Game não encontrado.");
+          titleEl.textContent = t("game.not_found", "Game not found.");
           logoEl.style.display = "none";
           return;
         }
@@ -1441,9 +1433,9 @@
         await fetchListings(currentGameId);
       } catch (err) {
         console.error(err);
-        titleEl.textContent = t("game.loading_error", "Erro ao carregar game.");
+        titleEl.textContent = t("game.loading_error", "Error loading game.");
         if (listingSearchMeta) {
-          listingSearchMeta.textContent = err?.message || t("game.try_again", "Tente novamente.");
+          listingSearchMeta.textContent = err?.message || t("game.try_again", "Try again.");
         }
       } finally {
         try {

@@ -89,7 +89,9 @@ Deno.serve(async (req) => {
       .single();
     if (updateErr) throw updateErr;
 
-    if (["paid", "rejected"].includes(nextStatus) && !requestRow.approved_email_sent_at && EMAIL_ENDPOINT) {
+    // Future review: re-enable the success e-mail for manual Pix payouts after the
+    // successful-transfer template has been validated in the full production flow.
+    if (["rejected"].includes(nextStatus) && !requestRow.approved_email_sent_at && EMAIL_ENDPOINT) {
       try {
         const { data: userRow, error: userErr } = await supabase
           .from("users")

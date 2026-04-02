@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Meus anúncios</title>
+  <title>Gimerr - My listings</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="my-listings-guard-style">html{visibility:hidden;}</style>
   <style>
@@ -113,24 +113,23 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
     <main class="section game-page" id="my-listings-main">
       <section class="hero-card" id="my-listings-header-card">
-        <h2 id="my-listings-title">Meus anúncios</h2>
-        <p id="my-listings-helper" class="helper">Gerencie seus anúncios: edite, destaque ou exclua quando quiser.</p>
+        <h2 id="my-listings-title">My listings</h2>
+        <p id="my-listings-helper" class="helper">Manage your listings: edit, boost, or delete them whenever you want.</p>
         <p id="my-listings-feedback"></p>
       </section>
       <section>
         <div id="my-listings-grid" class="listing-grid"></div>
-        <p id="my-listings-empty" class="helper" style="display:none;">Você ainda não publicou anúncios.</p>
+        <p id="my-listings-empty" class="helper" style="display:none;">You have not published any listings yet.</p>
       </section>
     </main>
 
-    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
@@ -138,7 +137,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -203,13 +201,13 @@
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function applyStaticTranslations() {
-      document.title = t("my_listings.title_default", "Gimerr - Meus anúncios");
+      document.title = t("my_listings.title_default", "Gimerr - My listings");
       document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
       const loaderImage = pageLoader?.querySelector("img");
-      if (loaderImage) loaderImage.alt = t("my_listings.loading", "Carregando");
-      if (myListingsTitle) myListingsTitle.textContent = t("my_listings.page_title", "Meus anúncios");
-      if (myListingsHelper) myListingsHelper.textContent = t("my_listings.page_helper", "Gerencie seus anúncios: edite, destaque ou exclua quando quiser.");
-      if (listingsEmpty) listingsEmpty.textContent = t("my_listings.empty", "Você ainda não publicou anúncios.");
+      if (loaderImage) loaderImage.alt = t("my_listings.loading", "Loading");
+      if (myListingsTitle) myListingsTitle.textContent = t("my_listings.page_title", "My listings");
+      if (myListingsHelper) myListingsHelper.textContent = t("my_listings.page_helper", "Manage your listings: edit, boost, or delete them whenever you want.");
+      if (listingsEmpty) listingsEmpty.textContent = t("my_listings.empty", "You have not published any listings yet.");
     }
 
     function revealPage() {
@@ -221,7 +219,7 @@
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         authBtn.disabled = true;
-        throw new Error(t("my_listings.supabase_not_configured", "Supabase não configurado"));
+        throw new Error(t("my_listings.supabase_not_configured", "Supabase is not configured"));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -410,29 +408,29 @@
         const highlightActive = isHighlightActive(listing);
         card.className = "listing-card";
 
-        const safeTitle = escapeHtml(listing.title || t("my_listings.no_title", "Sem título"));
-        const safeDescription = escapeHtml(listing.description || t("my_listings.no_description", "Sem descrição."));
+        const safeTitle = escapeHtml(listing.title || t("my_listings.no_title", "Untitled"));
+        const safeDescription = escapeHtml(listing.description || t("my_listings.no_description", "No description."));
         const safeServerName = escapeHtml(listing.server_name || "");
 
         const imageUrl = listing.imageUrl || listing.images?.[0];
         const image = imageUrl
           ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${safeTitle}" loading="lazy" /></div>`
-          : `<div class="listing-media empty">${escapeHtml(t("my_listings.no_image", "Sem imagem"))}</div>`;
+          : `<div class="listing-media empty">${escapeHtml(t("my_listings.no_image", "No image"))}</div>`;
 
         const promoteLink = (!highlightActive && listing.status === "active")
-          ? `<a class="btn btn-primary" href="ad-wallet.html">${escapeHtml(t("my_listings.highlight_listing", "Destacar anúncio"))}</a>`
+          ? `<a class="btn btn-primary" href="ad-wallet.html">${escapeHtml(t("my_listings.highlight_listing", "Boost listing"))}</a>`
           : "";
 
         card.innerHTML = `
           ${image}
           <div class="listing-body">
             <div class="listing-meta">
-              ${safeServerName ? `<span class="pill">${safeServerName}</span>` : `<span class="pill">${escapeHtml(t("my_listings.game_not_informed", "Game: não informado"))}</span>`}
+              ${safeServerName ? `<span class="pill">${safeServerName}</span>` : `<span class="pill">${escapeHtml(t("my_listings.game_not_informed", "Game: not informed"))}</span>`}
             </div>
             <h3>${safeTitle}</h3>
             <p class="listing-description-preserve listing-description-preview">${safeDescription}</p>
             <div class="inline-actions">
-              <a class="btn btn-ghost" href="listing.html?id=${encodeURIComponent(listing.id)}">${escapeHtml(t("my_listings.view_listing", "Ver anúncio"))}</a>
+              <a class="btn btn-ghost" href="listing.html?id=${encodeURIComponent(listing.id)}">${escapeHtml(t("my_listings.view_listing", "View listing"))}</a>
               <button class="btn btn-ghost" type="button" data-action="edit" data-id="${listing.id}">${escapeHtml(t("my_listings.edit", "Editar"))}</button>
               ${promoteLink}
               <button class="btn btn-ghost" type="button" data-action="delete" data-id="${listing.id}">${escapeHtml(t("my_listings.delete", "Excluir"))}</button>
@@ -494,7 +492,7 @@
       });
       if (error) throw error;
       if (!data?.ok) {
-        throw new Error(data?.error || t("my_listings.delete_error", "Erro ao excluir anúncio."));
+        throw new Error(data?.error || t("my_listings.delete_error", "Error deleting listing."));
       }
       await fetchMyListings();
     }
@@ -526,13 +524,13 @@
         }
       } catch (err) {
         console.error(err);
-        alert(err?.message || t("my_listings.manage_error", "Erro ao gerenciar anúncio."));
+        alert(err?.message || t("my_listings.manage_error", "Error managing listing."));
       } finally {
         if (action === "edit") {
           button.disabled = false;
           return;
         }
-        // Em exclusão bem-sucedida o card some no re-render.
+        // After a successful deletion, the card disappears on re-render.
         if (listingsGrid.contains(button)) {
           button.disabled = false;
           button.textContent = originalLabel;
@@ -592,16 +590,16 @@
 
         const params = new URLSearchParams(window.location.search);
         if (params.get("highlight_activated") === "1") {
-          showFeedback(t("my_listings.highlight_activated_success", "Destaque ativado com sucesso para o anúncio selecionado."));
+          showFeedback(t("my_listings.highlight_activated_success", "Boost activated successfully for the selected listing."));
         } else if (params.get("highlight") === "success") {
-          showFeedback(t("my_listings.highlight_payment_success", "Pagamento confirmado. Seu saldo de anúncios foi atualizado."));
+          showFeedback(t("my_listings.highlight_payment_success", "Payment confirmed. Your ad wallet balance was updated."));
         } else if (params.get("highlight") === "cancel") {
           showFeedback(t("my_listings.highlight_payment_cancel", "Pagamento cancelado."));
         }
       } catch (err) {
         console.error(err);
         listingsEmpty.style.display = "block";
-        listingsEmpty.textContent = err?.message || t("my_listings.load_error", "Erro ao carregar seus anúncios.");
+        listingsEmpty.textContent = err?.message || t("my_listings.load_error", "Error loading your listings.");
       } finally {
         revealPage();
       }

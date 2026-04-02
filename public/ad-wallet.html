@@ -248,6 +248,11 @@
       margin: 0;
     }
 
+    .wallet-topup-details {
+      display: grid;
+      gap: 12px;
+    }
+
     .wallet-inline-helper {
       display: flex;
       align-items: center;
@@ -369,7 +374,7 @@
         <aside class="wallet-sidebar">
           <section class="wallet-card">
             <h3 id="wallet-summary-title" class="wallet-title">Ad account summary</h3>
-            <div class="wallet-summary-grid">
+            <div id="wallet-summary-grid" class="wallet-summary-grid" hidden>
               <div class="wallet-summary-item">
                 <span id="wallet-balance-label" class="helper">Balance</span>
                 <strong id="wallet-balance-brl">R$ 0,00</strong>
@@ -397,7 +402,6 @@
       </div>
     </main>
 
-    <site-footer></site-footer>
   </div>
 
   <div id="topup-modal-backdrop" class="wallet-modal-backdrop" aria-hidden="true">
@@ -410,28 +414,32 @@
         <button id="topup-modal-close" class="btn btn-ghost" type="button">Close</button>
       </div>
 
-      <label id="deposit-amount-label" for="deposit-amount" class="helper">Deposit amount</label>
-      <div class="wallet-amount-field">
-        <span id="deposit-amount-prefix" class="wallet-amount-prefix">R$</span>
-        <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="5.00" autocomplete="off" />
-      </div>
-      <p id="deposit-amount-feedback" class="wallet-input-feedback"></p>
+      <p id="deposit-country-helper" class="helper">The checkout currency is defined automatically by your verified phone country.</p>
 
-      <div class="wallet-suggestions">
-        <button class="btn btn-ghost" type="button" data-suggest-amount="5">R$ 5,00</button>
-        <button class="btn btn-ghost" type="button" data-suggest-amount="35">R$ 35,00</button>
-        <button class="btn btn-ghost" type="button" data-suggest-amount="150">R$ 150,00</button>
-      </div>
+      <div id="topup-details" class="wallet-topup-details" hidden>
+        <label id="deposit-amount-label" for="deposit-amount" class="helper">Deposit amount</label>
+        <div class="wallet-amount-field">
+          <span id="deposit-amount-prefix" class="wallet-amount-prefix">R$</span>
+          <input id="deposit-amount" class="wallet-amount-input" type="text" inputmode="decimal" placeholder="5.00" autocomplete="off" />
+        </div>
+        <p id="deposit-amount-feedback" class="wallet-input-feedback"></p>
 
-      <label class="wallet-checkbox" for="wallet-policy-accept">
-        <input id="wallet-policy-accept" type="checkbox" />
-        <span id="wallet-policy-text">I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.</span>
-      </label>
+        <div class="wallet-suggestions">
+          <button class="btn btn-ghost" type="button" data-suggest-amount="5">R$ 5,00</button>
+          <button class="btn btn-ghost" type="button" data-suggest-amount="35">R$ 35,00</button>
+          <button class="btn btn-ghost" type="button" data-suggest-amount="150">R$ 150,00</button>
+        </div>
 
-      <p id="topup-feedback" class="wallet-modal-feedback"></p>
+        <label class="wallet-checkbox" for="wallet-policy-accept">
+          <input id="wallet-policy-accept" type="checkbox" />
+          <span id="wallet-policy-text">I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.</span>
+        </label>
 
-      <div class="inline-actions">
-        <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Add balance and pay</button>
+        <p id="topup-feedback" class="wallet-modal-feedback"></p>
+
+        <div class="inline-actions">
+          <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Add balance and pay</button>
+        </div>
       </div>
     </div>
   </div>
@@ -514,7 +522,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -536,10 +543,44 @@
       return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
     })();
     const MIN_TOPUP_BRL = 5;
-    const MIN_WITHDRAW_BRL = 5;
-    const displayCurrency = String(i18n.currency || "brl").toLowerCase() === "usd" ? "usd" : "brl";
-    const displayCurrencyCode = displayCurrency.toUpperCase();
-    const displayLocale = displayCurrency === "usd" ? "en-US" : (i18n.locale === "en" ? "en-US" : "pt-BR");
+    const MIN_WITHDRAW_BRL = MIN_TOPUP_BRL;
+    const CHECKOUT_FX_API = "https://api.frankfurter.dev/v1/latest";
+    const SUPPORTED_CHECKOUT_COUNTRIES = [
+      { code: "BR", currency: "brl" },
+      { code: "US", currency: "usd" },
+      { code: "CA", currency: "cad" },
+      { code: "GB", currency: "gbp" },
+      { code: "AU", currency: "aud" },
+      { code: "NZ", currency: "nzd" },
+      { code: "MX", currency: "mxn" },
+      { code: "CH", currency: "chf" },
+      { code: "SE", currency: "sek" },
+      { code: "NO", currency: "nok" },
+      { code: "DK", currency: "dkk" },
+      { code: "PL", currency: "pln" },
+      { code: "DE", currency: "eur" },
+      { code: "FR", currency: "eur" },
+      { code: "ES", currency: "eur" },
+      { code: "IT", currency: "eur" },
+      { code: "PT", currency: "eur" },
+      { code: "NL", currency: "eur" },
+      { code: "BE", currency: "eur" },
+      { code: "IE", currency: "eur" },
+      { code: "AT", currency: "eur" },
+      { code: "FI", currency: "eur" },
+      { code: "GR", currency: "eur" },
+      { code: "OTHER", currency: "usd" },
+    ];
+    const CHECKOUT_CURRENCY_FALLBACK_TO_BRL = {
+      brl: 1,
+      usd: USD_BRL_RATE,
+    };
+    const displayLocale = i18n.locale === "en" ? "en-US" : "pt-BR";
+    let selectedCheckoutCountry = "";
+    let selectedCheckoutCurrency = "usd";
+    let selectedCheckoutRateToBRL = 1;
+    let checkoutRatesReady = false;
+    let brlToCurrencyRates = { BRL: 1, USD: 1 / USD_BRL_RATE };
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -551,6 +592,7 @@
     const profileLink = document.getElementById("profile-link");
 
     const walletSummaryTitle = document.getElementById("wallet-summary-title");
+    const walletSummaryGrid = document.getElementById("wallet-summary-grid");
     const walletBalanceLabel = document.getElementById("wallet-balance-label");
     const walletActiveLabel = document.getElementById("wallet-active-label");
     const walletListingsTitle = document.getElementById("wallet-listings-title");
@@ -564,6 +606,8 @@
     const topupModalTitle = document.getElementById("topup-modal-title");
     const topupModalHelper = document.getElementById("topup-modal-helper");
     const topupModalClose = document.getElementById("topup-modal-close");
+    const depositCountryHelper = document.getElementById("deposit-country-helper");
+    const topupDetails = document.getElementById("topup-details");
     const depositAmountLabel = document.getElementById("deposit-amount-label");
     const depositAmountPrefix = document.getElementById("deposit-amount-prefix");
     const amountInput = document.getElementById("deposit-amount");
@@ -640,13 +684,148 @@
     let pendingActivateListingId = null;
     let topupIntent = "balance";
     let authRedirectInFlight = false;
+    let walletDisplayCurrency = "";
+    let walletDisplayRateToBRL = 1;
+    let currentProfile = null;
+
+    function getCurrencyLocale() {
+      return displayLocale;
+    }
+
+    function inferCountryCodeFromPhone(phone) {
+      const normalized = String(phone || "").replace(/\D/g, "");
+      const prefixes = [
+        ["55", "BR"],
+        ["41", "CH"],
+        ["52", "MX"],
+        ["44", "GB"],
+        ["61", "AU"],
+        ["64", "NZ"],
+        ["46", "SE"],
+        ["47", "NO"],
+        ["45", "DK"],
+        ["48", "PL"],
+        ["49", "DE"],
+        ["33", "FR"],
+        ["34", "ES"],
+        ["39", "IT"],
+        ["351", "PT"],
+        ["31", "NL"],
+        ["32", "BE"],
+        ["353", "IE"],
+        ["43", "AT"],
+        ["358", "FI"],
+        ["30", "GR"],
+        ["1", "US"],
+      ];
+      for (const [prefix, countryCode] of prefixes) {
+        if (normalized.startsWith(prefix)) return countryCode;
+      }
+      return "OTHER";
+    }
+
+    function getCheckoutCountryConfig(countryCode) {
+      const normalized = String(countryCode || "").trim().toUpperCase();
+      return SUPPORTED_CHECKOUT_COUNTRIES.find((item) => item.code === normalized) || null;
+    }
+
+    function getSelectedCheckoutConfig() {
+      return getCheckoutCountryConfig(selectedCheckoutCountry) || getCheckoutCountryConfig("OTHER");
+    }
+
+    function getSelectedCheckoutCurrency() {
+      return String(getSelectedCheckoutConfig()?.currency || selectedCheckoutCurrency || "usd").toLowerCase();
+    }
+
+    function getSelectedCheckoutCountryCode() {
+      return String(selectedCheckoutCountry || "").toUpperCase();
+    }
+
+    async function loadCurrentProfile() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("phone,phone_verified,country_code")
+        .eq("id", currentUser.id)
+        .single();
+      if (error) throw error;
+      currentProfile = data || null;
+      const resolvedCountry = getCheckoutCountryConfig(currentProfile?.country_code)?.code
+        || getCheckoutCountryConfig(inferCountryCodeFromPhone(currentProfile?.phone || ""))?.code
+        || "OTHER";
+      syncSelectedCheckoutCountry(resolvedCountry);
+      updateTopupCountryUI();
+    }
+
+    function getCurrencySymbol(currencyCode) {
+      try {
+        const parts = new Intl.NumberFormat(getCurrencyLocale(), {
+          style: "currency",
+          currency: String(currencyCode || "USD").toUpperCase(),
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).formatToParts(0);
+        return parts.find((part) => part.type === "currency")?.value || String(currencyCode || "").toUpperCase();
+      } catch (_err) {
+        return String(currencyCode || "").toUpperCase();
+      }
+    }
+
+    async function loadCheckoutCurrencyRates() {
+      const supportedCurrencies = [...new Set(SUPPORTED_CHECKOUT_COUNTRIES.map((item) => item.currency.toUpperCase()).filter((code) => code !== "BRL"))];
+      if (supportedCurrencies.length === 0) {
+        checkoutRatesReady = true;
+        return;
+      }
+      try {
+        const response = await fetch(`${CHECKOUT_FX_API}?base=BRL&symbols=${supportedCurrencies.join(",")}`);
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(payload?.error || "Could not load exchange rates.");
+        }
+        const nextRates = { BRL: 1 };
+        for (const currency of supportedCurrencies) {
+          const parsed = Number(payload?.rates?.[currency]);
+          if (Number.isFinite(parsed) && parsed > 0) {
+            nextRates[currency] = parsed;
+          }
+        }
+        if (Number.isFinite(CHECKOUT_CURRENCY_FALLBACK_TO_BRL.usd) && CHECKOUT_CURRENCY_FALLBACK_TO_BRL.usd > 0 && !nextRates.USD) {
+          nextRates.USD = 1 / CHECKOUT_CURRENCY_FALLBACK_TO_BRL.usd;
+        }
+        brlToCurrencyRates = { ...brlToCurrencyRates, ...nextRates };
+      } catch (_err) {
+        brlToCurrencyRates = {
+          ...brlToCurrencyRates,
+          BRL: 1,
+          USD: 1 / CHECKOUT_CURRENCY_FALLBACK_TO_BRL.usd,
+        };
+      } finally {
+        checkoutRatesReady = true;
+      }
+    }
+
+    function syncSelectedCheckoutCountry(nextCountryCode) {
+      const normalized = String(nextCountryCode || "").trim().toUpperCase();
+      const supported = getCheckoutCountryConfig(normalized);
+      selectedCheckoutCountry = supported?.code || "";
+      selectedCheckoutCurrency = String(supported?.currency || "usd").toLowerCase();
+      const brlToCurrency = Number(brlToCurrencyRates[selectedCheckoutCurrency.toUpperCase()] || 0);
+      if (selectedCheckoutCurrency === "brl") {
+        selectedCheckoutRateToBRL = 1;
+      } else if (Number.isFinite(brlToCurrency) && brlToCurrency > 0) {
+        selectedCheckoutRateToBRL = 1 / brlToCurrency;
+      } else {
+        selectedCheckoutRateToBRL = Number(CHECKOUT_CURRENCY_FALLBACK_TO_BRL[selectedCheckoutCurrency] || 1);
+      }
+    }
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function applyStaticTranslations() {
       document.title = t("ad_wallet.title_default", "Gimerr - Ad wallet");
       document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
-      const minimumAmount = formatDisplayMoneyFromBRL(MIN_TOPUP_BRL);
+      const minimumAmount = formatCheckoutMoneyFromBRL(MIN_TOPUP_BRL);
       const loaderImage = pageLoader?.querySelector("img");
       if (loaderImage) loaderImage.alt = t("ad_wallet.loading", "Carregando");
       if (walletSummaryTitle) walletSummaryTitle.textContent = t("ad_wallet.summary_title", "Ad account summary");
@@ -663,13 +842,29 @@
         });
       }
       if (topupModalClose) topupModalClose.textContent = t("ad_wallet.close", "Fechar");
+      if (depositCountryHelper) {
+        const currencyCode = getSelectedCheckoutCurrency().toUpperCase();
+        const currencyLabel = typeof Intl.DisplayNames === "function"
+          ? (new Intl.DisplayNames([i18n.locale === "en" ? "en" : "pt-BR"], { type: "currency" }).of(currencyCode) || currencyCode)
+          : currencyCode;
+        depositCountryHelper.textContent = currentProfile?.phone_verified
+          ? formatMessage(
+              "ad_wallet.deposit_currency_auto_helper",
+              "Checkout currency: {currency}. This is based on your verified phone number.",
+              { currency: `${currencyLabel} (${currencyCode})` },
+            )
+          : t(
+              "ad_wallet.deposit_phone_required",
+              "Verify your phone number to enable ad-wallet deposits.",
+            );
+      }
       if (depositAmountLabel) {
         depositAmountLabel.textContent = t("ad_wallet.deposit_label", "Deposit amount");
       }
-      if (depositAmountPrefix) depositAmountPrefix.textContent = displayCurrency === "usd" ? "$" : "R$";
+      if (depositAmountPrefix) depositAmountPrefix.textContent = getCurrencySymbol(getSelectedCheckoutCurrency());
       if (amountInput) {
         amountInput.placeholder = formatMessage("ad_wallet.deposit_placeholder_dynamic", "{amount}", {
-          amount: formatInputAmountFromBRL(MIN_TOPUP_BRL),
+          amount: formatCheckoutInputAmountFromBRL(MIN_TOPUP_BRL),
         });
       }
       if (walletPolicyText) walletPolicyText.innerHTML = formatMessage("ad_wallet.policy_text", 'I have read and agree with the <a class="wallet-policy-link" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.');
@@ -689,7 +884,7 @@
         activateCpmTooltip.textContent = formatMessage(
           "ad_wallet.activate_cpm_info_text",
           "CPM means cost per 1,000 views. Example: if CPM is {amount}, every 1,000 tracked views consume {amount} from your balance.",
-          { amount: formatDisplayMoneyFromBRL(getCpmBRL()) },
+          { amount: formatBRLMoney(getCpmBRL()) },
         );
       }
       if (activateModeImmediateLabel) activateModeImmediateLabel.textContent = t("ad_wallet.activate_mode_immediate", "Ativar destaque imediatamente");
@@ -697,16 +892,15 @@
       if (activateEndDateLabel) activateEndDateLabel.textContent = t("ad_wallet.activate_end_date_label", "Highlight until");
       if (activatePeriodHelper) activatePeriodHelper.textContent = t("ad_wallet.activate_period_helper", "The highlight starts now and stays active until the end of the selected date.");
       if (activateCpmLabel) activateCpmLabel.textContent = t("ad_wallet.activate_cpm_label", "CPM:");
-      if (activateCpmValue) activateCpmValue.textContent = formatDisplayMoneyFromBRL(getCpmBRL());
+      if (activateCpmValue) activateCpmValue.textContent = formatBRLMoney(getCpmBRL());
       if (activateConfirmBtn) activateConfirmBtn.textContent = activateModePeriod?.checked
         ? t("ad_wallet.activate_schedule", "Save highlight period")
         : t("ad_wallet.activate_now", "Activate highlight now");
       if (withdrawModalTitle) withdrawModalTitle.textContent = t("ad_wallet.withdraw_title", "Solicitar saque");
       if (withdrawModalHelper) {
-        withdrawModalHelper.textContent = formatMessage(
-          "ad_wallet.withdraw_helper_dynamic",
-          "Your available balance will be paused immediately for refund review. The minimum amount to request withdrawal is {amount}.",
-          { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+        withdrawModalHelper.textContent = t(
+          "ad_wallet.withdraw_helper",
+          "Your available balance will be paused immediately for refund review.",
         );
       }
       if (withdrawModalClose) withdrawModalClose.textContent = t("ad_wallet.close", "Fechar");
@@ -717,7 +911,7 @@
       document.querySelectorAll("[data-suggest-amount]").forEach((button) => {
         const amountBRL = Number(button.getAttribute("data-suggest-amount") || 0);
         if (!Number.isFinite(amountBRL) || amountBRL <= 0) return;
-        button.textContent = formatDisplayMoneyFromBRL(amountBRL);
+        button.textContent = formatCheckoutMoneyFromBRL(amountBRL);
       });
     }
 
@@ -773,10 +967,9 @@
       withdrawFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
     }
 
-    function formatMoney(value, currency = displayCurrency) {
-      const normalizedCurrency = currency === "usd" ? "USD" : "BRL";
-      const normalizedLocale = currency === "usd" ? "en-US" : displayLocale;
-      return new Intl.NumberFormat(normalizedLocale, {
+    function formatMoney(value, currency = "brl") {
+      const normalizedCurrency = String(currency || "brl").trim().toUpperCase();
+      return new Intl.NumberFormat(getCurrencyLocale(), {
         style: "currency",
         currency: normalizedCurrency,
         minimumFractionDigits: 2,
@@ -784,27 +977,44 @@
       }).format(Number(value || 0));
     }
 
-    function brlToDisplayAmount(valueBRL) {
+    function formatBRLMoney(valueBRL) {
+      return formatMoney(valueBRL, "brl");
+    }
+
+    function getWalletDisplayCurrency() {
+      return String(walletDisplayCurrency || "").trim().toLowerCase();
+    }
+
+    function formatWalletMoneyFromBRL(valueBRL) {
+      const currency = getWalletDisplayCurrency();
+      if (!currency) return "";
+      const normalized = Number(valueBRL || 0);
+      if (!Number.isFinite(normalized)) return formatMoney(0, currency);
+      const converted = walletDisplayRateToBRL > 0 ? normalized / walletDisplayRateToBRL : normalized;
+      return formatMoney(Number(converted.toFixed(2)), currency);
+    }
+
+    function brlToCheckoutAmount(valueBRL) {
       const normalized = Number(valueBRL || 0);
       if (!Number.isFinite(normalized)) return 0;
-      const converted = displayCurrency === "usd" ? normalized / USD_BRL_RATE : normalized;
+      const converted = selectedCheckoutRateToBRL > 0 ? normalized / selectedCheckoutRateToBRL : normalized;
       return Number(converted.toFixed(2));
     }
 
-    function displayAmountToBRL(value) {
+    function checkoutAmountToBRL(value) {
       const normalized = Number(value || 0);
       if (!Number.isFinite(normalized)) return NaN;
-      const converted = displayCurrency === "usd" ? normalized * USD_BRL_RATE : normalized;
+      const converted = normalized * (selectedCheckoutRateToBRL > 0 ? selectedCheckoutRateToBRL : 1);
       return Number(converted.toFixed(2));
     }
 
-    function formatDisplayMoneyFromBRL(valueBRL) {
-      return formatMoney(brlToDisplayAmount(valueBRL));
+    function formatCheckoutMoneyFromBRL(valueBRL) {
+      return formatMoney(brlToCheckoutAmount(valueBRL), getSelectedCheckoutCurrency());
     }
 
-    function formatInputAmountFromBRL(valueBRL) {
-      const amount = brlToDisplayAmount(valueBRL);
-      return displayCurrency === "usd"
+    function formatCheckoutInputAmountFromBRL(valueBRL) {
+      const amount = brlToCheckoutAmount(valueBRL);
+      return i18n.locale === "en"
         ? amount.toFixed(2)
         : amount.toFixed(2).replace(".", ",");
     }
@@ -865,14 +1075,13 @@
       let text = String(raw || "").trim();
       if (!text) return NaN;
       text = text.replace(/\s+/g, "");
-      if (displayCurrency === "usd") {
-        text = text.replace(/\$/g, "").replace(/USD/gi, "");
+      text = text.replace(/[A-Z$€£¥₣₽₹₩₺₴₫₦₱₲₡₵₸₭₮₼₨₾₥₺₤₪₼₣₳₴₭₸₧₠₢₣₿]/gi, "");
+      if (i18n.locale === "en") {
         if (text.includes(",") && !text.includes(".")) {
           text = text.replace(",", ".");
         }
         text = text.replace(/,/g, "");
       } else {
-        text = text.replace(/R\$/gi, "");
         text = text.replace(/\./g, "").replace(",", ".");
       }
       text = text.replace(/[^0-9.]/g, "");
@@ -885,7 +1094,7 @@
     function formatDisplayAmountInputValue(value) {
       const normalized = Number(value || 0);
       if (!Number.isFinite(normalized) || normalized < 0) return "";
-      return displayCurrency === "usd"
+      return i18n.locale === "en"
         ? normalized.toFixed(2)
         : normalized.toFixed(2).replace(".", ",");
     }
@@ -1043,14 +1252,17 @@
     }
 
     function updateCheckoutButtonState() {
+      const hasCountry = Boolean(getSelectedCheckoutCountryCode());
       const displayAmount = parseDisplayAmount(amountInput?.value || "");
-      const amountBRL = displayAmountToBRL(displayAmount);
-      const canPay = Number.isFinite(displayAmount) && Number.isFinite(amountBRL) && amountBRL >= MIN_TOPUP_BRL && Boolean(policyAccept?.checked);
-      if (!String(amountInput?.value || "").trim()) {
+      const amountBRL = checkoutAmountToBRL(displayAmount);
+      const canPay = Boolean(currentProfile?.phone_verified) && hasCountry && Number.isFinite(displayAmount) && Number.isFinite(amountBRL) && amountBRL >= MIN_TOPUP_BRL && Boolean(policyAccept?.checked);
+      if (!hasCountry) {
+        setDepositAmountFeedback("");
+      } else if (!String(amountInput?.value || "").trim()) {
         setDepositAmountFeedback("");
       } else if (!Number.isFinite(displayAmount) || !Number.isFinite(amountBRL) || amountBRL < MIN_TOPUP_BRL) {
         setDepositAmountFeedback(formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
-          amount: formatDisplayMoneyFromBRL(MIN_TOPUP_BRL),
+          amount: formatCheckoutMoneyFromBRL(MIN_TOPUP_BRL),
         }), true);
       } else {
         setDepositAmountFeedback("");
@@ -1058,26 +1270,35 @@
       checkoutBtn.disabled = !canPay;
     }
 
+    function updateTopupCountryUI() {
+      const canTopup = Boolean(currentProfile?.phone_verified) && Boolean(selectedCheckoutCountry);
+      if (topupDetails) topupDetails.hidden = !canTopup;
+      if (depositAmountPrefix) depositAmountPrefix.textContent = getCurrencySymbol(getSelectedCheckoutCurrency());
+      if (amountInput && !String(amountInput.value || "").trim()) {
+        amountInput.placeholder = formatMessage("ad_wallet.deposit_placeholder_dynamic", "{amount}", {
+          amount: formatCheckoutInputAmountFromBRL(MIN_TOPUP_BRL),
+        });
+      }
+      applyStaticTranslations();
+      updateCheckoutButtonState();
+      if (openTopupModalBtn) openTopupModalBtn.disabled = !Boolean(currentUser);
+    }
+
     function updateWithdrawButtonState() {
       const availableBalance = getAvailableBalanceBRL();
       const hasMinimumBalance = availableBalance >= MIN_WITHDRAW_BRL;
       if (openWithdrawModalBtn) {
         openWithdrawModalBtn.disabled = !hasMinimumBalance;
+        openWithdrawModalBtn.style.display = hasMinimumBalance ? "" : "none";
       }
       if (withdrawEstimateValue) {
-        withdrawEstimateValue.textContent = formatDisplayMoneyFromBRL(availableBalance);
+        withdrawEstimateValue.textContent = formatBRLMoney(availableBalance);
       }
       if (withdrawConfirmBtn) {
         withdrawConfirmBtn.disabled = !hasMinimumBalance || !Boolean(withdrawPolicyAccept?.checked);
       }
       if (walletWithdrawNote) {
-        walletWithdrawNote.textContent = hasMinimumBalance
-          ? ""
-          : formatMessage(
-            "ad_wallet.withdraw_entry_minimum_note",
-            "To request a refund, you need at least {amount} in your ad wallet. Refund fees are deducted during review.",
-            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
-          );
+        walletWithdrawNote.textContent = "";
       }
     }
 
@@ -1176,6 +1397,10 @@
     }
 
     function openTopupModal(referenceListingId = null, intent = "balance") {
+      if (!currentProfile?.phone_verified) {
+        window.location.href = "profile.html?phone_required=1";
+        return;
+      }
       checkoutReferenceListingId = referenceListingId || null;
       topupIntent = intent;
       if (intent === "activate" && checkoutReferenceListingId) {
@@ -1186,9 +1411,9 @@
       checkoutBtn.textContent = intent === "activate"
         ? t("ad_wallet.checkout_activate", "Pay and highlight listing")
         : t("ad_wallet.checkout_balance", "Add balance and pay");
+      updateTopupCountryUI();
       topupModalBackdrop.style.display = "grid";
       topupModalBackdrop.setAttribute("aria-hidden", "false");
-      updateCheckoutButtonState();
     }
 
     function closeTopupModal() {
@@ -1204,7 +1429,7 @@
           formatMessage(
             "ad_wallet.withdraw_minimum_error",
             "The minimum amount to request withdrawal is {amount}.",
-            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+            { amount: formatBRLMoney(MIN_WITHDRAW_BRL) },
           ),
           true,
         );
@@ -1230,7 +1455,7 @@
       activateTargetTitle.textContent = formatMessage("ad_wallet.activate_target", "Listing: {title}", {
         title: listing.title || t("ad_wallet.no_title", "Untitled"),
       });
-      if (activateCpmValue) activateCpmValue.textContent = formatDisplayMoneyFromBRL(getCpmBRL());
+      if (activateCpmValue) activateCpmValue.textContent = formatBRLMoney(getCpmBRL());
       setActivateFeedback("");
 
       activateModalBackdrop.style.display = "grid";
@@ -1259,8 +1484,38 @@
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || t("ad_wallet.status_error", "Erro ao consultar saldo."));
       walletState = data.wallet || null;
+      try {
+        const { data: topupRows, error: topupError } = await supabase
+          .from("wallet_events")
+          .select("metadata,created_at")
+          .eq("user_id", currentUser.id)
+          .eq("event_type", "topup")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (topupError) throw topupError;
+        const lastTopup = Array.isArray(topupRows) ? topupRows[0] : null;
+        const checkoutCurrency = String(lastTopup?.metadata?.checkout_currency || "").trim().toLowerCase();
+        const fxRate = Number(lastTopup?.metadata?.fx_rate || 0);
+        if (checkoutCurrency) {
+          walletDisplayCurrency = checkoutCurrency;
+          walletDisplayRateToBRL = checkoutCurrency === "brl"
+            ? 1
+            : (Number.isFinite(fxRate) && fxRate > 0 ? fxRate : Number(CHECKOUT_CURRENCY_FALLBACK_TO_BRL[checkoutCurrency] || 1));
+        } else {
+          walletDisplayCurrency = "";
+          walletDisplayRateToBRL = 1;
+        }
+      } catch (_err) {
+        walletDisplayCurrency = "";
+        walletDisplayRateToBRL = 1;
+      }
 
-      balanceBrlEl.textContent = formatDisplayMoneyFromBRL(getAvailableBalanceBRL());
+      if (walletSummaryGrid) {
+        walletSummaryGrid.hidden = !getWalletDisplayCurrency();
+      }
+      balanceBrlEl.textContent = getWalletDisplayCurrency()
+        ? formatWalletMoneyFromBRL(getAvailableBalanceBRL())
+        : "";
       activeCountEl.textContent = String(Number(walletState?.activeListingCount || 0));
       updateWithdrawButtonState();
       applyStaticTranslations();
@@ -1336,12 +1591,24 @@
 
     async function startCheckout() {
       const displayAmount = parseDisplayAmount(amountInput?.value || "");
-      const amount = displayAmountToBRL(displayAmount);
+      const amountBRL = checkoutAmountToBRL(displayAmount);
+      const checkoutCurrency = getSelectedCheckoutCurrency();
+      const checkoutCountryCode = getSelectedCheckoutCountryCode();
       const shouldAutoActivate = topupIntent === "activate" && Boolean(checkoutReferenceListingId);
       const referenceListingId = shouldAutoActivate ? checkoutReferenceListingId : null;
-      if (!Number.isFinite(displayAmount) || !Number.isFinite(amount) || amount < MIN_TOPUP_BRL) {
+      if (!checkoutCountryCode) {
+        setTopupFeedback(
+          t(
+            "ad_wallet.deposit_phone_required",
+            "Verify your phone number to enable ad-wallet deposits.",
+          ),
+          true,
+        );
+        return;
+      }
+      if (!Number.isFinite(displayAmount) || !Number.isFinite(amountBRL) || amountBRL < MIN_TOPUP_BRL) {
         setDepositAmountFeedback(formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
-          amount: formatDisplayMoneyFromBRL(MIN_TOPUP_BRL),
+          amount: formatCheckoutMoneyFromBRL(MIN_TOPUP_BRL),
         }), true);
         return;
       }
@@ -1366,8 +1633,10 @@
           body: {
             listingId: referenceListingId,
             autoActivate: shouldAutoActivate,
-            amountBRL: amount,
-            currency: displayCurrency,
+            amount: displayAmount,
+            amountBRL,
+            currency: checkoutCurrency,
+            countryCode: checkoutCountryCode,
             returnBaseUrl: window.location.origin,
           },
           headers: {
@@ -1403,7 +1672,7 @@
           formatMessage(
             "ad_wallet.withdraw_minimum_error",
             "The minimum amount to request withdrawal is {amount}.",
-            { amount: formatDisplayMoneyFromBRL(MIN_WITHDRAW_BRL) },
+            { amount: formatBRLMoney(MIN_WITHDRAW_BRL) },
           ),
           true,
         );
@@ -1474,17 +1743,11 @@
 
     async function redirectToGoogleAuth(targetPath = null) {
       authRedirectInFlight = true;
-      ensureClient();
       const normalizedPath = targetPath
         ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
         : `${window.location.pathname}${window.location.search || ""}`;
-      const redirectTo = `${window.location.origin}${normalizedPath}`;
       try {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo },
-        });
-        if (error) throw error;
+        window.__OPEN_AUTH_GATEWAY__?.(normalizedPath);
       } catch (err) {
         authRedirectInFlight = false;
         throw err;
@@ -1567,7 +1830,7 @@
       button.addEventListener("click", () => {
         const value = Number(button.getAttribute("data-suggest-amount") || 0);
         if (!Number.isFinite(value) || value <= 0) return;
-        amountInput.value = formatInputAmountFromBRL(value);
+        amountInput.value = formatCheckoutInputAmountFromBRL(value);
         updateCheckoutButtonState();
       });
     });
@@ -1663,7 +1926,9 @@
 
     (async function init() {
       try {
-        applyStaticTranslations();
+        await loadCheckoutCurrencyRates();
+        syncSelectedCheckoutCountry("OTHER");
+        updateTopupCountryUI();
         ensureClient();
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
@@ -1672,6 +1937,8 @@
           await redirectToGoogleAuth("ad-wallet.html");
           return;
         }
+
+        await loadCurrentProfile();
 
         const params = new URLSearchParams(window.location.search);
         const highlightResult = params.get("highlight");

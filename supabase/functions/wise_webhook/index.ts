@@ -167,7 +167,9 @@ Deno.serve(async (req) => {
       .eq("id", requestRow.id);
     if (updateErr) throw updateErr;
 
-    if (["paid", "rejected", "failed", "cancelled"].includes(mappedStatus) && !requestRow.approved_email_sent_at && EMAIL_ENDPOINT) {
+    // Future review: re-enable the success e-mail when the paid-transfer template
+    // has been validated end-to-end against Wise sandbox/production confirmations.
+    if (["rejected", "failed", "cancelled"].includes(mappedStatus) && !requestRow.approved_email_sent_at && EMAIL_ENDPOINT) {
       try {
         const { data: userRow, error: userErr } = await supabase
           .from("users")

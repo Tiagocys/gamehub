@@ -55,98 +55,103 @@
 
     <main class="section policy-page">
       <section class="hero-card">
-        <h2>Featured advertising policy</h2>
-        <p class="helper">Read carefully before adding balance and activating highlights.</p>
+        <h2 id="ads-policy-hero-title">Featured advertising policy</h2>
+        <p id="ads-policy-hero-helper" class="helper">Read carefully before adding balance and activating highlights.</p>
       </section>
 
       <article class="policy-card">
-        <h3>1. Adding balance</h3>
+        <h3 id="ads-policy-section-1-title">1. Adding balance</h3>
         <ul>
-          <li>The user adds balance to the ad wallet starting from R$ 5.00.</li>
-          <li>Payment is processed via Stripe in a secure environment.</li>
-          <li>After payment confirmation, the balance becomes available for the user's own listings.</li>
+          <li id="ads-policy-section-1-item-1">The user adds balance to the ad wallet starting from R$ 5.00.</li>
+          <li id="ads-policy-section-1-item-2">Adding balance requires a verified phone number.</li>
+          <li id="ads-policy-section-1-item-3">The checkout currency is inferred from the country prefix of the verified phone number.</li>
+          <li id="ads-policy-section-1-item-4">When there is no supported local currency for that country, the system uses USD as fallback.</li>
+          <li id="ads-policy-section-1-item-5">Payment is processed via Stripe in a secure environment.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>2. Activation and consumption</h3>
+        <h3 id="ads-policy-section-2-title">2. Wallet currency and activation</h3>
         <ul>
-          <li>Highlights are activated from the ad wallet dashboard.</li>
-          <li>Highlights follow a billing model based exclusively on CPM.</li>
-          <li>The reference CPM is US$ 2.00 per 1,000 impressions tracked by the system.</li>
-          <li>The BRL amount is converted daily based on the USD/BRL rate used by the system.</li>
-          <li>An impression is counted only when the featured card reaches at least 65% visibility on screen.</li>
-          <li>The same listing can only be counted again after 30 seconds in the same browser tab.</li>
-          <li>Impressions are grouped by the system with a small technical delay of up to 800ms.</li>
-          <li>The 30-second rule is applied in the browser itself to reduce repeated counts of the same listing in the same tab.</li>
-          <li>Tracked impressions are charged in real time based on CPM.</li>
-          <li>When the balance reaches zero, active highlights are paused automatically.</li>
+          <li id="ads-policy-section-2-item-1">After payment confirmation, the deposit is converted to BRL and credited to the ad wallet.</li>
+          <li id="ads-policy-section-2-item-2">The wallet balance and CPM consumption are accounted for internally in BRL.</li>
+          <li id="ads-policy-section-2-item-3">The sidebar may display the balance in the user's most recent deposit currency for convenience, but internal accounting remains in BRL.</li>
+          <li id="ads-policy-section-2-item-4">Highlights are activated from the ad wallet dashboard.</li>
+          <li id="ads-policy-section-2-item-5">Highlights follow a billing model based exclusively on CPM.</li>
+          <li id="ads-policy-section-2-item-6">The CPM reference used by the system is based on US$ 2.00 per 1,000 tracked impressions and converted to BRL.</li>
+          <li id="ads-policy-section-2-item-7">When the balance reaches zero, active highlights are paused automatically.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>3. Pausing and deleting a listing</h3>
+        <h3 id="ads-policy-section-3-title">3. Impression counting and consumption</h3>
         <ul>
-          <li>When a listing is paused or deleted, its highlight ends immediately.</li>
-          <li>Amounts already consumed by impressions are not refunded.</li>
-          <li>Any remaining balance stays in the ad wallet for future use.</li>
+          <li id="ads-policy-section-3-item-1">An impression is counted only when the featured card reaches at least 65% visibility on screen.</li>
+          <li id="ads-policy-section-3-item-2">The same listing can only be counted again after 30 seconds in the same browser tab.</li>
+          <li id="ads-policy-section-3-item-3">Impressions are grouped by the system with a small technical delay of up to 800ms.</li>
+          <li id="ads-policy-section-3-item-4">Tracked impressions are charged in real time based on CPM.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>4. Withdrawal and balance refunds</h3>
+        <h3 id="ads-policy-section-4-title">4. Pausing, deleting, and refunds</h3>
         <ul>
-          <li>You may request withdrawal of the available ad wallet balance starting from R$ 5.00.</li>
-          <li>When a withdrawal is requested, active highlights are paused and the balance goes into review.</li>
-          <li>Refund requests below R$ 5.00 are not accepted.</li>
-          <li>The final refunded amount may be lower than the requested balance because original payment fees and other applicable costs may be deducted during refund review.</li>
+          <li id="ads-policy-section-4-item-1">When a listing is paused or deleted, its highlight ends immediately.</li>
+          <li id="ads-policy-section-4-item-2">Amounts already consumed by impressions are not refunded.</li>
+          <li id="ads-policy-section-4-item-3">Any remaining balance stays in the ad wallet for future use.</li>
+          <li id="ads-policy-section-4-item-4">You may request withdrawal of the available ad wallet balance starting from the same minimum amount required to add balance.</li>
+          <li id="ads-policy-section-4-item-5">When a withdrawal is requested, active highlights are paused and the balance goes into review.</li>
+          <li id="ads-policy-section-4-item-6">The final refunded amount may be lower than the requested balance because original payment fees, conversion, and other applicable costs may be deducted during refund review.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>5. Moderation</h3>
+        <h3 id="ads-policy-section-5-title">5. Moderation</h3>
         <ul>
-          <li>Listings may be removed for violating the platform rules.</li>
-          <li>Even in moderation removals, consumption already recorded up to the removal time is not reverted.</li>
+          <li id="ads-policy-section-5-item-1">Listings may be removed for violating the platform rules.</li>
+          <li id="ads-policy-section-5-item-2">Even in moderation removals, consumption already recorded up to the removal time is not reverted.</li>
         </ul>
       </article>
 
       <article class="policy-card">
-        <h3>6. Support</h3>
-        <p>
+        <h3 id="ads-policy-section-6-title">6. Support</h3>
+        <p id="ads-policy-section-6-body">
           Questions about payments, balance and highlights:
           <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>
         </p>
       </article>
 
       <article class="policy-card">
-        <h3>7. Payment security</h3>
-        <p>
+        <h3 id="ads-policy-section-7-title">7. Payment security</h3>
+        <p id="ads-policy-section-7-item-1">
           Payments are processed exclusively by Stripe,
           in a secure and encrypted environment.
         </p>
-        <p>
+        <p id="ads-policy-section-7-item-2">
           Gimerr does not store sensitive credit card data,
           such as card number, security code (CVV) or expiration date.
         </p>
-        <p>
+        <p id="ads-policy-section-7-item-3">
           All financial information is handled directly by Stripe,
           in accordance with applicable international security standards.
         </p>
       </article>
     </main>
 
-    <site-footer></site-footer>
   </div>
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
@@ -168,6 +173,58 @@
       avatarImg.addEventListener("error", () => {
         avatarImg.src = "img/avatar.svg";
       });
+    }
+
+    function setText(id, key, fallback) {
+      const node = document.getElementById(id);
+      if (node) node.textContent = t(key, fallback);
+    }
+
+    function setHtml(id, key, fallback) {
+      const node = document.getElementById(id);
+      if (node) node.innerHTML = t(key, fallback);
+    }
+
+    function applyTranslations() {
+      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      document.title = t("ads_policy.title", "Gimerr - Advertising policy");
+      setText("ads-policy-hero-title", "ads_policy.hero_title", "Featured advertising policy");
+      setText("ads-policy-hero-helper", "ads_policy.hero_helper", "Read carefully before adding balance and activating highlights.");
+      setText("ads-policy-section-1-title", "ads_policy.section_1_title", "1. Adding balance");
+      setText("ads-policy-section-1-item-1", "ads_policy.section_1_item_1", "The user adds balance to the ad wallet starting from R$ 5.00.");
+      setText("ads-policy-section-1-item-2", "ads_policy.section_1_item_2", "Adding balance requires a verified phone number.");
+      setText("ads-policy-section-1-item-3", "ads_policy.section_1_item_3", "The checkout currency is inferred from the country prefix of the verified phone number.");
+      setText("ads-policy-section-1-item-4", "ads_policy.section_1_item_4", "When there is no supported local currency for that country, the system uses USD as fallback.");
+      setText("ads-policy-section-1-item-5", "ads_policy.section_1_item_5", "Payment is processed via Stripe in a secure environment.");
+      setText("ads-policy-section-2-title", "ads_policy.section_2_title", "2. Wallet currency and activation");
+      setText("ads-policy-section-2-item-1", "ads_policy.section_2_item_1", "After payment confirmation, the deposit is converted to BRL and credited to the ad wallet.");
+      setText("ads-policy-section-2-item-2", "ads_policy.section_2_item_2", "The wallet balance and CPM consumption are accounted for internally in BRL.");
+      setText("ads-policy-section-2-item-3", "ads_policy.section_2_item_3", "The sidebar may display the balance in the user's most recent deposit currency for convenience, but internal accounting remains in BRL.");
+      setText("ads-policy-section-2-item-4", "ads_policy.section_2_item_4", "Highlights are activated from the ad wallet dashboard.");
+      setText("ads-policy-section-2-item-5", "ads_policy.section_2_item_5", "Highlights follow a billing model based exclusively on CPM.");
+      setText("ads-policy-section-2-item-6", "ads_policy.section_2_item_6", "The CPM reference used by the system is based on US$ 2.00 per 1,000 tracked impressions and converted to BRL.");
+      setText("ads-policy-section-2-item-7", "ads_policy.section_2_item_7", "When the balance reaches zero, active highlights are paused automatically.");
+      setText("ads-policy-section-3-title", "ads_policy.section_3_title", "3. Impression counting and consumption");
+      setText("ads-policy-section-3-item-1", "ads_policy.section_3_item_1", "An impression is counted only when the featured card reaches at least 65% visibility on screen.");
+      setText("ads-policy-section-3-item-2", "ads_policy.section_3_item_2", "The same listing can only be counted again after 30 seconds in the same browser tab.");
+      setText("ads-policy-section-3-item-3", "ads_policy.section_3_item_3", "Impressions are grouped by the system with a small technical delay of up to 800ms.");
+      setText("ads-policy-section-3-item-4", "ads_policy.section_3_item_4", "Tracked impressions are charged in real time based on CPM.");
+      setText("ads-policy-section-4-title", "ads_policy.section_4_title", "4. Pausing, deleting, and refunds");
+      setText("ads-policy-section-4-item-1", "ads_policy.section_4_item_1", "When a listing is paused or deleted, its highlight ends immediately.");
+      setText("ads-policy-section-4-item-2", "ads_policy.section_4_item_2", "Amounts already consumed by impressions are not refunded.");
+      setText("ads-policy-section-4-item-3", "ads_policy.section_4_item_3", "Any remaining balance stays in the ad wallet for future use.");
+      setText("ads-policy-section-4-item-4", "ads_policy.section_4_item_4", "You may request withdrawal of the available ad wallet balance starting from the same minimum amount required to add balance.");
+      setText("ads-policy-section-4-item-5", "ads_policy.section_4_item_5", "When a withdrawal is requested, active highlights are paused and the balance goes into review.");
+      setText("ads-policy-section-4-item-6", "ads_policy.section_4_item_6", "The final refunded amount may be lower than the requested balance because original payment fees, conversion, and other applicable costs may be deducted during refund review.");
+      setText("ads-policy-section-5-title", "ads_policy.section_5_title", "5. Moderation");
+      setText("ads-policy-section-5-item-1", "ads_policy.section_5_item_1", "Listings may be removed for violating the platform rules.");
+      setText("ads-policy-section-5-item-2", "ads_policy.section_5_item_2", "Even in moderation removals, consumption already recorded up to the removal time is not reverted.");
+      setText("ads-policy-section-6-title", "ads_policy.section_6_title", "6. Support");
+      setHtml("ads-policy-section-6-body", "ads_policy.section_6_body_html", 'Questions about payments, balance and highlights: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>');
+      setText("ads-policy-section-7-title", "ads_policy.section_7_title", "7. Payment security");
+      setText("ads-policy-section-7-item-1", "ads_policy.section_7_item_1", "Payments are processed exclusively by Stripe, in a secure and encrypted environment.");
+      setText("ads-policy-section-7-item-2", "ads_policy.section_7_item_2", "Gimerr does not store sensitive credit card data, such as card number, security code (CVV) or expiration date.");
+      setText("ads-policy-section-7-item-3", "ads_policy.section_7_item_3", "All financial information is handled directly by Stripe, in accordance with applicable international security standards.");
     }
 
     function ensureClient() {
@@ -287,6 +344,7 @@
       window.location.href = "listing-create.html";
     });
 
+    applyTranslations();
     initAuth();
   </script>
 </body>

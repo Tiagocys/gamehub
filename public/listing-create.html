@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Criar anúncio</title>
+  <title>Gimerr - Create listing</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="listing-guard-style">html{visibility:hidden;}</style>
   <style>
@@ -133,7 +133,7 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
@@ -141,44 +141,44 @@
     <main class="section listing-create-main">
       <div class="form-card">
         <div>
-          <h2 id="form-title">Novo anúncio</h2>
-          <p id="form-title-helper" class="helper">Você pode criar apenas 1 anúncio por game.</p>
+          <h2 id="form-title">New listing</h2>
+          <p id="form-title-helper" class="helper">You can create only 1 listing per game.</p>
         </div>
         <form id="listing-form" class="form-vertical">
           <div class="field">
             <div class="field-head">
-              <label id="listing-game-label" for="listing-game">Nome do game *</label>
+              <label id="listing-game-label" for="listing-game">Game name *</label>
             </div>
-            <span id="game-helper" class="helper">Selecione um game existente da lista ou cadastre um novo.</span>
+            <span id="game-helper" class="helper">Select an existing game from the list or submit a new one.</span>
             <div class="suggestions">
-              <input id="listing-game" class="input" placeholder="Digite para buscar um game" autocomplete="off" required />
+              <input id="listing-game" class="input" placeholder="Type to search for a game" autocomplete="off" required />
               <div id="game-suggestions" class="suggestions-panel" style="display:none;"></div>
             </div>
           </div>
 
           <div class="field">
-            <label id="listing-title-label" for="listing-title">Título do anúncio *</label>
-            <input id="listing-title" class="input" placeholder="Ex: 1kk gold + itens raros" maxlength="70" required />
+            <label id="listing-title-label" for="listing-title">Listing title *</label>
+            <input id="listing-title" class="input" placeholder="Ex: 1kk gold + rare items" maxlength="70" required />
           </div>
 
           <div class="field field-soft">
             <div class="field-head">
-              <label id="listing-images-label" for="listing-images">Imagens do anúncio (opcional, até 8)</label>
+              <label id="listing-images-label" for="listing-images">Listing images (optional, up to 8)</label>
             </div>
-            <span id="listing-images-helper" class="helper">Você pode enviar até 8 imagens.</span>
+            <span id="listing-images-helper" class="helper">You can upload up to 8 images.</span>
             <input id="listing-images" type="file" accept="image/png,image/jpeg,image/webp" multiple />
-            <span id="image-count" class="helper">0/8 imagens selecionadas.</span>
+            <span id="image-count" class="helper">0/8 selected images.</span>
             <div id="image-previews" class="image-preview-grid" aria-live="polite"></div>
           </div>
 
           <div class="field">
-            <label id="listing-description-label" for="listing-description">Descrição (opcional)</label>
-            <textarea id="listing-description" class="textarea" maxlength="1000" placeholder="Descreva seu anúncio (até 1000 caracteres)."></textarea>
+            <label id="listing-description-label" for="listing-description">Description (optional)</label>
+            <textarea id="listing-description" class="textarea" maxlength="1000" placeholder="Describe your listing (up to 1000 characters)."></textarea>
             <span id="desc-counter" class="helper">0/1000</span>
           </div>
 
           <div class="field" style="grid-column: 1 / -1;">
-            <button type="submit" class="btn btn-primary" id="submit-btn">Publicar anúncio</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">Publish listing</button>
             <div id="form-feedback" class="helper"></div>
           </div>
         </form>
@@ -188,34 +188,33 @@
     <div id="custom-game-modal" class="listing-create-modal" aria-hidden="true">
       <div class="listing-create-modal-card">
         <div class="listing-create-modal-head">
-          <h3 id="custom-game-modal-title">Novo game</h3>
-          <p id="custom-game-modal-helper" class="helper">Informe os dados básicos para enviar seu anúncio à análise.</p>
+          <h3 id="custom-game-modal-title">New game</h3>
+          <p id="custom-game-modal-helper" class="helper">Enter the basic information to submit your listing for review.</p>
         </div>
         <div class="field">
-          <label id="custom-game-name-label" for="custom-game-name">Nome do game *</label>
+          <label id="custom-game-name-label" for="custom-game-name">Game name *</label>
           <input id="custom-game-name" class="input" placeholder="Ex: Miracle 7.4" autocomplete="off" />
         </div>
         <div class="field">
-          <label id="custom-game-site-label" for="custom-game-site">Site oficial *</label>
+          <label id="custom-game-site-label" for="custom-game-site">Official website *</label>
           <input id="custom-game-site" class="input" type="url" placeholder="https://nomedogame.com" inputmode="url" autocomplete="off" />
         </div>
         <div class="field">
-          <label id="custom-game-discord-label" for="custom-game-discord">Convite para discord oficial (opcional)</label>
-          <input id="custom-game-discord" class="input" placeholder="https://discord.gg/seu-servidor" autocomplete="off" />
+          <label id="custom-game-discord-label" for="custom-game-discord">Official Discord invite (optional)</label>
+          <input id="custom-game-discord" class="input" placeholder="https://discord.gg/your-server" autocomplete="off" />
         </div>
         <div class="field">
-          <label id="custom-game-logo-label" for="custom-game-logo">Logo do servidor (png/jpg/webp) (opcional)</label>
+          <label id="custom-game-logo-label" for="custom-game-logo">Server logo (png/jpg/webp) (optional)</label>
           <input id="custom-game-logo" type="file" accept="image/png,image/jpeg,image/webp" />
         </div>
         <div id="custom-game-feedback" class="helper"></div>
         <div class="listing-create-modal-actions">
-          <button type="button" class="btn btn-ghost" id="close-custom-game-modal-btn">Cancelar</button>
-          <button type="button" class="btn btn-primary" id="save-custom-game-btn">Usar este game</button>
+          <button type="button" class="btn btn-ghost" id="close-custom-game-modal-btn">Cancel</button>
+          <button type="button" class="btn btn-primary" id="save-custom-game-btn">Use this game</button>
         </div>
       </div>
     </div>
 
-    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
@@ -223,7 +222,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -313,8 +311,8 @@
     const MAX_LOGO_WIDTH = 512;
     const MAX_IMAGE_DIMENSION = 1600;
     const WEBP_QUALITY = 0.8;
-    const DEFAULT_GAME_HELPER_TEXT = t("listing_create.game_helper", "Selecione um game existente da lista ou cadastre um novo.");
-    const CUSTOM_GAME_TRIGGER_TEXT = t("listing_create.custom_trigger", "Não encontrou o seu game na lista? Clique aqui.");
+    const DEFAULT_GAME_HELPER_TEXT = t("listing_create.game_helper", "Select an existing game from the list or submit a new one.");
+    const CUSTOM_GAME_TRIGGER_TEXT = t("listing_create.custom_trigger", "Didn't find your game in the list? Click here.");
     const urlParams = new URLSearchParams(window.location.search);
     const editListingId = urlParams.get("edit");
 
@@ -330,38 +328,38 @@
     let avatarLoaded = false;
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
     if (submitBtn && !submitBtn.dataset.defaultText) {
-      submitBtn.dataset.defaultText = submitBtn.textContent || t("listing_create.submit", "Publicar anúncio");
+      submitBtn.dataset.defaultText = submitBtn.textContent || t("listing_create.submit", "Publish listing");
     }
 
     function applyStaticTranslations() {
-      document.title = t("listing_create.title_default", "Gimerr - Criar anúncio");
+      document.title = t("listing_create.title_default", "Gimerr - Create listing");
       document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
       const loaderImage = pageLoader?.querySelector("img");
-      if (loaderImage) loaderImage.alt = t("listing_create.loading", "Carregando");
-      if (formTitle) formTitle.textContent = editListingId ? t("listing_create.edit_title", "Editar anúncio") : t("listing_create.page_title", "Novo anúncio");
-      if (formTitleHelper) formTitleHelper.textContent = t("listing_create.page_helper", "Você pode criar apenas 1 anúncio por game.");
-      if (listingTitleLabel) listingTitleLabel.textContent = t("listing_create.title_label", "Título do anúncio *");
-      if (listingTitleInput) listingTitleInput.placeholder = t("listing_create.title_placeholder", "Ex: 1kk gold + itens raros");
-      if (listingGameLabel) listingGameLabel.textContent = t("listing_create.game_label", "Nome do game *");
+      if (loaderImage) loaderImage.alt = t("listing_create.loading", "Loading");
+      if (formTitle) formTitle.textContent = editListingId ? t("listing_create.edit_title", "Edit listing") : t("listing_create.page_title", "New listing");
+      if (formTitleHelper) formTitleHelper.textContent = t("listing_create.page_helper", "You can create only 1 listing per game.");
+      if (listingTitleLabel) listingTitleLabel.textContent = t("listing_create.title_label", "Listing title *");
+      if (listingTitleInput) listingTitleInput.placeholder = t("listing_create.title_placeholder", "Ex: 1kk gold + rare items");
+      if (listingGameLabel) listingGameLabel.textContent = t("listing_create.game_label", "Game name *");
       if (gameHelper) gameHelper.textContent = DEFAULT_GAME_HELPER_TEXT;
-      if (gameInput) gameInput.placeholder = t("listing_create.game_placeholder", "Digite para buscar um game");
-      if (listingImagesLabel) listingImagesLabel.textContent = t("listing_create.images_label", "Imagens do anúncio (opcional, até 8)");
-      if (listingImagesHelper) listingImagesHelper.textContent = t("listing_create.images_helper", "Você pode enviar até 8 imagens.");
-      if (listingDescriptionLabel) listingDescriptionLabel.textContent = t("listing_create.description_label", "Descrição (opcional)");
-      if (descInput) descInput.placeholder = t("listing_create.description_placeholder", "Descreva seu anúncio (até 1000 caracteres).");
-      if (customGameModalTitle) customGameModalTitle.textContent = t("listing_create.modal_title", "Novo game");
-      if (customGameModalHelper) customGameModalHelper.textContent = t("listing_create.modal_helper", "Informe os dados básicos para enviar seu anúncio à análise.");
-      if (customGameNameLabel) customGameNameLabel.textContent = t("listing_create.modal_name_label", "Nome do game *");
+      if (gameInput) gameInput.placeholder = t("listing_create.game_placeholder", "Type to search for a game");
+      if (listingImagesLabel) listingImagesLabel.textContent = t("listing_create.images_label", "Listing images (optional, up to 8)");
+      if (listingImagesHelper) listingImagesHelper.textContent = t("listing_create.images_helper", "You can upload up to 8 images.");
+      if (listingDescriptionLabel) listingDescriptionLabel.textContent = t("listing_create.description_label", "Description (optional)");
+      if (descInput) descInput.placeholder = t("listing_create.description_placeholder", "Describe your listing (up to 1000 characters).");
+      if (customGameModalTitle) customGameModalTitle.textContent = t("listing_create.modal_title", "New game");
+      if (customGameModalHelper) customGameModalHelper.textContent = t("listing_create.modal_helper", "Enter the basic information to submit your listing for review.");
+      if (customGameNameLabel) customGameNameLabel.textContent = t("listing_create.modal_name_label", "Game name *");
       if (customGameNameInput) customGameNameInput.placeholder = t("listing_create.modal_name_placeholder", "Ex: Miracle 7.4");
-      if (customGameSiteLabel) customGameSiteLabel.textContent = t("listing_create.modal_site_label", "Site oficial *");
+      if (customGameSiteLabel) customGameSiteLabel.textContent = t("listing_create.modal_site_label", "Official website *");
       if (customGameSiteInput) customGameSiteInput.placeholder = t("listing_create.modal_site_placeholder", "https://nomedogame.com");
-      if (customGameDiscordLabel) customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Convite para discord oficial (opcional)");
-      if (customGameDiscordInput) customGameDiscordInput.placeholder = t("listing_create.modal_discord_placeholder", "https://discord.gg/seu-servidor");
-      if (customGameLogoLabel) customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Logo do servidor (png/jpg/webp) (opcional)");
-      if (closeCustomGameModalBtn) closeCustomGameModalBtn.textContent = t("listing_create.cancel", "Cancelar");
-      if (saveCustomGameBtn) saveCustomGameBtn.textContent = t("listing_create.modal_submit", "Usar este game");
+      if (customGameDiscordLabel) customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Official Discord invite (optional)");
+      if (customGameDiscordInput) customGameDiscordInput.placeholder = t("listing_create.modal_discord_placeholder", "https://discord.gg/your-server");
+      if (customGameLogoLabel) customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Server logo (png/jpg/webp) (optional)");
+      if (closeCustomGameModalBtn) closeCustomGameModalBtn.textContent = t("listing_create.cancel", "Cancel");
+      if (saveCustomGameBtn) saveCustomGameBtn.textContent = t("listing_create.modal_submit", "Use this game");
       if (submitBtn) {
-        const defaultText = editListingId ? t("listing_create.edit_submit", "Salvar alterações") : t("listing_create.submit", "Publicar anúncio");
+        const defaultText = editListingId ? t("listing_create.edit_submit", "Save changes") : t("listing_create.submit", "Publish listing");
         submitBtn.dataset.defaultText = defaultText;
         submitBtn.textContent = defaultText;
       }
@@ -369,9 +367,9 @@
 
     function setSubmitLoading(isLoading) {
       if (!submitBtn) return;
-      const defaultText = submitBtn.dataset.defaultText || t("listing_create.submit", "Publicar anúncio");
+      const defaultText = submitBtn.dataset.defaultText || t("listing_create.submit", "Publish listing");
       submitBtn.disabled = isLoading;
-      submitBtn.textContent = isLoading ? t("listing_create.submitting", "Publicando...") : defaultText;
+      submitBtn.textContent = isLoading ? t("listing_create.submitting", "Publishing...") : defaultText;
     }
 
     function setDefaultSubmitText(text) {
@@ -401,10 +399,10 @@
       if (customGameDiscordInput) customGameDiscordInput.required = false;
       if (customGameLogoInput) customGameLogoInput.required = false;
       if (customGameDiscordLabel) {
-        customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Convite para discord oficial (opcional)");
+        customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Official Discord invite (optional)");
       }
       if (customGameLogoLabel) {
-        customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Logo do servidor (png/jpg/webp) (opcional)");
+        customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Server logo (png/jpg/webp) (optional)");
       }
     }
 
@@ -447,10 +445,10 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        feedback.textContent = t("listing_create.configure_env", "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.");
+        feedback.textContent = t("listing_create.configure_env", "Configure SUPABASE_URL and SUPABASE_ANON_KEY in public/env.js.");
         authBtn.disabled = true;
         submitBtn.disabled = true;
-        throw new Error(t("listing_create.supabase_not_configured", "Supabase não configurado"));
+        throw new Error(t("listing_create.supabase_not_configured", "Supabase is not configured"));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -555,8 +553,8 @@
         const wrapper = document.createElement("div");
         wrapper.className = "image-thumb";
         wrapper.innerHTML = `
-          <img src="${encodeURI(normalizePreviewUrl(url))}" alt="${escapeHtml(formatMessage("listing_create.current_image_alt", "Imagem atual {index}", { index: index + 1 }))}" />
-          <button type="button" class="image-remove" aria-label="${escapeHtml(t("listing_create.remove_image", "Remover imagem"))}">×</button>
+          <img src="${encodeURI(normalizePreviewUrl(url))}" alt="${escapeHtml(formatMessage("listing_create.current_image_alt", "Current image {index}", { index: index + 1 }))}" />
+          <button type="button" class="image-remove" aria-label="${escapeHtml(t("listing_create.remove_image", "Remove image"))}">×</button>
         `;
         const removeBtn = wrapper.querySelector(".image-remove");
         removeBtn.addEventListener("click", () => {
@@ -570,8 +568,8 @@
         const wrapper = document.createElement("div");
         wrapper.className = "image-thumb";
         wrapper.innerHTML = `
-          <img src="${url}" alt="${escapeHtml(formatMessage("listing_create.image_alt", "Imagem {index}", { index: index + 1 }))}" />
-          <button type="button" class="image-remove" aria-label="${escapeHtml(t("listing_create.remove_image", "Remover imagem"))}">×</button>
+          <img src="${url}" alt="${escapeHtml(formatMessage("listing_create.image_alt", "Image {index}", { index: index + 1 }))}" />
+          <button type="button" class="image-remove" aria-label="${escapeHtml(t("listing_create.remove_image", "Remove image"))}">×</button>
         `;
         const removeBtn = wrapper.querySelector(".image-remove");
         removeBtn.addEventListener("click", () => {
@@ -585,7 +583,7 @@
       });
       if (imageCount) {
         const total = existingImageUrls.length + selectedImages.length;
-        imageCount.textContent = formatMessage("listing_create.image_count", "{count}/{max} imagens selecionadas.", { count: total, max: MAX_IMAGES });
+        imageCount.textContent = formatMessage("listing_create.image_count", "{count}/{max} selected images.", { count: total, max: MAX_IMAGES });
       }
     }
 
@@ -594,12 +592,12 @@
       if (incoming.length === 0) return;
       const available = MAX_IMAGES - (selectedImages.length + existingImageUrls.length);
       if (available <= 0) {
-        feedback.textContent = formatMessage("listing_create.max_images_selected", "Você já selecionou {max} imagens.", { max: MAX_IMAGES });
+        feedback.textContent = formatMessage("listing_create.max_images_selected", "You already selected {max} images.", { max: MAX_IMAGES });
         return;
       }
       selectedImages = selectedImages.concat(incoming.slice(0, available));
       if (incoming.length > available) {
-        feedback.textContent = formatMessage("listing_create.max_images_allowed", "Apenas {max} imagens são permitidas.", { max: MAX_IMAGES });
+        feedback.textContent = formatMessage("listing_create.max_images_allowed", "Only {max} images are allowed.", { max: MAX_IMAGES });
       }
       renderImagePreviews();
     }
@@ -637,7 +635,7 @@
         localStorage.removeItem("gimerr-auth-token");
         localStorage.removeItem("gimerr-auth-session");
         window.location.replace("index.html");
-        throw new Error(t("listing_create.invalid_session", "Sessão inválida. Faça login novamente."));
+        throw new Error(t("listing_create.invalid_session", "Invalid session. Sign in again."));
       }
       currentUser = data.user;
       return data.user;
@@ -676,12 +674,12 @@
     function duplicateListingMessage() {
       return formatMessage(
         "listing_create.duplicate_listing",
-        'Você já possui um anúncio para este game, <a class="feedback-link" href="my-listings.html">clique aqui</a> para editar ou excluir o anúncio existente.',
+        'You already have a listing for this game. <a class="feedback-link" href="my-listings.html">Click here</a> to edit or remove the existing listing.',
       );
     }
 
     function duplicateListingRequestMessage() {
-      return t("listing_create.duplicate_request", "Você já possui uma solicitação pendente para este game/site. Aguarde a análise antes de enviar novamente.");
+      return t("listing_create.duplicate_request", "You already have a pending request for this game/site. Wait for the review before submitting again.");
     }
 
     function ensureHttpsPrefix(raw) {
@@ -826,11 +824,11 @@
         .eq("user_id", currentUser.id)
         .single();
       if (error || !data) {
-        throw new Error(t("listing_create.edit_not_found", "Anúncio para edição não encontrado."));
+        throw new Error(t("listing_create.edit_not_found", "Listing to edit not found."));
       }
       editingListing = data;
-      if (formTitle) formTitle.textContent = t("listing_create.edit_title", "Editar anúncio");
-      setDefaultSubmitText(t("listing_create.edit_submit", "Salvar alterações"));
+      if (formTitle) formTitle.textContent = t("listing_create.edit_title", "Edit listing");
+      setDefaultSubmitText(t("listing_create.edit_submit", "Save changes"));
 
       document.getElementById("listing-title").value = data.title || "";
       descInput.value = data.description || "";
@@ -839,7 +837,7 @@
       const gameName = await resolveGameNameById(data.server_id);
       gameInput.value = gameName;
       gameInput.dataset.gameId = data.server_id || "";
-      gameHelper.textContent = t("listing_create.game_selected", "Game selecionado.");
+      gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
       setCustomGameMode(false);
 
       existingImageUrls = Array.isArray(data.images) ? data.images.slice(0, MAX_IMAGES) : [];
@@ -862,7 +860,7 @@
         window.location.href = "index.html";
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("listing_create.auth_error", "Erro ao autenticar.");
+        feedback.textContent = err?.message || t("listing_create.auth_error", "Authentication error.");
         authBtn.disabled = false;
       }
     }
@@ -882,7 +880,7 @@
         })));
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("listing_create.load_games_error", "Erro ao carregar games.");
+        feedback.textContent = err?.message || t("listing_create.load_games_error", "Error loading games.");
       }
     }
 
@@ -911,14 +909,14 @@
       const logoFile = customGameLogoInput?.files?.[0] || null;
 
       if (!customName || !rawWebsite) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_fill_required", "Preencha o nome e o site oficial do game.");
+        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_fill_required", "Fill in the game name and official website.");
         return;
       }
 
       const normalizedWebsite = normalizeWebsite(rawWebsite);
       const websiteDomain = extractDomainKey(rawWebsite);
       if (!normalizedWebsite || !websiteDomain) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_url", "Informe uma URL válida, por exemplo: https://nomedogame.com");
+        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_url", "Enter a valid URL, for example: https://yourgame.com");
         return;
       }
 
@@ -928,7 +926,7 @@
 
       const discordInvite = rawDiscord ? normalizeDiscordInvite(rawDiscord) : null;
       if (rawDiscord && !discordInvite) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_discord", "Use um convite que comece com https://discord.gg/");
+        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_discord", "Use an invite that starts with https://discord.gg/");
         return;
       }
 
@@ -942,9 +940,9 @@
         if (existingServer?.id) {
           fillGameFromSelection(existingServer);
           setCustomGameMode(false);
-          if (gameHelper) gameHelper.textContent = t("listing_create.game_selected", "Game selecionado.");
-          feedback.textContent = formatMessage("listing_create.website_existing_game_selected", "Já existe um game cadastrado para este site oficial: {name}. Selecionamos esse game para você.", {
-            name: existingServer.name || t("listing_create.game_found", "game encontrado"),
+          if (gameHelper) gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
+          feedback.textContent = formatMessage("listing_create.website_existing_game_selected", "A game is already registered for this official website: {name}. We selected it for you.", {
+            name: existingServer.name || t("listing_create.game_found", "game found"),
           });
           closeCustomGameModal();
           return;
@@ -963,16 +961,16 @@
           gameInput.value = customName;
           gameInput.dataset.gameId = "";
         }
-        if (gameHelper) gameHelper.textContent = t("listing_create.custom_game_ready", "Novo game pronto para análise.");
+        if (gameHelper) gameHelper.textContent = t("listing_create.custom_game_ready", "New game ready for review.");
         if (suggestionsPanel) {
           suggestionsPanel.style.display = "none";
           suggestionsPanel.innerHTML = "";
         }
-        feedback.textContent = t("listing_create.review_notice", "Seu anúncio será enviado para análise antes de ser publicado.");
+        feedback.textContent = t("listing_create.review_notice", "Your listing will be sent for review before it is published.");
         closeCustomGameModal();
       } catch (err) {
         console.error(err);
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_validation_error", "Não foi possível validar esse site agora. Você ainda pode tentar enviar.");
+        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_validation_error", "Could not validate this website right now. You can still try to submit.");
       }
     }
 
@@ -1017,7 +1015,7 @@
           return `<div class="suggestion-item" data-game-id="${g.id}" data-game-name="${g.name}" style="display:flex;align-items:center;gap:10px;">
             ${logoMarkup}
             <span style="min-width:0;flex:1 1 auto;">${escapeHtml(g.name)}</span>
-            <span class="badge">${escapeHtml(t("listing_create.select_badge", "Selecionar"))}</span>
+            <span class="badge">${escapeHtml(t("listing_create.select_badge", "Select"))}</span>
           </div>`;
         })
         .join("");
@@ -1034,7 +1032,7 @@
         fillGameFromSelection(selectedGame, gameName);
         setCustomGameMode(false);
         suggestionsPanel.style.display = "none";
-        gameHelper.textContent = t("listing_create.game_selected", "Game selecionado.");
+        gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
         return;
       }
       const customTrigger = event.target.closest("[data-custom-game-trigger='true']");
@@ -1065,7 +1063,7 @@
       return new Promise((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (!blob) {
-            reject(new Error(t("listing_create.logo_compress_error", "Falha ao comprimir a imagem.")));
+            reject(new Error(t("listing_create.logo_compress_error", "Failed to compress the image.")));
             return;
           }
           resolve(blob);
@@ -1117,7 +1115,7 @@
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        throw new Error(t("listing_create.session_expired", "Sessão expirada. Faça login novamente."));
+        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
       }
       const payload = decodeJwtPayload(token);
       const expectedIss = `${SUPABASE_URL}/auth/v1`;
@@ -1125,7 +1123,7 @@
         localStorage.removeItem("gimerr-auth-token");
         localStorage.removeItem("gimerr-auth-session");
         window.location.replace("index.html");
-        throw new Error(t("listing_create.invalid_project_session", "Sessão inválida para este projeto."));
+        throw new Error(t("listing_create.invalid_project_session", "Invalid session for this project."));
       }
       const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
         method: "POST",
@@ -1141,7 +1139,7 @@
         }),
       });
       if (!response.ok) {
-        let message = t("listing_create.signed_upload_error", "Erro ao solicitar upload.");
+        let message = t("listing_create.signed_upload_error", "Error requesting upload.");
         try {
           const payload = await response.json();
           message = payload?.error || message;
@@ -1166,7 +1164,7 @@
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        throw new Error(t("listing_create.session_expired", "Sessão expirada. Faça login novamente."));
+        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
       }
 
       const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
@@ -1184,7 +1182,7 @@
       });
 
       if (!response.ok) {
-        let message = t("listing_create.delete_old_images_error", "Erro ao remover imagens antigas.");
+        let message = t("listing_create.delete_old_images_error", "Error removing old images.");
         try {
           const payload = await response.json();
           message = payload?.error || message;
@@ -1210,7 +1208,7 @@
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", WEBP_QUALITY));
       if (!blob) {
-        throw new Error(formatMessage("listing_create.convert_webp_error", "Falha ao converter {name} para WebP.", { name: file.name }));
+        throw new Error(formatMessage("listing_create.convert_webp_error", "Failed to convert {name} to WebP.", { name: file.name }));
       }
       const baseName = file.name.replace(/\.[^.]+$/, "");
       return new File([blob], `${baseName}.webp`, { type: "image/webp" });
@@ -1221,11 +1219,11 @@
       for (let i = 0; i < files.length; i += 1) {
         const originalFile = files[i];
         if (originalFile.size > MAX_IMAGE_BYTES) {
-          throw new Error(formatMessage("listing_create.image_max_size", "Imagem {name} excede 5MB.", { name: originalFile.name }));
+          throw new Error(formatMessage("listing_create.image_max_size", "Image {name} exceeds 5MB.", { name: originalFile.name }));
         }
         const file = await convertToWebp(originalFile);
         if (file.size > MAX_IMAGE_BYTES) {
-          throw new Error(formatMessage("listing_create.image_max_size_after_conversion", "Imagem {name} excede 5MB após compressão.", { name: originalFile.name }));
+          throw new Error(formatMessage("listing_create.image_max_size_after_conversion", "Image {name} exceeds 5MB after compression.", { name: originalFile.name }));
         }
         const signed = await requestSignedUpload(file);
         const uploadRes = await fetch(signed.uploadUrl, {
@@ -1236,7 +1234,7 @@
           body: file
         });
         if (!uploadRes.ok) {
-          throw new Error(formatMessage("listing_create.upload_storage_error", "Falha ao enviar {name} para o storage.", { name: file.name }));
+          throw new Error(formatMessage("listing_create.upload_storage_error", "Failed to upload {name} to storage.", { name: file.name }));
         }
         uploads.push(signed.publicUrl);
       }
@@ -1312,12 +1310,12 @@
         const isEditing = Boolean(editingListing?.id);
 
         if (!title || !gameName) {
-          feedback.textContent = t("listing_create.fill_title_game", "Preencha título e game.");
+          feedback.textContent = t("listing_create.fill_title_game", "Fill in the title and game.");
           setSubmitLoading(false);
           return;
         }
         if (title.length > MAX_TITLE) {
-          feedback.textContent = formatMessage("listing_create.max_title", "O título pode ter no máximo {max} caracteres.", { max: MAX_TITLE });
+          feedback.textContent = formatMessage("listing_create.max_title", "The title can have at most {max} characters.", { max: MAX_TITLE });
           setSubmitLoading(false);
           return;
         }
@@ -1333,7 +1331,7 @@
 
         const totalImages = existingImageUrls.length + files.length;
         if (totalImages > MAX_IMAGES) {
-          feedback.textContent = formatMessage("listing_create.max_images_total", "Você pode enviar no máximo {max} imagens.", { max: MAX_IMAGES });
+          feedback.textContent = formatMessage("listing_create.max_images_total", "You can upload at most {max} images.", { max: MAX_IMAGES });
           setSubmitLoading(false);
           return;
         }
@@ -1355,7 +1353,7 @@
 
         if (!gameId) {
           if (!customGameRequested || !customGamePayload?.website || !customGamePayload?.websiteDomain) {
-            feedback.textContent = formatMessage("listing_create.select_game_or_trigger", 'Selecione um game existente na lista ou clique em "{trigger}"', { trigger: CUSTOM_GAME_TRIGGER_TEXT });
+            feedback.textContent = formatMessage("listing_create.select_game_or_trigger", 'Select an existing game from the list or click "{trigger}"', { trigger: CUSTOM_GAME_TRIGGER_TEXT });
             if (uploadedImageUrls.length > 0) {
               try {
                 await requestImageDeletion(uploadedImageUrls);
@@ -1386,8 +1384,8 @@
             }
             fillGameFromSelection(existingServer);
             setCustomGameMode(false);
-            feedback.textContent = formatMessage("listing_create.website_existing_game_review", "Já existe um game cadastrado para este site oficial: {name}. Selecionamos esse game para você. Revise os dados e envie novamente.", {
-              name: existingServer.name || t("listing_create.game_found", "game encontrado"),
+            feedback.textContent = formatMessage("listing_create.website_existing_game_review", "A game is already registered for this official website: {name}. We selected it for you. Review the details and submit again.", {
+              name: existingServer.name || t("listing_create.game_found", "game found"),
             });
             return;
           }
@@ -1430,7 +1428,7 @@
             throw requestErr;
           }
 
-          feedback.textContent = t("listing_create.sent_for_review", "Seu anúncio foi enviado para análise. Vamos revisar o game informado antes de publicar.");
+          feedback.textContent = t("listing_create.sent_for_review", "Your listing was sent for review. We will review the game before publishing.");
           form.reset();
           gameInput.dataset.gameId = "";
           setCustomGameMode(false);
@@ -1476,13 +1474,13 @@
         }
 
         feedback.textContent = isEditing
-          ? t("listing_create.updated_success", "Anúncio atualizado com sucesso!")
-          : t("listing_create.published_success", "Anúncio publicado com sucesso!");
+          ? t("listing_create.updated_success", "Listing updated successfully!")
+          : t("listing_create.published_success", "Listing published successfully!");
         if (isEditing) {
           if (removedImageUrls.length > 0) {
             const deleteResult = await requestImageDeletion(removedImageUrls);
             if (!deleteResult?.ok || Number(deleteResult?.failedKeys || 0) > 0) {
-              throw new Error(t("listing_create.updated_cleanup_warning", "Anúncio atualizado, mas não foi possível remover todas as imagens antigas do storage."));
+              throw new Error(t("listing_create.updated_cleanup_warning", "Listing updated, but not all old images could be removed from storage."));
             }
           }
         }
@@ -1490,7 +1488,7 @@
         return;
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("listing_create.publish_error", "Erro ao publicar anúncio.");
+        feedback.textContent = err?.message || t("listing_create.publish_error", "Error publishing listing.");
       } finally {
         setSubmitLoading(false);
       }
@@ -1581,7 +1579,7 @@
         revealPage();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("listing_create.init_error", "Erro ao iniciar página.");
+        feedback.textContent = err?.message || t("listing_create.init_error", "Error starting page.");
         revealPage();
       }
     })();

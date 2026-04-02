@@ -23,6 +23,38 @@ function normalizePhone(value: string) {
   return value.replace(/\D/g, "");
 }
 
+function inferCountryCodeFromPhone(phone: string) {
+  const normalized = normalizePhone(phone);
+  const prefixes = [
+    ["55", "BR"],
+    ["41", "CH"],
+    ["52", "MX"],
+    ["44", "GB"],
+    ["61", "AU"],
+    ["64", "NZ"],
+    ["46", "SE"],
+    ["47", "NO"],
+    ["45", "DK"],
+    ["48", "PL"],
+    ["49", "DE"],
+    ["33", "FR"],
+    ["34", "ES"],
+    ["39", "IT"],
+    ["351", "PT"],
+    ["31", "NL"],
+    ["32", "BE"],
+    ["353", "IE"],
+    ["43", "AT"],
+    ["358", "FI"],
+    ["30", "GR"],
+    ["1", "US"],
+  ] as const;
+  for (const [prefix, countryCode] of prefixes) {
+    if (normalized.startsWith(prefix)) return countryCode;
+  }
+  return null;
+}
+
 function matchesPhone(a: string, b: string) {
   if (!a || !b) return false;
   return a === b || a.endsWith(b) || b.endsWith(a);
@@ -162,11 +194,13 @@ Deno.serve(async (req) => {
       }
 
       const phoneToSave = contact.phone_number || data.phone || "";
+      const countryCode = inferCountryCodeFromPhone(phoneToSave);
       const nowIso = new Date().toISOString();
       const { error: userUpdateError } = await supabase.from("users").update({
         phone: phoneToSave,
         phone_verified: true,
         phone_verified_at: nowIso,
+        country_code: countryCode,
       }).eq("id", data.user_id);
       if (userUpdateError) {
         if (userUpdateError.code === "23505") {

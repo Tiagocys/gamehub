@@ -23,6 +23,21 @@ const PARTNER_SHARE_RATIO = 0.5;
 const ADMIN_SHARE_RATIO = 0.25;
 const PRICE_PER_DAY_CENTS = 600;
 const DEFAULT_USD_BRL_RATE = 5.5;
+const SUPPORTED_CHECKOUT_CURRENCIES = new Set([
+  "BRL",
+  "USD",
+  "EUR",
+  "GBP",
+  "CAD",
+  "AUD",
+  "NZD",
+  "MXN",
+  "CHF",
+  "SEK",
+  "NOK",
+  "DKK",
+  "PLN",
+]);
 
 const textEncoder = new TextEncoder();
 
@@ -102,19 +117,20 @@ function centsToMoney(cents: number) {
   return Number((Math.max(0, cents) / 100).toFixed(2));
 }
 
-function getUsdBrlRate(value?: unknown) {
+function getBrlFxRate(value?: unknown) {
   const envRate = Number(Deno.env.get("USD_BRL_RATE") || DEFAULT_USD_BRL_RATE);
   const fallback = Number.isFinite(envRate) && envRate > 0 ? envRate : DEFAULT_USD_BRL_RATE;
   return normalizePositiveNumber(value, fallback);
 }
 
 function normalizeBusinessCurrency(value: unknown) {
-  return String(value || "").trim().toUpperCase() === "USD" ? "USD" : "BRL";
+  const currency = String(value || "").trim().toUpperCase();
+  return SUPPORTED_CHECKOUT_CURRENCIES.has(currency) ? currency : "BRL";
 }
 
-function normalizeToBrlCents(cents: number, currency: string, usdBrlRate: number) {
-  if (currency === "USD") {
-    return Math.max(0, Math.round(cents * usdBrlRate));
+function normalizeToBrlCents(cents: number, currency: string, brlFxRate: number) {
+  if (currency !== "BRL") {
+    return Math.max(0, Math.round(cents * brlFxRate));
   }
   return Math.max(0, Math.round(cents));
 }
@@ -252,7 +268,7 @@ Deno.serve(async (req) => {
       const sessionId = session?.id;
       const paymentIntentId = typeof session?.payment_intent === "string" ? session.payment_intent : null;
       const checkoutCurrency = normalizeBusinessCurrency(metadata.checkout_currency || session?.currency);
-      const usdBrlRate = getUsdBrlRate(metadata.fx_rate);
+      const brlFxRate = checkoutCurrency === "BRL" ? 1 : getBrlFxRate(metadata.fx_rate);
       if (!userId || !sessionId) {
         return errorResponse("Metadata incompleta no checkout", 400);
       }
@@ -294,13 +310,13 @@ Deno.serve(async (req) => {
         payment_intent_id: paymentIntentId,
         amount_paid: Number((totalCents / 100).toFixed(2)),
         currency: "BRL",
-        metadata: {
-          days: daysEquivalent,
-          purchased_seconds: purchasedSeconds,
-          source: "stripe_webhook",
-          checkout_currency: checkoutCurrency,
-          checkout_amount_paid: Number((checkoutTotalCents / 100).toFixed(2)),
-          fx_rate: checkoutCurrency === "USD" ? usdBrlRate : null,
+          metadata: {
+            days: daysEquivalent,
+            purchased_seconds: purchasedSeconds,
+            source: "stripe_webhook",
+            checkout_currency: checkoutCurrency,
+            checkout_amount_paid: Number((checkoutTotalCents / 100).toFixed(2)),
+            fx_rate: brlFxRate,
         },
       };
       let topupReserved = false;
@@ -395,7 +411,7 @@ Deno.serve(async (req) => {
         const stripeNetDetails = await fetchStripeNetDetails(paymentIntentId);
         const platformNetCents = stripeNetDetails.netCents == null
           ? Math.round(totalCents * NET_ESTIMATE_RATIO)
-          : normalizeToBrlCents(stripeNetDetails.netCents, checkoutCurrency, usdBrlRate);
+          : normalizeToBrlCents(stripeNetDetails.netCents, checkoutCurrency, brlFxRate);
         const grossAmount = centsToMoney(totalCents);
         const payoutStatus = projectedExpire <= now ? "eligible" : "pending";
 
@@ -432,8 +448,8 @@ Deno.serve(async (req) => {
             payout_status: payoutStatus,
             notes: stripeNetDetails.netCents == null
               ? `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido estimado. Modelo wallet: expiração projetada (${projectedSeconds}s).`
-              : checkoutCurrency === "USD"
-                ? `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe convertido de USD para BRL pela taxa fixa ${usdBrlRate.toFixed(2)}. Modelo wallet: expiração projetada (${projectedSeconds}s).`
+              : checkoutCurrency !== "BRL"
+                ? `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe convertido de ${checkoutCurrency} para BRL pela taxa ${brlFxRate.toFixed(4)}. Modelo wallet: expiração projetada (${projectedSeconds}s).`
                 : `Repasse ${recipient.role} calculado como ${(recipient.ratio * 100).toFixed(0)}% do líquido da Stripe. Modelo wallet: expiração projetada (${projectedSeconds}s).`,
           };
 

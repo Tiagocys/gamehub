@@ -4,8 +4,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 type Payload = {
   listingId?: string;
   autoActivate?: boolean;
+  amount?: number | string;
   amountBRL?: number | string;
   currency?: string;
+  countryCode?: string;
   days?: number;
   returnBaseUrl?: string;
   userToken?: string;
@@ -25,6 +27,48 @@ const MIN_TOPUP_BRL = 5;
 const DAY_SECONDS = 24 * 60 * 60;
 const PRICE_PER_DAY_CENTS = 600;
 const DEFAULT_USD_BRL_RATE = 5.5;
+const CHECKOUT_RATE_API = "https://api.frankfurter.dev/v1/latest";
+const SUPPORTED_CHECKOUT_CURRENCIES = new Set([
+  "brl",
+  "usd",
+  "eur",
+  "gbp",
+  "cad",
+  "aud",
+  "nzd",
+  "mxn",
+  "chf",
+  "sek",
+  "nok",
+  "dkk",
+  "pln",
+]);
+const SUPPORTED_CHECKOUT_COUNTRIES = [
+  { code: "BR", currency: "brl" },
+  { code: "US", currency: "usd" },
+  { code: "CA", currency: "cad" },
+  { code: "GB", currency: "gbp" },
+  { code: "AU", currency: "aud" },
+  { code: "NZ", currency: "nzd" },
+  { code: "MX", currency: "mxn" },
+  { code: "CH", currency: "chf" },
+  { code: "SE", currency: "sek" },
+  { code: "NO", currency: "nok" },
+  { code: "DK", currency: "dkk" },
+  { code: "PL", currency: "pln" },
+  { code: "DE", currency: "eur" },
+  { code: "FR", currency: "eur" },
+  { code: "ES", currency: "eur" },
+  { code: "IT", currency: "eur" },
+  { code: "PT", currency: "eur" },
+  { code: "NL", currency: "eur" },
+  { code: "BE", currency: "eur" },
+  { code: "IE", currency: "eur" },
+  { code: "AT", currency: "eur" },
+  { code: "FI", currency: "eur" },
+  { code: "GR", currency: "eur" },
+  { code: "OTHER", currency: "usd" },
+] as const;
 
 function errorResponse(message: string, status = 400) {
   return new Response(JSON.stringify({ ok: false, error: message }), {
@@ -44,10 +88,52 @@ function normalizeBaseUrl(input?: string) {
 }
 
 function normalizeCheckoutCurrency(value: unknown) {
-  return String(value || "").trim().toLowerCase() === "usd" ? "usd" : "brl";
+  const normalized = String(value || "").trim().toLowerCase();
+  return SUPPORTED_CHECKOUT_CURRENCIES.has(normalized) ? normalized : "usd";
 }
 
-function getUsdBrlRate() {
+function normalizePhone(value: unknown) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function inferCountryCodeFromPhone(phone: unknown) {
+  const normalized = normalizePhone(phone);
+  const prefixes = [
+    ["55", "BR"],
+    ["41", "CH"],
+    ["52", "MX"],
+    ["44", "GB"],
+    ["61", "AU"],
+    ["64", "NZ"],
+    ["46", "SE"],
+    ["47", "NO"],
+    ["45", "DK"],
+    ["48", "PL"],
+    ["49", "DE"],
+    ["33", "FR"],
+    ["34", "ES"],
+    ["39", "IT"],
+    ["351", "PT"],
+    ["31", "NL"],
+    ["32", "BE"],
+    ["353", "IE"],
+    ["43", "AT"],
+    ["358", "FI"],
+    ["30", "GR"],
+    ["1", "US"],
+  ] as const;
+  for (const [prefix, countryCode] of prefixes) {
+    if (normalized.startsWith(prefix)) return countryCode;
+  }
+  return "OTHER";
+}
+
+function getCheckoutCountryConfig(countryCode: unknown) {
+  const normalized = String(countryCode || "").trim().toUpperCase();
+  return SUPPORTED_CHECKOUT_COUNTRIES.find((item) => item.code === normalized) || null;
+}
+
+function getUsdBrlRateFallback() {
   const parsed = Number(Deno.env.get("USD_BRL_RATE") || DEFAULT_USD_BRL_RATE);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_USD_BRL_RATE;
 }
@@ -69,6 +155,30 @@ function normalizeAmountBRL(value: unknown): number | null {
   const parsed = Number(normalized);
   if (!Number.isFinite(parsed)) return null;
   return Math.round(parsed * 100) / 100;
+}
+
+async function getCurrencyRateToBRL(checkoutCurrency: string) {
+  if (checkoutCurrency === "brl") return 1;
+  try {
+    const response = await fetch(`${CHECKOUT_RATE_API}?base=${checkoutCurrency.toUpperCase()}&symbols=BRL`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.error || "Could not load checkout exchange rate.");
+    }
+    const parsed = Number(payload?.rates?.BRL);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+  } catch (_err) {
+    if (checkoutCurrency === "usd") {
+      return getUsdBrlRateFallback();
+    }
+    throw new Error("Could not load the selected checkout currency rate.");
+  }
+  if (checkoutCurrency === "usd") {
+    return getUsdBrlRateFallback();
+  }
+  throw new Error("Could not load the selected checkout currency rate.");
 }
 
 function amountToSeconds(totalCents: number) {
@@ -93,12 +203,35 @@ Deno.serve(async (req) => {
 
     if (!token) return errorResponse("Não autorizado", 401);
 
+    const amountFromCurrencyPayload = normalizeAmountBRL(payload.amount);
     const amountFromPayload = normalizeAmountBRL(payload.amountBRL);
     const legacyDays = Number(payload.days || 0);
     const fallbackAmount = Number.isFinite(legacyDays) && legacyDays > 0
       ? Math.round(legacyDays * MIN_TOPUP_BRL * 100) / 100
       : null;
-    const amountBRL = amountFromPayload ?? fallbackAmount;
+
+    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: authData, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !authData?.user) return errorResponse("Sessão inválida", 401);
+
+    const { data: profile, error: profileErr } = await supabase
+      .from("users")
+      .select("phone,phone_verified,country_code")
+      .eq("id", authData.user.id)
+      .single();
+    if (profileErr || !profile) return errorResponse("Perfil não encontrado", 404);
+    if (!profile.phone_verified) {
+      return errorResponse("Verifique seu telefone antes de adicionar saldo.", 403);
+    }
+
+    const resolvedCountryCode = getCheckoutCountryConfig(profile.country_code)?.code
+      || getCheckoutCountryConfig(inferCountryCodeFromPhone(profile.phone))?.code
+      || "OTHER";
+    const checkoutCurrency = normalizeCheckoutCurrency(getCheckoutCountryConfig(resolvedCountryCode)?.currency || "usd");
+    const fxRateToBRL = await getCurrencyRateToBRL(checkoutCurrency);
+    const amountBRL = amountFromCurrencyPayload != null
+      ? Number((amountFromCurrencyPayload * fxRateToBRL).toFixed(2))
+      : (amountFromPayload ?? fallbackAmount);
 
     if (!amountBRL || amountBRL < MIN_TOPUP_BRL) {
       return errorResponse("Valor mínimo para depósito: R$ 5,00", 400);
@@ -107,19 +240,14 @@ Deno.serve(async (req) => {
     const totalCents = Math.round(amountBRL * 100);
     const purchasedSeconds = amountToSeconds(totalCents);
     const equivalentDays = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
-    const checkoutCurrency = normalizeCheckoutCurrency(payload.currency);
-    const usdBrlRate = getUsdBrlRate();
-    const checkoutTotalCents = checkoutCurrency === "usd"
-      ? Math.round((amountBRL / usdBrlRate) * 100)
-      : totalCents;
+    const checkoutAmount = amountFromCurrencyPayload != null
+      ? amountFromCurrencyPayload
+      : Number((amountBRL / fxRateToBRL).toFixed(2));
+    const checkoutTotalCents = Math.round(checkoutAmount * 100);
 
     if (!Number.isFinite(checkoutTotalCents) || checkoutTotalCents <= 0) {
       return errorResponse("Valor inválido para checkout.", 400);
     }
-
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: authData, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !authData?.user) return errorResponse("Sessão inválida", 401);
 
     let listing: { id: string; user_id: string; title: string | null; status: string } | null = null;
     if (payload.listingId) {
@@ -170,8 +298,9 @@ Deno.serve(async (req) => {
     body.set("metadata[total_cents]", String(totalCents));
     body.set("metadata[checkout_total_cents]", String(checkoutTotalCents));
     body.set("metadata[checkout_currency]", checkoutCurrency.toUpperCase());
+    body.set("metadata[checkout_country_code]", resolvedCountryCode);
     body.set("metadata[amount_brl]", amountBRL.toFixed(2));
-    body.set("metadata[fx_rate]", usdBrlRate.toFixed(4));
+    body.set("metadata[fx_rate]", fxRateToBRL.toFixed(6));
     body.set("metadata[auto_activate]", shouldAutoActivate ? "1" : "0");
     if (listing?.id) {
       body.set("metadata[listing_id]", listing.id);
@@ -201,6 +330,7 @@ Deno.serve(async (req) => {
         totalCents,
         checkoutCurrency: checkoutCurrency.toUpperCase(),
         checkoutTotalCents,
+        fxRateToBRL,
         purchasedSeconds,
         referenceListingId: listing?.id || null,
         autoActivate: shouldAutoActivate,

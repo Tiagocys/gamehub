@@ -15,7 +15,7 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
@@ -24,60 +24,45 @@
       <aside id="home-sidebar" class="home-sidebar">
         <div class="home-sidebar-head">
           <div class="home-sidebar-heading">
-            <p class="home-sidebar-kicker">Explorar</p>
+            <p class="home-sidebar-kicker">Explore</p>
             <div class="home-sidebar-titlebar">
-              <h2>Descobertas</h2>
-              <button id="home-sidebar-toggle" class="home-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true" data-icon="left">
-                <span class="sr-only">Recolher menu lateral</span>
+              <h2>Discoveries</h2>
+              <button id="home-sidebar-toggle" class="home-sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true" data-icon="left">
+                <span class="sr-only">Collapse sidebar</span>
               </button>
             </div>
           </div>
         </div>
 
-        <section class="home-sidebar-section">
+        <section id="sidebar-users-section" class="home-sidebar-section">
           <div class="home-sidebar-section-head">
-            <h3>Anunciantes recomendados</h3>
+            <h3>Recommended sellers</h3>
           </div>
           <div id="sidebar-users" class="sidebar-list"></div>
-          <p id="sidebar-users-empty" class="helper" style="display:none;">Sem sugestões de usuários por enquanto.</p>
+          <p id="sidebar-users-empty" class="helper" style="display:none;">No user suggestions right now.</p>
         </section>
 
         <section class="home-sidebar-section">
           <div class="home-sidebar-section-head">
-            <h3>Games sugeridos</h3>
+            <h3>Suggested games</h3>
           </div>
           <div id="sidebar-games" class="sidebar-list"></div>
-          <p id="sidebar-games-empty" class="helper" style="display:none;">Nenhum game com anúncios ativos no momento.</p>
+          <p id="sidebar-games-empty" class="helper" style="display:none;">No games with active listings right now.</p>
         </section>
       </aside>
 
       <section class="home-feed">
-        <section class="hero hero-reputation">
-          <section class="hero-spotlight-card" aria-label="Anúncios destacados">
-            <div class="hero-spotlight-head">
-              <div class="hero-spotlight-controls">
-                <button id="hero-carousel-prev" class="hero-carousel-btn" type="button" aria-label="Anúncio anterior">‹</button>
-                <button id="hero-carousel-next" class="hero-carousel-btn" type="button" aria-label="Próximo anúncio">›</button>
-              </div>
-            </div>
-            <div id="hero-carousel" class="hero-carousel-track"></div>
-            <p id="hero-carousel-empty" class="helper" style="display:none;">Nenhum anúncio destacado no momento.</p>
-          </section>
-        </section>
-
         <section class="section home-feed-sections">
           <div class="section-header">
             <div>
-              <h2>Games recomendados</h2>
+              <h2>Recommended games</h2>
             </div>
           </div>
           <div id="home-game-sections" class="home-game-sections"></div>
-          <p id="home-game-sections-empty" class="helper" style="display:none;">Nenhum anúncio ativo para montar o feed.</p>
+          <p id="home-game-sections-empty" class="helper" style="display:none;">No active listings to build the feed.</p>
         </section>
       </section>
     </main>
-
-    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
@@ -85,7 +70,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -115,12 +99,9 @@
     const searchInput = document.getElementById("game-search-input");
     const searchSuggestions = document.getElementById("search-suggestions");
     const createListingBtn = document.getElementById("create-listing-btn");
-    const heroCarousel = document.getElementById("hero-carousel");
-    const heroCarouselEmpty = document.getElementById("hero-carousel-empty");
-    const heroCarouselPrev = document.getElementById("hero-carousel-prev");
-    const heroCarouselNext = document.getElementById("hero-carousel-next");
     const homeSidebar = document.getElementById("home-sidebar");
     const homeSidebarToggle = document.getElementById("home-sidebar-toggle");
+    const sidebarUsersSection = document.getElementById("sidebar-users-section");
     const sidebarUsers = document.getElementById("sidebar-users");
     const sidebarUsersEmpty = document.getElementById("sidebar-users-empty");
     const sidebarGames = document.getElementById("sidebar-games");
@@ -142,20 +123,17 @@
     let searchablePlayers = [];
     let serverMap = new Map();
     let recommendationCountMap = new Map();
+    let serverFollowerCountMap = new Map();
     let followedGameIds = new Set();
-    const FEATURED_LISTINGS_LIMIT = 12;
     const SIDEBAR_USERS_LIMIT = 8;
     const SIDEBAR_GAMES_LIMIT = 8;
     const HOME_GAME_SECTION_LIMIT = 6;
     const HOME_GAME_CARD_LIMIT = 6;
     let avatarLoaded = false;
-    let featuredListings = [];
-    let featuredCarouselIndex = 0;
-    let featuredCarouselTimer = null;
-    let featuredImpressionObserver = null;
-    let featuredImpressionFlushTimer = null;
-    const trackedFeaturedImpressions = new Map();
-    const pendingFeaturedImpressionIds = new Set();
+    let homeHighlightImpressionObserver = null;
+    let homeHighlightImpressionFlushTimer = null;
+    const trackedHomeHighlightImpressions = new Map();
+    const pendingHomeHighlightImpressionIds = new Set();
     let sidebarCollapsed = window.innerWidth < 960;
     let sidebarAutoManaged = true;
     if (avatarImg) {
@@ -167,17 +145,14 @@
       });
     }
 
-    if (homeSidebarKicker) homeSidebarKicker.textContent = t("home.explore", "Explorar");
-    if (homeSidebarTitle) homeSidebarTitle.textContent = t("home.discoveries", "Descobertas");
-    if (sidebarUsersTitle) sidebarUsersTitle.textContent = t("home.recommended_sellers", "Anunciantes recomendados");
-    if (sidebarGamesTitle) sidebarGamesTitle.textContent = t("home.recommended_games_sidebar", "Games sugeridos");
-    if (sidebarUsersEmpty) sidebarUsersEmpty.textContent = t("home.no_users", "Sem sugestões de usuários por enquanto.");
-    if (sidebarGamesEmpty) sidebarGamesEmpty.textContent = t("home.no_games", "Nenhum game com anúncios ativos no momento.");
-    if (heroCarouselPrev) heroCarouselPrev.setAttribute("aria-label", t("home.prev_featured", "Anúncio anterior"));
-    if (heroCarouselNext) heroCarouselNext.setAttribute("aria-label", t("home.next_featured", "Próximo anúncio"));
-    if (heroCarouselEmpty) heroCarouselEmpty.textContent = t("home.no_featured", "Nenhum anúncio destacado no momento.");
-    if (homeRecommendedGamesTitle) homeRecommendedGamesTitle.textContent = t("home.recommended_games", "Games recomendados");
-    if (homeGameSectionsEmpty) homeGameSectionsEmpty.textContent = t("home.no_feed", "Nenhum anúncio ativo para montar o feed.");
+    if (homeSidebarKicker) homeSidebarKicker.textContent = t("home.explore", "Explore");
+    if (homeSidebarTitle) homeSidebarTitle.textContent = t("home.discoveries", "Discoveries");
+    if (sidebarUsersTitle) sidebarUsersTitle.textContent = t("home.recommended_sellers", "Recommended sellers");
+    if (sidebarGamesTitle) sidebarGamesTitle.textContent = t("home.recommended_games_sidebar", "Suggested games");
+    if (sidebarUsersEmpty) sidebarUsersEmpty.textContent = t("home.no_users", "No user suggestions right now.");
+    if (sidebarGamesEmpty) sidebarGamesEmpty.textContent = t("home.no_games", "No games with active listings right now.");
+    if (homeRecommendedGamesTitle) homeRecommendedGamesTitle.textContent = t("home.recommended_games", "Recommended games");
+    if (homeGameSectionsEmpty) homeGameSectionsEmpty.textContent = t("home.no_feed", "No active listings to build the feed.");
 
     function getSidebarToggleIconName() {
       const isMobile = window.matchMedia("(max-width: 900px)").matches;
@@ -189,9 +164,9 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        showSuggestionMessage(t("home.configure_env", "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js."));
+        showSuggestionMessage(t("home.configure_env", "Configure SUPABASE_URL and SUPABASE_ANON_KEY in public/env.js."));
         authBtn.disabled = true;
-        throw new Error("Supabase não configurado");
+        throw new Error("Supabase is not configured");
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -290,22 +265,16 @@
         await startOAuthLikeNavbar();
       } catch (err) {
         console.error(err);
-        showSuggestionMessage(err?.message || "Erro ao autenticar.");
+        showSuggestionMessage(err?.message || "Authentication error.");
         authBtn.disabled = false;
       }
     }
 
     async function startOAuthLikeNavbar(targetPath = null) {
-      ensureClient();
       const normalizedPath = targetPath
         ? (String(targetPath).startsWith("/") ? String(targetPath) : `/${String(targetPath)}`)
         : `${window.location.pathname}${window.location.search || ""}`;
-      const redirectTo = `${window.location.origin}${normalizedPath}`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo },
-      });
-      if (error) throw error;
+      window.__OPEN_AUTH_GATEWAY__?.(normalizedPath);
     }
 
     async function bootstrapAuth() {
@@ -316,7 +285,7 @@
         updateAuthUI();
       } catch (err) {
         console.error(err);
-        showSuggestionMessage("Erro ao carregar sessão.");
+        showSuggestionMessage("Error loading session.");
         markAvatarReady();
       }
     }
@@ -438,6 +407,17 @@
       return map;
     }
 
+    function buildHighlightedServerSet(listings) {
+      const highlightedServerIds = new Set();
+      (listings || []).forEach((row) => {
+        if (row?.highlight_status !== "active") return;
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        highlightedServerIds.add(key);
+      });
+      return highlightedServerIds;
+    }
+
     async function attachRecommendationsScore(listings) {
       const items = Array.isArray(listings) ? listings : [];
       const userIds = Array.from(new Set(
@@ -474,7 +454,11 @@
         const countA = popularityMap.get(String(a.id)) || 0;
         const countB = popularityMap.get(String(b.id)) || 0;
         if (countB !== countA) return countB - countA;
-        return String(a.name || "").localeCompare(String(b.name || ""), "pt-BR", { sensitivity: "base" });
+        return String(a.name || "").localeCompare(
+          String(b.name || ""),
+          i18n.locale === "en" ? "en-US" : "pt-BR",
+          { sensitivity: "base" },
+        );
       });
     }
 
@@ -518,6 +502,20 @@
         const key = String(row?.user_id || "").trim();
         if (!key) return;
         recommendationCountMap.set(key, (recommendationCountMap.get(key) || 0) + 1);
+      });
+    }
+
+    async function fetchServerFollowerCounts() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("server_follows")
+        .select("server_id");
+      if (error) throw error;
+      serverFollowerCountMap = new Map();
+      (data || []).forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        serverFollowerCountMap.set(key, (serverFollowerCountMap.get(key) || 0) + 1);
       });
     }
 
@@ -604,11 +602,11 @@
       }
       if (homeSidebarToggle) {
         homeSidebarToggle.setAttribute("aria-expanded", String(!sidebarCollapsed));
-        homeSidebarToggle.setAttribute("aria-label", sidebarCollapsed ? t("home.sidebar_expand", "Expandir menu lateral") : t("home.sidebar_collapse", "Recolher menu lateral"));
+        homeSidebarToggle.setAttribute("aria-label", sidebarCollapsed ? t("home.sidebar_expand", "Expand sidebar") : t("home.sidebar_collapse", "Collapse sidebar"));
         homeSidebarToggle.dataset.icon = getSidebarToggleIconName();
         const srOnly = homeSidebarToggle.querySelector(".sr-only");
         if (srOnly) {
-          srOnly.textContent = sidebarCollapsed ? t("home.sidebar_expand", "Expandir menu lateral") : t("home.sidebar_collapse", "Recolher menu lateral");
+          srOnly.textContent = sidebarCollapsed ? t("home.sidebar_expand", "Expand sidebar") : t("home.sidebar_collapse", "Collapse sidebar");
         }
       }
     }
@@ -618,6 +616,7 @@
       activeListingsCatalog.forEach((listing) => {
         const userId = String(listing?.user_id || "").trim();
         if (!userId) return;
+        if (currentUser?.id && userId === String(currentUser.id).trim()) return;
         const createdAt = new Date(listing?.created_at || 0).getTime();
         const current = sellers.get(userId);
         const isFollowed = isFollowedGame(listing?.server_id);
@@ -646,20 +645,6 @@
         })
         .slice(0, limit)
         .map((item) => item.userId);
-    }
-
-    function getFeaturedListings() {
-      const highlighted = activeListingsCatalog.filter((listing) => listing?.highlight_status === "active");
-      const source = highlighted.length > 0 ? highlighted : activeListingsCatalog;
-      return [...source]
-        .sort((a, b) => {
-          const followedDiff = Number(isFollowedGame(b.server_id)) - Number(isFollowedGame(a.server_id));
-          if (followedDiff !== 0) return followedDiff;
-          const scoreDiff = getRecommendationCount(b.user_id) - getRecommendationCount(a.user_id);
-          if (scoreDiff !== 0) return scoreDiff;
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-        })
-        .slice(0, FEATURED_LISTINGS_LIMIT);
     }
 
     async function fetchUserProfiles(userIds) {
@@ -691,15 +676,22 @@
       }
 
       sidebarGamesEmpty.style.display = "none";
-      sidebarGames.innerHTML = items
-        .sort((a, b) => {
-          const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
-          if (followedDiff !== 0) return followedDiff;
-          return 0;
-        })
+      const sortedItems = [...items].sort((a, b) => {
+        const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
+        if (followedDiff !== 0) return followedDiff;
+        const countA = counts.get(String(a.id)) || 0;
+        const countB = counts.get(String(b.id)) || 0;
+        if (countB !== countA) return countB - countA;
+        return String(a.name || "").localeCompare(
+          String(b.name || ""),
+          i18n.locale === "en" ? "en-US" : "pt-BR",
+          { sensitivity: "base" },
+        );
+      });
+      sidebarGames.innerHTML = sortedItems
         .map((game) => {
         const count = counts.get(String(game.id)) || 0;
-        const followedTag = isFollowedGame(game.id) ? `<span class="sidebar-item-chip">${t("home.following", "Seguindo")}</span>` : "";
+        const followedTag = isFollowedGame(game.id) ? `<span class="sidebar-item-chip">${t("home.following", "Following")}</span>` : "";
         const safeGameName = escapeHtml(game.name);
         const gameThumb = game.cover_url
           ? `<span class="sidebar-item-thumb game-logo"><img src="${encodeURI(game.cover_url)}" alt="${safeGameName}" loading="lazy" /></span>`
@@ -709,7 +701,7 @@
             ${gameThumb}
             <span class="sidebar-item-copy">
               <strong>${safeGameName} ${followedTag}</strong>
-              <span>${escapeHtml(formatMessage("home.active_listings_count", "{count} anúncios ativos", { count }))}</span>
+              <span>${escapeHtml(formatMessage("home.active_listings_count", "{count} active listings", { count }))}</span>
             </span>
           </a>
         `;
@@ -717,14 +709,24 @@
     }
 
     function renderSidebarUsers(userMap) {
-      if (!sidebarUsers || !sidebarUsersEmpty) return;
+      if (!sidebarUsers || !sidebarUsersEmpty || !sidebarUsersSection) return;
+      if (followedGameIds.size === 0) {
+        sidebarUsersSection.style.display = "none";
+        sidebarUsers.innerHTML = "";
+        sidebarUsersEmpty.style.display = "none";
+        return;
+      }
+      sidebarUsersSection.style.display = "";
       const topSellerIds = getTopSellerIds();
       if (topSellerIds.length === 0) {
+        sidebarUsersSection.style.display = "none";
         sidebarUsers.innerHTML = "";
         sidebarUsersEmpty.style.display = "block";
+        sidebarUsersEmpty.textContent = t("home.no_users", "No user suggestions right now.");
         return;
       }
 
+      sidebarUsersSection.style.display = "";
       sidebarUsersEmpty.style.display = "none";
       sidebarUsers.innerHTML = topSellerIds.map((userId) => {
         const user = userMap.get(String(userId)) || {};
@@ -767,62 +769,15 @@
       }
     }
 
-    function renderFeaturedPlaceholder() {
-      if (!heroCarousel) return;
-      heroCarousel.innerHTML = Array.from({ length: 3 }).map(() => `
-        <article class="hero-listing-card is-placeholder" aria-hidden="true">
-          <div class="hero-listing-media"></div>
-          <div class="hero-listing-body">
-            <div class="hero-listing-pill"></div>
-            <div class="hero-listing-line hero-listing-line-lg"></div>
-            <div class="hero-listing-line"></div>
-            <div class="hero-listing-line hero-listing-line-sm"></div>
-          </div>
-        </article>
-      `).join("");
-    }
-
-    function createFeaturedCard(listing) {
-      const card = document.createElement("a");
-      card.className = "hero-listing-card";
-      card.href = `listing.html?id=${encodeURIComponent(listing.id)}`;
-      card.dataset.listingId = String(listing.id || "");
-      if (listing.highlight_status === "active") {
-        card.dataset.highlightTrack = "1";
-      }
-      card.innerHTML = `
-        <div
-          class="hero-listing-media${listing.image_url ? " has-image" : " empty"}"
-          ${listing.image_url ? `style="background-image:url('${encodeURI(listing.image_url)}')"` : ""}
-        >
-          ${listing.image_url
-            ? ""
-            : `<img src="img/logo.png" alt="" class="hero-listing-fallback" loading="lazy" />`}
-        </div>
-        <div class="hero-listing-body">
-          <span class="pill hero-listing-server">${escapeHtml(listing.server_name || "Marketplace")}</span>
-          <h3>${escapeHtml(listing.title || t("home.listing_untitled", "Anúncio sem título"))}</h3>
-          <div class="hero-listing-seller">
-            <img src="${encodeURI(listing.avatar_url || "img/avatar.svg")}" alt="" class="hero-listing-avatar" loading="lazy" referrerpolicy="no-referrer" />
-            <div>
-              <strong>${escapeHtml(listing.seller_name || "Vendedor")}</strong>
-              <span>${escapeHtml(formatRecommendations(listing.user_recommendations_count))}</span>
-            </div>
-          </div>
-        </div>
-      `;
-      return card;
-    }
-
-    function queueFeaturedImpression(listingId) {
+    function queueHomeHighlightImpression(listingId) {
       const normalizedId = String(listingId || "").trim();
       if (!normalizedId) return;
-      pendingFeaturedImpressionIds.add(normalizedId);
-      if (featuredImpressionFlushTimer) return;
-      featuredImpressionFlushTimer = window.setTimeout(async () => {
-        const ids = Array.from(pendingFeaturedImpressionIds);
-        pendingFeaturedImpressionIds.clear();
-        featuredImpressionFlushTimer = null;
+      pendingHomeHighlightImpressionIds.add(normalizedId);
+      if (homeHighlightImpressionFlushTimer) return;
+      homeHighlightImpressionFlushTimer = window.setTimeout(async () => {
+        const ids = Array.from(pendingHomeHighlightImpressionIds);
+        pendingHomeHighlightImpressionIds.clear();
+        homeHighlightImpressionFlushTimer = null;
         if (ids.length === 0) return;
         try {
           ensureClient();
@@ -835,103 +790,30 @@
       }, 800);
     }
 
-    function observeFeaturedImpressions() {
-      if (featuredImpressionObserver) {
-        featuredImpressionObserver.disconnect();
-        featuredImpressionObserver = null;
+    function observeHomeHighlightImpressions() {
+      if (homeHighlightImpressionObserver) {
+        homeHighlightImpressionObserver.disconnect();
+        homeHighlightImpressionObserver = null;
       }
-      if (!heroCarousel) return;
-      const cards = [...heroCarousel.querySelectorAll(".hero-listing-card[data-highlight-track='1']")];
+      if (!homeGameSections) return;
+      const cards = [...homeGameSections.querySelectorAll(".home-feed-card[data-highlight-track='1']")];
       if (cards.length === 0) return;
-      featuredImpressionObserver = new IntersectionObserver((entries) => {
+      homeHighlightImpressionObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting || entry.intersectionRatio < 0.65) return;
           const listingId = entry.target?.dataset?.listingId;
           if (!listingId) return;
           const now = Date.now();
-          const lastTrackedAt = Number(trackedFeaturedImpressions.get(listingId) || 0);
+          const lastTrackedAt = Number(trackedHomeHighlightImpressions.get(listingId) || 0);
           if (now - lastTrackedAt < 30000) return;
-          trackedFeaturedImpressions.set(listingId, now);
-          queueFeaturedImpression(listingId);
+          trackedHomeHighlightImpressions.set(listingId, now);
+          queueHomeHighlightImpression(listingId);
         });
       }, {
-        root: heroCarousel,
+        root: null,
         threshold: [0.65],
       });
-      cards.forEach((card) => featuredImpressionObserver.observe(card));
-    }
-
-    function scrollFeaturedCarousel(direction = 1) {
-      if (!heroCarousel || featuredListings.length === 0) return;
-      featuredCarouselIndex = (featuredCarouselIndex + direction + featuredListings.length) % featuredListings.length;
-      const target = heroCarousel.children[featuredCarouselIndex];
-      target?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
-    }
-
-    function startFeaturedCarouselAutoplay() {
-      if (!heroCarousel || featuredListings.length <= 1) return;
-      if (featuredCarouselTimer) window.clearInterval(featuredCarouselTimer);
-      featuredCarouselTimer = window.setInterval(() => {
-        scrollFeaturedCarousel(1);
-      }, 5000);
-    }
-
-    function stopFeaturedCarouselAutoplay() {
-      if (!featuredCarouselTimer) return;
-      window.clearInterval(featuredCarouselTimer);
-      featuredCarouselTimer = null;
-    }
-
-    function renderFeaturedCarousel(items) {
-      if (!heroCarousel || !heroCarouselEmpty) return;
-      featuredListings = Array.isArray(items) ? items : [];
-      featuredCarouselIndex = 0;
-      heroCarousel.innerHTML = "";
-      if (featuredListings.length === 0) {
-        heroCarouselEmpty.style.display = "block";
-        if (heroCarouselPrev) heroCarouselPrev.disabled = true;
-        if (heroCarouselNext) heroCarouselNext.disabled = true;
-        stopFeaturedCarouselAutoplay();
-        return;
-      }
-
-      heroCarouselEmpty.style.display = "none";
-      featuredListings.forEach((listing) => {
-        heroCarousel.appendChild(createFeaturedCard(listing));
-      });
-      observeFeaturedImpressions();
-      const disableControls = featuredListings.length <= 1;
-      if (heroCarouselPrev) heroCarouselPrev.disabled = disableControls;
-      if (heroCarouselNext) heroCarouselNext.disabled = disableControls;
-      startFeaturedCarouselAutoplay();
-    }
-
-    async function populateFeaturedCarousel(userMap) {
-      renderFeaturedPlaceholder();
-      try {
-        const featured = getFeaturedListings();
-        const resolved = await Promise.all(featured.map(async (listing) => {
-          const user = userMap.get(String(listing.user_id)) || {};
-          const primaryImage = Array.isArray(listing.images) ? listing.images[0] : "";
-          const [imageUrl, avatarUrl] = await Promise.all([
-            primaryImage ? resolveImageUrl(primaryImage) : Promise.resolve(""),
-            Promise.resolve(user.avatar_url || "img/avatar.svg"),
-          ]);
-          return {
-            ...listing,
-            image_url: imageUrl || "",
-            avatar_url: avatarUrl || "img/avatar.svg",
-            seller_name: formatSellerName(user),
-            server_name: serverMap.get(String(listing.server_id))?.name || "Marketplace",
-            user_recommendations_count: getRecommendationCount(listing.user_id),
-          };
-        }));
-
-        renderFeaturedCarousel(resolved);
-      } catch (err) {
-        console.error(err);
-        renderFeaturedCarousel([]);
-      }
+      cards.forEach((card) => homeHighlightImpressionObserver.observe(card));
     }
 
     function parseCoverStoragePath(urlString) {
@@ -967,7 +849,7 @@
         if (error) throw error;
         return data?.signedUrl || urlString;
       } catch (err) {
-        console.warn("Falha ao assinar cover", err);
+        console.warn("Failed to sign cover image", err);
         return urlString;
       }
     }
@@ -981,13 +863,23 @@
         if (!groupedListings.has(serverId)) groupedListings.set(serverId, []);
         groupedListings.get(serverId).push(listing);
       });
+      const activeListingCountMap = buildPopularityMap(activeListingsCatalog);
+      const highlightedServerIds = buildHighlightedServerSet(activeListingsCatalog);
 
       const selectedGames = [...allSortedGames]
         .filter((game) => groupedListings.has(String(game.id)))
         .sort((a, b) => {
-          const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
-          if (followedDiff !== 0) return followedDiff;
-          return 0;
+          const highlightedDiff = Number(highlightedServerIds.has(String(b.id))) - Number(highlightedServerIds.has(String(a.id)));
+          if (highlightedDiff !== 0) return highlightedDiff;
+          const followerDiff = (serverFollowerCountMap.get(String(b.id)) || 0) - (serverFollowerCountMap.get(String(a.id)) || 0);
+          if (followerDiff !== 0) return followerDiff;
+          const activeDiff = (activeListingCountMap.get(String(b.id)) || 0) - (activeListingCountMap.get(String(a.id)) || 0);
+          if (activeDiff !== 0) return activeDiff;
+          return String(a.name || "").localeCompare(
+            String(b.name || ""),
+            i18n.locale === "en" ? "en-US" : "pt-BR",
+            { sensitivity: "base" },
+          );
         })
         .slice(0, HOME_GAME_SECTION_LIMIT);
 
@@ -1008,18 +900,21 @@
             ? await resolveImageUrl(listing.images[0])
             : "";
           const highlightBadge = listing?.highlight_status === "active"
-            ? `<span class="home-feed-card-badge">${escapeHtml(t("home.featured_badge", "Destaque"))}</span>`
+            ? `<span class="home-feed-card-badge">${escapeHtml(t("home.featured_badge", "Featured"))}</span>`
+            : "";
+          const highlightAttrs = listing?.highlight_status === "active"
+            ? ` data-highlight-track="1" data-listing-id="${escapeHtml(String(listing.id || ""))}"`
             : "";
           return `
-            <a class="home-feed-card" href="listing.html?id=${encodeURIComponent(listing.id)}">
+            <a class="home-feed-card" href="listing.html?id=${encodeURIComponent(listing.id)}"${highlightAttrs}>
               <div class="home-feed-card-media${imageUrl ? "" : " empty"}">
                 ${highlightBadge}
                 ${imageUrl
-                  ? `<img src="${encodeURI(imageUrl)}" alt="${escapeHtml(listing.title || "Anúncio")}" loading="lazy" />`
+                  ? `<img src="${encodeURI(imageUrl)}" alt="${escapeHtml(listing.title || "Listing")}" loading="lazy" />`
                   : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
               </div>
               <div class="home-feed-card-copy">
-                <strong>${escapeHtml(listing.title || t("home.listing_untitled", "Anúncio sem título"))}</strong>
+                <strong>${escapeHtml(listing.title || t("home.listing_untitled", "Untitled listing"))}</strong>
               </div>
             </a>
           `;
@@ -1032,14 +927,14 @@
                 <h3>
                   <a class="home-game-title-link" href="game.html?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
                 </h3>
-                <p class="helper">${escapeHtml(formatMessage("home.active_listings_count", "{count} anúncios ativos", { count: (groupedListings.get(String(game.id)) || []).length }))}</p>
+                <p class="helper">${escapeHtml(formatMessage("home.active_listings_count", "{count} active listings", { count: (groupedListings.get(String(game.id)) || []).length }))}</p>
               </div>
               <button
                 class="btn btn-ghost home-game-follow-btn${isFollowedGame(game.id) ? " is-following" : ""}"
                 type="button"
                 data-action="toggle-follow"
                 data-game-id="${escapeHtml(game.id)}">
-                ${isFollowedGame(game.id) ? t("home.following", "Seguindo") : t("home.follow_game", "Seguir game")}
+                ${isFollowedGame(game.id) ? t("home.following", "Following") : t("home.follow_game", "Follow game")}
               </button>
             </div>
             <div class="home-game-row">
@@ -1050,6 +945,7 @@
       }));
 
       homeGameSections.innerHTML = sectionsMarkup.join("");
+      observeHomeHighlightImpressions();
     }
 
     async function loadHomeLayout() {
@@ -1059,32 +955,30 @@
         currentUser = sessionData?.session?.user || currentUser;
         await fetchGamesCatalog();
         await fetchRecommendationCounts();
+        await fetchServerFollowerCounts();
         await fetchSearchablePlayers();
         await fetchFollowedGames();
         renderSidebarGames();
 
-        const sellerIds = getTopSellerIds();
-        const featuredIds = getFeaturedListings().map((listing) => listing.user_id);
-        const userMap = await fetchUserProfiles([...sellerIds, ...featuredIds]);
+        const sellerIds = followedGameIds.size > 0 ? getTopSellerIds() : [];
+        const userMap = await fetchUserProfiles(sellerIds);
 
         renderSidebarUsers(userMap);
-        await populateFeaturedCarousel(userMap);
         await renderHomeGameSections();
       } catch (err) {
         console.error(err);
         if (sidebarGamesEmpty) {
           sidebarGamesEmpty.style.display = "block";
-          sidebarGamesEmpty.textContent = err?.message || t("home.sidebar_error", "Erro ao carregar sidebar.");
+          sidebarGamesEmpty.textContent = err?.message || t("home.sidebar_error", "Error loading sidebar.");
         }
         if (sidebarUsersEmpty) {
           sidebarUsersEmpty.style.display = "block";
-          sidebarUsersEmpty.textContent = err?.message || t("home.users_error", "Erro ao carregar usuários.");
+          sidebarUsersEmpty.textContent = err?.message || t("home.users_error", "Error loading users.");
         }
         if (homeGameSectionsEmpty) {
           homeGameSectionsEmpty.style.display = "block";
-          homeGameSectionsEmpty.textContent = err?.message || t("home.feed_error", "Erro ao carregar feed.");
+          homeGameSectionsEmpty.textContent = err?.message || t("home.feed_error", "Error loading feed.");
         }
-        renderFeaturedCarousel([]);
       } finally {
         await waitForInitialHomeVisuals();
         markContentReady();
@@ -1113,13 +1007,17 @@
           const aIncludes = aUsername.includes(normalizedTerm) ? 1 : 0;
           const bIncludes = bUsername.includes(normalizedTerm) ? 1 : 0;
           if (bIncludes !== aIncludes) return bIncludes - aIncludes;
-          return String(a.username || a.name || "").localeCompare(String(b.username || b.name || ""), "pt-BR", { sensitivity: "base" });
+          return String(a.username || a.name || "").localeCompare(
+            String(b.username || b.name || ""),
+            i18n.locale === "en" ? "en-US" : "pt-BR",
+            { sensitivity: "base" },
+          );
         })
         .slice(0, 6);
       if (gameMatches.length === 0 && playerMatches.length === 0) {
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
-            ${t("home.search_not_found_prefix", "Não encontramos games ou players para")} "${escapeHtml(term)}".
+            ${t("home.search_not_found_prefix", "We couldn't find games or players for")} "${escapeHtml(term)}".
             <a class="link-ghost" href="game-submit.html" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
           </div>
         `;
@@ -1129,7 +1027,7 @@
       const gameItems = gameMatches
         .map((g) => {
           const logoUrl = normalizeR2PublicUrl(g.cover_url || "");
-          const websiteLabel = String(g.website || "").replace(/^https?:\/\//i, "").replace(/\/$/, "") || "Sem site oficial";
+          const websiteLabel = String(g.website || "").replace(/^https?:\/\//i, "").replace(/\/$/, "") || "No official website";
           return `<div class="suggestion-item suggestion-item-rich" data-kind="game" data-game-id="${g.id}" data-game-name="${escapeHtml(g.name)}">
             <span class="suggestion-thumb suggestion-thumb-game">
               ${logoUrl
@@ -1158,7 +1056,7 @@
         .join("");
       const footer = `
         <div class="suggestion-footer">
-          ${t("home.search_not_found_simple", "Não encontramos")}
+          ${t("home.search_not_found_simple", "We couldn't find")}
           <a class="link-ghost" href="game-submit.html" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
         </div>
       `;
@@ -1190,7 +1088,7 @@
       event.preventDefault();
       const term = searchInput?.value.trim();
       if (!term) {
-        showSuggestionMessage(t("home.type_to_search", "Digite o nome de um game ou player para começar."));
+        showSuggestionMessage(t("home.type_to_search", "Type the name of a game or player to begin."));
         return;
       }
       const normalizedTerm = normalizeSearchText(term);
@@ -1210,7 +1108,7 @@
       } else {
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
-            ${t("home.search_not_found_simple", "Não encontramos")} "${escapeHtml(term)}".
+            ${t("home.search_not_found_simple", "We couldn't find")} "${escapeHtml(term)}".
             <a href="game-submit.html" class="link-ghost" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
           </div>
         `;
@@ -1231,25 +1129,12 @@
       if (!currentUser) {
         startOAuthLikeNavbar("game-submit.html").catch((err) => {
           console.error(err);
-          showSuggestionMessage(err?.message || "Erro ao iniciar login com Google.");
+          showSuggestionMessage(err?.message || "Error starting Google sign-in.");
         });
         return;
       }
       window.location.href = "game-submit.html";
     });
-
-    heroCarouselPrev?.addEventListener("click", () => {
-      stopFeaturedCarouselAutoplay();
-      scrollFeaturedCarousel(-1);
-      startFeaturedCarouselAutoplay();
-    });
-    heroCarouselNext?.addEventListener("click", () => {
-      stopFeaturedCarouselAutoplay();
-      scrollFeaturedCarousel(1);
-      startFeaturedCarouselAutoplay();
-    });
-    heroCarousel?.addEventListener("mouseenter", stopFeaturedCarouselAutoplay);
-    heroCarousel?.addEventListener("mouseleave", startFeaturedCarouselAutoplay);
 
     authBtn?.addEventListener("click", handleAuthClick);
     avatarBtn?.addEventListener("click", (event) => {
@@ -1293,19 +1178,17 @@
       const originalText = button.textContent;
       try {
         button.disabled = true;
-        button.textContent = isFollowedGame(gameId) ? t("home.removing", "Removendo...") : t("home.following", "Seguindo...");
+        button.textContent = isFollowedGame(gameId) ? t("home.removing", "Removing...") : t("home.following", "Following...");
         await toggleFollowGame(gameId);
         renderSidebarGames();
-        const sellerIds = getTopSellerIds();
-        const featuredIds = getFeaturedListings().map((listing) => listing.user_id);
-        const userMap = await fetchUserProfiles([...sellerIds, ...featuredIds]);
+        const sellerIds = followedGameIds.size > 0 ? getTopSellerIds() : [];
+        const userMap = await fetchUserProfiles(sellerIds);
         renderSidebarUsers(userMap);
-        await populateFeaturedCarousel(userMap);
         await renderHomeGameSections();
       } catch (err) {
         console.error(err);
         button.disabled = false;
-        button.textContent = originalText || t("home.follow_game", "Seguir game");
+        button.textContent = originalText || t("home.follow_game", "Follow game");
       }
     });
     homeSidebarToggle?.addEventListener("click", () => {
@@ -1319,7 +1202,6 @@
     });
     bootstrapAuth();
     loadHomeLayout();
-    window.addEventListener("pagehide", stopFeaturedCarouselAutoplay);
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
     let windowLoaded = false;
@@ -1350,7 +1232,7 @@
 
     async function waitForInitialHomeVisuals() {
       const images = Array.from(document.querySelectorAll(
-        "#home-sidebar img, .hero-spotlight-card img, #home-game-sections img"
+        "#home-sidebar img, #home-game-sections img"
       ))
         .filter((img) => !img.classList.contains("brand-logo"))
         .slice(0, 12);

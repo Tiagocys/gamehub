@@ -10,7 +10,7 @@
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
-  <title>Gimerr - Perfil</title>
+  <title>Gimerr - Profile</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
     .avatar-upload-card {
@@ -166,46 +166,46 @@
 </head>
 <body>
   <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Carregando" />
+    <img src="img/logo.png" alt="Loading" />
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
     <main class="section">
       <div id="phone-required-cta" class="phone-required-cta">
-        <span id="phone-required-cta-text">Você precisa antes verificar o seu número de telefone para poder anunciar.</span>
-        <a id="phone-required-cta-link" href="#verify-card">Clique aqui para iniciar a verificação</a>.
+        <span id="phone-required-cta-text">You need to verify your phone number before you can create listings.</span>
+        <a id="phone-required-cta-link" href="#verify-card">Click here to start verification</a>.
       </div>
       <div class="form-card">
         <div>
-          <h2 id="profile-page-title">Perfil</h2>
-          <p id="profile-page-helper" class="helper">Mantenha as informações do seu perfil atualizadas.</p>
+          <h2 id="profile-page-title">Profile</h2>
+          <p id="profile-page-helper" class="helper">Keep your profile information up to date.</p>
         </div>
         <form id="profile-form" class="form-vertical">
           <section class="profile-section">
-            <h3 id="profile-section-info-title" class="profile-section-title">Informações do perfil</h3>
+            <h3 id="profile-section-info-title" class="profile-section-title">Profile information</h3>
             <div class="avatar-upload-card">
-              <label id="avatar-upload-label" for="avatar-upload">Foto de perfil</label>
+              <label id="avatar-upload-label" for="avatar-upload">Profile picture</label>
               <div class="avatar-upload-row">
-                <img id="profile-avatar-preview" class="avatar-upload-preview" src="img/avatar.svg" alt="Pré-visualização do avatar" />
+                <img id="profile-avatar-preview" class="avatar-upload-preview" src="img/avatar.svg" alt="Avatar preview" />
                 <input id="avatar-upload" class="input" type="file" accept="image/*" />
               </div>
-              <div id="avatar-upload-helper" class="helper">Envie uma imagem JPG, PNG ou WEBP (máx. 5MB).</div>
+              <div id="avatar-upload-helper" class="helper">Upload a JPG, PNG, or WEBP image (max 5MB).</div>
             </div>
             <div class="form-grid">
               <div class="field">
-                <label id="first-name-label" for="first-name">Nome *</label>
-                <input id="first-name" class="input" placeholder="Seu nome" required />
+                <label id="first-name-label" for="first-name">First name *</label>
+                <input id="first-name" class="input" placeholder="Your first name" required />
               </div>
               <div class="field">
-                <label id="last-name-label" for="last-name">Sobrenome *</label>
-                <input id="last-name" class="input" placeholder="Seu sobrenome" required />
+                <label id="last-name-label" for="last-name">Last name *</label>
+                <input id="last-name" class="input" placeholder="Your last name" required />
               </div>
             </div>
             <div class="field">
-              <label id="profile-username-label" for="profile-username">Nome de usuário</label>
+              <label id="profile-username-label" for="profile-username">Username</label>
               <input id="profile-username" class="input" placeholder="ex: player123" minlength="3" maxlength="20" inputmode="text" autocomplete="off" />
-              <div id="profile-username-help" class="helper">Use apenas letras e números. Entre 3 e 20 caracteres.</div>
+              <div id="profile-username-help" class="helper">Use letters and numbers only. Between 3 and 20 characters.</div>
             </div>
   
             <div class="field">
@@ -217,102 +217,92 @@
               <div id="discord-help" class="helper"></div>
             </div>
             <div class="field">
-              <label id="about-me-label" for="about-me">Sobre mim</label>
-              <textarea id="about-me" class="textarea" maxlength="1000" placeholder="Conte um pouco sobre você, seus horários ou sua experiência no game."></textarea>
-              <div id="about-me-helper" class="helper">Opcional. Até 1000 caracteres.</div>
+              <label id="about-me-label" for="about-me">About me</label>
+              <textarea id="about-me" class="textarea" maxlength="1000" placeholder="Share a bit about yourself, your schedule, or your experience in the game."></textarea>
+              <div id="about-me-helper" class="helper">Optional. Up to 1000 characters.</div>
             </div>
           </section>
 
-          <div class="field" style="grid-column: 1 / -1;">
-            <div class="inline-actions">
-              <button type="submit" class="btn btn-primary" id="save-btn">Salvar perfil</button>
-              <a id="view-public-profile-btn" class="btn btn-ghost" href="#" style="display:none;">Ver meu perfil público</a>
-            </div>
-            <div id="profile-feedback" class="helper"></div>
-          </div>
-
           <section class="profile-section">
-            <h3 id="profile-section-contact-title" class="profile-section-title">Contato</h3>
+            <h3 id="profile-section-contact-title" class="profile-section-title">Contact</h3>
             <div class="field" id="phone-field" style="display:none;">
-              <label id="phone-label" for="phone">Telefone</label>
-              <input id="phone" class="input" type="tel" placeholder="Compartilhe via Telegram" readonly />
+              <label id="phone-label" for="phone">Phone</label>
+              <input id="phone" class="input" type="tel" placeholder="Share via Telegram" readonly />
             </div>
             <div id="whatsapp-pref-card" class="whatsapp-pref-card">
-              <p id="whatsapp-pref-helper" class="helper">Esse número verificado via Telegram é o mesmo do WhatsApp?</p>
+              <p id="whatsapp-pref-helper" class="helper">Is this Telegram-verified number also your WhatsApp number?</p>
               <div class="whatsapp-pref-options">
                 <label class="whatsapp-pref-option" for="whatsapp-same-yes">
                   <input id="whatsapp-same-yes" type="radio" name="whatsapp-same-phone" value="yes" />
-                  <span id="whatsapp-same-yes-label">Sim</span>
+                  <span id="whatsapp-same-yes-label">Yes</span>
                 </label>
                 <label class="whatsapp-pref-option" for="whatsapp-same-no">
                   <input id="whatsapp-same-no" type="radio" name="whatsapp-same-phone" value="no" />
-                  <span id="whatsapp-same-no-label">Não</span>
+                  <span id="whatsapp-same-no-label">No</span>
                 </label>
               </div>
+              <label class="whatsapp-pref-option" for="show-telegram-button">
+                <input id="show-telegram-button" type="checkbox" checked />
+                <span id="show-telegram-button-label">Show a Telegram chat button on my profile and listings</span>
+              </label>
               <label id="whatsapp-show-wrap" class="whatsapp-pref-option whatsapp-show-wrap" for="show-whatsapp-button">
                 <input id="show-whatsapp-button" type="checkbox" />
-                <span id="show-whatsapp-button-label">Exibir botão para conversar no WhatsApp nos meus anúncios</span>
+                <span id="show-whatsapp-button-label">Show a WhatsApp chat button on my profile and listings</span>
               </label>
             </div>
-            <div id="public-contact-pref-card" class="whatsapp-pref-card">
-              <p id="public-contact-helper" class="helper">Onde exibir meu número de telefone?</p>
-              <div class="whatsapp-pref-options">
-                <label class="whatsapp-pref-option" for="public-contact-yes">
-                  <input id="public-contact-yes" type="radio" name="public-contact-visibility" value="yes" checked />
-                  <span id="public-contact-yes-label">Exibir no perfil público e nos anúncios</span>
-                </label>
-                <label class="whatsapp-pref-option" for="public-contact-no">
-                  <input id="public-contact-no" type="radio" name="public-contact-visibility" value="no" />
-                  <span id="public-contact-no-label">Exibir apenas nos anúncios</span>
-                </label>
-              </div>
-            </div>
+            <div id="profile-feedback" class="helper"></div>
             <div class="verify-card" id="verify-card">
               <div>
                 <div class="inline-actions" style="gap:8px; align-items:center;">
-                  <h3 id="verify-title">Verificação do telefone via Telegram</h3>
-                  <span class="info-icon" aria-label="Informações sobre o Telegram" tabindex="0">i
-                    <span id="telegram-info-tooltip" class="info-tooltip">Você precisará baixar o aplicativo do Telegram no seu dispositivo móvel ou o Telegram para desktop caso esteja acessando essa página a partir de um computador.</span>
+                  <h3 id="verify-title">Phone verification via Telegram</h3>
+                  <span class="info-icon" aria-label="Information about Telegram" tabindex="0">i
+                    <span id="telegram-info-tooltip" class="info-tooltip">You will need the Telegram app on your phone, or Telegram Desktop if you are accessing this page from a computer.</span>
                   </span>
                 </div>
-                <p class="helper" id="phone-status">Verifique seu número de telefone via Telegram para ativar sua conta anunciante.</p>
+                <p class="helper" id="phone-status">Verify your phone number via Telegram to activate your advertiser account.</p>
               </div>
               <div class="inline-actions">
                 <button id="verify-phone-btn" class="btn btn-telegram" type="button">
-                  <span id="verify-phone-btn-text">Clique aqui para verificar seu número</span>
+                  <span id="verify-phone-btn-text">Click here to verify your number</span>
                   <img src="img/telegram.webp" alt="" class="btn-icon" />
                 </button>
                 <a id="telegram-link" class="btn btn-telegram" href="#" target="_blank" rel="noopener" style="display:none;">
-                  <span id="telegram-link-text">Abrir Telegram</span>
+                  <span id="telegram-link-text">Open Telegram</span>
                   <img src="img/telegram.webp" alt="" class="btn-icon" />
                 </a>
               </div>
               <ol id="verify-steps" class="verify-steps" style="display:none;">
-                <li id="verify-step-1">Abra o Telegram usando o botão acima.</li>
-                <li><span id="verify-step-2">Clique em START BOT ou copie e cole o seguinte código na conversa com o bot gimerr:</span>
+                <li id="verify-step-1">Open Telegram using the button above.</li>
+                <li><span id="verify-step-2">Click START BOT or copy and paste the following code into the conversation with the Gimerr bot:</span>
                   <span class="code-wrap">
                     <span id="telegram-code" class="code-pill">/start verify_GMR-XXXX</span>
-                    <button id="copy-telegram-code" class="copy-btn" type="button" aria-label="Copiar comando do Telegram">⧉</button>
+                    <button id="copy-telegram-code" class="copy-btn" type="button" aria-label="Copy Telegram command">⧉</button>
                   </span>
                 </li>
-                <li id="verify-step-3">No chat com o bot toque em “Compartilhar telefone” no canto inferior do chat.</li>
-                <li id="verify-step-4">Volte aqui e atualize a página.</li>
+                <li id="verify-step-3">In the bot chat, tap “Share phone number” at the bottom of the conversation.</li>
+                <li id="verify-step-4">Come back here and refresh the page.</li>
               </ol>
             </div>
           </section>
 
           <div class="field" style="grid-column: 1 / -1;">
+            <div class="inline-actions">
+              <button type="submit" class="btn btn-primary" id="save-btn">Save profile</button>
+              <a id="view-public-profile-btn" class="btn btn-ghost" href="#" style="display:none;">View my public profile</a>
+            </div>
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
             <div class="danger-zone">
-              <strong id="danger-zone-title">Excluir perfil</strong>
-              <p id="danger-zone-helper" class="helper">Esta ação remove todos os seus anúncios ativos. Seus dados em perfil permanecem salvos para possível reativação no próximo login.</p>
-              <button type="button" class="btn btn-danger" id="delete-profile-btn">Excluir perfil</button>
+              <strong id="danger-zone-title">Delete profile</strong>
+              <p id="danger-zone-helper" class="helper">This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.</p>
+              <button type="button" class="btn btn-danger" id="delete-profile-btn">Delete profile</button>
             </div>
           </div>
         </form>
       </div>
     </main>
 
-    <site-footer></site-footer>
   </div>
 
   <script src="env.js"></script>
@@ -320,7 +310,6 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
-  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -350,10 +339,10 @@
     const form = document.getElementById("profile-form");
     const feedback = document.getElementById("profile-feedback");
     const saveBtn = document.getElementById("save-btn");
-    const defaultSaveBtnLabel = t("profile.save", "Salvar perfil");
+    const defaultSaveBtnLabel = t("profile.save", "Save profile");
     const viewPublicProfileBtn = document.getElementById("view-public-profile-btn");
     const deleteProfileBtn = document.getElementById("delete-profile-btn");
-    const defaultDeleteProfileBtnLabel = t("profile.delete_profile", "Excluir perfil");
+    const defaultDeleteProfileBtnLabel = t("profile.delete_profile", "Delete profile");
 
     const profilePageTitle = document.getElementById("profile-page-title");
     const profilePageHelper = document.getElementById("profile-page-helper");
@@ -374,9 +363,7 @@
     const whatsappSameYesLabel = document.getElementById("whatsapp-same-yes-label");
     const whatsappSameNoLabel = document.getElementById("whatsapp-same-no-label");
     const showWhatsappButtonLabel = document.getElementById("show-whatsapp-button-label");
-    const publicContactHelper = document.getElementById("public-contact-helper");
-    const publicContactYesLabel = document.getElementById("public-contact-yes-label");
-    const publicContactNoLabel = document.getElementById("public-contact-no-label");
+    const showTelegramButtonLabel = document.getElementById("show-telegram-button-label");
     const verifyTitle = document.getElementById("verify-title");
     const telegramInfoIcon = document.querySelector(".info-icon");
     const telegramInfoTooltip = document.getElementById("telegram-info-tooltip");
@@ -411,11 +398,9 @@
     const whatsappPrefCard = document.getElementById("whatsapp-pref-card");
     const whatsappSameYes = document.getElementById("whatsapp-same-yes");
     const whatsappSameNo = document.getElementById("whatsapp-same-no");
+    const showTelegramButtonInput = document.getElementById("show-telegram-button");
     const whatsappShowWrap = document.getElementById("whatsapp-show-wrap");
     const showWhatsappButtonInput = document.getElementById("show-whatsapp-button");
-    const publicContactPrefCard = document.getElementById("public-contact-pref-card");
-    const publicContactYes = document.getElementById("public-contact-yes");
-    const publicContactNo = document.getElementById("public-contact-no");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -448,8 +433,6 @@
     let pendingAvatarObjectUrl = null;
     let whatsappPrefSaving = false;
     let whatsappPrefPending = false;
-    let publicContactPrefSaving = false;
-    let publicContactPrefPending = false;
     const pageParams = new URLSearchParams(window.location.search);
     const requiresPhoneCta = pageParams.get("phone_required") === "1";
     const PROFILE_USERNAME_REGEX = /^[a-z0-9]{3,20}$/;
@@ -467,61 +450,60 @@
 
     function getVerifyPhoneButtonLabel(verified) {
       return verified
-        ? t("profile.change_phone_button", "Clique aqui para alterar o seu número")
-        : t("profile.verify_phone_button", "Clique aqui para verificar seu número");
+        ? t("profile.change_phone_button", "Click here to change your phone number")
+        : t("profile.verify_phone_button", "Click here to verify your number");
     }
 
     function applyProfileTranslations() {
-      document.title = t("profile.title_default", "Gimerr - Perfil");
+      document.title = t("profile.title_default", "Gimerr - Profile");
       document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
       if (pageLoader?.querySelector("img")) {
-        pageLoader.querySelector("img").alt = t("profile.loading", "Carregando");
+        pageLoader.querySelector("img").alt = t("profile.loading", "Loading");
       }
-      if (phoneRequiredCtaText) phoneRequiredCtaText.textContent = t("profile.phone_required_cta", "Você precisa antes verificar o seu número de telefone para poder anunciar.");
-      if (phoneRequiredCtaLink) phoneRequiredCtaLink.textContent = t("profile.phone_required_link", "Clique aqui para iniciar a verificação");
-      if (profilePageTitle) profilePageTitle.textContent = t("profile.page_title", "Perfil");
-      if (profilePageHelper) profilePageHelper.textContent = t("profile.page_helper", "Mantenha as informações do seu perfil atualizadas.");
-      if (profileSectionInfoTitle) profileSectionInfoTitle.textContent = t("profile.section_info", "Informações do perfil");
-      if (avatarUploadLabel) avatarUploadLabel.textContent = t("profile.avatar_label", "Foto de perfil");
-      if (profileAvatarPreview) profileAvatarPreview.alt = t("profile.avatar_preview_alt", "Pré-visualização do avatar");
-      if (avatarUploadHelper) avatarUploadHelper.textContent = t("profile.avatar_helper", "Envie uma imagem JPG, PNG ou WEBP (máx. 5MB).");
-      if (firstNameLabel) firstNameLabel.textContent = t("profile.first_name_label", "Nome *");
-      if (lastNameLabel) lastNameLabel.textContent = t("profile.last_name_label", "Sobrenome *");
-      if (firstNameInput) firstNameInput.placeholder = t("profile.first_name_placeholder", "Seu nome");
-      if (lastNameInput) lastNameInput.placeholder = t("profile.last_name_placeholder", "Seu sobrenome");
-      if (profileUsernameLabel) profileUsernameLabel.textContent = t("profile.username_label", "Nome de usuário");
+      if (phoneRequiredCtaText) phoneRequiredCtaText.textContent = t("profile.phone_required_cta", "You need to verify your phone number before you can create listings.");
+      if (phoneRequiredCtaLink) phoneRequiredCtaLink.textContent = t("profile.phone_required_link", "Click here to start verification");
+      if (profilePageTitle) profilePageTitle.textContent = t("profile.page_title", "Profile");
+      if (profilePageHelper) profilePageHelper.textContent = t("profile.page_helper", "Keep your profile information up to date.");
+      if (profileSectionInfoTitle) profileSectionInfoTitle.textContent = t("profile.section_info", "Profile information");
+      if (avatarUploadLabel) avatarUploadLabel.textContent = t("profile.avatar_label", "Profile picture");
+      if (profileAvatarPreview) profileAvatarPreview.alt = t("profile.avatar_preview_alt", "Avatar preview");
+      if (avatarUploadHelper) avatarUploadHelper.textContent = t("profile.avatar_helper", "Upload a JPG, PNG, or WEBP image (max 5MB).");
+      if (firstNameLabel) firstNameLabel.textContent = t("profile.first_name_label", "First name *");
+      if (lastNameLabel) lastNameLabel.textContent = t("profile.last_name_label", "Last name *");
+      if (firstNameInput) firstNameInput.placeholder = t("profile.first_name_placeholder", "Your first name");
+      if (lastNameInput) lastNameInput.placeholder = t("profile.last_name_placeholder", "Your last name");
+      if (profileUsernameLabel) profileUsernameLabel.textContent = t("profile.username_label", "Username");
       if (usernameInput) usernameInput.placeholder = t("profile.username_placeholder", "ex: player123");
-      if (usernameHelp) usernameHelp.textContent = t("profile.username_help", "Use apenas letras e números. Entre 3 e 20 caracteres.");
+      if (usernameHelp) usernameHelp.textContent = t("profile.username_help", "Use letters and numbers only. Between 3 and 20 characters.");
       if (discordUsernameLabel) discordUsernameLabel.textContent = t("profile.discord_label", "Discord");
       if (discordInput) discordInput.placeholder = t("profile.discord_placeholder", "ex: diorgenis6969");
-      if (aboutMeLabel) aboutMeLabel.textContent = t("profile.about_label", "Sobre mim");
-      if (aboutMeInput) aboutMeInput.placeholder = t("profile.about_placeholder", "Conte um pouco sobre você, seus horários ou sua experiência no game.");
-      if (aboutMeHelper) aboutMeHelper.textContent = t("profile.about_helper", "Opcional. Até 1000 caracteres.");
+      if (discordHelp) discordHelp.textContent = t("profile.discord_visibility_helper", "Your username will be visible on your profile page and your listings.");
+      if (aboutMeLabel) aboutMeLabel.textContent = t("profile.about_label", "About me");
+      if (aboutMeInput) aboutMeInput.placeholder = t("profile.about_placeholder", "Share a bit about yourself, your schedule, or your experience in the game.");
+      if (aboutMeHelper) aboutMeHelper.textContent = t("profile.about_helper", "Optional. Up to 1000 characters.");
       if (saveBtn) saveBtn.textContent = defaultSaveBtnLabel;
-      if (viewPublicProfileBtn) viewPublicProfileBtn.textContent = t("profile.view_public_profile", "Ver meu perfil público");
-      if (profileSectionContactTitle) profileSectionContactTitle.textContent = t("profile.section_contact", "Contato");
-      if (phoneLabel) phoneLabel.textContent = t("profile.phone_label", "Telefone");
-      if (phoneInput) phoneInput.placeholder = t("profile.phone_placeholder", "Compartilhe via Telegram");
-      if (whatsappPrefHelper) whatsappPrefHelper.textContent = t("profile.whatsapp_same_phone", "Esse número verificado via Telegram é o mesmo do WhatsApp?");
-      if (whatsappSameYesLabel) whatsappSameYesLabel.textContent = t("profile.yes", "Sim");
-      if (whatsappSameNoLabel) whatsappSameNoLabel.textContent = t("profile.no", "Não");
-      if (showWhatsappButtonLabel) showWhatsappButtonLabel.textContent = t("profile.show_whatsapp_button", "Exibir botão para conversar no WhatsApp nos meus anúncios");
-      if (publicContactHelper) publicContactHelper.textContent = t("profile.public_contact_helper", "Onde exibir meu número de telefone?");
-      if (publicContactYesLabel) publicContactYesLabel.textContent = t("profile.public_contact_yes", "Exibir no perfil público e nos anúncios");
-      if (publicContactNoLabel) publicContactNoLabel.textContent = t("profile.public_contact_no", "Exibir apenas nos anúncios");
-      if (verifyTitle) verifyTitle.textContent = t("profile.verify_title", "Verificação do telefone via Telegram");
-      if (telegramInfoIcon) telegramInfoIcon.setAttribute("aria-label", t("profile.telegram_info_aria", "Informações sobre o Telegram"));
-      if (telegramInfoTooltip) telegramInfoTooltip.textContent = t("profile.telegram_info_tooltip", "Você precisará baixar o aplicativo do Telegram no seu dispositivo móvel ou o Telegram para desktop caso esteja acessando essa página a partir de um computador.");
-      if (phoneStatus && !currentProfile?.phone) phoneStatus.textContent = t("profile.phone_status_needs_verify", "Verifique seu número de telefone via Telegram para ativar sua conta anunciante.");
-      if (verifyPhoneBtnText) verifyPhoneBtnText.textContent = t("profile.verify_phone_button", "Clique aqui para verificar seu número");
-      if (telegramLinkText) telegramLinkText.textContent = t("profile.open_telegram", "Abrir Telegram");
-      if (verifyStep1) verifyStep1.textContent = t("profile.verify_step_1", "Abra o Telegram usando o botão acima.");
-      if (verifyStep2) verifyStep2.textContent = t("profile.verify_step_2", "Clique em START BOT ou copie e cole o seguinte código na conversa com o bot gimerr:");
-      if (copyTelegramCode) copyTelegramCode.setAttribute("aria-label", t("profile.copy_telegram_code_aria", "Copiar comando do Telegram"));
-      if (verifyStep3) verifyStep3.textContent = t("profile.verify_step_3", "No chat com o bot toque em “Compartilhar telefone” no canto inferior do chat.");
-      if (verifyStep4) verifyStep4.textContent = t("profile.verify_step_4", "Volte aqui e atualize a página.");
-      if (dangerZoneTitle) dangerZoneTitle.textContent = t("profile.danger_title", "Excluir perfil");
-      if (dangerZoneHelper) dangerZoneHelper.textContent = t("profile.danger_helper", "Esta ação remove todos os seus anúncios ativos. Seus dados em perfil permanecem salvos para possível reativação no próximo login.");
+      if (viewPublicProfileBtn) viewPublicProfileBtn.textContent = t("profile.view_public_profile", "View my public profile");
+      if (profileSectionContactTitle) profileSectionContactTitle.textContent = t("profile.section_contact", "Contact");
+      if (phoneLabel) phoneLabel.textContent = t("profile.phone_label", "Phone");
+      if (phoneInput) phoneInput.placeholder = t("profile.phone_placeholder", "Share via Telegram");
+      if (whatsappPrefHelper) whatsappPrefHelper.textContent = t("profile.whatsapp_same_phone", "Is this Telegram-verified number also your WhatsApp number?");
+      if (showTelegramButtonLabel) showTelegramButtonLabel.textContent = t("profile.show_telegram_button", "Show a Telegram chat button on my profile and listings");
+      if (whatsappSameYesLabel) whatsappSameYesLabel.textContent = t("profile.yes", "Yes");
+      if (whatsappSameNoLabel) whatsappSameNoLabel.textContent = t("profile.no", "No");
+      if (showWhatsappButtonLabel) showWhatsappButtonLabel.textContent = t("profile.show_whatsapp_button", "Show a WhatsApp chat button on my profile and listings");
+      if (verifyTitle) verifyTitle.textContent = t("profile.verify_title", "Phone verification via Telegram");
+      if (telegramInfoIcon) telegramInfoIcon.setAttribute("aria-label", t("profile.telegram_info_aria", "Information about Telegram"));
+      if (telegramInfoTooltip) telegramInfoTooltip.textContent = t("profile.telegram_info_tooltip", "You will need the Telegram app on your phone, or Telegram Desktop if you are accessing this page from a computer.");
+      if (phoneStatus && !currentProfile?.phone) phoneStatus.textContent = t("profile.phone_status_needs_verify", "Verify your phone number via Telegram to activate your advertiser account.");
+      if (verifyPhoneBtnText) verifyPhoneBtnText.textContent = t("profile.verify_phone_button", "Click here to verify your number");
+      if (telegramLinkText) telegramLinkText.textContent = t("profile.open_telegram", "Open Telegram");
+      if (verifyStep1) verifyStep1.textContent = t("profile.verify_step_1", "Open Telegram using the button above.");
+      if (verifyStep2) verifyStep2.textContent = t("profile.verify_step_2", "Click START BOT or copy and paste the following code into the conversation with the Gimerr bot:");
+      if (copyTelegramCode) copyTelegramCode.setAttribute("aria-label", t("profile.copy_telegram_code_aria", "Copy Telegram command"));
+      if (verifyStep3) verifyStep3.textContent = t("profile.verify_step_3", "In the bot chat, tap “Share phone number” at the bottom of the conversation.");
+      if (verifyStep4) verifyStep4.textContent = t("profile.verify_step_4", "Come back here and refresh the page.");
+      if (dangerZoneTitle) dangerZoneTitle.textContent = t("profile.danger_title", "Delete profile");
+      if (dangerZoneHelper) dangerZoneHelper.textContent = t("profile.danger_helper", "This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.");
       if (deleteProfileBtn) deleteProfileBtn.textContent = defaultDeleteProfileBtnLabel;
     }
 
@@ -535,10 +517,10 @@
 
     function ensureClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
-        feedback.textContent = t("profile.configure_env", "Configure SUPABASE_URL e SUPABASE_ANON_KEY em public/env.js.");
+        feedback.textContent = t("profile.configure_env", "Configure SUPABASE_URL and SUPABASE_ANON_KEY in public/env.js.");
         authBtn.disabled = true;
         saveBtn.disabled = true;
-        throw new Error(t("profile.supabase_not_configured", "Supabase não configurado"));
+        throw new Error(t("profile.supabase_not_configured", "Supabase is not configured"));
       }
       if (!supabase) {
         supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -642,7 +624,7 @@
         window.location.href = "index.html";
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("profile.auth_error", "Erro ao autenticar.");
+        feedback.textContent = err?.message || t("profile.auth_error", "Authentication error.");
         authBtn.disabled = false;
       }
     }
@@ -666,27 +648,27 @@
     function validateProfileUsername(value) {
       if (!value) {
         if (usernameHelp) {
-          usernameHelp.textContent = t("profile.username_help", "Use apenas letras e números. Entre 3 e 20 caracteres.");
+          usernameHelp.textContent = t("profile.username_help", "Use letters and numbers only. Between 3 and 20 characters.");
         }
         return false;
       }
       const ok = PROFILE_USERNAME_REGEX.test(value);
       if (usernameHelp) {
-        usernameHelp.textContent = t("profile.username_help", "Use apenas letras e números. Entre 3 e 20 caracteres.");
+        usernameHelp.textContent = t("profile.username_help", "Use letters and numbers only. Between 3 and 20 characters.");
       }
       return ok;
     }
 
     function validateDiscordUsername(value) {
       if (!value) {
-        if (discordHelp) discordHelp.textContent = "";
+        if (discordHelp) discordHelp.textContent = t("profile.discord_visibility_helper", "Your username will be visible on your profile page and your listings.");
         return true;
       }
       const ok = DISCORD_USERNAME_REGEX.test(value);
       if (discordHelp) {
         discordHelp.textContent = ok
-          ? ""
-          : t("profile.discord_help_invalid", "Use 2-32 caracteres: letras minúsculas, números, ponto e sublinhado (sem pontos consecutivos).");
+          ? t("profile.discord_visibility_helper", "Your username will be visible on your profile page and your listings.")
+          : t("profile.discord_help_invalid", "Use 2-32 characters: lowercase letters, numbers, periods, and underscores (no consecutive periods).");
       }
       return ok;
     }
@@ -731,21 +713,17 @@
       if (showWhatsappButtonInput) {
         showWhatsappButtonInput.checked = !!profile.show_whatsapp_button;
       }
-      syncPublicContactVisibilityInputs(profile);
+      if (showTelegramButtonInput) {
+        showTelegramButtonInput.checked = profile?.show_telegram_button !== false;
+      }
       setProfileAvatarPreview(profile.avatar_url || null);
-    }
-
-    function syncPublicContactVisibilityInputs(profile) {
-      const showPublicContacts = profile?.show_contacts_on_public_profile !== false;
-      if (publicContactYes) publicContactYes.checked = showPublicContacts;
-      if (publicContactNo) publicContactNo.checked = !showPublicContacts;
     }
 
     async function fetchProfile() {
       ensureClient();
       const { data, error } = await supabase
         .from("users")
-        .select("id,username,email,status,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,phone_verified_at,whatsapp_same_phone,show_whatsapp_button,show_contacts_on_public_profile")
+        .select("id,username,email,status,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,phone_verified_at,whatsapp_same_phone,show_whatsapp_button,show_telegram_button")
         .eq("id", currentUser.id)
         .single();
       if (error && error.code !== "PGRST116") throw error;
@@ -769,7 +747,7 @@
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        throw new Error(t("profile.session_expired", "Sessão expirada. Faça login novamente."));
+        throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
       }
 
       const extension = (file.name.split(".").pop() || "").toLowerCase();
@@ -789,7 +767,7 @@
       });
 
       if (!response.ok) {
-        let message = t("profile.avatar_signed_upload_error", "Erro ao solicitar upload do avatar.");
+        let message = t("profile.avatar_signed_upload_error", "Failed to request avatar upload.");
         try {
           const payload = await response.json();
           message = payload?.error || message;
@@ -805,7 +783,7 @@
 
     async function convertAvatarToWebp(file) {
       if (!file.type || !file.type.startsWith("image/")) {
-        throw new Error(t("profile.avatar_invalid_image", "Selecione uma imagem válida para o avatar."));
+        throw new Error(t("profile.avatar_invalid_image", "Select a valid image for the avatar."));
       }
       const bitmap = await createImageBitmap(file);
       const maxSide = Math.max(bitmap.width, bitmap.height);
@@ -815,12 +793,12 @@
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       const ctx = canvas.getContext("2d");
       if (!ctx) {
-        throw new Error(t("profile.avatar_process_error", "Não foi possível processar a imagem do avatar."));
+        throw new Error(t("profile.avatar_process_error", "Could not process the avatar image."));
       }
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/webp", AVATAR_WEBP_QUALITY));
       if (!blob) {
-        throw new Error(t("profile.avatar_convert_error", "Falha ao converter avatar para WebP."));
+        throw new Error(t("profile.avatar_convert_error", "Failed to convert avatar to WebP."));
       }
       const baseName = file.name.replace(/\.[^.]+$/, "") || "avatar";
       return new File([blob], `${baseName}.webp`, { type: "image/webp" });
@@ -829,15 +807,15 @@
     async function uploadProfileAvatar(file) {
       if (!file) return currentProfile?.avatar_url || null;
       if (!file.type || !file.type.startsWith("image/")) {
-        throw new Error(t("profile.avatar_invalid_image", "Selecione uma imagem válida para o avatar."));
+        throw new Error(t("profile.avatar_invalid_image", "Select a valid image for the avatar."));
       }
       if (file.size > MAX_AVATAR_BYTES) {
-        throw new Error(t("profile.avatar_max_size", "A imagem do avatar deve ter no máximo 5MB."));
+        throw new Error(t("profile.avatar_max_size", "The avatar image must be at most 5MB."));
       }
 
       const webpFile = await convertAvatarToWebp(file);
       if (webpFile.size > MAX_AVATAR_BYTES) {
-        throw new Error(t("profile.avatar_max_size_after_conversion", "A imagem do avatar excede 5MB após conversão."));
+        throw new Error(t("profile.avatar_max_size_after_conversion", "The avatar image exceeds 5MB after conversion."));
       }
 
       const signed = await requestAvatarSignedUpload(webpFile);
@@ -849,7 +827,7 @@
         body: webpFile,
       });
       if (!uploadRes.ok) {
-        throw new Error(t("profile.avatar_upload_error", "Falha ao enviar avatar para o storage."));
+        throw new Error(t("profile.avatar_upload_error", "Failed to upload avatar to storage."));
       }
       return signed.publicUrl || null;
     }
@@ -860,10 +838,9 @@
       if (!verified) {
         whatsappPrefCard.style.display = "none";
         whatsappPrefCard.classList.remove("contact-highlight");
-        if (publicContactPrefCard) publicContactPrefCard.style.display = "none";
-        if (publicContactPrefCard) publicContactPrefCard.classList.remove("contact-highlight");
         if (whatsappSameYes) whatsappSameYes.checked = false;
         if (whatsappSameNo) whatsappSameNo.checked = true;
+        if (showTelegramButtonInput) showTelegramButtonInput.checked = true;
         if (showWhatsappButtonInput) showWhatsappButtonInput.checked = false;
         if (whatsappShowWrap) whatsappShowWrap.style.display = "none";
         return;
@@ -871,9 +848,9 @@
 
       whatsappPrefCard.style.display = "grid";
       whatsappPrefCard.classList.add("contact-highlight");
-      if (publicContactPrefCard) publicContactPrefCard.style.display = "grid";
-      if (publicContactPrefCard) publicContactPrefCard.classList.add("contact-highlight");
-      syncPublicContactVisibilityInputs(profile);
+      if (showTelegramButtonInput) {
+        showTelegramButtonInput.checked = profile?.show_telegram_button !== false;
+      }
       const samePhone = !!profile?.whatsapp_same_phone;
       if (whatsappSameYes) whatsappSameYes.checked = samePhone;
       if (whatsappSameNo) whatsappSameNo.checked = !samePhone;
@@ -885,63 +862,25 @@
       }
     }
 
-    async function persistPublicContactVisibilityOnChange() {
-      if (!currentUser || !currentProfile) return;
-      const verified = !!currentProfile.phone_verified && !!currentProfile.phone;
-      if (!verified) return;
-
-      const nextShowPublicContacts = !!publicContactYes?.checked;
-      const currentShowPublicContacts = currentProfile.show_contacts_on_public_profile !== false;
-
-      if (nextShowPublicContacts === currentShowPublicContacts) {
-        return;
-      }
-
-      if (publicContactPrefSaving) {
-        publicContactPrefPending = true;
-        return;
-      }
-
-      publicContactPrefSaving = true;
-      try {
-        ensureClient();
-        const { error } = await supabase
-          .from("users")
-          .update({
-            show_contacts_on_public_profile: nextShowPublicContacts,
-          })
-          .eq("id", currentUser.id);
-        if (error) throw error;
-
-        currentProfile = {
-          ...(currentProfile || {}),
-          show_contacts_on_public_profile: nextShowPublicContacts,
-        };
-        feedback.textContent = t("profile.contact_visibility_saved", "Preferência de visibilidade de contato salva.");
-      } catch (err) {
-        console.error(err);
-        feedback.textContent = err?.message || t("profile.contact_visibility_error", "Erro ao salvar preferência de contato.");
-        syncPublicContactVisibilityInputs(currentProfile);
-      } finally {
-        publicContactPrefSaving = false;
-        if (publicContactPrefPending) {
-          publicContactPrefPending = false;
-          persistPublicContactVisibilityOnChange();
-        }
-      }
-    }
-
     async function persistWhatsappPreferencesOnChange() {
       if (!currentUser || !currentProfile) return;
       const verified = !!currentProfile.phone_verified && !!currentProfile.phone;
       if (!verified) return;
 
       const nextSamePhone = !!whatsappSameYes?.checked;
+      const nextShowTelegram = !!showTelegramButtonInput?.checked;
       const nextShowButton = nextSamePhone && !!showWhatsappButtonInput?.checked;
+      if (!nextShowTelegram && !nextShowButton) {
+        feedback.textContent = t("profile.contact_one_required", "Keep at least one contact option visible: Telegram or WhatsApp.");
+        if (showTelegramButtonInput) showTelegramButtonInput.checked = currentProfile?.show_telegram_button !== false;
+        if (showWhatsappButtonInput) showWhatsappButtonInput.checked = !!currentProfile?.show_whatsapp_button;
+        return;
+      }
       const currentSamePhone = !!currentProfile.whatsapp_same_phone;
+      const currentShowTelegram = currentProfile?.show_telegram_button !== false;
       const currentShowButton = !!currentProfile.show_whatsapp_button;
 
-      if (nextSamePhone === currentSamePhone && nextShowButton === currentShowButton) {
+      if (nextSamePhone === currentSamePhone && nextShowTelegram === currentShowTelegram && nextShowButton === currentShowButton) {
         return;
       }
 
@@ -958,6 +897,7 @@
           .update({
             whatsapp_same_phone: nextSamePhone,
             show_whatsapp_button: nextShowButton,
+            show_telegram_button: nextShowTelegram,
           })
           .eq("id", currentUser.id);
         if (error) throw error;
@@ -966,11 +906,12 @@
           ...(currentProfile || {}),
           whatsapp_same_phone: nextSamePhone,
           show_whatsapp_button: nextShowButton,
+          show_telegram_button: nextShowTelegram,
         };
-        feedback.textContent = t("profile.whatsapp_prefs_saved", "Preferências de WhatsApp salvas.");
+        feedback.textContent = t("profile.contact_visibility_saved", "Contact visibility preference saved.");
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("profile.whatsapp_prefs_error", "Erro ao salvar preferências de WhatsApp.");
+        feedback.textContent = err?.message || t("profile.contact_visibility_error", "Error saving contact visibility preference.");
         updateWhatsappPreferences(currentProfile);
       } finally {
         whatsappPrefSaving = false;
@@ -990,7 +931,7 @@
       }
       const verifyLabel = getVerifyPhoneButtonLabel(verified);
       if (!profile?.phone) {
-        phoneStatus.textContent = t("profile.phone_status_needs_verify", "Verifique seu número de telefone via Telegram para ativar sua conta anunciante.");
+        phoneStatus.textContent = t("profile.phone_status_needs_verify", "Verify your phone number via Telegram to activate your advertiser account.");
         if (verifyPhoneBtn) {
           verifyPhoneBtn.disabled = false;
           verifyPhoneBtn.style.display = "inline-flex";
@@ -1003,7 +944,7 @@
         return;
       }
       if (profile.phone_verified) {
-        phoneStatus.textContent = t("profile.phone_status_verified", "Telefone verificado ✔️");
+        phoneStatus.textContent = t("profile.phone_status_verified", "Phone verified ✔️");
         if (verifyPhoneBtn) {
           verifyPhoneBtn.disabled = false;
           verifyPhoneBtn.style.display = "inline-flex";
@@ -1014,7 +955,7 @@
         if (verifySteps) verifySteps.style.display = "none";
         updateWhatsappPreferences(profile);
       } else {
-        phoneStatus.textContent = t("profile.phone_status_unverified", "Telefone não verificado.");
+        phoneStatus.textContent = t("profile.phone_status_unverified", "Phone not verified.");
         if (verifyPhoneBtn) {
           verifyPhoneBtn.disabled = false;
           verifyPhoneBtn.style.display = "inline-flex";
@@ -1042,7 +983,7 @@
           email: currentUser.email,
           whatsapp_same_phone: false,
           show_whatsapp_button: false,
-          show_contacts_on_public_profile: true,
+          show_telegram_button: true,
         }, { onConflict: "id" }).select().single();
         if (!error) return data;
         if (error.code !== "23505") {
@@ -1058,7 +999,7 @@
       event.preventDefault();
       feedback.textContent = "";
       saveBtn.disabled = true;
-      saveBtn.textContent = t("profile.saving", "Salvando...");
+      saveBtn.textContent = t("profile.saving", "Saving...");
 
       try {
         ensureClient();
@@ -1079,29 +1020,34 @@
         let avatarUrl = currentProfile?.avatar_url || null;
         const phone = currentProfile?.phone || null;
         const phoneVerified = !!currentProfile?.phone_verified;
-        const showContactsOnPublicProfile = !!publicContactYes?.checked;
         let whatsappSamePhone = false;
         let showWhatsappButton = false;
+        let showTelegramButton = true;
 
         if (!firstName || !lastName) {
-          feedback.textContent = t("profile.fill_name_surname", "Preencha nome e sobrenome.");
+          feedback.textContent = t("profile.fill_name_surname", "Fill in your first and last name.");
           return;
         }
         if (!email) {
-          feedback.textContent = t("profile.email_missing", "Não foi possível identificar o email da conta. Faça login novamente.");
+          feedback.textContent = t("profile.email_missing", "Could not identify the account email. Please sign in again.");
           return;
         }
         if (!validateProfileUsername(username)) {
-          feedback.textContent = t("profile.username_invalid_save", "Corrija o nome de usuário antes de salvar.");
+          feedback.textContent = t("profile.username_invalid_save", "Fix the username before saving.");
           return;
         }
         if (discordUsername && !validateDiscordUsername(discordUsername)) {
-          feedback.textContent = t("profile.discord_invalid_save", "Corrija o usuário do Discord antes de salvar.");
+          feedback.textContent = t("profile.discord_invalid_save", "Fix the Discord username before saving.");
           return;
         }
         if (phoneVerified && phone) {
           whatsappSamePhone = !!whatsappSameYes?.checked;
+          showTelegramButton = !!showTelegramButtonInput?.checked;
           showWhatsappButton = whatsappSamePhone && !!showWhatsappButtonInput?.checked;
+          if (!showTelegramButton && !showWhatsappButton) {
+            feedback.textContent = t("profile.contact_one_required", "Keep at least one contact option visible: Telegram or WhatsApp.");
+            return;
+          }
         }
         if (pendingAvatarFile) {
           avatarUrl = await uploadProfileAvatar(pendingAvatarFile);
@@ -1123,11 +1069,11 @@
           phone_verified_at: currentProfile?.phone_verified_at ?? null,
           whatsapp_same_phone: whatsappSamePhone,
           show_whatsapp_button: showWhatsappButton,
-          show_contacts_on_public_profile: showContactsOnPublicProfile,
+          show_telegram_button: showTelegramButton,
         }, { onConflict: "id" }).select().single();
         if (error) throw error;
 
-        feedback.textContent = t("profile.saved_success", "Perfil salvo com sucesso!");
+        feedback.textContent = t("profile.saved_success", "Profile saved successfully!");
         currentProfile = {
           ...(currentProfile || {}),
           ...(savedProfile || {}),
@@ -1153,7 +1099,7 @@
             };
           }
         } catch (authUpdateErr) {
-          console.warn("Não foi possível sincronizar avatar no Auth metadata.", authUpdateErr);
+          console.warn("Could not sync avatar in Auth metadata.", authUpdateErr);
         }
         avatarLoaded = true;
         if (persistedAvatarUrl) {
@@ -1169,9 +1115,9 @@
       } catch (err) {
         console.error(err);
         if (String(err?.message || "").includes("users_username_key")) {
-          feedback.textContent = t("profile.username_taken", "Esse nome de usuário já está em uso.");
+          feedback.textContent = t("profile.username_taken", "That username is already in use.");
         } else {
-          feedback.textContent = err?.message || t("profile.save_error", "Erro ao salvar perfil.");
+          feedback.textContent = err?.message || t("profile.save_error", "Error saving profile.");
         }
       } finally {
         saveBtn.disabled = false;
@@ -1205,7 +1151,7 @@
         }
       }
       if (failures.length > 0) {
-        throw new Error(formatMessage("profile.delete_listings_error", "Não foi possível excluir {count} anúncio(s). Tente novamente.", { count: failures.length }));
+        throw new Error(formatMessage("profile.delete_listings_error", "Could not delete {count} listing(s). Try again.", { count: failures.length }));
       }
     }
 
@@ -1257,12 +1203,8 @@
       persistWhatsappPreferencesOnChange();
     });
 
-    publicContactYes?.addEventListener("change", () => {
-      persistPublicContactVisibilityOnChange();
-    });
-
-    publicContactNo?.addEventListener("change", () => {
-      persistPublicContactVisibilityOnChange();
+    showTelegramButtonInput?.addEventListener("change", () => {
+      persistWhatsappPreferencesOnChange();
     });
 
     copyTelegramCode?.addEventListener("click", async () => {
@@ -1301,7 +1243,7 @@
         return;
       }
       if (!file.type || !file.type.startsWith("image/")) {
-        feedback.textContent = t("profile.avatar_invalid_image", "Selecione um arquivo de imagem válido para o avatar.");
+        feedback.textContent = t("profile.avatar_invalid_image", "Select a valid image file for the avatar.");
         event.target.value = "";
         pendingAvatarFile = null;
         clearPendingAvatarPreviewUrl();
@@ -1310,7 +1252,7 @@
       }
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        feedback.textContent = t("profile.avatar_max_size", "A imagem do avatar deve ter no máximo 5MB.");
+        feedback.textContent = t("profile.avatar_max_size", "The avatar image must be at most 5MB.");
         event.target.value = "";
         pendingAvatarFile = null;
         clearPendingAvatarPreviewUrl();
@@ -1321,7 +1263,7 @@
       clearPendingAvatarPreviewUrl();
       pendingAvatarObjectUrl = URL.createObjectURL(file);
       setProfileAvatarPreview(pendingAvatarObjectUrl);
-      feedback.textContent = t("profile.avatar_selected", "Avatar selecionado. Clique em salvar perfil para aplicar.");
+      feedback.textContent = t("profile.avatar_selected", "Avatar selected. Click save profile to apply it.");
     });
 
     (async function init() {
@@ -1351,7 +1293,7 @@
         revealPage();
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("profile.load_error", "Erro ao carregar perfil.");
+        feedback.textContent = err?.message || t("profile.load_error", "Error loading profile.");
         revealPage();
       }
     })();
@@ -1369,7 +1311,7 @@
           return;
         }
         verifyPhoneBtn.disabled = true;
-        verifyPhoneBtn.textContent = t("profile.please_wait", "Aguarde...");
+        verifyPhoneBtn.textContent = t("profile.please_wait", "Please wait...");
         const response = await fetch(`${SUPABASE_URL}/functions/v1/phone_verify_start`, {
           method: "POST",
           headers: {
@@ -1384,16 +1326,16 @@
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}));
           const hint = payload?.error || payload?.message;
-          throw new Error(hint || t("profile.verify_start_error", "Erro ao iniciar verificação."));
+          throw new Error(hint || t("profile.verify_start_error", "Error starting verification."));
         }
         const payload = await response.json();
         if (phoneStatus) {
-          phoneStatus.textContent = t("profile.verification_started", "Verificação iniciada. Siga os passos abaixo.");
+          phoneStatus.textContent = t("profile.verification_started", "Verification started. Follow the steps below.");
         }
         if (payload.link) {
           telegramLink.href = payload.link;
           telegramLink.style.display = "inline-flex";
-          setTelegramButtonLabel(telegramLink, t("profile.open_telegram", "Abrir Telegram"));
+          setTelegramButtonLabel(telegramLink, t("profile.open_telegram", "Open Telegram"));
           const code = extractTelegramCode(payload.link);
           if (telegramCode && code) {
             telegramCode.textContent = `/start verify_${code}`;
@@ -1405,7 +1347,7 @@
         if (verifySteps) verifySteps.style.display = "grid";
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("profile.verify_start_error", "Erro ao iniciar verificação.");
+        feedback.textContent = err?.message || t("profile.verify_start_error", "Error starting verification.");
         if (verifyPhoneBtn) {
           verifyPhoneBtn.disabled = false;
           updatePhoneStatus(currentProfile);
@@ -1421,18 +1363,18 @@
           window.location.href = "index.html";
           return;
         }
-        const firstConfirm = window.confirm(t("profile.delete_confirm_one", "Deseja excluir seu perfil? Todos os seus anúncios serão removidos."));
+        const firstConfirm = window.confirm(t("profile.delete_confirm_one", "Do you want to delete your profile? All your listings will be removed."));
         if (!firstConfirm) return;
-        const secondConfirm = window.confirm(t("profile.delete_confirm_two", "Confirma a exclusão do perfil agora?"));
+        const secondConfirm = window.confirm(t("profile.delete_confirm_two", "Confirm profile deletion now?"));
         if (!secondConfirm) return;
 
         deleteProfileBtn.disabled = true;
-        deleteProfileBtn.textContent = t("profile.deleting", "Excluindo...");
+        deleteProfileBtn.textContent = t("profile.deleting", "Deleting...");
 
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         if (!token) {
-          throw new Error(t("profile.session_expired", "Sessão expirada. Faça login novamente."));
+          throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
         }
 
         await deleteOwnListingsBeforeProfileDelete(token);
@@ -1447,7 +1389,7 @@
         window.location.href = "index.html";
       } catch (err) {
         console.error(err);
-        feedback.textContent = err?.message || t("profile.delete_error", "Erro ao excluir perfil.");
+        feedback.textContent = err?.message || t("profile.delete_error", "Error deleting profile.");
         deleteProfileBtn.disabled = false;
         deleteProfileBtn.textContent = defaultDeleteProfileBtnLabel;
       }

@@ -307,10 +307,38 @@
     if (error) throw error;
   }
 
+  function normalizeGatewayTarget(targetPath = null) {
+    const fallback = `${window.location.pathname}${window.location.search || ""}`;
+    let normalized = String(targetPath || fallback).trim();
+    if (!normalized) return fallback;
+    try {
+      if (/^https?:\/\//i.test(normalized)) {
+        const parsed = new URL(normalized, window.location.origin);
+        if (parsed.origin !== window.location.origin) return fallback;
+        return `${parsed.pathname}${parsed.search || ""}`;
+      }
+    } catch (_err) {
+      return fallback;
+    }
+    if (normalized.startsWith("?")) {
+      return `${window.location.pathname}${normalized}`;
+    }
+    return normalized.startsWith("/") ? normalized : `/${normalized}`;
+  }
+
+  function buildAuthGatewayUrl(targetPath = null) {
+    const next = normalizeGatewayTarget(targetPath);
+    return `sign-in.html?next=${encodeURIComponent(next)}`;
+  }
+
+  window.__OPEN_AUTH_GATEWAY__ = function openAuthGateway(targetPath = null) {
+    window.location.href = buildAuthGatewayUrl(targetPath);
+  };
+
   window.__NAVBAR_GOOGLE_LOGIN__ = async function navbarGoogleLogin(_event, buttonEl) {
     try {
       if (buttonEl) buttonEl.disabled = true;
-      await startGoogleLogin();
+      window.__OPEN_AUTH_GATEWAY__?.();
     } catch (err) {
       console.error(err);
       if (buttonEl) buttonEl.disabled = false;
@@ -394,18 +422,7 @@
     if (adWalletAccessCache.userId === userId) {
       return adWalletAccessCache.canAccess;
     }
-
-    const { data: profile, error } = await client
-      .from("users")
-      .select("phone,phone_verified")
-      .eq("id", userId)
-      .maybeSingle();
-    if (error) {
-      adWalletAccessCache = { userId, canAccess: false };
-      return false;
-    }
-
-    const canAccess = Boolean(profile?.phone_verified && String(profile?.phone || "").trim());
+    const canAccess = true;
     adWalletAccessCache = { userId, canAccess };
     return canAccess;
   }
@@ -643,13 +660,13 @@
           <a href="index.html" class="brand">
             <img src="img/logo.png" alt="Gimerr" class="brand-logo" />
             <div class="brand-copy">
-              <span class="brand-tagline">Community marketplace powered by gamers.</span>
+              <span class="brand-tagline">${t("common.brand_tagline", "Community marketplace powered by gamers.")}</span>
             </div>
           </a>
           ${searchMarkup}
           <div class="nav-actions">
             <button id="create-listing-btn" class="btn btn-ghost create-listing-btn" type="button" style="display:none;">${t("nav.create_listing", "Criar anúncio")}</button>
-            <button id="auth-btn" class="btn btn-primary"><img src="img/google.svg" alt="" class="btn-google-logo" /> ${t("nav.login_google", "Entrar com Google")}</button>
+            <button id="auth-btn" class="btn btn-primary">${t("nav.login", "Entrar")}</button>
             <div id="user-menu" class="nav-user">
               <button id="avatar-btn" class="avatar-btn" type="button" aria-label="Abrir menu do usuário">
                 <img id="avatar-img" class="avatar-img" src="img/avatar.svg" alt="Foto do usuário" />
@@ -672,7 +689,8 @@
         authBtn.addEventListener("click", (event) => {
           event.preventDefault();
           event.stopImmediatePropagation();
-          window.__NAVBAR_GOOGLE_LOGIN__?.(event, authBtn);
+          authBtn.disabled = true;
+          window.__OPEN_AUTH_GATEWAY__?.();
         });
       }
 
