@@ -18,28 +18,12 @@ export function isMissingWalletTablesError(err: { code?: string; message?: strin
   return message.includes("wallets") || message.includes("wallet_events") || message.includes("highlight_daily_metrics");
 }
 
-function isMissingAdminBeneficiaryColumnError(err: { code?: string; message?: string } | null | undefined) {
-  if (!err) return false;
-  return String(err.message || "").includes("admin_beneficiary_id");
-}
-
 export async function getPartnerPayoutSummary(supabase: any, userId: string) {
-  let serverRows: Array<{ id: string; owner_id: string | null; admin_beneficiary_id: string | null }> = [];
+  let serverRows: Array<{ id: string; owner_id: string | null }> = [];
   let { data: servers, error: serverErr } = await supabase
     .from("servers")
-    .select("id,owner_id,admin_beneficiary_id")
-    .or(`owner_id.eq.${userId},admin_beneficiary_id.eq.${userId}`);
-
-  if (isMissingAdminBeneficiaryColumnError(serverErr)) {
-    const fallback = await supabase
-      .from("servers")
-      .select("id,owner_id")
-      .eq("owner_id", userId);
-    servers = Array.isArray(fallback.data)
-      ? fallback.data.map((row: any) => ({ ...row, admin_beneficiary_id: null }))
-      : [];
-    serverErr = fallback.error;
-  }
+    .select("id,owner_id")
+    .eq("owner_id", userId);
 
   if (serverErr) throw serverErr;
   serverRows = Array.isArray(servers) ? servers : [];
@@ -78,7 +62,7 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
 
   const { data: payoutRows, error: payoutErr } = await supabase
     .from("partner_payout_events")
-    .select("expected_net_amount,refunded_net_amount,payout_status")
+    .select("expected_net_amount,refunded_net_amount,payout_status,payout_role")
     .eq("owner_user_id", userId)
     .in("server_id", serverIds)
     .in("payout_status", ["pending", "eligible"]);
@@ -87,6 +71,8 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
   }
 
   (Array.isArray(payoutRows) ? payoutRows : []).forEach((row: any) => {
+    const payoutRole = String(row?.payout_role || "").toLowerCase();
+    if (payoutRole && payoutRole !== "owner") return;
     const expectedNetCents = Math.max(0, Math.round(Number(row?.expected_net_amount || 0) * 100));
     const refundedNetCents = Math.max(0, Math.round(Number(row?.refunded_net_amount || 0) * 100));
     const outstandingCents = Math.max(0, expectedNetCents - refundedNetCents);
@@ -142,12 +128,7 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     const server = serverById.get(listing.server_id);
     if (!server) return;
 
-    let shareRatio = 0;
-    if (server.owner_id === userId) {
-      shareRatio = 0.25;
-    } else if (server.admin_beneficiary_id === userId) {
-      shareRatio = 0.25;
-    }
+    const shareRatio = server.owner_id === userId ? 0.5 : 0;
     if (shareRatio <= 0) return;
 
     const consumedCents = safeInt(row?.charged_cents, 0);

@@ -400,7 +400,7 @@ window.__I18N_MESSAGES__.en = {
   "partner_policy.section_1_item_4": "<strong>Active highlights:</strong> indicates how many listings linked to their servers are currently highlighted.",
   "partner_policy.section_2_title": "2. Calculation basis",
   "partner_policy.section_2_item_1": "Advertisers pay for highlighting based on the platform's current CPM.",
-  "partner_policy.section_2_item_2": "The eligible partner receives <strong>25%</strong> of the amount consumed by highlighted listings linked to their servers.",
+  "partner_policy.section_2_item_2": "The eligible partner receives <strong>50%</strong> of the amount consumed by highlighted listings linked to their servers.",
   "partner_policy.section_2_item_3": "The balance shown to the partner is gross and does not include conversion, transfer, or payout fees.",
   "partner_policy.section_3_title": "3. When the balance appears",
   "partner_policy.section_3_item_1": "The balance is calculated according to the real consumption of highlighted listings linked to the partner's servers.",

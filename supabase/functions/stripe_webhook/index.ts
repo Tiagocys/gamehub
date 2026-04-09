@@ -20,7 +20,6 @@ const corsHeaders = {
 
 const NET_ESTIMATE_RATIO = 0.921;
 const PARTNER_SHARE_RATIO = 0.5;
-const ADMIN_SHARE_RATIO = 0.25;
 const PRICE_PER_DAY_CENTS = 600;
 const DEFAULT_USD_BRL_RATE = 5.5;
 const SUPPORTED_CHECKOUT_CURRENCIES = new Set([
@@ -150,11 +149,6 @@ function isMissingPayoutRoleColumnError(err: { code?: string; message?: string }
 function isMissingShareRatioColumnError(err: { code?: string; message?: string } | null | undefined) {
   if (!err) return false;
   return String(err.message || "").includes("share_ratio");
-}
-
-function isMissingAdminBeneficiaryColumnError(err: { code?: string; message?: string } | null | undefined) {
-  if (!err) return false;
-  return String(err.message || "").includes("admin_beneficiary_id");
 }
 
 type StripeNetDetails = {
@@ -381,33 +375,18 @@ Deno.serve(async (req) => {
       const projectedExpire = new Date(now.getTime() + projectedSeconds * 1000);
 
       let ownerId: string | null = null;
-      let adminBeneficiaryId: string | null = null;
       if (listing?.server_id) {
-        let { data: serverData, error: serverErr } = await supabase
+        const { data: serverData, error: serverErr } = await supabase
           .from("servers")
-          .select("owner_id,admin_beneficiary_id")
+          .select("owner_id")
           .eq("id", listing.server_id)
           .single();
-        if (isMissingAdminBeneficiaryColumnError(serverErr)) {
-          const fallback = await supabase
-            .from("servers")
-            .select("owner_id")
-            .eq("id", listing.server_id)
-            .single();
-          serverData = fallback.data ? { ...fallback.data, admin_beneficiary_id: null } : null;
-          serverErr = fallback.error;
-        }
         if (!serverErr) {
           ownerId = typeof serverData?.owner_id === "string" ? serverData.owner_id : null;
-          adminBeneficiaryId = typeof serverData?.admin_beneficiary_id === "string" ? serverData.admin_beneficiary_id : null;
-          if (ownerId && adminBeneficiaryId && ownerId === adminBeneficiaryId) {
-            console.warn("Regra antifraude aplicada no webhook: owner_id e admin_beneficiary_id iguais. Ignorando repasse admin.");
-            adminBeneficiaryId = null;
-          }
         }
       }
 
-      if ((ownerId || adminBeneficiaryId) && listing) {
+      if (ownerId && listing) {
         const stripeNetDetails = await fetchStripeNetDetails(paymentIntentId);
         const platformNetCents = stripeNetDetails.netCents == null
           ? Math.round(totalCents * NET_ESTIMATE_RATIO)
@@ -415,13 +394,9 @@ Deno.serve(async (req) => {
         const grossAmount = centsToMoney(totalCents);
         const payoutStatus = projectedExpire <= now ? "eligible" : "pending";
 
-        const recipients: Array<{ userId: string; role: "owner" | "admin"; ratio: number }> = [];
-        if (ownerId) {
-          recipients.push({ userId: ownerId, role: "owner", ratio: PARTNER_SHARE_RATIO });
-        }
-        if (adminBeneficiaryId) {
-          recipients.push({ userId: adminBeneficiaryId, role: "admin", ratio: ADMIN_SHARE_RATIO });
-        }
+        const recipients: Array<{ userId: string; role: "owner"; ratio: number }> = [
+          { userId: ownerId, role: "owner", ratio: PARTNER_SHARE_RATIO },
+        ];
 
         for (const recipient of recipients) {
           const recipientNetCents = Math.round(platformNetCents * recipient.ratio);

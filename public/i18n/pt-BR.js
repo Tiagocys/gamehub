@@ -400,7 +400,7 @@ window.__I18N_MESSAGES__["pt-BR"] = {
   "partner_policy.section_1_item_4": "<strong>Destaques ativos:</strong> indica quantos anúncios vinculados aos seus servidores estão destacados no momento.",
   "partner_policy.section_2_title": "2. Base de cálculo",
   "partner_policy.section_2_item_1": "O anunciante paga pelo destaque com base no CPM vigente da plataforma.",
-  "partner_policy.section_2_item_2": "O parceiro elegível recebe <strong>25%</strong> do valor consumido pelos anúncios destacados vinculados aos seus servidores.",
+  "partner_policy.section_2_item_2": "O parceiro elegível recebe <strong>50%</strong> do valor consumido pelos anúncios destacados vinculados aos seus servidores.",
   "partner_policy.section_2_item_3": "O saldo exibido ao parceiro é bruto e não inclui descontos de taxas de conversão, transferência ou envio do saque.",
   "partner_policy.section_3_title": "3. Quando o saldo aparece",
   "partner_policy.section_3_item_1": "O saldo é calculado conforme o consumo real dos anúncios destacados vinculados aos seus servidores.",

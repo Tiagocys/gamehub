@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -2380,11 +2381,6 @@
       return message.includes("partner_payout_events");
     }
 
-    function isMissingAdminBeneficiaryColumnError(error) {
-      if (!error) return false;
-      return String(error.message || "").includes("admin_beneficiary_id");
-    }
-
     async function fetchPartnerProfile() {
       const fields = "id,email,first_name,last_name,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
       let { data, error } = await supabase
@@ -2621,19 +2617,9 @@
     async function fetchOwnedServers() {
       let { data, error } = await supabase
         .from("servers")
-        .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id,admin_beneficiary_id")
-        .or(`owner_id.eq.${currentUser.id},admin_beneficiary_id.eq.${currentUser.id}`)
+        .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id")
+        .eq("owner_id", currentUser.id)
         .order("created_at", { ascending: false });
-
-      if (isMissingAdminBeneficiaryColumnError(error)) {
-        const fallback = await supabase
-          .from("servers")
-          .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id")
-          .eq("owner_id", currentUser.id)
-          .order("created_at", { ascending: false });
-        data = (fallback.data || []).map((item) => ({ ...item, admin_beneficiary_id: null }));
-        error = fallback.error;
-      }
       if (error && error.code === "42703") {
         connectFeedback.textContent = t("partner_page.missing_server_link_columns", "The server link columns do not exist yet. Apply the latest migrations.");
         return [];

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -232,11 +233,6 @@
       word-break: break-word;
     }
 
-    .user-contact-trigger {
-      padding: 8px 14px;
-      font-size: 13px;
-    }
-
     .user-card-actions {
       display: inline-flex;
       align-items: center;
@@ -245,11 +241,6 @@
       align-self: start;
       flex-wrap: wrap;
       min-width: 0;
-    }
-
-    .user-contact-corner {
-      position: static;
-      z-index: auto;
     }
 
     .user-contact-panel {
@@ -632,7 +623,6 @@
       <section class="user-public-card">
         <img id="public-avatar" class="user-public-avatar" src="img/avatar.svg" alt="User photo" />
         <div class="user-card-actions">
-          <button id="contact-toggle-btn" class="btn btn-ghost user-contact-trigger user-contact-corner" type="button" style="display:none;">chat</button>
           <button id="share-user-btn" class="user-share-btn" type="button">Share</button>
           <button id="report-user-btn" class="report-icon-btn" type="button" style="display:none;" aria-label="Report profile">
             <img src="img/flag.png" alt="" class="report-icon" />
@@ -793,7 +783,6 @@
     const reportUserSubmit = document.getElementById("report-user-submit");
     const reportUserCancel = document.getElementById("report-user-cancel");
     const reportUserFeedback = document.getElementById("report-user-feedback");
-    const contactToggleBtn = document.getElementById("contact-toggle-btn");
     const shareUserBtn = document.getElementById("share-user-btn");
     const contactPanel = document.getElementById("contact-panel");
     const contactTelegram = document.getElementById("contact-telegram");
@@ -855,7 +844,6 @@
     let recommendersHasMore = true;
     let recommendersLoading = false;
     let recommendersFetched = false;
-    let contactPanelVisible = false;
     let currentPublicProfile = null;
     let shareUrl = "";
     let shareCardDataUrl = "";
@@ -871,7 +859,6 @@
     const loaderImage = pageLoader?.querySelector("img");
     if (loaderImage) loaderImage.alt = t("user.page_loading", "Loading");
     if (publicAvatar) publicAvatar.alt = t("user.public_avatar_alt", "User photo");
-    if (contactToggleBtn) contactToggleBtn.textContent = t("user.chat", "chat");
     if (shareUserBtn) shareUserBtn.textContent = t("user.share_title", "Share profile");
     if (reportUserBtn) reportUserBtn.setAttribute("aria-label", t("user.report_profile_aria", "Report profile"));
     if (publicName) publicName.textContent = t("user.loading_profile", "Loading profile...");
@@ -1614,30 +1601,22 @@
     }
 
     function setupContactPanel(profile) {
-      if (!contactToggleBtn || !contactPanel || !contactTelegram || !contactWhatsapp) return;
-      const isOwnProfile = !!currentUser && currentUser.id === targetUserId;
+      if (!contactPanel || !contactTelegram || !contactWhatsapp) return;
       const discord = String(profile?.discord_username || "").trim();
-      const firstName = String(profile?.first_name || "").trim();
       const phoneDigits = String(profile?.phone || "").replace(/\D/g, "");
       const hasTelegram = !!profile?.phone_verified && phoneDigits.length > 0 && profile?.show_telegram_button !== false;
       const hasWhatsapp = !!profile?.phone_verified && phoneDigits.length > 0 && !!profile?.show_whatsapp_button;
       const hasDiscord = !!discord;
       const hasAny = hasDiscord || hasTelegram || hasWhatsapp;
-      const baseLabel = formatMessage("user.chat_with", "conversar com {name}", {
-        name: firstName || t("user.community_user", "community user").toLowerCase(),
-      });
 
-      contactPanelVisible = false;
-      contactPanel.style.display = "none";
-      contactToggleBtn.textContent = baseLabel;
-      contactToggleBtn.style.display = !isOwnProfile && hasAny ? "inline-flex" : "none";
-      contactToggleBtn.dataset.baseLabel = baseLabel;
-
-      if (isOwnProfile || !hasAny) {
+      if (!hasAny) {
+        contactPanel.style.display = "none";
         contactTelegram.style.display = "none";
         contactWhatsapp.style.display = "none";
         return;
       }
+
+      contactPanel.style.display = "grid";
 
       if (hasTelegram) {
         contactTelegram.href = `https://t.me/+${phoneDigits}`;
@@ -1652,13 +1631,6 @@
       } else {
         contactWhatsapp.style.display = "none";
       }
-    }
-
-    function toggleContactPanel() {
-      if (!contactToggleBtn || !contactPanel || contactToggleBtn.style.display === "none") return;
-      contactPanelVisible = !contactPanelVisible;
-      contactPanel.style.display = contactPanelVisible ? "grid" : "none";
-      contactToggleBtn.textContent = contactPanelVisible ? t("user.close_contact", "Close contact") : (contactToggleBtn.dataset.baseLabel || t("user.conversation", "Chat"));
     }
 
     async function renderPublicAvatar(profile) {
@@ -1860,7 +1832,7 @@
             : t("user.profile_disabled_message", "This profile is temporarily disabled.");
           if (recommendBtn) recommendBtn.style.display = "none";
           if (reportUserBtn) reportUserBtn.style.display = "none";
-          if (contactToggleBtn) contactToggleBtn.style.display = "none";
+          if (contactPanel) contactPanel.style.display = "none";
           if (recommendCount) recommendCount.textContent = t("user.recommendations_zero", "0 recommendations");
           renderGames([]);
           renderListings([]);
@@ -2049,7 +2021,6 @@
         if (reportUserSubmit) reportUserSubmit.disabled = false;
       }
     });
-    contactToggleBtn?.addEventListener("click", toggleContactPanel);
     recommendCount?.addEventListener("click", handleRecommendCountClick);
     recommendersWrap?.addEventListener("scroll", handleRecommendersScroll);
     recommendersModalClose?.addEventListener("click", closeRecommendersModal);

@@ -346,11 +346,6 @@
     }
   };
 
-  function isMissingAdminBeneficiaryColumnError(error) {
-    if (!error) return false;
-    return String(error.message || "").includes("admin_beneficiary_id");
-  }
-
   async function resolvePartnerAreaAccess() {
     const client = await getAuthClient();
     const { data } = await client.auth.getSession();
@@ -378,17 +373,9 @@
     const serverQuery = await client
       .from("servers")
       .select("id", { count: "exact", head: true })
-      .or(`owner_id.eq.${userId},admin_beneficiary_id.eq.${userId}`);
+      .eq("owner_id", userId);
 
-    if (isMissingAdminBeneficiaryColumnError(serverQuery.error)) {
-      const fallback = await client
-        .from("servers")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", userId);
-      if (!fallback.error) {
-        serverCount = Number(fallback.count || 0);
-      }
-    } else if (!serverQuery.error) {
+    if (!serverQuery.error) {
       serverCount = Number(serverQuery.count || 0);
     }
 
