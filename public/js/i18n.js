@@ -10,7 +10,9 @@
   function normalizeLocale(value) {
     const normalized = String(value || "").trim().toLowerCase();
     if (!normalized) return "";
-    return normalized.startsWith("pt") ? "pt-BR" : "en";
+    if (normalized.startsWith("pt")) return "pt-BR";
+    if (normalized.startsWith("es")) return "es";
+    return "en";
   }
 
   function normalizeCurrency(value) {

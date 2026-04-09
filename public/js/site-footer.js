@@ -39,6 +39,7 @@
           <div class="site-footer-inner">
             <nav class="site-footer-links site-footer-languages" aria-label="${escapeAttr(t("footer.languages_aria", "Language selector"))}">
               <a href="#" class="${i18n.locale === "pt-BR" ? "active" : ""}" data-locale="pt-BR">Português (Brasil)</a>
+              <a href="#" class="${i18n.locale === "es" ? "active" : ""}" data-locale="es">Español</a>
               <a href="#" class="${i18n.locale === "en" ? "active" : ""}" data-locale="en">English</a>
             </nav>
             <nav class="site-footer-links" aria-label="Links úteis">

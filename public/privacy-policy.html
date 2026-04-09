@@ -162,6 +162,10 @@
 
   </div>
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/es.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
@@ -169,6 +173,8 @@
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const main = document.querySelector(".policy-page");
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
@@ -190,6 +196,253 @@
       avatarImg.addEventListener("error", () => {
         avatarImg.src = "img/avatar.svg";
       });
+    }
+
+    function getPrivacyCopy(locale) {
+      if (locale === "pt-BR") {
+        return {
+          title: "Gimerr - Políticas de privacidade",
+          heroTitle: "Políticas de privacidade",
+          heroHelper: "Última atualização: 4 de março de 2026",
+          sections: [
+            {
+              title: "1. Dados coletados via Google",
+              body: [
+                "Ao entrar com o Google, vinculamos o ID único do usuário ao e-mail da conta e coletamos, quando disponíveis:",
+              ],
+              items: ["Primeiro nome", "Sobrenome", "Foto de perfil"],
+              tail: [
+                "Não solicitamos acesso ao conteúdo do e-mail, contatos, arquivos do Google Drive ou qualquer outro dado adicional da conta Google.",
+              ],
+            },
+            {
+              title: "2. Finalidade do uso dos dados",
+              body: ["Os dados coletados são usados exclusivamente para:"],
+              items: [
+                "Criar e identificar o perfil do usuário na plataforma;",
+                "Exibir nome e foto nos anúncios publicados;",
+                "Permitir autenticação segura;",
+                "Prevenir fraudes e abusos;",
+                "Melhorar a experiência do usuário.",
+              ],
+              tail: ["O Gimerr não utiliza dados do Google para marketing externo, spam ou venda de informações."],
+            },
+            {
+              title: "3. Compartilhamento de dados",
+              body: [
+                "O Gimerr não vende nem comercializa dados pessoais.",
+                "Os dados podem ser processados por terceiros apenas quando necessário para a operação técnica da plataforma, como:",
+              ],
+              items: [
+                "Serviços de hospedagem e banco de dados.",
+                "Plataforma de autenticação - Google.",
+                "Plataforma de processamento de pagamentos - Stripe. Para mais informações sobre a política de anúncios do Gimerr, <a style=\"text-decoration: underline;\" href=\"ads-policy.html\">clique aqui</a>.",
+                "Aplicativo de mensagens - Telegram, quando o usuário escolhe verificar a conta via número de telefone.",
+              ],
+              tail: ["Esses serviços operam sob suas próprias políticas de privacidade e utilizam padrões reconhecidos de segurança."],
+            },
+            {
+              title: "4. Armazenamento e proteção",
+              body: [
+                "Os dados são armazenados em infraestrutura segura, com controles de acesso restritos e medidas técnicas para proteção contra acesso não autorizado, alteração ou vazamento.",
+                "Utilizamos criptografia e práticas compatíveis com medidas de segurança padronizadas de mercado.",
+              ],
+            },
+            {
+              title: "5. Retenção e exclusão de dados",
+              body: [
+                "Os dados do usuário são mantidos enquanto a conta permanecer ativa.",
+                "Quando você exclui sua conta pela plataforma, todos os dados vinculados ao perfil são removidos automática e imediatamente do banco de dados.",
+              ],
+            },
+            {
+              title: "6. Direitos do usuário (LGPD)",
+              body: [
+                "Nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018), o usuário pode solicitar:",
+              ],
+              items: [
+                "Confirmação da existência de tratamento de dados;",
+                "Acesso aos dados armazenados;",
+                "Correção de informações incompletas ou desatualizadas;",
+                "Exclusão de dados pessoais;",
+                "Informações sobre compartilhamento.",
+              ],
+              tail: ["Todas as informações acima podem ser solicitadas por admin@gimerr.com"],
+            },
+            {
+              title: "7. Alterações nesta política",
+              body: ["Esta Política de Privacidade pode ser atualizada periodicamente. Em caso de mudanças relevantes, a nova versão será publicada nesta página."],
+            },
+          ],
+        };
+      }
+      if (locale === "es") {
+        return {
+          title: "Gimerr - Política de privacidad",
+          heroTitle: "Política de privacidad",
+          heroHelper: "Última actualización: 4 de marzo de 2026",
+          sections: [
+            {
+              title: "1. Datos recopilados mediante Google",
+              body: [
+                "Al iniciar sesión con Google, vinculamos el ID único del usuario al correo de la cuenta y recopilamos, cuando estén disponibles:",
+              ],
+              items: ["Nombre", "Apellido", "Foto de perfil"],
+              tail: [
+                "No solicitamos acceso al contenido del correo, contactos, archivos de Google Drive ni ningún otro dato adicional de la cuenta de Google.",
+              ],
+            },
+            {
+              title: "2. Finalidad del uso de los datos",
+              body: ["Los datos recopilados se utilizan exclusivamente para:"],
+              items: [
+                "Crear e identificar el perfil del usuario en la plataforma;",
+                "Mostrar nombre y foto en los anuncios publicados;",
+                "Permitir una autenticación segura;",
+                "Prevenir fraudes y abusos;",
+                "Mejorar la experiencia del usuario.",
+              ],
+              tail: ["Gimerr no utiliza los datos de Google para marketing externo, spam ni venta de información."],
+            },
+            {
+              title: "3. Compartición de datos",
+              body: [
+                "Gimerr no vende ni comercializa datos personales.",
+                "Los datos pueden ser procesados por terceros solo cuando sea necesario para la operación técnica de la plataforma, como:",
+              ],
+              items: [
+                "Servicios de alojamiento y base de datos.",
+                "Plataforma de autenticación - Google.",
+                "Plataforma de procesamiento de pagos - Stripe. Para más información sobre la política de anuncios de Gimerr, <a style=\"text-decoration: underline;\" href=\"ads-policy.html\">haz clic aquí</a>.",
+                "Aplicación de mensajería - Telegram, cuando el usuario elige verificar la cuenta mediante número de teléfono.",
+              ],
+              tail: ["Estos servicios operan bajo sus propias políticas de privacidad y utilizan estándares reconocidos de seguridad."],
+            },
+            {
+              title: "4. Almacenamiento y protección",
+              body: [
+                "Los datos se almacenan en una infraestructura segura, con controles de acceso restringidos y medidas técnicas de protección contra acceso no autorizado, alteración o filtración.",
+                "Utilizamos cifrado y prácticas compatibles con los estándares de seguridad del mercado.",
+              ],
+            },
+            {
+              title: "5. Conservación y eliminación de datos",
+              body: [
+                "Los datos del usuario se conservan mientras la cuenta permanezca activa.",
+                "Cuando eliminas tu cuenta desde la plataforma, todos los datos vinculados al perfil se eliminan automática e inmediatamente de la base de datos.",
+              ],
+            },
+            {
+              title: "6. Derechos del usuario",
+              body: [
+                "De acuerdo con la legislación aplicable de protección de datos, el usuario puede solicitar:",
+              ],
+              items: [
+                "Confirmación de la existencia de tratamiento de datos;",
+                "Acceso a los datos almacenados;",
+                "Corrección de información incompleta o desactualizada;",
+                "Eliminación de datos personales;",
+                "Información sobre el intercambio de datos.",
+              ],
+              tail: ["Toda la información anterior puede solicitarse a través de admin@gimerr.com"],
+            },
+            {
+              title: "7. Cambios en esta política",
+              body: ["Esta Política de Privacidad puede actualizarse periódicamente. En caso de cambios relevantes, la nueva versión se publicará en esta página."],
+            },
+          ],
+        };
+      }
+      return {
+        title: "Gimerr - Privacy policy",
+        heroTitle: "Privacy policy",
+        heroHelper: "Last updated: March 4, 2026",
+        sections: [
+          {
+            title: "1. Data collected via Google",
+            body: ["When signing in with Google, we connect the user's unique ID to the account email and collect, when available:"],
+            items: ["First name", "Last name", "Profile photo"],
+            tail: ["We do not request access to email content, contacts, Google Drive files or any other additional Google account data."],
+          },
+          {
+            title: "2. Purpose of data use",
+            body: ["The collected data is used exclusively to:"],
+            items: [
+              "Create and identify the user profile on the platform;",
+              "Display name and photo on published listings;",
+              "Enable secure authentication;",
+              "Prevent fraud and abuse;",
+              "Improve user experience.",
+            ],
+            tail: ["Gimerr does not use Google data for external marketing, spam or sale of information."],
+          },
+          {
+            title: "3. Data sharing",
+            body: [
+              "Gimerr does not sell or trade personal data.",
+              "Data may be processed by third parties only when necessary for the technical operation of the platform, such as:",
+            ],
+            items: [
+              "Hosting and database services.",
+              "Authentication platform - Google.",
+              "Payment processing platform - Stripe. For more information about Gimerr's advertising policy, <a style=\"text-decoration: underline;\" href=\"ads-policy.html\">click here</a>.",
+              "Messaging app - Telegram, when the user chooses to verify the account via phone number.",
+            ],
+            tail: ["These services operate under their own privacy policies and use recognized security standards."],
+          },
+          {
+            title: "4. Storage and protection",
+            body: [
+              "Data is stored in secure infrastructure, with restricted access controls and technical measures to protect against unauthorized access, alteration or leakage.",
+              "We use encryption and practices compatible with market-standard security measures.",
+            ],
+          },
+          {
+            title: "5. Data retention and deletion",
+            body: [
+              "User data is kept while the account remains active.",
+              "When you delete your account through the platform, all data linked to the profile is automatically and immediately removed from the database.",
+            ],
+          },
+          {
+            title: "6. User rights (LGPD)",
+            body: ["Under the Brazilian General Data Protection Law (Law No. 13.709/2018), the user may request:"],
+            items: [
+              "Confirmation that data processing exists;",
+              "Access to stored data;",
+              "Correction of incomplete or outdated information;",
+              "Deletion of personal data;",
+              "Information about sharing.",
+            ],
+            tail: ["All information above can be requested via admin@gimerr.com"],
+          },
+          {
+            title: "7. Changes to this policy",
+            body: ["This Privacy Policy may be updated periodically. In case of relevant changes, the new version will be published on this page."],
+          },
+        ],
+      };
+    }
+
+    function renderPrivacyPolicy() {
+      if (!main) return;
+      const copy = getPrivacyCopy(i18n.locale);
+      document.documentElement.lang = i18n.locale === "pt-BR" ? "pt-BR" : i18n.locale === "es" ? "es" : "en";
+      document.title = copy.title;
+      main.innerHTML = `
+        <section class="hero-card">
+          <h2>${copy.heroTitle}</h2>
+          <p class="helper">${copy.heroHelper}</p>
+        </section>
+        ${copy.sections.map((section) => `
+          <article class="policy-card">
+            <h3>${section.title}</h3>
+            ${(section.body || []).map((paragraph) => `<p>${paragraph}</p>`).join("")}
+            ${section.items?.length ? `<ul>${section.items.map((item) => `<li>${item}</li>`).join("")}</ul>` : ""}
+            ${(section.tail || []).map((paragraph) => `<p>${paragraph}</p>`).join("")}
+          </article>
+        `).join("")}
+      `;
     }
 
     function ensureClient() {
@@ -309,6 +562,7 @@
       window.location.href = "listing-create.html";
     });
 
+    renderPrivacyPolicy();
     initAuth();
   </script>
 </body>

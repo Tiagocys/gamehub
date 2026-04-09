@@ -109,6 +109,10 @@
 
   </div>
   <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/es.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
@@ -116,6 +120,8 @@
     await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const main = document.querySelector(".terms-page");
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
 
@@ -137,6 +143,69 @@
       avatarImg.addEventListener("error", () => {
         avatarImg.src = "img/avatar.svg";
       });
+    }
+
+    function getTermsCopy(locale) {
+      if (locale === "pt-BR") {
+        return {
+          title: "Gimerr - Termos de uso",
+          heroTitle: "Termos de uso",
+          heroHelper: "Ao usar a plataforma, você concorda com os termos e políticas aplicáveis.",
+          sections: [
+            { title: "1. Conta e acesso", items: ["Você é responsável pelo uso da sua conta e pela segurança das suas credenciais.", "Os dados do perfil devem ser corretos e mantidos atualizados.", "Podemos restringir acesso em casos de abuso, fraude ou violação de regras."] },
+            { title: "2. Anúncios e conteúdo", items: ["O usuário é responsável pelas informações publicadas em seus anúncios.", "É proibido publicar conteúdo enganoso, malicioso, ilegal ou que viole direitos de terceiros.", "Conteúdos denunciados podem ser revisados, editados ou removidos pela moderação."] },
+            { title: "3. Recursos pagos", items: ["Os destaques de anúncios são recursos pagos e seguem regras específicas de consumo de saldo.", "As regras completas de destaque estão descritas na política de anúncios."], body: 'Veja: <a class="link-ghost" href="ads-policy.html">Políticas de anúncios</a>' },
+            { title: "4. Moderação e sanções", items: ["Podemos remover anúncios e perfis que violem os termos de uso ou as regras da comunidade.", "Em casos graves ou recorrentes, a conta pode ser suspensa ou banida."] },
+            { title: "5. Suporte", body: 'E-mail de suporte: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
+          ],
+        };
+      }
+      if (locale === "es") {
+        return {
+          title: "Gimerr - Términos de uso",
+          heroTitle: "Términos de uso",
+          heroHelper: "Al usar la plataforma, aceptas los términos y políticas aplicables.",
+          sections: [
+            { title: "1. Cuenta y acceso", items: ["Eres responsable del uso de tu cuenta y de la seguridad de tus credenciales.", "Los datos del perfil deben ser correctos y mantenerse actualizados.", "Podemos restringir el acceso en casos de abuso, fraude o violación de reglas."] },
+            { title: "2. Anuncios y contenido", items: ["El usuario es responsable de la información publicada en sus anuncios.", "Está prohibido publicar contenido engañoso, malicioso, ilegal o que viole derechos de terceros.", "El contenido denunciado puede ser revisado, editado o eliminado por moderación."] },
+            { title: "3. Funciones de pago", items: ["Los destacados de anuncios son funciones de pago y siguen reglas específicas de consumo de saldo.", "Las reglas completas de los destacados están descritas en la política de anuncios."], body: 'Ver: <a class="link-ghost" href="ads-policy.html">Política de anuncios</a>' },
+            { title: "4. Moderación y sanciones", items: ["Podemos eliminar anuncios y perfiles que violen los términos de uso o las reglas de la comunidad.", "En casos graves o reiterados, la cuenta puede ser suspendida o bloqueada."] },
+            { title: "5. Soporte", body: 'Correo de soporte: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
+          ],
+        };
+      }
+      return {
+        title: "Gimerr - Terms of use",
+        heroTitle: "Terms of use",
+        heroHelper: "By using the platform, you agree to the applicable terms and policies.",
+        sections: [
+          { title: "1. Account and access", items: ["You are responsible for the use of your account and the security of your credentials.", "Profile data must be accurate and kept up to date.", "We may restrict access in cases of abuse, fraud or rule violations."] },
+          { title: "2. Listings and content", items: ["The user is responsible for the information published in their listings.", "Publishing misleading, malicious, illegal content or content that violates third-party rights is prohibited.", "Reported content may be reviewed, edited or removed by moderation."] },
+          { title: "3. Paid features", items: ["Listing highlights are paid features and follow specific balance consumption rules.", "The complete highlight rules are described in the advertising policy."], body: 'See: <a class="link-ghost" href="ads-policy.html">Advertising policy</a>' },
+          { title: "4. Moderation and sanctions", items: ["We may remove listings and profiles that violate the terms of use or community rules.", "In serious or repeated cases, the account may be suspended or banned."] },
+          { title: "5. Support", body: 'Support email: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
+        ],
+      };
+    }
+
+    function renderTermsPage() {
+      if (!main) return;
+      const copy = getTermsCopy(i18n.locale);
+      document.documentElement.lang = i18n.locale === "pt-BR" ? "pt-BR" : i18n.locale === "es" ? "es" : "en";
+      document.title = copy.title;
+      main.innerHTML = `
+        <section class="hero-card">
+          <h2>${copy.heroTitle}</h2>
+          <p class="helper">${copy.heroHelper}</p>
+        </section>
+        ${copy.sections.map((section) => `
+          <article class="terms-card">
+            <h3>${section.title}</h3>
+            ${section.items?.length ? `<ul>${section.items.map((item) => `<li>${item}</li>`).join("")}</ul>` : ""}
+            ${section.body ? `<p>${section.body}</p>` : ""}
+          </article>
+        `).join("")}
+      `;
     }
 
     function ensureClient() {
@@ -256,6 +325,7 @@
       window.location.href = "listing-create.html";
     });
 
+    renderTermsPage();
     initAuth();
   </script>
 </body>

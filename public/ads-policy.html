@@ -142,6 +142,7 @@
   </div>
   <script src="env.js"></script>
   <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/es.js"></script>
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
@@ -187,7 +188,7 @@
     }
 
     function applyTranslations() {
-      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      document.documentElement.lang = i18n.locale === "pt-BR" ? "pt-BR" : i18n.locale === "es" ? "es" : "en";
       document.title = t("ads_policy.title", "Gimerr - Advertising policy");
       setText("ads-policy-hero-title", "ads_policy.hero_title", "Featured advertising policy");
       setText("ads-policy-hero-helper", "ads_policy.hero_helper", "Read carefully before adding balance and activating highlights.");
