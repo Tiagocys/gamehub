@@ -236,7 +236,7 @@ window.__I18N_MESSAGES__.es = {
   "listing_create.custom_trigger": "¿No encontraste tu juego en la lista? Haz clic aquí.",
   "listing_create.delete_old_images_error": "No se pudieron eliminar las imágenes anteriores.",
   "listing_create.description_label": "Descripción",
-  "listing_create.description_placeholder": "Describe lo que ofreces en este anuncio.",
+  "listing_create.description_placeholder": "Describe tu anuncio (hasta 10000 caracteres).",
   "listing_create.duplicate_listing": "Ya existe un anuncio activo para este juego con el mismo título.",
   "listing_create.duplicate_request": "Ya tienes una solicitud pendiente para este juego/sitio. Espera la revisión antes de enviarla de nuevo.",
   "listing_create.edit_not_found": "No se encontró el anuncio para editar.",

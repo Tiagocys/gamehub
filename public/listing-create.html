@@ -183,8 +183,8 @@
 
           <div class="field">
             <label id="listing-description-label" for="listing-description">Description (optional)</label>
-            <textarea id="listing-description" class="textarea" maxlength="1000" placeholder="Describe your listing (up to 1000 characters)."></textarea>
-            <span id="desc-counter" class="helper">0/1000</span>
+            <textarea id="listing-description" class="textarea" maxlength="10000" placeholder="Describe your listing (up to 10000 characters)."></textarea>
+            <span id="desc-counter" class="helper">0/10000</span>
           </div>
 
           <div class="field" style="grid-column: 1 / -1;">
@@ -315,7 +315,7 @@
     });
 
     const MAX_IMAGES = 8;
-    const MAX_DESC = 1000;
+    const MAX_DESC = 10000;
     const MAX_TITLE = 70;
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     const MAX_LOGO_BYTES = 3 * 1024 * 1024;
@@ -357,7 +357,7 @@
       if (listingImagesLabel) listingImagesLabel.textContent = t("listing_create.images_label", "Listing images (optional, up to 8)");
       if (listingImagesHelper) listingImagesHelper.textContent = t("listing_create.images_helper", "You can upload up to 8 images.");
       if (listingDescriptionLabel) listingDescriptionLabel.textContent = t("listing_create.description_label", "Description (optional)");
-      if (descInput) descInput.placeholder = t("listing_create.description_placeholder", "Describe your listing (up to 1000 characters).");
+      if (descInput) descInput.placeholder = t("listing_create.description_placeholder", "Describe your listing (up to 10000 characters).");
       if (customGameModalTitle) customGameModalTitle.textContent = t("listing_create.modal_title", "New game");
       if (customGameModalHelper) customGameModalHelper.textContent = t("listing_create.modal_helper", "Enter the basic information to submit your listing for review.");
       if (customGameNameLabel) customGameNameLabel.textContent = t("listing_create.modal_name_label", "Game name *");

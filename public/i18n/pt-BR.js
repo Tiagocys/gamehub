@@ -347,7 +347,7 @@ window.__I18N_MESSAGES__["pt-BR"] = {
   "listing_create.images_helper": "Você pode enviar até 8 imagens.",
   "listing_create.image_count": "{count}/{max} imagens selecionadas.",
   "listing_create.description_label": "Descrição (opcional)",
-  "listing_create.description_placeholder": "Descreva seu anúncio (até 1000 caracteres).",
+  "listing_create.description_placeholder": "Descreva seu anúncio (até 10000 caracteres).",
   "listing_create.submit": "Publicar anúncio",
   "listing_create.edit_submit": "Salvar alterações",
   "listing_create.submitting": "Publicando...",

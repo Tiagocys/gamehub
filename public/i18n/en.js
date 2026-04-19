@@ -347,7 +347,7 @@ window.__I18N_MESSAGES__.en = {
   "listing_create.images_helper": "You can upload up to 8 images.",
   "listing_create.image_count": "{count}/{max} selected images.",
   "listing_create.description_label": "Description (optional)",
-  "listing_create.description_placeholder": "Describe your listing (up to 1000 characters).",
+  "listing_create.description_placeholder": "Describe your listing (up to 10000 characters).",
   "listing_create.submit": "Publish listing",
   "listing_create.edit_submit": "Save changes",
   "listing_create.submitting": "Publishing...",
