@@ -177,6 +177,13 @@ body {
         </div>
         <button type="button" class="chip-btn" id="clear-edit-btn">Limpar</button>
       </div>
+      <div class="notice" id="edit-server-banner" style="display:none; gap:10px; align-items:center; justify-content:space-between;">
+        <div>
+          Editando servidor existente:
+          <strong id="edit-server-title"></strong>
+        </div>
+        <button type="button" class="chip-btn" id="clear-server-edit-btn">Limpar</button>
+      </div>
       <div class="divider"></div>
 
       <form id="server-form">
@@ -205,6 +212,20 @@ body {
         <div class="error" id="form-error"></div>
         <div class="success" id="form-success"></div>
       </form>
+    </section>
+
+    <section class="card">
+      <h1>Editar games cadastrados</h1>
+      <p>Edite nome, site oficial, Discord e logo dos servidores já aprovados.</p>
+      <div class="row" style="margin-bottom:12px;">
+        <div>
+          <label for="server-search-input">Buscar servidor</label>
+          <input id="server-search-input" placeholder="Digite o nome ou site do servidor" />
+        </div>
+      </div>
+      <div class="notice" id="servers-status">Carregando...</div>
+      <div id="servers-empty" class="muted" style="display:none;">Nenhum servidor encontrado.</div>
+      <div id="servers-list" class="list"></div>
     </section>
 
     <section class="card">
@@ -311,7 +332,14 @@ body {
     const editBanner = document.getElementById("edit-request-banner");
     const editBannerTitle = document.getElementById("edit-request-title");
     const clearEditBtn = document.getElementById("clear-edit-btn");
+    const editServerBanner = document.getElementById("edit-server-banner");
+    const editServerTitle = document.getElementById("edit-server-title");
+    const clearServerEditBtn = document.getElementById("clear-server-edit-btn");
     const MAX_LOGO_BYTES = 3 * 1024 * 1024; // 3MB
+    const serverSearchInput = document.getElementById("server-search-input");
+    const serversList = document.getElementById("servers-list");
+    const serversEmpty = document.getElementById("servers-empty");
+    const serversStatus = document.getElementById("servers-status");
     const requestsList = document.getElementById("requests-list");
     const requestsEmpty = document.getElementById("requests-empty");
     const requestsStatus = document.getElementById("requests-status");
@@ -337,11 +365,13 @@ body {
     let avatarLoaded = false;
     let profile = null;
     let requestCache = [];
+    let serverCache = [];
     let withdrawCache = [];
     let reportCache = [];
     let requestCursor = 0;
     let reportCursor = 0;
     let editingRequest = null;
+    let editingServer = null;
     const SERVER_SUBMIT_DEFAULT_TEXT = serverSubmitBtn?.textContent || "Salvar servidor";
     let ownerLookupTimer = null;
     const OWNER_ADMIN_CONFLICT_MESSAGE = "Administradores não podem ser cadastrados como responsáveis pelos jogos.";
@@ -754,11 +784,14 @@ body {
     }
 
     function enterEditMode(req) {
+      editingServer = null;
+      if (editServerBanner) editServerBanner.style.display = "none";
       editingRequest = req || null;
       formError.textContent = "";
       formSuccess.textContent = "";
       if (!req) {
         if (serverOwnerEmailInput) serverOwnerEmailInput.value = "";
+        if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = false;
         clearOwnerEmailSuggestions();
         setOwnerEmailHelper("Digite para buscar usuários cadastrados pelo e-mail.");
         if (serverLogoInput) {
@@ -773,6 +806,7 @@ body {
       if (serverSiteInput) serverSiteInput.value = req.website || "";
       if (serverDiscordInput) serverDiscordInput.value = req.discord_invite || "";
       if (serverOwnerEmailInput) serverOwnerEmailInput.value = req.is_owner ? (req.user_email || "") : "";
+      if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = false;
       clearOwnerEmailSuggestions();
       setOwnerEmailHelper("Confirme ou altere o e-mail do owner.");
       if (serverLogoInput) {
@@ -788,6 +822,53 @@ body {
         if (editBannerTitle) {
           editBannerTitle.textContent = `${req.name || "Solicitação"} (${req.website || "-"})`;
         }
+      }
+      document.querySelector("main")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function enterServerEditMode(server) {
+      editingRequest = null;
+      if (editBanner) editBanner.style.display = "none";
+      editingServer = server || null;
+      formError.textContent = "";
+      formSuccess.textContent = "";
+      requestsStatus.textContent = "";
+      if (!server) {
+        if (serverNameInput) serverNameInput.value = "";
+        if (serverSiteInput) serverSiteInput.value = "";
+        if (serverDiscordInput) serverDiscordInput.value = "";
+        if (serverOwnerEmailInput) serverOwnerEmailInput.value = "";
+        if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = false;
+        clearOwnerEmailSuggestions();
+        setOwnerEmailHelper("Digite para buscar usuários cadastrados pelo e-mail.");
+        if (serverLogoInput) {
+          serverLogoInput.value = "";
+          serverLogoInput.required = true;
+          serverLogoInput.setAttribute("required", "true");
+        }
+        setLogoPreview("");
+        if (editServerBanner) editServerBanner.style.display = "none";
+        return;
+      }
+      if (serverNameInput) serverNameInput.value = server.name || "";
+      if (serverSiteInput) serverSiteInput.value = server.official_site || "";
+      if (serverDiscordInput) serverDiscordInput.value = server.discord_invite || "";
+      if (serverOwnerEmailInput) serverOwnerEmailInput.value = server.owner_email || "";
+      if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = true;
+      clearOwnerEmailSuggestions();
+      setOwnerEmailHelper("O owner atual não é alterado por este formulário.");
+      if (serverLogoInput) {
+        serverLogoInput.value = "";
+        serverLogoInput.required = false;
+        serverLogoInput.removeAttribute("required");
+      }
+      setLogoPreview(server.displayBannerUrl || server.banner_url || "");
+      if (editServerBanner) {
+        editServerBanner.style.display = "flex";
+        editServerBanner.style.flexWrap = "wrap";
+      }
+      if (editServerTitle) {
+        editServerTitle.textContent = `${server.name || "Servidor"} (${server.official_site || "-"})`;
       }
       document.querySelector("main")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -843,6 +924,25 @@ body {
         } catch (err) {
           console.warn("Erro ao gerar URL assinada", err);
           return { ...req, displayCoverUrl: req.cover_url };
+        }
+      }));
+    }
+
+    async function enhanceServersWithSignedUrls(list) {
+      if (!list || list.length === 0) return [];
+      return Promise.all(list.map(async (server) => {
+        const path = extractStoragePath(server.banner_url);
+        if (!path) return { ...server, displayBannerUrl: server.banner_url };
+        try {
+          ensureClient();
+          const { data, error } = await supabase.storage
+            .from("server_logos")
+            .createSignedUrl(path, 60 * 60);
+          if (error) throw error;
+          return { ...server, displayBannerUrl: data?.signedUrl || server.banner_url };
+        } catch (err) {
+          console.warn("Erro ao gerar URL assinada do servidor", err);
+          return { ...server, displayBannerUrl: server.banner_url };
         }
       }));
     }
@@ -926,7 +1026,7 @@ body {
             : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
           if (profile?.is_admin) {
             revealAdminPage();
-            await Promise.all([fetchRequests(), fetchWithdrawRequests(), fetchReports()]);
+            await Promise.all([fetchServers(), fetchRequests(), fetchWithdrawRequests(), fetchReports()]);
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
             withdrawsStatus.textContent = "Restrito aos admins.";
@@ -989,6 +1089,88 @@ body {
       return { path: data.path, publicUrl: publicData.publicUrl };
     }
 
+    function getFilteredServers() {
+      const query = String(serverSearchInput?.value || "").trim().toLowerCase();
+      if (!query) return null;
+      return serverCache.filter((server) => {
+        const name = String(server?.name || "").toLowerCase();
+        const site = String(server?.official_site || "").toLowerCase();
+        return name.includes(query) || site.includes(query);
+      });
+    }
+
+    function renderServers(list) {
+      if (!serversList || !serversEmpty || !serversStatus) return;
+      serversList.innerHTML = "";
+      const query = String(serverSearchInput?.value || "").trim();
+      if (!query) {
+        serversEmpty.style.display = "none";
+        serversStatus.textContent = "Digite o nome ou site de um servidor para pesquisar.";
+        return;
+      }
+      if (!list || list.length === 0) {
+        serversEmpty.style.display = "block";
+        serversStatus.textContent = "Nenhum servidor encontrado.";
+        return;
+      }
+      serversEmpty.style.display = "none";
+      serversStatus.textContent = `Mostrando ${list.length} servidor(es).`;
+      list.forEach((server) => {
+        const card = document.createElement("div");
+        card.className = "notice";
+        card.style.display = "grid";
+        card.style.gap = "8px";
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+            <div>
+              <strong>${escapeHtml(server.name || "Servidor")}</strong>
+              <div class="muted">${escapeHtml(server.official_site || "-")}</div>
+            </div>
+            <span class="pill">${escapeHtml(server.status || "active")}</span>
+          </div>
+          ${server.displayBannerUrl || server.banner_url ? `<img src="${encodeURI(server.displayBannerUrl || server.banner_url)}" alt="${escapeHtml(server.name || "Servidor")}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
+          <div class="muted">${formatDiscordInviteHtml(server.discord_invite)}</div>
+          <div class="muted">Criado em ${escapeHtml(formatDateTime(server.created_at))}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn secondary" type="button" data-action="edit-server" data-id="${server.id}" style="flex:1;">Editar servidor</button>
+          </div>
+        `;
+        serversList.appendChild(card);
+      });
+    }
+
+    async function fetchServers() {
+      try {
+        if (serversStatus) serversStatus.textContent = "Carregando...";
+        const { data, error } = await supabase
+          .from("servers")
+          .select("id,name,official_site,discord_invite,banner_url,status,created_at,owner_email")
+          .order("created_at", { ascending: false })
+          .limit(200);
+        if (isMissingOwnerEmailColumnError(error)) {
+          const fallback = await supabase
+            .from("servers")
+            .select("id,name,official_site,discord_invite,banner_url,status,created_at")
+            .order("created_at", { ascending: false })
+            .limit(200);
+          if (fallback.error) throw fallback.error;
+          serverCache = await enhanceServersWithSignedUrls((fallback.data || []).map((item) => ({ ...item, owner_email: null })));
+        } else {
+          if (error) throw error;
+          serverCache = await enhanceServersWithSignedUrls(data || []);
+        }
+        renderServers(getFilteredServers());
+      } catch (err) {
+        console.error(err);
+        if (serversList) serversList.innerHTML = "";
+        if (serversEmpty) {
+          serversEmpty.style.display = "block";
+          serversEmpty.textContent = "Erro ao carregar servidores.";
+        }
+        if (serversStatus) serversStatus.textContent = err?.message || "Erro ao carregar servidores.";
+      }
+    }
+
     serverForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       formError.textContent = "";
@@ -1024,6 +1206,63 @@ body {
         const discordInvite = discordInviteRaw ? normalizeOptionalUrl(discordInviteRaw) : null;
         if (discordInviteRaw && !discordInvite) {
           formError.textContent = "Use um convite que comece com https://discord.gg/";
+          return;
+        }
+
+        if (editingServer) {
+          if (file && file.size > MAX_LOGO_BYTES) {
+            formError.textContent = "Logo deve ter no máximo 3MB.";
+            return;
+          }
+
+          const summary = [
+            `Servidor: ${name}`,
+            `Site: ${site}`,
+            `Discord: ${discordInvite || "não informado"}`,
+            `Logo: ${file ? `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)` : "mantida"}`,
+          ].join("\n");
+          const confirmUpdate = window.confirm(`${summary}\n\nDeseja salvar as alterações deste servidor?`);
+          if (!confirmUpdate) {
+            formError.textContent = "Edição cancelada pelo usuário.";
+            return;
+          }
+
+          let bannerUrl = editingServer.banner_url || null;
+          if (file) {
+            const { publicUrl } = await uploadLogo(file, user.id);
+            bannerUrl = publicUrl;
+          }
+
+          const { data: updateData, error: updateErr } = await supabase.functions.invoke("server_update_settings", {
+            body: {
+              serverId: editingServer.id,
+              name,
+              officialSite: site,
+              discordInvite,
+              bannerUrl,
+            },
+            headers: accessToken
+              ? {
+                  Authorization: `Bearer ${accessToken}`,
+                  apikey: SUPABASE_ANON_KEY,
+                }
+              : {},
+          });
+          if (updateErr || !updateData?.ok) {
+            const errMsg = await resolveInvokeErrorMessage(
+              updateErr,
+              updateData,
+              "Erro ao atualizar servidor."
+            );
+            throw new Error(errMsg);
+          }
+
+          formSuccess.textContent = "Servidor atualizado com sucesso.";
+          requestsStatus.textContent = "Servidor atualizado.";
+          serverForm.reset();
+          setLogoPreview("");
+          enterServerEditMode(null);
+          await fetchServers();
           return;
         }
 
@@ -1170,6 +1409,7 @@ body {
             if (!removedAnyColumn) break;
           }
           if (insertErr) throw insertErr;
+          await fetchServers();
         }
 
         const editedName = editingRequest?.name;
@@ -1702,6 +1942,20 @@ body {
       renderReports(reportCache);
     });
 
+    serversList?.addEventListener("click", (event) => {
+      const btn = event.target.closest('button[data-action="edit-server"]');
+      if (!btn) return;
+      const id = String(btn.getAttribute("data-id") || "");
+      const server = serverCache.find((row) => String(row.id) === id);
+      if (!server) return;
+      enterServerEditMode(server);
+      if (serversStatus) serversStatus.textContent = "Formulário carregado para edição do servidor.";
+    });
+
+    serverSearchInput?.addEventListener("input", () => {
+      renderServers(getFilteredServers());
+    });
+
     requestsList?.addEventListener("click", async (event) => {
       const btn = event.target.closest("button[data-action]");
       if (!btn) return;
@@ -1935,6 +2189,12 @@ body {
     clearEditBtn?.addEventListener("click", () => {
       serverForm?.reset();
       enterEditMode(null);
+    });
+    clearServerEditBtn?.addEventListener("click", () => {
+      serverForm?.reset();
+      enterServerEditMode(null);
+      formError.textContent = "";
+      formSuccess.textContent = "";
     });
 
     authBtn?.addEventListener("click", () => {

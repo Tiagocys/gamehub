@@ -835,8 +835,8 @@
         loadImage(qrDataUrl),
       ]);
       const canvas = document.createElement("canvas");
-      canvas.width = 960;
-      canvas.height = 1120;
+      canvas.width = 1200;
+      canvas.height = 630;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("Canvas unavailable");
 
@@ -847,41 +847,58 @@
       ctx.strokeStyle = "#dbe2ef";
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(40, 40, canvas.width - 80, canvas.height - 80, 28);
+      ctx.roundRect(24, 24, canvas.width - 48, canvas.height - 48, 28);
       ctx.fill();
       ctx.stroke();
 
-      const logoMaxWidth = 420;
-      const logoMaxHeight = 120;
+      const leftColumnX = 72;
+      const leftColumnWidth = 520;
+      const qrSize = 360;
+      const qrX = canvas.width - 96 - qrSize;
+      const qrY = Math.round((canvas.height - qrSize) / 2) - 12;
+      const logoMaxWidth = 300;
+      const logoMaxHeight = 84;
       const logoRatio = Math.min(
         logoMaxWidth / (logoImg.naturalWidth || logoImg.width || logoMaxWidth),
         logoMaxHeight / (logoImg.naturalHeight || logoImg.height || logoMaxHeight),
       );
       const logoWidth = Math.round((logoImg.naturalWidth || logoImg.width || logoMaxWidth) * logoRatio);
       const logoHeight = Math.round((logoImg.naturalHeight || logoImg.height || logoMaxHeight) * logoRatio);
-      const logoX = Math.round((canvas.width - logoWidth) / 2);
-      ctx.drawImage(logoImg, logoX, 96, logoWidth, logoHeight);
+      const logoX = Math.round(leftColumnX + ((leftColumnWidth - logoWidth) / 2));
+      const logoY = 94;
+      ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+
+      ctx.strokeStyle = "#dbe2ef";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(648, 88);
+      ctx.lineTo(648, canvas.height - 88);
+      ctx.stroke();
 
       const listingTitle = String(currentListing?.title || "").trim();
-      let titleLineCount = 0;
       if (listingTitle) {
         ctx.fillStyle = "#0f172a";
-        ctx.font = "700 44px Arial, sans-serif";
+        ctx.font = "700 46px Arial, sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        titleLineCount = drawWrappedText(ctx, listingTitle, canvas.width / 2, 266, 760, 50, 2);
+        drawWrappedText(
+          ctx,
+          listingTitle,
+          leftColumnX + (leftColumnWidth / 2),
+          248,
+          leftColumnWidth,
+          54,
+          3,
+        );
       }
 
-      const qrSize = 520;
-      const qrX = Math.round((canvas.width - qrSize) / 2);
-      const qrY = 266 + (titleLineCount * 50) + 78;
       ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
       ctx.fillStyle = "#64748b";
-      ctx.font = "600 34px Arial, sans-serif";
+      ctx.font = "600 28px Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillText("gimerr.com", canvas.width / 2, qrY + qrSize + 44);
+      ctx.fillText("gimerr.com", qrX + (qrSize / 2), qrY + qrSize + 24);
 
       return canvas.toDataURL("image/png");
     }
