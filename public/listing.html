@@ -15,12 +15,26 @@
   <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2685595309963345"
      crossorigin="anonymous"></script>
+  <meta name="description" content="Discover listings from the gaming community on Gimerr." />
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Gimerr" />
+  <meta property="og:title" content="Gimerr - Listing" />
+  <meta property="og:description" content="Discover listings from the gaming community on Gimerr." />
+  <meta property="og:url" content="https://gamehub-d35.pages.dev/listing.html" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:secure_url" content="https://gamehub-d35.pages.dev/img/meta.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Gimerr" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gimerr - Listing" />
+  <meta name="twitter:description" content="Discover listings from the gaming community on Gimerr." />
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
+  <meta name="twitter:image:width" content="1200" />
+  <meta name="twitter:image:height" content="630" />
+  <link rel="canonical" href="https://gamehub-d35.pages.dev/listing.html" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Listing</title>
   <link rel="stylesheet" href="css/global.css" />
@@ -1293,6 +1307,12 @@
     function setNotFound(message) {
       titleEl.textContent = message || t("listing.not_found", "Listing not found.");
       document.title = t("listing.title_default", "Gimerr - Listing");
+      syncShareMeta({
+        title: t("listing.title_default", "Gimerr - Listing"),
+        description: t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available."),
+        url: `${window.location.origin}/listing.html`,
+        image: `${window.location.origin}/img/meta.png`,
+      });
       descriptionEl.textContent = t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available.");
       currentGalleryImages = [];
       currentListing = null;
@@ -1315,6 +1335,45 @@
         thumbGrid.style.display = "none";
       }
       markCriticalAssetsReady();
+    }
+
+    function truncateShareDescription(value, maxLength = 160) {
+      const text = String(value || "").replace(/\s+/g, " ").trim();
+      if (!text) return "";
+      if (text.length <= maxLength) return text;
+      return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+    }
+
+    function setMetaContent(selector, content) {
+      const element = document.head.querySelector(selector);
+      if (!element || !content) return;
+      element.setAttribute("content", content);
+    }
+
+    function setLinkHref(selector, href) {
+      const element = document.head.querySelector(selector);
+      if (!element || !href) return;
+      element.setAttribute("href", href);
+    }
+
+    function syncShareMeta({ title, description, url, image }) {
+      const safeTitle = title || "Gimerr - Listing";
+      const safeDescription = description || "Discover listings from the gaming community on Gimerr.";
+      const safeUrl = url || `${window.location.origin}/listing.html`;
+      const safeImage = image || `${window.location.origin}/img/meta.png`;
+
+      setMetaContent('meta[name="description"]', safeDescription);
+      setMetaContent('meta[property="og:title"]', safeTitle);
+      setMetaContent('meta[property="og:description"]', safeDescription);
+      setMetaContent('meta[property="og:url"]', safeUrl);
+      setMetaContent('meta[property="og:image"]', safeImage);
+      setMetaContent('meta[property="og:image:secure_url"]', safeImage);
+      setMetaContent('meta[property="og:image:alt"]', safeTitle);
+      setMetaContent('meta[name="twitter:title"]', safeTitle);
+      setMetaContent('meta[name="twitter:description"]', safeDescription);
+      setMetaContent('meta[name="twitter:image"]', safeImage);
+      setMetaContent('meta[name="twitter:image:alt"]', safeTitle);
+      setLinkHref('link[rel="canonical"]', safeUrl);
     }
 
     function isMissingListingError(error) {
@@ -1393,6 +1452,12 @@
       const discordUsername = String(listing.user_discord_username || "").trim();
 
       document.title = `${listing.title} | Gimerr`;
+      syncShareMeta({
+        title: `${listing.title} | Gimerr`,
+        description: truncateShareDescription(listing.description || t("listing.no_description", "No description provided.")),
+        url: shareUrl,
+        image: listing.images?.[0] || `${window.location.origin}/img/meta.png`,
+      });
       titleEl.textContent = listing.title;
       descriptionEl.textContent = listing.description || t("listing.no_description", "No description provided.");
 
