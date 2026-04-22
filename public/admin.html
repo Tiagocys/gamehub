@@ -209,6 +209,7 @@ body {
         </div>
 
         <button id="server-submit-btn" type="submit">Salvar servidor</button>
+        <button id="delete-server-btn" class="secondary" type="button" style="display:none;color:var(--danger);border-color:rgba(226,82,109,0.35);">Excluir servidor</button>
         <div class="error" id="form-error"></div>
         <div class="success" id="form-success"></div>
       </form>
@@ -318,6 +319,7 @@ body {
     const sessionStatus = document.getElementById("session-status");
     const serverForm = document.getElementById("server-form");
     const serverSubmitBtn = document.getElementById("server-submit-btn");
+    const deleteServerBtn = document.getElementById("delete-server-btn");
     const formError = document.getElementById("form-error");
     const formSuccess = document.getElementById("form-success");
     const serverNameInput = document.getElementById("server-name");
@@ -785,6 +787,7 @@ body {
 
     function enterEditMode(req) {
       editingServer = null;
+      if (deleteServerBtn) deleteServerBtn.style.display = "none";
       if (editServerBanner) editServerBanner.style.display = "none";
       editingRequest = req || null;
       formError.textContent = "";
@@ -848,6 +851,7 @@ body {
         }
         setLogoPreview("");
         if (editServerBanner) editServerBanner.style.display = "none";
+        if (deleteServerBtn) deleteServerBtn.style.display = "none";
         return;
       }
       if (serverNameInput) serverNameInput.value = server.name || "";
@@ -867,6 +871,9 @@ body {
         editServerBanner.style.display = "flex";
         editServerBanner.style.flexWrap = "wrap";
       }
+      if (deleteServerBtn) {
+        deleteServerBtn.style.display = "block";
+      }
       if (editServerTitle) {
         editServerTitle.textContent = `${server.name || "Servidor"} (${server.official_site || "-"})`;
       }
@@ -877,6 +884,33 @@ body {
       if (!serverSubmitBtn) return;
       serverSubmitBtn.disabled = !!processing;
       serverSubmitBtn.textContent = processing ? "Enviando..." : SERVER_SUBMIT_DEFAULT_TEXT;
+      if (deleteServerBtn) {
+        deleteServerBtn.disabled = !!processing;
+      }
+    }
+
+    async function deleteServer(server) {
+      ensureClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || "";
+      if (!accessToken) {
+        throw new Error("Sessão expirada. Faça login novamente.");
+      }
+      const { data, error } = await supabase.functions.invoke("server_delete", {
+        body: {
+          serverId: server.id,
+          userToken: accessToken,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !data?.ok) {
+        const message = await resolveInvokeErrorMessage(error, data, "Erro ao excluir servidor.");
+        throw new Error(message);
+      }
+      return data.deletedServer || null;
     }
 
     function handleLogoChange() {
@@ -1074,19 +1108,68 @@ body {
       }
     }
 
-    async function uploadLogo(file, userId) {
-      const ext = file.name.split(".").pop();
-      const path = `${userId}/server-logo-${crypto.randomUUID()}.${ext}`;
-      const bucket = supabase.storage.from("server_logos");
-      const { error, data } = await bucket.upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
+    async function uploadLogo(file, accessToken) {
+      const extension = (file.name.split(".").pop() || "").toLowerCase();
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "application/octet-stream",
+          extension,
+          userToken: accessToken,
+          assetType: "server",
+        }),
       });
-      if (error) throw error;
-      const { data: publicData, error: publicErr } = bucket.getPublicUrl(path);
-      if (publicErr) throw publicErr;
-      return { path: data.path, publicUrl: publicData.publicUrl };
+      if (!response.ok) {
+        let message = "Erro ao solicitar upload da logo.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text().catch(() => "");
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      const signed = await response.json();
+      const uploadRes = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "application/octet-stream",
+        },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.text().catch(() => "");
+        throw new Error(body || "Erro ao enviar logo para o storage.");
+      }
+      return { path: signed.key, publicUrl: signed.publicUrl };
+    }
+
+    async function deleteServerLogo(logoRef, accessToken) {
+      const raw = String(logoRef || "").trim();
+      if (!raw) return { ok: true };
+      const { data, error } = await supabase.functions.invoke("server_logo_delete", {
+        body: {
+          logoUrl: raw,
+          userToken: accessToken,
+        },
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: SUPABASE_ANON_KEY,
+            }
+          : {},
+      });
+      if (error || !data?.ok) {
+        const message = await resolveInvokeErrorMessage(error, data, "Erro ao excluir logo antiga.");
+        throw new Error(message);
+      }
+      return data;
     }
 
     function getFilteredServers() {
@@ -1177,12 +1260,14 @@ body {
       formSuccess.textContent = "";
       requestsStatus.textContent = "";
       setServerSubmitState(true);
+      let accessToken = "";
+      let uploadedLogo = null;
 
       try {
         ensureClient();
         const { data: sessionData } = await supabase.auth.getSession();
         const user = sessionData.session?.user;
-        const accessToken = sessionData.session?.access_token || "";
+        accessToken = sessionData.session?.access_token || "";
         if (!user) {
           formError.textContent = "Faça login com Google.";
           return;
@@ -1229,8 +1314,8 @@ body {
 
           let bannerUrl = editingServer.banner_url || null;
           if (file) {
-            const { publicUrl } = await uploadLogo(file, user.id);
-            bannerUrl = publicUrl;
+            uploadedLogo = await uploadLogo(file, accessToken);
+            bannerUrl = uploadedLogo.publicUrl;
           }
 
           const { data: updateData, error: updateErr } = await supabase.functions.invoke("server_update_settings", {
@@ -1315,8 +1400,8 @@ body {
         requestsStatus.textContent = "Salvando servidor...";
         let bannerUrl = editingRequest?.cover_url || editingRequest?.displayCoverUrl || null;
         if (file) {
-          const { publicUrl } = await uploadLogo(file, user.id);
-          bannerUrl = publicUrl;
+          uploadedLogo = await uploadLogo(file, accessToken);
+          bannerUrl = uploadedLogo.publicUrl;
         }
         if (!bannerUrl) {
           formError.textContent = "Adicione ou mantenha uma logo para continuar.";
@@ -1425,11 +1510,51 @@ body {
         requestsStatus.textContent ||= "Servidor salvo.";
       } catch (err) {
         console.error(err);
+        if (uploadedLogo?.path) {
+          try {
+            await deleteServerLogo(uploadedLogo.path, accessToken);
+          } catch (cleanupErr) {
+            console.warn("Could not delete unused uploaded server logo.", cleanupErr);
+          }
+        }
         formError.textContent = getFriendlyAdminErrorMessage(err?.message, "Erro ao criar servidor.");
         if (!formError.textContent && typeof err === "object") {
           formError.textContent = JSON.stringify(err);
         }
         requestsStatus.textContent = "Erro ao salvar servidor.";
+      } finally {
+        setServerSubmitState(false);
+      }
+    });
+
+    deleteServerBtn?.addEventListener("click", async () => {
+      if (!editingServer?.id) return;
+      formError.textContent = "";
+      formSuccess.textContent = "";
+      requestsStatus.textContent = "";
+      const deletingServerId = String(editingServer.id || "");
+      const deletingServerName = editingServer.name || "Servidor";
+      const confirmDelete = window.confirm(
+        `Excluir o servidor "${deletingServerName}"?\n\n` +
+        "Essa ação remove os anúncios vinculados e os follows desse servidor. Solicitações e eventos relacionados ficam desvinculados quando o banco permitir."
+      );
+      if (!confirmDelete) return;
+
+      setServerSubmitState(true);
+      try {
+        const deleted = await deleteServer(editingServer);
+        formSuccess.textContent = `Servidor excluído: ${deleted?.name || deletingServerName}.`;
+        requestsStatus.textContent = "Servidor excluído.";
+        serverCache = serverCache.filter((server) => String(server?.id || "") !== deletingServerId);
+        serverForm?.reset();
+        setLogoPreview("");
+        enterServerEditMode(null);
+        renderServers(getFilteredServers());
+        await fetchServers();
+      } catch (err) {
+        console.error(err);
+        formError.textContent = getFriendlyAdminErrorMessage(err?.message, "Erro ao excluir servidor.");
+        requestsStatus.textContent = "Erro ao excluir servidor.";
       } finally {
         setServerSubmitState(false);
       }

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import { getLogoR2Config } from "../_shared/r2_logo.ts";
 
 type Payload = {
   mode?: "put" | "delete";
@@ -22,6 +23,7 @@ const R2_PUBLIC_URL = Deno.env.get("R2_PUBLIC_URL");
 const R2_PROFILE_BUCKET = Deno.env.get("R2_PROFILE_BUCKET") || R2_BUCKET;
 const R2_PROFILE_PUBLIC_URL = Deno.env.get("R2_PROFILE_PUBLIC_URL") || R2_PUBLIC_URL;
 const R2_ENDPOINT = Deno.env.get("R2_ENDPOINT");
+const { bucket: R2_LOGO_BUCKET, publicUrl: R2_LOGO_PUBLIC_URL, prefix: R2_LOGO_PREFIX } = getLogoR2Config();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,6 +142,53 @@ function parseR2Key(raw: string): string | null {
   return null;
 }
 
+function parseLogoR2Key(raw: string): string | null {
+  if (!raw) return null;
+  const value = String(raw).trim();
+  if (!value) return null;
+
+  if (!value.startsWith("http://") && !value.startsWith("https://")) {
+    const normalized = decodeURIComponent(value.replace(/^\/+/, ""));
+    return normalized.startsWith(`${R2_LOGO_PREFIX}/`) ? normalized : null;
+  }
+
+  try {
+    const url = new URL(value);
+    const path = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
+    if (!path) return null;
+
+    if (R2_LOGO_PUBLIC_URL) {
+      try {
+        const publicHost = new URL(R2_LOGO_PUBLIC_URL).host;
+        if (url.host === publicHost && path.startsWith(`${R2_LOGO_PREFIX}/`)) return path;
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    if (R2_LOGO_BUCKET && path.startsWith(`${R2_LOGO_BUCKET}/${R2_LOGO_PREFIX}/`)) {
+      return path.slice(R2_LOGO_BUCKET.length + 1);
+    }
+
+    if (url.host.includes(".r2.cloudflarestorage.com") && R2_LOGO_BUCKET) {
+      const marker = `/${R2_LOGO_BUCKET}/`;
+      const idx = url.pathname.indexOf(marker);
+      if (idx >= 0) {
+        const key = decodeURIComponent(url.pathname.slice(idx + marker.length));
+        return key.startsWith(`${R2_LOGO_PREFIX}/`) ? key : null;
+      }
+    }
+
+    if (url.host.endsWith(".r2.dev") && path.startsWith(`${R2_LOGO_PREFIX}/`)) {
+      return path;
+    }
+  } catch (_err) {
+    return null;
+  }
+
+  return null;
+}
+
 async function buildDeleteUrl(key: string, bucket: string) {
   if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !bucket) {
     throw new Error("Variáveis R2 não configuradas");
@@ -191,11 +240,11 @@ async function buildDeleteUrl(key: string, bucket: string) {
   return `${endpointUrl.origin}${canonicalUri}?${canonicalQuery}&X-Amz-Signature=${signature}`;
 }
 
-async function deleteR2Object(key: string) {
-  if (!R2_BUCKET) {
-    throw new Error("R2_BUCKET não configurado para deleção");
+async function deleteR2Object(key: string, bucket: string) {
+  if (!bucket) {
+    throw new Error("Bucket R2 não configurado para deleção");
   }
-  const url = await buildDeleteUrl(key, R2_BUCKET);
+  const url = await buildDeleteUrl(key, bucket);
   const response = await fetch(url, { method: "DELETE" });
   if (!response.ok && response.status !== 404) {
     const body = await response.text().catch(() => "");
@@ -233,9 +282,28 @@ Deno.serve(async (req) => {
     const mode = payload.mode || "put";
 
     if (mode === "delete") {
-      if (!R2_BUCKET) {
-        return errorResponse("R2_BUCKET não configurado para deleção", 500);
+      const deleteAssetType = payload.assetType === "avatar"
+        ? "avatar"
+        : payload.assetType === "report"
+          ? "report"
+          : payload.assetType === "server"
+            ? "server"
+            : "listing";
+      const deleteBucket = deleteAssetType === "avatar"
+        ? R2_PROFILE_BUCKET
+        : deleteAssetType === "server"
+          ? R2_LOGO_BUCKET
+          : R2_BUCKET;
+      if (!deleteBucket) {
+        return errorResponse("Bucket R2 não configurado para deleção", 500);
       }
+      const deletePrefix = deleteAssetType === "avatar"
+        ? `avatars/${authData.user.id}/`
+        : deleteAssetType === "report"
+          ? `reports/${authData.user.id}/`
+          : deleteAssetType === "server"
+            ? `${R2_LOGO_PREFIX}/${authData.user.id}/`
+            : `listings/${authData.user.id}/`;
       const rawItems = [
         ...(Array.isArray(payload.keys) ? payload.keys : []),
         ...(payload.key ? [payload.key] : []),
@@ -243,8 +311,8 @@ Deno.serve(async (req) => {
       const keys = Array.from(
         new Set(
           rawItems
-            .map((item) => parseR2Key(String(item)))
-            .filter((key): key is string => Boolean(key && key.startsWith(`listings/${authData.user.id}/`))),
+            .map((item) => deleteAssetType === "server" ? parseLogoR2Key(String(item)) : parseR2Key(String(item)))
+            .filter((key): key is string => Boolean(key && key.startsWith(deletePrefix))),
         ),
       );
 
@@ -252,7 +320,7 @@ Deno.serve(async (req) => {
       let failedKeys = 0;
       for (const key of keys) {
         try {
-          await deleteR2Object(key);
+          await deleteR2Object(key, deleteBucket);
           deletedKeys += 1;
         } catch (err) {
           failedKeys += 1;
@@ -291,7 +359,11 @@ Deno.serve(async (req) => {
         : payload.assetType === "server"
           ? "server"
           : "listing";
-    const bucket = assetType === "avatar" ? R2_PROFILE_BUCKET : R2_BUCKET;
+    const bucket = assetType === "avatar"
+      ? R2_PROFILE_BUCKET
+      : assetType === "server"
+        ? R2_LOGO_BUCKET
+        : R2_BUCKET;
     if (!bucket) {
       return errorResponse("Bucket R2 não configurado", 500);
     }
@@ -301,7 +373,7 @@ Deno.serve(async (req) => {
       : assetType === "report"
         ? `reports/${authData.user.id}`
         : assetType === "server"
-          ? `servers/${authData.user.id}`
+          ? `${R2_LOGO_PREFIX}/${authData.user.id}`
         : `listings/${authData.user.id}`;
     const key = `${keyPrefix}/${crypto.randomUUID()}.${ext}`;
     const endpoint = R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
@@ -351,7 +423,11 @@ Deno.serve(async (req) => {
 
     const uploadUrl = `${endpointUrl.origin}${canonicalUri}?${canonicalQuery}&X-Amz-Signature=${signature}`;
     let publicBase = (
-      assetType === "avatar" ? (R2_PROFILE_PUBLIC_URL || "") : (R2_PUBLIC_URL || "")
+      assetType === "avatar"
+        ? (R2_PROFILE_PUBLIC_URL || "")
+        : assetType === "server"
+          ? (R2_LOGO_PUBLIC_URL || "")
+          : (R2_PUBLIC_URL || "")
     ).replace(/\/$/, "");
     if (publicBase.includes("r2.cloudflarestorage.com")) {
       publicBase = `https://${bucket}.${R2_ACCOUNT_ID}.r2.dev`;

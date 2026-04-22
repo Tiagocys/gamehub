@@ -468,6 +468,27 @@
       }
     }
 
+    async function deleteServerLogo(logoRef, accessToken) {
+      const raw = String(logoRef || "").trim();
+      if (!raw) return { ok: true };
+      const { data, error } = await supabase.functions.invoke("server_logo_delete", {
+        body: {
+          logoUrl: raw,
+          userToken: accessToken,
+        },
+        headers: accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`,
+              apikey: SUPABASE_ANON_KEY,
+            }
+          : {},
+      });
+      if (error || !data?.ok) {
+        throw new Error(data?.error || error?.message || "Error deleting unused server logo.");
+      }
+      return data;
+    }
+
     function goToCreateListing() {
       if (!currentUser) {
         window.location.href = "index.html";
@@ -481,6 +502,8 @@
       feedback.textContent = "";
       submitBtn.disabled = true;
       submitBtn.textContent = t("game_submit.submitting", "Sending...");
+      let accessToken = "";
+      let uploadedLogo = null;
 
       try {
         ensureClient();
@@ -495,6 +518,8 @@
           submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
           return;
         }
+        const { data: currentSession } = await supabase.auth.getSession();
+        accessToken = currentSession.session?.access_token || "";
 
         const name = document.getElementById("game-name").value.trim();
         const websiteRaw = document.getElementById("game-website").value.trim();
@@ -556,7 +581,8 @@
         let logoUrl = null;
         if (logoFile) {
           const compressed = await compressImage(logoFile, MAX_WIDTH);
-          logoUrl = await uploadLogo(compressed, currentUser.id);
+          uploadedLogo = await uploadLogo(compressed, accessToken);
+          logoUrl = uploadedLogo.publicUrl;
         }
 
         const requestPayload = {
@@ -628,24 +654,58 @@
         updateOfficialAdminNote();
       } catch (err) {
         console.error(err);
+        if (uploadedLogo?.path) {
+          try {
+            await deleteServerLogo(uploadedLogo.path, accessToken);
+          } catch (cleanupErr) {
+            console.warn("Could not delete unused uploaded server logo.", cleanupErr);
+          }
+        }
         feedback.textContent = err?.message || t("game_submit.submit_error", "Error sending request.");
         submitBtn.disabled = false;
         submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
       }
     }
 
-    async function uploadLogo(file, userId) {
-      const path = `${userId}/game-logo-${crypto.randomUUID()}.webp`;
-      const bucket = supabase.storage.from("server_logos");
-      const { error, data } = await bucket.upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type || "image/webp"
+    async function uploadLogo(file, accessToken) {
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: file.type || "image/webp",
+          extension: "webp",
+          userToken: accessToken,
+          assetType: "server",
+        }),
       });
-      if (error) throw error;
-      const { data: publicData, error: publicErr } = bucket.getPublicUrl(path);
-      if (publicErr) throw publicErr;
-      return publicData.publicUrl;
+      if (!response.ok) {
+        let message = "Error requesting logo upload.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text().catch(() => "");
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      const signed = await response.json();
+      const uploadRes = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": file.type || "image/webp",
+        },
+        body: file,
+      });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.text().catch(() => "");
+        throw new Error(body || "Error uploading logo to storage.");
+      }
+      return { path: signed.key, publicUrl: signed.publicUrl };
     }
 
     async function compressImage(file, maxWidth) {

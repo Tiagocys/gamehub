@@ -327,6 +327,16 @@ verify_jwt = false
 import_map = "./functions/server_update_settings/deno.json"
 entrypoint = "./functions/server_update_settings/index.ts"
 
+[functions.server_delete]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/server_delete/index.ts"
+
+[functions.server_logo_delete]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/server_logo_delete/index.ts"
+
 [functions.partner_payout_summary]
 enabled = true
 verify_jwt = false

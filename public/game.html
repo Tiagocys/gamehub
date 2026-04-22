@@ -822,7 +822,9 @@
         const url = new URL(urlString);
         if (R2_PUBLIC_URL) {
           const publicHost = new URL(R2_PUBLIC_URL).host;
-          if (url.hostname.endsWith(".r2.dev") && url.hostname !== publicHost) {
+          const accountId = url.hostname.split(".")[1] || "";
+          const expectedBucketHost = R2_BUCKET && accountId ? `${R2_BUCKET}.${accountId}.r2.dev` : "";
+          if (url.hostname === expectedBucketHost && url.hostname !== publicHost) {
             return `${R2_PUBLIC_URL.replace(/\/$/, "")}${url.pathname}`;
           }
         }

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import { deleteLogoFromR2, extractLogoR2Key, extractSupabaseLogoPath } from "../_shared/r2_logo.ts";
 
 type Payload = {
   serverId?: string;
@@ -130,14 +131,14 @@ Deno.serve(async (req) => {
 
     let { data: server, error: serverErr } = await supabase
       .from("servers")
-      .select("id,owner_id,admin_beneficiary_id")
+      .select("id,owner_id,admin_beneficiary_id,banner_url")
       .eq("id", serverId)
       .maybeSingle();
 
     if (isMissingAdminBeneficiaryColumnError(serverErr)) {
       const fallback = await supabase
         .from("servers")
-        .select("id,owner_id")
+        .select("id,owner_id,banner_url")
         .eq("id", serverId)
         .maybeSingle();
       server = fallback.data ? { ...fallback.data, admin_beneficiary_id: null } : null;
@@ -199,6 +200,7 @@ Deno.serve(async (req) => {
       return errorResponse("Nenhuma alteração informada.", 400);
     }
 
+    const previousBannerUrl = String(server.banner_url || "").trim() || null;
     const { data: updatedServer, error: updateErr } = await supabase
       .from("servers")
       .update(updatePayload)
@@ -207,6 +209,26 @@ Deno.serve(async (req) => {
       .single();
 
     if (updateErr) throw updateErr;
+
+    const nextBannerUrl = String(updatedServer?.banner_url || "").trim() || null;
+    if (previousBannerUrl && previousBannerUrl !== nextBannerUrl) {
+      const oldBannerR2Key = extractLogoR2Key(previousBannerUrl);
+      const oldSupabasePath = extractSupabaseLogoPath(previousBannerUrl);
+      if (oldBannerR2Key) {
+        try {
+          await deleteLogoFromR2(oldBannerR2Key);
+        } catch (removeErr) {
+          console.error("Falha ao excluir logo antiga do servidor no R2:", removeErr);
+        }
+      } else if (oldSupabasePath) {
+        const { error: removeErr } = await supabase.storage
+          .from("server_logos")
+          .remove([oldSupabasePath]);
+        if (removeErr) {
+          console.error("Falha ao excluir logo antiga do servidor no Supabase Storage:", removeErr);
+        }
+      }
+    }
 
     return jsonResponse({
       ok: true,

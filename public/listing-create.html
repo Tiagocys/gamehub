@@ -1082,19 +1082,55 @@
       });
     }
 
-    async function uploadGameLogo(file, userId) {
+    async function uploadGameLogo(file) {
       const compressed = await compressLogo(file, MAX_LOGO_WIDTH);
-      const path = `${userId}/game-logo-${crypto.randomUUID()}.webp`;
-      const bucket = supabase.storage.from("server_logos");
-      const { error } = await bucket.upload(path, compressed, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: compressed.type || "image/webp",
+      await ensureValidSession();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
+      }
+
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          contentType: compressed.type || "image/webp",
+          extension: "webp",
+          userToken: token,
+          assetType: "server",
+        }),
       });
-      if (error) throw error;
-      const { data: publicData, error: publicErr } = bucket.getPublicUrl(path);
-      if (publicErr) throw publicErr;
-      return publicData.publicUrl;
+      if (!response.ok) {
+        let message = "Error requesting logo upload.";
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text().catch(() => "");
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+
+      const signed = await response.json();
+      const uploadRes = await fetch(signed.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": compressed.type || "image/webp",
+        },
+        body: compressed,
+      });
+      if (!uploadRes.ok) {
+        const body = await uploadRes.text().catch(() => "");
+        throw new Error(body || "Error uploading logo to storage.");
+      }
+
+      return { path: signed.key, publicUrl: signed.publicUrl };
     }
 
     async function findWebsiteRecord(website, domainKey) {
@@ -1107,7 +1143,7 @@
 
       const { data: inRequests, error: reqErr } = await supabase
         .from("game_requests")
-        .select("id,status,website,website_domain,user_id")
+        .select("id,status,website,website_domain,user_id,cover_url")
         .eq("website_domain", domainKey)
         .in("status", ["pending", "under_review", "approved"])
         .limit(1);
@@ -1117,6 +1153,31 @@
         inServers: Boolean(inServers && inServers.length > 0),
         request: inRequests?.[0] || null,
       };
+    }
+
+    async function deleteServerLogo(logoRef) {
+      const raw = String(logoRef || "").trim();
+      if (!raw) return { ok: true };
+      await ensureValidSession();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
+      }
+      const { data: responseData, error } = await supabase.functions.invoke("server_logo_delete", {
+        body: {
+          logoUrl: raw,
+          userToken: token,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !responseData?.ok) {
+        throw new Error(responseData?.error || error?.message || "Error deleting old server logo.");
+      }
+      return responseData;
     }
 
     async function requestSignedUpload(file) {
@@ -1355,6 +1416,14 @@
           error = fallback.error;
         }
         if (error) throw error;
+        const oldCoverUrl = String(websiteRecord.request?.cover_url || "").trim() || null;
+        if (oldCoverUrl && payload.cover_url && oldCoverUrl !== payload.cover_url) {
+          try {
+            await deleteServerLogo(oldCoverUrl);
+          } catch (cleanupErr) {
+            console.warn("Could not delete previous game request logo.", cleanupErr);
+          }
+        }
         if (shouldNotifyAdmin) {
           await notifyAdminAboutNewGameRequest({
             gameName: payload.name,
@@ -1371,6 +1440,8 @@
       event.preventDefault();
       feedback.textContent = "";
       setSubmitLoading(true);
+      let uploadedGameLogo = null;
+      let customGameRequestSaved = false;
 
       try {
         ensureClient();
@@ -1448,11 +1519,6 @@
           const manualGameName = customGamePayload.name || gameName;
           let gameLogoUrl = customGamePayload.cover_url || null;
 
-          if (!gameLogoUrl && customGamePayload.logoFile) {
-            gameLogoUrl = await uploadGameLogo(customGamePayload.logoFile, currentUser.id);
-            customGamePayload.cover_url = gameLogoUrl;
-          }
-
           const existingServer = await findExistingServerByDomain(websiteDomain);
           if (existingServer?.id) {
             if (uploadedImageUrls.length > 0) {
@@ -1470,6 +1536,12 @@
             return;
           }
 
+          if (!gameLogoUrl && customGamePayload.logoFile) {
+            uploadedGameLogo = await uploadGameLogo(customGamePayload.logoFile);
+            gameLogoUrl = uploadedGameLogo.publicUrl;
+            customGamePayload.cover_url = gameLogoUrl;
+          }
+
           await createOrReuseGameRequest({
             name: manualGameName,
             website: normalizedWebsite,
@@ -1478,6 +1550,7 @@
             is_owner: customGamePayload.is_owner || false,
             cover_url: gameLogoUrl,
           });
+          customGameRequestSaved = true;
 
           try {
             await createListingReviewRequest({
@@ -1568,6 +1641,13 @@
         return;
       } catch (err) {
         console.error(err);
+        if (!customGameRequestSaved && uploadedGameLogo?.path) {
+          try {
+            await deleteServerLogo(uploadedGameLogo.path);
+          } catch (cleanupErr) {
+            console.warn("Could not delete unused uploaded game logo.", cleanupErr);
+          }
+        }
         feedback.textContent = err?.message || t("listing_create.publish_error", "Error publishing listing.");
       } finally {
         setSubmitLoading(false);
