@@ -11,6 +11,9 @@ type Payload = {
   gameName?: string;
   website?: string;
   requestId?: string;
+  userToken?: string;
+  requesterEmail?: string;
+  requesterName?: string;
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
@@ -162,21 +165,29 @@ Deno.serve(async (req) => {
     }
 
     const authHeader = req.headers.get("authorization") || req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) {
+    const headerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.replace("Bearer ", "").trim()
+      : "";
+    const bodyToken = String(body.userToken || "").trim();
+    const token = bodyToken || headerToken;
+    if (!token) {
       return jsonResponse({ ok: false, error: "Não autorizado" }, 401);
     }
-
-    const token = authHeader.replace("Bearer ", "").trim();
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !authData?.user) {
       return jsonResponse({ ok: false, error: "Sessão inválida" }, 401);
     }
 
-    const requesterEmail = String(authData.user.email || "").trim() || "sem-email";
+    const requesterEmail = String(
+      authData.user.email
+      || body.requesterEmail
+      || ""
+    ).trim() || "sem-email";
     const requesterName = String(
       authData.user.user_metadata?.full_name
       || authData.user.user_metadata?.name
+      || body.requesterName
       || requesterEmail.split("@")[0]
       || "Usuário"
     ).trim();

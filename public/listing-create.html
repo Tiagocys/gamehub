@@ -1269,13 +1269,16 @@
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
             apikey: SUPABASE_ANON_KEY,
           },
           body: JSON.stringify({
             gameName: params.gameName,
             website: params.website,
             requestId: params.requestId || undefined,
+            userToken: accessToken,
+            requesterEmail: currentUser?.email || undefined,
+            requesterName: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || undefined,
           }),
         });
         if (!response.ok) {
