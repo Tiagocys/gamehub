@@ -77,7 +77,7 @@ async function fetchResizedImage(imageUrl) {
       image: {
         width: 1200,
         height: 630,
-        fit: "contain",
+        fit: "pad",
         background: "#ffffff",
         format: "jpeg",
         quality: 85,
