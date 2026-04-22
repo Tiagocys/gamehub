@@ -126,13 +126,6 @@ async function fetchServerName({ supabaseUrl, supabaseAnonKey, serverId }) {
   return Array.isArray(rows) && rows[0]?.name ? String(rows[0].name) : "";
 }
 
-function resolveListingImage(listing, siteUrl) {
-  const images = Array.isArray(listing?.images) ? listing.images : [];
-  if (images.length === 0) return normalizeImageUrl(DEFAULT_META_PATH, siteUrl);
-  const first = images.find(Boolean);
-  return normalizeImageUrl(first, siteUrl) || normalizeImageUrl(DEFAULT_META_PATH, siteUrl);
-}
-
 function renderMetaPage({ title, description, imageUrl, ogUrl, appUrl, siteName = "Gimerr" }) {
   const escTitle = escapeHtml(title);
   const escDescription = escapeHtml(description);
@@ -153,12 +146,17 @@ function renderMetaPage({ title, description, imageUrl, ogUrl, appUrl, siteName 
   <meta property="og:title" content="${escTitle}" />
   <meta property="og:description" content="${escDescription}" />
   <meta property="og:image" content="${escImageUrl}" />
+  <meta property="og:image:url" content="${escImageUrl}" />
+  <meta property="og:image:secure_url" content="${escImageUrl}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="${escTitle}" />
   <meta property="og:url" content="${escOgUrl}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escTitle}" />
   <meta name="twitter:description" content="${escDescription}" />
   <meta name="twitter:image" content="${escImageUrl}" />
+  <meta name="twitter:image:src" content="${escImageUrl}" />
   <meta name="twitter:image:alt" content="${escTitle}" />
   <link rel="canonical" href="${escAppUrl}" />
 </head>
@@ -229,7 +227,7 @@ export async function onRequestGet(context) {
       listing.description || "Confira este anúncio no marketplace da comunidade Gimerr.",
       200,
     );
-    const imageUrl = resolveListingImage(listing, siteUrl);
+    const imageUrl = `${siteUrl}/og/listing-image/${encodeURIComponent(listingId)}`;
 
     const html = renderMetaPage({
       title,

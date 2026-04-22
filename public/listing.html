@@ -21,8 +21,9 @@
   <meta property="og:title" content="Gimerr - Gaming listing" />
   <meta property="og:description" content="Gaming community marketplace. Discover listings, items and offers on Gimerr." />
   <meta property="og:url" content="https://gimerr.com/listing" />
-  <meta property="og:image" content="https://gimerr.com/img/meta.png" />
-  <meta property="og:image:secure_url" content="https://gimerr.com/img/meta.png" />
+  <meta property="og:image" content="https://gimerr.com/img/meta-listing.png" />
+  <meta property="og:image:url" content="https://gimerr.com/img/meta-listing.png" />
+  <meta property="og:image:secure_url" content="https://gimerr.com/img/meta-listing.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
@@ -30,7 +31,8 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Gimerr - Gaming listing" />
   <meta name="twitter:description" content="Gaming community marketplace. Discover listings, items and offers on Gimerr." />
-  <meta name="twitter:image" content="https://gimerr.com/img/meta.png" />
+  <meta name="twitter:image" content="https://gimerr.com/img/meta-listing.png" />
+  <meta name="twitter:image:src" content="https://gimerr.com/img/meta-listing.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <meta name="twitter:image:width" content="1200" />
   <meta name="twitter:image:height" content="630" />
@@ -1377,7 +1379,7 @@
         title: t("listing.title_default", "Gimerr - Listing"),
         description: t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available."),
         url: `${window.location.origin}/listing.html`,
-        image: `${window.location.origin}/img/meta.png`,
+        image: `${window.location.origin}/img/meta-listing.png`,
       });
       descriptionEl.textContent = t("listing.deleted_or_unavailable", "This listing was deleted or is no longer available.");
       currentGalleryImages = [];
@@ -1427,7 +1429,7 @@
       const safeTitle = title || "Gimerr - Listing";
       const safeDescription = description || "Discover listings from the gaming community on Gimerr.";
       const safeUrl = url || `${window.location.origin}/listing.html`;
-      const safeImage = image || `${window.location.origin}/img/meta.png`;
+      const safeImage = image || `${window.location.origin}/img/meta-listing.png`;
 
       setMetaContent('meta[name="description"]', safeDescription);
       setMetaContent('meta[property="og:title"]', safeTitle);
