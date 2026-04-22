@@ -52,6 +52,47 @@
       text-decoration: underline;
     }
 
+    .listing-server-link {
+      width: fit-content;
+      max-width: 100%;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #f7faff);
+      box-shadow: 0 10px 24px rgba(12, 21, 51, 0.06);
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .listing-server-link:hover {
+      background: linear-gradient(180deg, #ffffff, #f2f7ff);
+    }
+
+    .listing-server-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--border);
+      display: block;
+      flex: 0 0 auto;
+      padding: 4px;
+      box-shadow: 0 8px 18px rgba(12, 21, 51, 0.08);
+    }
+
+    .listing-server-name {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     .seller-profile-avatar {
       width: 34px;
       height: 34px;
@@ -381,6 +422,10 @@
     <main class="section listing-page">
       <div class="listing-hero-card">
         <div class="listing-hero-copy">
+          <a id="listing-server-link" class="listing-server-link" href="#" style="display:none;">
+            <img id="listing-server-logo" class="listing-server-logo" src="img/logo.png" alt="" />
+            <span id="listing-server-name" class="listing-server-name"></span>
+          </a>
           <h1 id="listing-title">Loading...</h1>
           <div class="seller-meta-row">
             <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
@@ -502,6 +547,9 @@
     const shareBtn = document.getElementById("listing-share-btn");
     const descriptionEl = document.getElementById("listing-description");
     const metaEl = document.getElementById("listing-meta");
+    const listingServerLink = document.getElementById("listing-server-link");
+    const listingServerLogo = document.getElementById("listing-server-logo");
+    const listingServerName = document.getElementById("listing-server-name");
     const contactActionsRow = document.getElementById("listing-contact-actions");
     const telegramChat = document.getElementById("telegram-chat");
     const whatsappChat = document.getElementById("whatsapp-chat");
@@ -1337,6 +1385,7 @@
       recommendersTargetUserId = null;
       recommendersFetched = false;
       closeRecommendersModal();
+      if (listingServerLink) listingServerLink.style.display = "none";
       if (telegramChat) telegramChat.style.display = "none";
       if (whatsappChat) whatsappChat.style.display = "none";
       if (contactActionsRow) contactActionsRow.style.display = "none";
@@ -1470,6 +1519,20 @@
       const discordUsername = String(listing.user_discord_username || "").trim();
 
       document.title = `${listing.title} | Gimerr`;
+      if (listingServerLink && listingServerName && listingServerLogo) {
+        if (listing.server_id && listing.server_name) {
+          listingServerLink.href = `game.html?id=${encodeURIComponent(listing.server_id)}`;
+          listingServerName.textContent = listing.server_name;
+          listingServerLogo.src = listing.server_banner_url || "img/logo.png";
+          listingServerLogo.alt = formatMessage("listing.server_logo_alt", "Logo of {name}", { name: listing.server_name });
+          listingServerLogo.onerror = () => {
+            listingServerLogo.src = "img/logo.png";
+          };
+          listingServerLink.style.display = "inline-flex";
+        } else {
+          listingServerLink.style.display = "none";
+        }
+      }
       syncShareMeta({
         title: `${listing.title} | Gimerr`,
         description: truncateShareDescription(listing.description || t("listing.no_description", "No description provided.")),
@@ -1606,6 +1669,27 @@
       }
     }
 
+    async function fetchServerSummary(serverId) {
+      if (!serverId) return null;
+      try {
+        const { data, error } = await supabase
+          .from("servers")
+          .select("id,name,banner_url")
+          .eq("id", serverId)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data) return null;
+        return {
+          id: data.id,
+          name: data.name || "",
+          banner_url: data.banner_url ? await resolveImageUrl(data.banner_url) : "",
+        };
+      } catch (err) {
+        console.warn("Failed to load server summary.", err);
+        return null;
+      }
+    }
+
     async function fetchListing(listingId) {
       try {
         ensureClient();
@@ -1635,9 +1719,12 @@
         const userDiscordUsername = data?.users?.discord_username || "";
         const userProfileId = data?.users?.id || data?.user_id || null;
         const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
+        const serverSummary = await fetchServerSummary(data?.server_id);
         return {
           listing: {
             ...data,
+            server_name: serverSummary?.name || "",
+            server_banner_url: serverSummary?.banner_url || "",
             user_phone: phone,
             user_show_whatsapp: userShowWhatsapp,
             user_show_telegram: userShowTelegram,
@@ -1691,9 +1778,12 @@
           userDiscordUsername = userData?.discord_username || "";
         }
         const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
+        const serverSummary = await fetchServerSummary(data?.server_id);
         return {
           listing: {
             ...data,
+            server_name: serverSummary?.name || "",
+            server_banner_url: serverSummary?.banner_url || "",
             user_phone: userPhone,
             user_show_whatsapp: userShowWhatsapp,
             user_show_telegram: userShowTelegram,
