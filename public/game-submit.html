@@ -429,6 +429,42 @@
       submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
     }
 
+    async function notifyAdminAboutNewGameRequest(params) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token;
+        if (!accessToken) {
+          throw new Error(t("game_submit.session_expired", "Session expired. Sign in again."));
+        }
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/game_request_notify_email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            gameName: params.gameName,
+            website: params.website,
+            requestId: params.requestId || undefined,
+          }),
+        });
+        if (!response.ok) {
+          let message = t("game_submit.notify_error", "Error notifying admin about the new game request.");
+          try {
+            const payload = await response.json();
+            message = payload?.error || message;
+          } catch (_err) {
+            const text = await response.text();
+            if (text) message = text;
+          }
+          throw new Error(message);
+        }
+      } catch (err) {
+        console.warn("Failed to notify admin about the new game request.", err);
+      }
+    }
+
     function goToCreateListing() {
       if (!currentUser) {
         window.location.href = "index.html";
@@ -533,23 +569,52 @@
         if (websiteRecord.request?.id && websiteRecord.request.website === website) {
           requestPayload.id = websiteRecord.request.id;
         }
-        let { error } = await supabase.from("game_requests").upsert(requestPayload, { onConflict: "website" });
+        const shouldNotifyAdmin = !websiteRecord.request?.id;
+        let requestData = null;
+        let { data: upsertData, error } = await supabase
+          .from("game_requests")
+          .upsert(requestPayload, { onConflict: "website" })
+          .select("id")
+          .single();
+        requestData = upsertData;
         if (isMissingDiscordInviteColumnError(error)) {
           const { discord_invite: _discordInvite, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (isMissingOwnerColumnError(error)) {
           const { is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
           const { discord_invite: _discordInvite, is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (error) throw error;
+        if (shouldNotifyAdmin) {
+          await notifyAdminAboutNewGameRequest({
+            gameName: name,
+            website,
+            requestId: requestData?.id || null,
+          });
+        }
 
         feedback.textContent = t("game_submit.success", "Your request will be reviewed. Thanks for helping the Gimerr community.");
         hasPending = { name, website, status: "pending" };

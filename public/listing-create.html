@@ -1257,12 +1257,50 @@
       if (error) throw error;
     }
 
+    async function notifyAdminAboutNewGameRequest(params) {
+      try {
+        await ensureValidSession();
+        const { data } = await supabase.auth.getSession();
+        const accessToken = data.session?.access_token;
+        if (!accessToken) {
+          throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
+        }
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/game_request_notify_email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({
+            gameName: params.gameName,
+            website: params.website,
+            requestId: params.requestId || undefined,
+          }),
+        });
+        if (!response.ok) {
+          let message = "Error notifying admin about the new game request.";
+          try {
+            const payload = await response.json();
+            message = payload?.error || message;
+          } catch (_err) {
+            const text = await response.text();
+            if (text) message = text;
+          }
+          throw new Error(message);
+        }
+      } catch (err) {
+        console.warn("Failed to notify admin about the new game request.", err);
+      }
+    }
+
     async function createOrReuseGameRequest(payload) {
       const websiteRecord = await findWebsiteRecord(payload.website, payload.websiteDomain);
       if (websiteRecord.inServers) {
         return { status: "server_exists", request: websiteRecord.request || null };
       }
       if (!websiteRecord.request || websiteRecord.request.user_id === currentUser.id) {
+        const shouldNotifyAdmin = !websiteRecord.request?.id;
         const requestPayload = {
           name: payload.name,
           website: payload.website,
@@ -1276,23 +1314,51 @@
         if (websiteRecord.request?.id && websiteRecord.request.website === payload.website) {
           requestPayload.id = websiteRecord.request.id;
         }
-        let { error } = await supabase.from("game_requests").upsert(requestPayload, { onConflict: "website" });
+        let requestData = null;
+        let { data: upsertData, error } = await supabase
+          .from("game_requests")
+          .upsert(requestPayload, { onConflict: "website" })
+          .select("id")
+          .single();
+        requestData = upsertData;
         if (isMissingDiscordInviteColumnError(error)) {
           const { discord_invite: _discordInvite, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (isMissingOwnerColumnError(error)) {
           const { is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
           const { discord_invite: _discordInvite, is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase.from("game_requests").upsert(fallbackPayload, { onConflict: "website" });
+          const fallback = await supabase
+            .from("game_requests")
+            .upsert(fallbackPayload, { onConflict: "website" })
+            .select("id")
+            .single();
+          requestData = fallback.data;
           error = fallback.error;
         }
         if (error) throw error;
+        if (shouldNotifyAdmin) {
+          await notifyAdminAboutNewGameRequest({
+            gameName: payload.name,
+            website: payload.website,
+            requestId: requestData?.id || null,
+          });
+        }
         return { status: "created_or_updated", request: websiteRecord.request || null };
       }
       return { status: "reused_other_request", request: websiteRecord.request };
