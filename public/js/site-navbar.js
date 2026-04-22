@@ -608,6 +608,9 @@
       searchInput.addEventListener("input", (event) => {
         renderSuggestions(event.target.value.trim());
       });
+      searchInput.addEventListener("focus", () => {
+        renderSuggestions(searchInput.value.trim());
+      });
       searchSuggestions.addEventListener("click", handleSuggestionClick);
       document.addEventListener("click", (event) => {
         if (!this.contains(event.target)) {
