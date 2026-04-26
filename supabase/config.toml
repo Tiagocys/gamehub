@@ -332,6 +332,11 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/server_delete/index.ts"
 
+[functions.server_feed_highlight]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/server_feed_highlight/index.ts"
+
 [functions.server_logo_delete]
 enabled = true
 verify_jwt = false
@@ -342,6 +347,16 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/partner_payout_summary/deno.json"
 entrypoint = "./functions/partner_payout_summary/index.ts"
+
+[functions.partner_wallet_checkout]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/partner_wallet_checkout/index.ts"
+
+[functions.server_feed_impression]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/server_feed_impression/index.ts"
 
 [functions.wise_recipient_requirements]
 enabled = true
@@ -363,6 +378,16 @@ enabled = true
 verify_jwt = true
 entrypoint = "./functions/partner_withdraw_email/index.ts"
 
+[functions.game_request_notify_email]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/game_request_notify_email/index.ts"
+
+[functions.game_request_upsert]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/game_request_upsert/index.ts"
+
 [functions.wise_webhook]
 enabled = true
 verify_jwt = false
@@ -372,3 +397,23 @@ entrypoint = "./functions/wise_webhook/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/partner_withdraw_review/index.ts"
+
+[functions.support_contact_email]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/support_contact_email/index.ts"
+
+[functions.support_request_reply]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/support_request_reply/index.ts"
+
+[functions.admin_user_report]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/admin_user_report/index.ts"
+
+[functions.admin_listing_moderate]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/admin_listing_moderate/index.ts"

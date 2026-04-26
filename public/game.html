@@ -25,11 +25,24 @@
   <title>Gimerr - Game</title>
   <link rel="stylesheet" href="css/global.css" />
   <style>
+    .game-top-block {
+      width: min(900px, calc(100% - 64px));
+      margin: 0 auto;
+      display: grid;
+    }
+
+    .game-top-block .section {
+      max-width: none;
+      margin: 0;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
     .game-hero-card {
       padding: 16px 18px;
       gap: 14px;
       grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
+      align-items: start;
       min-height: 126px;
     }
 
@@ -45,7 +58,7 @@
 
     .game-hero-head {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 10px 14px;
     }
@@ -130,7 +143,7 @@
     }
 
     .section-header > div {
-      width: min(820px, 100%);
+      width: 100%;
       margin-inline: auto;
     }
 
@@ -138,6 +151,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      width: 100%;
       border: 1px solid rgba(14, 165, 233, 0.35);
       border-radius: 14px;
       background: linear-gradient(180deg, #ffffff, #f8fbff);
@@ -295,21 +309,6 @@
       box-sizing: border-box;
     }
 
-    .feed-highlight-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      z-index: 2;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: linear-gradient(120deg, #0ea5e9, #1d4ed8);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.01em;
-      box-shadow: 0 8px 18px rgba(13, 79, 180, 0.3);
-    }
-
     .feed-media img {
       width: 100%;
       height: 100%;
@@ -319,10 +318,16 @@
     }
 
     .feed-media.feed-media-image {
+      background-image: var(--feed-image);
       background-repeat: no-repeat;
       background-position: center;
       background-size: contain;
       background-color: #fff;
+    }
+
+    .feed-media.feed-media-image img:not(.feed-media-fallback-logo) {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .feed-media img.feed-media-fallback-logo {
@@ -358,6 +363,10 @@
     }
 
     @media (max-width: 860px) {
+      .game-top-block {
+        width: calc(100% - 36px);
+      }
+
       .game-hero-card {
         grid-template-columns: 1fr;
         min-height: 0;
@@ -365,6 +374,15 @@
 
       .game-hero-head {
         align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .game-actions {
+        width: 100%;
+      }
+
+      .game-actions .btn {
+        width: 100%;
       }
 
       .game-logo-frame {
@@ -381,7 +399,7 @@
       }
 
       .listing-feed {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
       }
 
       .feed-media img:not(.feed-media-fallback-logo) {
@@ -399,9 +417,16 @@
         background-size: contain;
         background-color: #fff;
       }
+    }
 
-      .feed-media.feed-media-image img:not(.feed-media-fallback-logo) {
-        display: none !important;
+    @media (max-width: 400px) {
+      .game-top-block {
+        width: 100%;
+      }
+
+      .game-top-block .section {
+        padding-left: 18px;
+        padding-right: 18px;
       }
     }
   </style>
@@ -413,48 +438,50 @@
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
-    <section class="section game-hero-shell">
-      <div class="game-hero-card">
-        <div class="game-logo-frame">
-          <img id="game-logo" alt="Game logo" />
-        </div>
-        <div class="game-hero-copy">
-          <div class="game-hero-head">
-            <div class="game-title-block">
-              <h1 id="game-title">Loading...</h1>
-              <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
-            </div>
-            <div id="game-actions" class="game-actions"></div>
+    <div class="game-top-block">
+      <section class="section game-hero-shell">
+        <div class="game-hero-card">
+          <div class="game-logo-frame">
+            <img id="game-logo" alt="Game logo" />
           </div>
-          <p id="game-description" class="game-description" style="display:none;"></p>
+          <div class="game-hero-copy">
+            <div class="game-hero-head">
+              <div class="game-title-block">
+                <h1 id="game-title">Loading...</h1>
+                <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+              </div>
+              <div id="game-actions" class="game-actions"></div>
+            </div>
+            <p id="game-description" class="game-description" style="display:none;"></p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section game-toolbar-shell">
-      <div class="section-header">
-        <div>
-          <div class="feed-toolbar">
-            <div class="feed-search">
-              <span class="feed-search-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
-                  <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-                </svg>
-              </span>
-              <input
-                id="listing-search"
-                type="search"
-                placeholder="What are you looking for?"
-                autocomplete="off"
-              />
+      <section class="section game-toolbar-shell">
+        <div class="section-header">
+          <div>
+            <div class="feed-toolbar">
+              <div class="feed-search">
+                <span class="feed-search-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"></circle>
+                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+                  </svg>
+                </span>
+                <input
+                  id="listing-search"
+                  type="search"
+                  placeholder="What are you looking for in this game?"
+                  autocomplete="off"
+                />
+              </div>
+              <div id="listing-search-meta" class="feed-search-meta"></div>
+              <div id="sort-filters" class="feed-sort"></div>
             </div>
-            <div id="listing-search-meta" class="feed-search-meta"></div>
-            <div id="sort-filters" class="feed-sort"></div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
 
     <main class="game-page">
       <section class="section">
@@ -515,6 +542,14 @@
     const listingEmpty = document.getElementById("listing-empty");
     const gameFeedShell = document.getElementById("game-feed-shell");
     const feedLoadingOverlay = document.getElementById("feed-loading-overlay");
+
+    function updateListingSearchPlaceholder(gameName = "") {
+      if (!listingSearchInput) return;
+      const safeName = String(gameName || "").trim();
+      listingSearchInput.placeholder = safeName
+        ? formatMessage("game.search_placeholder_named", "What are you looking for in {game}?", { game: safeName })
+        : t("game.search_placeholder", "What are you looking for in this game?");
+    }
 
     const pageLoader = document.getElementById("page-loader");
     let initialLoaderCompleted = false;
@@ -633,6 +668,8 @@
     let feedObserver = null;
     let gameHighlightImpressionObserver = null;
     let gameHighlightImpressionFlushTimer = null;
+    const HIGHLIGHT_IMPRESSION_WINDOW_MS = 120 * 1000;
+    const HIGHLIGHT_IMPRESSION_STORAGE_PREFIX = "gimerr-highlight-impression:";
     const trackedGameHighlightImpressions = new Map();
     const pendingGameHighlightImpressionIds = new Set();
     let isRenderingBatch = false;
@@ -641,7 +678,7 @@
     document.title = t("game.title_default", "Gimerr - Game");
     if (logoEl) logoEl.alt = t("game.logo_alt", "Game logo");
     if (titleEl) titleEl.textContent = t("game.loading", "Loading...");
-    if (listingSearchInput) listingSearchInput.placeholder = t("game.search_placeholder", "What are you looking for?");
+    updateListingSearchPlaceholder();
     if (feedSentinel) feedSentinel.textContent = t("game.scroll_more", "Scroll to load more");
     if (listingEmpty) listingEmpty.textContent = t("game.empty", "No listings for this game yet.");
     const loadingOverlayImage = feedLoadingOverlay?.querySelector("img");
@@ -892,8 +929,9 @@
         ensureClient();
         const { data, error } = await supabase
           .from("servers")
-          .select("id,name,official_site,banner_url,description")
+          .select("id,name,official_site,banner_url,description,status")
           .eq("id", id)
+          .eq("status", "active")
           .single();
         if (error) throw error;
         return data ? {
@@ -937,6 +975,7 @@
     function renderGame(game) {
       if (!game) {
         titleEl.textContent = t("game.not_found", "Game not found.");
+        updateListingSearchPlaceholder();
         logoEl.style.display = "none";
         if (siteLinkEl) siteLinkEl.style.display = "none";
         if (descriptionEl) descriptionEl.style.display = "none";
@@ -945,6 +984,7 @@
       }
       document.title = `${game.name} | Gimerr`;
       titleEl.textContent = game.name;
+      updateListingSearchPlaceholder(game.name);
       if (siteLinkEl) {
         if (game.website) {
           siteLinkEl.href = game.website;
@@ -1118,15 +1158,7 @@
       }
 
       normal.sort(compareListingBySort);
-
-      const merged = [];
-      const maxLen = Math.max(highlighted.length, normal.length);
-      for (let i = 0; i < maxLen; i += 1) {
-        if (highlighted[i]) merged.push(highlighted[i]);
-        if (normal[i]) merged.push(normal[i]);
-      }
-
-      return merged;
+      return [...highlighted, ...normal];
     }
 
     function renderSortFilters() {
@@ -1203,7 +1235,7 @@
       const matched = listingMatchesQuery(listing, searchQuery);
       card.classList.toggle("matched", matched && String(searchQuery || "").trim().length > 0);
       const highlightBadge = isHighlightActive(listing)
-        ? `<span class="feed-highlight-badge">${escapeHtml(t("game.highlight_badge", "Featured"))}</span>`
+        ? `<span class="home-feed-card-badge">${escapeHtml(t("game.highlight_badge", "Featured"))}</span>`
         : "";
       const cardImageUrl = listing.cardImage ? encodeURI(listing.cardImage).replace(/'/g, "%27") : "";
       const media = listing.cardImage
@@ -1237,6 +1269,23 @@
       }, 800);
     }
 
+    function getLastGameHighlightImpressionAt(listingId) {
+      try {
+        return Number(localStorage.getItem(`${HIGHLIGHT_IMPRESSION_STORAGE_PREFIX}${listingId}`) || 0);
+      } catch (_err) {
+        return Number(trackedGameHighlightImpressions.get(listingId) || 0);
+      }
+    }
+
+    function setLastGameHighlightImpressionAt(listingId, timestamp) {
+      trackedGameHighlightImpressions.set(listingId, timestamp);
+      try {
+        localStorage.setItem(`${HIGHLIGHT_IMPRESSION_STORAGE_PREFIX}${listingId}`, String(timestamp));
+      } catch (_err) {
+        // ignore
+      }
+    }
+
     function observeGameHighlightImpressions() {
       if (gameHighlightImpressionObserver) {
         gameHighlightImpressionObserver.disconnect();
@@ -1251,9 +1300,9 @@
           const listingId = entry.target?.dataset?.listingId;
           if (!listingId) return;
           const now = Date.now();
-          const lastTrackedAt = Number(trackedGameHighlightImpressions.get(listingId) || 0);
-          if (now - lastTrackedAt < 30000) return;
-          trackedGameHighlightImpressions.set(listingId, now);
+          const lastTrackedAt = getLastGameHighlightImpressionAt(listingId);
+          if (now - lastTrackedAt < HIGHLIGHT_IMPRESSION_WINDOW_MS) return;
+          setLastGameHighlightImpressionAt(listingId, now);
           queueGameHighlightImpression(listingId);
         });
       }, {

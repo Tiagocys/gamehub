@@ -22,6 +22,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Sign in</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="signin-guard-style">html{visibility:hidden;}</style>
   <style>
     .sign-in-shell {
       min-height: 100vh;
@@ -126,6 +127,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
   <div class="sign-in-shell">
     <main class="sign-in-main">
       <section class="sign-in-card">
@@ -169,11 +173,23 @@
     const buttonEl = document.getElementById("sign-in-google-btn");
     const buttonLabelEl = document.getElementById("sign-in-google-label");
     const feedbackEl = document.getElementById("sign-in-feedback");
+    const pageLoader = document.getElementById("page-loader");
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("signin-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
 
     if (titleEl) titleEl.textContent = t("signin.title", "Sign in to Gimerr");
     if (taglineEl) taglineEl.textContent = t("common.brand_tagline", "Community marketplace powered by gamers.");
     if (actionTitleEl) actionTitleEl.textContent = t("signin.action_title", "Continue with Google");
     if (buttonLabelEl) buttonLabelEl.textContent = t("nav.login_google", "Sign in with Google");
+    revealPage();
 
     function getClient() {
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {

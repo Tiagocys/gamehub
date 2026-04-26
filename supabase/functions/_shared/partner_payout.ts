@@ -1,3 +1,5 @@
+import { getPartnerWalletSummary, isMissingPartnerWalletTablesError } from "./partner_wallet.ts";
+
 function safeInt(value: unknown, fallback = 0) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -19,11 +21,33 @@ export function isMissingWalletTablesError(err: { code?: string; message?: strin
 }
 
 export async function getPartnerPayoutSummary(supabase: any, userId: string) {
-  let serverRows: Array<{ id: string; owner_id: string | null }> = [];
+  let walletAvailableAmount = 0;
+  let walletAvailableCents = 0;
+  try {
+    const partnerWallet = await getPartnerWalletSummary(supabase, userId);
+    walletAvailableAmount = Number(partnerWallet.availableAmountBRL || 0);
+    walletAvailableCents = safeInt(partnerWallet.availableCents, 0);
+  } catch (walletErr) {
+    const typedWalletErr = walletErr as { code?: string; message?: string } | null | undefined;
+    if (!isMissingPartnerWalletTablesError(typedWalletErr)) {
+      throw walletErr;
+    }
+  }
+
+  let serverRows: Array<{ id: string; owner_id: string | null; admin_beneficiary_id?: string | null }> = [];
   let { data: servers, error: serverErr } = await supabase
     .from("servers")
-    .select("id,owner_id")
-    .eq("owner_id", userId);
+    .select("id,owner_id,admin_beneficiary_id")
+    .or(`owner_id.eq.${userId},admin_beneficiary_id.eq.${userId}`);
+
+  if (serverErr && String(serverErr.message || "").includes("admin_beneficiary_id")) {
+    const fallback = await supabase
+      .from("servers")
+      .select("id,owner_id")
+      .eq("owner_id", userId);
+    servers = fallback.data;
+    serverErr = fallback.error;
+  }
 
   if (serverErr) throw serverErr;
   serverRows = Array.isArray(servers) ? servers : [];
@@ -31,8 +55,9 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
   if (serverRows.length === 0) {
     return {
       unsupported: false,
-      totalExpected: 0,
-      availableAmount: 0,
+      totalExpected: Number(walletAvailableAmount.toFixed(2)),
+      availableAmount: Number(walletAvailableAmount.toFixed(2)),
+      boostAvailableAmount: Number(walletAvailableAmount.toFixed(2)),
       pendingAmount: 0,
       count: 0,
       method: "wallet-consume-by-listing-v3",
@@ -72,7 +97,7 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
 
   (Array.isArray(payoutRows) ? payoutRows : []).forEach((row: any) => {
     const payoutRole = String(row?.payout_role || "").toLowerCase();
-    if (payoutRole && payoutRole !== "owner") return;
+    if (payoutRole && payoutRole !== "owner" && payoutRole !== "admin") return;
     const expectedNetCents = Math.max(0, Math.round(Number(row?.expected_net_amount || 0) * 100));
     const refundedNetCents = Math.max(0, Math.round(Number(row?.refunded_net_amount || 0) * 100));
     const outstandingCents = Math.max(0, expectedNetCents - refundedNetCents);
@@ -84,10 +109,13 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
   });
 
   if (listingIds.length === 0) {
+    const availableCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents - pendingCentsFromEvents);
+    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents);
     return {
       unsupported: false,
-      totalExpected: Number((totalExpectedCentsFromEvents / 100).toFixed(2)),
-      availableAmount: 0,
+      totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
+      availableAmount: Number((availableCents / 100).toFixed(2)),
+      boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
       pendingAmount: Number((pendingCentsFromEvents / 100).toFixed(2)),
       count: 0,
       method: "wallet-consume-by-listing-v3",
@@ -101,13 +129,16 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     .in("listing_id", listingIds)
     .order("stat_date", { ascending: false });
   if (isMissingWalletTablesError(metricsErr)) {
+    const availableCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents - pendingCentsFromEvents);
+    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents);
     return {
-      unsupported: true,
-      totalExpected: 0,
-      availableAmount: 0,
+      unsupported: false,
+      totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
+      availableAmount: Number((availableCents / 100).toFixed(2)),
+      boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
       pendingAmount: 0,
       count: 0,
-      method: "wallet-consume-by-listing-v3",
+      method: "partner-payout-events-fallback-v1",
       withdrawRequest: null,
     };
   }
@@ -128,7 +159,11 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     const server = serverById.get(listing.server_id);
     if (!server) return;
 
-    const shareRatio = server.owner_id === userId ? 0.5 : 0;
+    const shareRatio = server.owner_id === userId
+      ? 0.5
+      : String(server.admin_beneficiary_id || "") === userId
+        ? 0.25
+        : 0;
     if (shareRatio <= 0) return;
 
     const consumedCents = safeInt(row?.charged_cents, 0);
@@ -171,14 +206,15 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     }
   });
 
-  const availableCents = Math.max(0, grossAvailableCents - lockedCents - paidCents);
-  const totalExpectedCents = Math.max(totalExpectedCentsFromEvents, grossAvailableCents);
+  const availableCents = Math.max(0, grossAvailableCents + walletAvailableCents - lockedCents - paidCents);
+  const totalExpectedCents = Math.max(totalExpectedCentsFromEvents, grossAvailableCents) + walletAvailableCents;
   const pendingAmountCents = Math.max(pendingCentsFromEvents, lockedCents);
 
   return {
     unsupported: false,
     totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
     availableAmount: Number((availableCents / 100).toFixed(2)),
+    boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
     pendingAmount: Number((pendingAmountCents / 100).toFixed(2)),
     count: pendingListingCount,
     method: "wallet-consume-by-listing-v3",

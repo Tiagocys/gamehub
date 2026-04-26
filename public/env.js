@@ -6,5 +6,5 @@ window.__ENV = {
   R2_BUCKET: "img-anuncios",
   R2_PUBLIC_URL: "https://pub-7131ea9efda440d0b8efc47462c776c6.r2.dev",
   USD_BRL_RATE: 5.5,
-  PARTNER_WITHDRAW_MIN_BRL: 1
+  PARTNER_WITHDRAW_MIN_BRL: 50
 };

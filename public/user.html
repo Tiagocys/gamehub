@@ -78,6 +78,26 @@
       word-break: break-word;
     }
 
+    .user-public-reputation {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .reputation-score-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
     .user-public-reco {
       display: inline-flex;
       align-items: center;
@@ -296,7 +316,7 @@
     }
 
     .report-icon-btn {
-      width: 38px;
+      min-height: 38px;
       height: 38px;
       border-radius: 999px;
       border: 1px solid var(--border);
@@ -304,8 +324,18 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0;
+      gap: 8px;
+      padding: 0 12px;
       cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .report-icon-btn[disabled] {
+      opacity: 0.7;
+      cursor: default;
     }
 
     .report-icon-btn:hover {
@@ -636,12 +666,14 @@
         <div class="user-card-actions">
           <button id="share-user-btn" class="user-share-btn" type="button">Share</button>
           <button id="report-user-btn" class="report-icon-btn" type="button" style="display:none;" aria-label="Report profile">
+            <span id="report-user-btn-label">Report</span>
             <img src="img/flag.png" alt="" class="report-icon" />
           </button>
         </div>
         <div class="user-public-copy">
           <h1 id="public-name" class="user-public-name">Loading profile...</h1>
           <p id="public-username" class="user-public-username" style="display:none;"></p>
+          <div id="public-reputation" class="user-public-reputation" style="display:none;"></div>
           <p id="public-discord" class="helper discord-inline" style="display:none;"></p>
           <div class="inline-actions">
             <button id="recommend-btn" class="recommend-btn" type="button" style="display:none;">
@@ -658,6 +690,7 @@
             <div id="report-user-files-info" class="helper">No images selected.</div>
             <div class="inline-actions">
               <button id="report-user-submit" class="btn btn-primary" type="button">Submit report</button>
+              <button id="report-user-ban" class="btn btn-danger" type="button" style="display:none;">Ban account</button>
               <button id="report-user-cancel" class="btn btn-ghost" type="button">Cancel</button>
             </div>
             <div id="report-user-feedback" class="report-feedback"></div>
@@ -779,6 +812,7 @@
     const publicAvatar = document.getElementById("public-avatar");
     const publicName = document.getElementById("public-name");
     const publicUsername = document.getElementById("public-username");
+    const publicReputation = document.getElementById("public-reputation");
     const publicDiscord = document.getElementById("public-discord");
     const publicAbout = document.getElementById("public-about");
     const publicGames = document.getElementById("public-games");
@@ -793,8 +827,10 @@
     const reportUserFiles = document.getElementById("report-user-files");
     const reportUserFilesInfo = document.getElementById("report-user-files-info");
     const reportUserSubmit = document.getElementById("report-user-submit");
+    const reportUserBan = document.getElementById("report-user-ban");
     const reportUserCancel = document.getElementById("report-user-cancel");
     const reportUserFeedback = document.getElementById("report-user-feedback");
+    const reportUserBtnLabel = document.getElementById("report-user-btn-label");
     const shareUserBtn = document.getElementById("share-user-btn");
     const contactPanel = document.getElementById("contact-panel");
     const contactTelegram = document.getElementById("contact-telegram");
@@ -857,6 +893,7 @@
     let recommendersLoading = false;
     let recommendersFetched = false;
     let currentPublicProfile = null;
+    let currentPublicReputation = null;
     let shareUrl = "";
     let shareCardDataUrl = "";
     const RECOMMENDERS_PAGE_SIZE = 8;
@@ -873,8 +910,9 @@
     if (publicAvatar) publicAvatar.alt = t("user.public_avatar_alt", "User photo");
     if (shareUserBtn) shareUserBtn.textContent = t("user.share_title", "Share profile");
     if (reportUserBtn) reportUserBtn.setAttribute("aria-label", t("user.report_profile_aria", "Report profile"));
+    if (reportUserBtnLabel) reportUserBtnLabel.textContent = t("user.report_cta", "Report");
     if (publicName) publicName.textContent = t("user.loading_profile", "Loading profile...");
-    if (recommendBtn) recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${t("user.recommend_user", "Recommend user")}`;
+    if (recommendBtn) recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${t("user.recommend_user", "Recommend")}`;
     if (recommendCount) recommendCount.textContent = t("user.recommendations_zero", "0 recommendations");
     const reportUserReasonLabel = document.querySelector('label[for="report-user-reason"]');
     if (reportUserReasonLabel) reportUserReasonLabel.textContent = t("user.report_problem_label", "Describe the issue");
@@ -883,6 +921,7 @@
     if (reportUserFilesLabel) reportUserFilesLabel.textContent = t("user.report_files_label", "Attachments (optional, up to 4 images)");
     if (reportUserFilesInfo) reportUserFilesInfo.textContent = t("user.report_files_empty", "No images selected.");
     if (reportUserSubmit) reportUserSubmit.textContent = t("user.report_submit", "Submit report");
+    if (reportUserBan) reportUserBan.textContent = t("user.report_ban_submit", "Ban account");
     if (reportUserCancel) reportUserCancel.textContent = t("user.cancel", "Cancel");
     if (contactTelegram) contactTelegram.childNodes[0].textContent = t("user.contact_telegram", "Chat on Telegram");
     if (contactWhatsapp) contactWhatsapp.childNodes[0].textContent = t("user.contact_whatsapp", "Chat on WhatsApp");
@@ -1048,6 +1087,31 @@
         if (typeof onProgress === "function") onProgress(index + 1, files.length);
       }
       return uploaded.filter(Boolean);
+    }
+
+    async function submitAdminUserReport({ targetUserId: targetId, reason, evidenceImages, action }) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token || "";
+      if (!token) throw new Error(t("user.session_expired", "Session expired. Please sign in again."));
+
+      const { data: responseData, error } = await supabase.functions.invoke("admin_user_report", {
+        body: {
+          targetUserId: targetId,
+          reason,
+          evidenceImages,
+          action,
+          userToken: token,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !responseData?.ok) {
+        throw new Error(responseData?.error || error?.message || t("user.report_send_error", "Error sending report."));
+      }
+      return responseData.report;
     }
 
     async function setAvatarImage(target, src) {
@@ -1220,11 +1284,85 @@
       if (!currentUser?.id) return null;
       const { data, error } = await supabase
         .from("users")
-        .select("id,phone_verified")
+        .select("id,phone_verified,is_admin")
         .eq("id", currentUser.id)
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data || null;
+    }
+
+    async function fetchReputationStats(userIds) {
+      const ids = Array.from(new Set(
+        (Array.isArray(userIds) ? userIds : [])
+          .map((value) => String(value || "").trim())
+          .filter(Boolean),
+      ));
+      if (ids.length === 0) return new Map();
+      const entries = await Promise.all(ids.map(async (userId) => {
+        try {
+          const [{ data: userRow, error: userError }, { count: recommendationsCount, error: recommendationsError }, { count: profileReportsCount, error: profileReportsError }, { data: userListings, error: listingsError }] = await Promise.all([
+            supabase
+              .from("users")
+              .select("id,phone_verified")
+              .eq("id", userId)
+              .maybeSingle(),
+            supabase
+              .from("recommendations")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", userId),
+            supabase
+              .from("reports")
+              .select("id", { count: "exact", head: true })
+              .eq("target_type", "user")
+              .eq("reported_user_id", userId)
+              .eq("status", "handled")
+              .in("action_taken", ["confirmed_report", "user_banned", "listing_deleted"]),
+            supabase
+              .from("listings")
+              .select("id")
+              .eq("user_id", userId),
+          ]);
+          if (userError) throw userError;
+          if (recommendationsError) throw recommendationsError;
+          if (profileReportsError) throw profileReportsError;
+          if (listingsError) throw listingsError;
+
+          const listingIds = (userListings || []).map((item) => item?.id).filter(Boolean);
+          let listingReportsCount = 0;
+          if (listingIds.length > 0) {
+            const { count, error } = await supabase
+              .from("reports")
+              .select("id", { count: "exact", head: true })
+              .eq("target_type", "listing")
+              .eq("status", "handled")
+              .in("action_taken", ["confirmed_report", "listing_deleted"])
+              .in("listing_id", listingIds);
+            if (error) throw error;
+            listingReportsCount = Number(count || 0);
+          }
+
+          const recommendations = Number(recommendationsCount || 0);
+          const reports = Number(profileReportsCount || 0) + listingReportsCount;
+          const isVerified = !!userRow?.phone_verified;
+          const score = !isVerified
+            ? null
+            : recommendations + reports === 0
+              ? 0
+              : Math.round((recommendations / (recommendations + reports)) * 100) / 10;
+
+          return [userId, {
+            user_id: userId,
+            is_verified: isVerified,
+            recommendations_count: recommendations,
+            reports_count: reports,
+            reputation_score: score,
+          }];
+        } catch (err) {
+          console.warn("Failed to load public reputation stats.", err);
+          return null;
+        }
+      }));
+      return new Map(entries.filter(Boolean));
     }
 
     async function fetchUserListings() {
@@ -1558,8 +1696,19 @@
       recommendBtn.title = "";
       recommendBtn.disabled = false;
       recommendBtn.innerHTML = state.didRecommend
-        ? `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.unrecommend_user", "Remove recommendation"))}`
-        : `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.recommend_user_cta", "Recommend user"))}`;
+        ? `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.unrecommend_user", "Recommended"))}`
+        : `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.recommend_user_cta", "Recommend"))}`;
+    }
+
+    async function refreshPublicReputation() {
+      if (!targetUserId) return;
+      try {
+        const stats = await fetchReputationStats([targetUserId]);
+        currentPublicReputation = stats.get(String(targetUserId)) || null;
+      } catch (_err) {
+        currentPublicReputation = null;
+      }
+      if (currentPublicProfile) renderProfile(currentPublicProfile);
     }
 
     function renderProfile(profile) {
@@ -1581,12 +1730,61 @@
         }
       }
 
+      if (publicReputation) {
+        const score = Number(currentPublicReputation?.reputation_score);
+        if (profile?.phone_verified && Number.isFinite(score)) {
+          publicReputation.innerHTML = `
+            <span class="reputation-score-pill">${escapeHtml(formatMessage("common.rating_out_of_ten", "Rating {score}/10", { score: score.toFixed(1) }))}</span>
+          `;
+          publicReputation.style.display = "inline-flex";
+        } else {
+          publicReputation.innerHTML = "";
+          publicReputation.style.display = "none";
+        }
+      }
+
       if (reportUserBtn) {
         const ownProfile = !!currentUser && currentUser.id === targetUserId;
         const canReport = !ownProfile && profileStatus === "active";
-        reportUserBtn.style.display = canReport ? "inline-flex" : "none";
+        if (!canReport || !currentUser) {
+          reportUserBtn.style.display = "none";
+        } else {
+          const isAdminViewer = !!currentUserProfile?.is_admin;
+          const canSubmitReport = isAdminViewer || !!currentUserProfile?.phone_verified;
+          reportUserBtn.style.display = "inline-flex";
+          reportUserBtn.disabled = !canSubmitReport;
+          reportUserBtn.title = canSubmitReport ? "" : t("user.phone_required_title_report", "Only users with a verified phone number can report profiles.");
+          reportUserBtn.setAttribute("aria-label", canSubmitReport
+            ? (isAdminViewer ? t("user.punish_profile_aria", "Punish profile") : t("user.report_profile_aria", "Report profile"))
+            : t("user.phone_required_report_aria", "Verify your phone to report"));
+          if (reportUserBtnLabel) {
+            reportUserBtnLabel.textContent = canSubmitReport
+              ? (isAdminViewer ? t("user.punish_cta", "Punish") : t("user.report_cta", "Report"))
+              : t("user.phone_required_report_cta", "Verify your phone to report");
+          }
+          if (reportUserSubmit) {
+            reportUserSubmit.textContent = isAdminViewer
+              ? t("user.report_warn_submit", "Send warning")
+              : t("user.report_submit", "Submit report");
+          }
+          if (reportUserBan) {
+            reportUserBan.style.display = isAdminViewer ? "inline-flex" : "none";
+          }
+          const reportUserReasonLabel = document.querySelector('label[for="report-user-reason"]');
+          if (reportUserReasonLabel) {
+            reportUserReasonLabel.textContent = isAdminViewer
+              ? t("user.report_admin_reason_label", "Write the warning or punishment reason")
+              : t("user.report_problem_label", "Describe the issue");
+          }
+          if (reportUserReason) {
+            reportUserReason.placeholder = isAdminViewer
+              ? t("user.report_admin_reason_placeholder", "Explain the written warning or why this account is being banned.")
+              : t("user.report_problem_placeholder", "Explain why this profile should be reviewed.");
+          }
+        }
       }
       if (reportUserForm) reportUserForm.style.display = "none";
+      if (reportUserBan && !currentUserProfile?.is_admin) reportUserBan.style.display = "none";
       if (reportUserReason) reportUserReason.value = "";
       if (reportUserFeedback) reportUserFeedback.textContent = "";
       if (reportUserFiles) reportUserFiles.value = "";
@@ -1778,6 +1976,7 @@
           if (error) throw error;
         }
         await refreshRecommendationUI();
+        await refreshPublicReputation();
         if (recommendersFetched) {
           await loadMoreRecommenders({ reset: true });
         }
@@ -1834,6 +2033,12 @@
         ]);
         currentUserProfile = viewerProfile;
         currentPublicProfile = profile;
+        try {
+          const stats = await fetchReputationStats([profile?.id || targetUserId]);
+          currentPublicReputation = stats.get(String(profile?.id || targetUserId)) || null;
+        } catch (_err) {
+          currentPublicReputation = null;
+        }
 
         renderProfile(profile);
         setupContactPanel(profile);
@@ -1847,6 +2052,7 @@
           if (recommendBtn) recommendBtn.style.display = "none";
           if (reportUserBtn) reportUserBtn.style.display = "none";
           if (contactPanel) contactPanel.style.display = "none";
+          if (publicReputation) publicReputation.style.display = "none";
           if (recommendCount) recommendCount.textContent = t("user.recommendations_zero", "0 recommendations");
           renderGames([]);
           renderListings([]);
@@ -1891,6 +2097,10 @@
       if (!targetUserId) return;
       if (currentUser.id === targetUserId) return;
       if (String(currentPublicProfile?.status || "active") !== "active") return;
+      if (!currentUserProfile?.is_admin && !currentUserProfile?.phone_verified) {
+        feedback.textContent = t("user.phone_verified_required_report", "Only users with a verified phone number can submit reports.");
+        return;
+      }
       if (!reportUserForm) return;
       const showing = reportUserForm.style.display !== "none";
       reportUserForm.style.display = showing ? "none" : "grid";
@@ -1969,7 +2179,7 @@
       }
     });
     reportUserFiles?.addEventListener("change", updateReportFilesInfo);
-    reportUserSubmit?.addEventListener("click", async () => {
+    async function handleUserModeration(action = "warn") {
       try {
         if (!currentUser) {
           await redirectToGoogleLogin();
@@ -1978,7 +2188,8 @@
         if (!currentUserProfile) {
           currentUserProfile = await fetchCurrentUserProfile();
         }
-        if (!currentUserProfile?.phone_verified) {
+        const isAdminReporter = !!currentUserProfile?.is_admin;
+        if (!isAdminReporter && !currentUserProfile?.phone_verified) {
           if (reportUserFeedback) {
             reportUserFeedback.textContent = t("user.phone_verified_required_report", "Only users with a verified phone number can submit reports.");
           }
@@ -1994,8 +2205,13 @@
           if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_min_reason", "Describe the issue using at least 10 characters.");
           return;
         }
+        if (isAdminReporter && action === "ban") {
+          const confirmed = window.confirm(t("user.report_ban_confirm", "Ban this account now? Active listings will be removed."));
+          if (!confirmed) return;
+        }
         const files = getReportFiles();
-        reportUserSubmit.disabled = true;
+        if (reportUserSubmit) reportUserSubmit.disabled = true;
+        if (reportUserBan) reportUserBan.disabled = true;
         if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_sending", "Sending report...");
         let evidenceImages = [];
         if (files.length > 0) {
@@ -2006,20 +2222,35 @@
           });
         }
         if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_registering", "Registering report...");
-        const { error } = await supabase.from("reports").insert({
-          reporter_id: currentUser.id,
-          target_type: "user",
-          reported_user_id: targetUserId,
-          reason,
-          evidence_images: evidenceImages,
-        });
-        if (error) {
-          if (error.code === "23505") {
-            throw new Error(t("user.report_duplicate", "You already have a pending report for this profile."));
+        if (isAdminReporter) {
+          await submitAdminUserReport({
+            targetUserId,
+            reason,
+            evidenceImages,
+            action,
+          });
+        } else {
+          const { error } = await supabase.from("reports").insert({
+            reporter_id: currentUser.id,
+            target_type: "user",
+            reported_user_id: targetUserId,
+            reason,
+            evidence_images: evidenceImages,
+          });
+          if (error) {
+            if (error.code === "23505") {
+              throw new Error(t("user.report_duplicate", "You already have a pending report for this profile."));
+            }
+            throw error;
           }
-          throw error;
         }
-        if (reportUserFeedback) reportUserFeedback.textContent = t("user.report_sent", "Report sent for review.");
+        if (reportUserFeedback) {
+          reportUserFeedback.textContent = isAdminReporter
+            ? (action === "ban"
+              ? t("user.report_ban_sent_admin", "Account banned and user notified by e-mail.")
+              : t("user.report_sent_admin", "Report recorded and counted in the rating."))
+            : t("user.report_sent", "Report sent for review.");
+        }
         if (reportUserReason) reportUserReason.value = "";
         if (reportUserFiles) reportUserFiles.value = "";
         updateReportFilesInfo();
@@ -2033,7 +2264,14 @@
         }
       } finally {
         if (reportUserSubmit) reportUserSubmit.disabled = false;
+        if (reportUserBan) reportUserBan.disabled = false;
       }
+    }
+    reportUserSubmit?.addEventListener("click", () => {
+      handleUserModeration("warn");
+    });
+    reportUserBan?.addEventListener("click", () => {
+      handleUserModeration("ban");
     });
     recommendCount?.addEventListener("click", handleRecommendCountClick);
     recommendersWrap?.addEventListener("scroll", handleRecommendersScroll);

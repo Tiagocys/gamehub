@@ -7,10 +7,6 @@
     userId: null,
     canAccess: false,
   };
-  let adWalletAccessCache = {
-    userId: null,
-    canAccess: false,
-  };
 
   function normalizeUsername(value) {
     const clean = String(value || "")
@@ -261,8 +257,8 @@
       ensurePublicUserProfile(client, session.user).catch((err) => {
         console.error("Falha ao sincronizar perfil público:", err);
       });
+      partnerAccessCache = { userId: null, canAccess: false };
       updatePartnerLinksVisibility(document).catch(() => {});
-      updateAdWalletLinksVisibility(document).catch(() => {});
     });
 
     const { data } = await client.auth.getSession();
@@ -270,8 +266,8 @@
       ensurePublicUserProfile(client, data.session.user).catch((err) => {
         console.error("Falha ao sincronizar perfil público:", err);
       });
+      partnerAccessCache = { userId: null, canAccess: false };
       updatePartnerLinksVisibility(document).catch(() => {});
-      updateAdWalletLinksVisibility(document).catch(() => {});
     }
   }
 
@@ -361,21 +357,20 @@
       return partnerAccessCache.canAccess;
     }
 
-    const { data: profile, error: profileError } = await client
-      .from("users")
-      .select("is_admin,is_partner")
-      .eq("id", userId)
-      .maybeSingle();
-    if (!profileError && (profile?.is_admin || profile?.is_partner)) {
-      partnerAccessCache = { userId, canAccess: true };
-      return true;
-    }
-
     let serverCount = 0;
-    const serverQuery = await client
+    let serverQuery = await client
       .from("servers")
       .select("id", { count: "exact", head: true })
-      .eq("owner_id", userId);
+      .or(`owner_id.eq.${userId},admin_beneficiary_id.eq.${userId}`)
+      .neq("status", "deleted");
+
+    if (serverQuery.error && String(serverQuery.error.message || "").includes("admin_beneficiary_id")) {
+      serverQuery = await client
+        .from("servers")
+        .select("id", { count: "exact", head: true })
+        .eq("owner_id", userId)
+        .neq("status", "deleted");
+    }
 
     if (!serverQuery.error) {
       serverCount = Number(serverQuery.count || 0);
@@ -398,36 +393,6 @@
 
   window.__RESOLVE_PARTNER_AREA_ACCESS__ = resolvePartnerAreaAccess;
   window.__UPDATE_PARTNER_LINKS__ = updatePartnerLinksVisibility;
-
-  async function resolveAdWalletAccess() {
-    const client = await getAuthClient();
-    const { data } = await client.auth.getSession();
-    const user = data?.session?.user || null;
-    const userId = user?.id || null;
-    if (!userId) {
-      adWalletAccessCache = { userId: null, canAccess: false };
-      return false;
-    }
-    if (adWalletAccessCache.userId === userId) {
-      return adWalletAccessCache.canAccess;
-    }
-    const canAccess = true;
-    adWalletAccessCache = { userId, canAccess };
-    return canAccess;
-  }
-
-  async function updateAdWalletLinksVisibility(scope) {
-    const canAccess = await resolveAdWalletAccess().catch(() => false);
-    const nodes = Array.from((scope || document).querySelectorAll("[data-ad-wallet-link]"));
-    nodes.forEach((node) => {
-      node.style.display = canAccess ? "" : "none";
-    });
-    document.dispatchEvent(new CustomEvent("gimerr:ad-wallet-access", { detail: { canAccess } }));
-    return canAccess;
-  }
-
-  window.__RESOLVE_AD_WALLET_ACCESS__ = resolveAdWalletAccess;
-  window.__UPDATE_AD_WALLET_LINKS__ = updateAdWalletLinksVisibility;
 
   class SiteNavbar extends HTMLElement {
     async initializeGlobalSearch() {
@@ -666,9 +631,9 @@
               <div class="user-dropdown">
                 <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">${t("nav.create_listing", "Criar anúncio")}</button>
                 <a id="my-listings-link" class="menu-item" href="my-listings.html">${t("nav.my_listings", "Meus anúncios")}</a>
-                <a id="menu-ad-wallet-link" class="menu-item" href="ad-wallet.html" data-ad-wallet-link style="display:none;">${t("nav.ad_wallet", "Conta de anúncios")}</a>
                 <a id="profile-link" class="menu-item" href="profile.html">${t("nav.my_profile", "Meu perfil")}</a>
                 <a id="menu-partner-link" class="menu-item" href="partner.html" data-partner-link style="display:none;">${t("nav.partner_area", "Área de parceiros")}</a>
+                <a id="help-link" class="menu-item" href="help.html">${t("nav.help", "Ajuda")}</a>
                 <button id="logout-btn" class="menu-item" type="button">${t("nav.logout", "Sair")}</button>
               </div>
             </div>
@@ -690,7 +655,6 @@
         console.error("Falha ao inicializar busca global do navbar:", err);
       });
       window.__UPDATE_PARTNER_LINKS__?.(this);
-      window.__UPDATE_AD_WALLET_LINKS__?.(this);
     }
   }
 

@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 import { getLogoR2Config } from "../_shared/r2_logo.ts";
+import { enforceUserRateLimit, RateLimitError } from "../_shared/rate_limit.ts";
 
 type Payload = {
   mode?: "put" | "delete";
@@ -189,6 +190,56 @@ function parseLogoR2Key(raw: string): string | null {
   return null;
 }
 
+function getRateLimitConfig(mode: "put" | "delete", assetType: "listing" | "avatar" | "report" | "server") {
+  if (mode === "delete") {
+    return {
+      action: `r2_sign_upload_delete_${assetType}`,
+      maxCount: 60,
+      windowSeconds: 10 * 60,
+      bucketSeconds: 60,
+      message: "Muitas tentativas de limpeza de arquivos. Aguarde alguns minutos e tente novamente.",
+    };
+  }
+
+  if (assetType === "avatar") {
+    return {
+      action: "r2_sign_upload_put_avatar",
+      maxCount: 10,
+      windowSeconds: 60 * 60,
+      bucketSeconds: 60,
+      message: "Muitas trocas de avatar em pouco tempo. Aguarde alguns minutos e tente novamente.",
+    };
+  }
+
+  if (assetType === "server") {
+    return {
+      action: "r2_sign_upload_put_server",
+      maxCount: 20,
+      windowSeconds: 60 * 60,
+      bucketSeconds: 60,
+      message: "Muitos uploads de logo em pouco tempo. Aguarde alguns minutos e tente novamente.",
+    };
+  }
+
+  if (assetType === "report") {
+    return {
+      action: "r2_sign_upload_put_report",
+      maxCount: 15,
+      windowSeconds: 10 * 60,
+      bucketSeconds: 60,
+      message: "Muitos uploads de evidência em pouco tempo. Aguarde alguns minutos e tente novamente.",
+    };
+  }
+
+  return {
+    action: "r2_sign_upload_put_listing",
+    maxCount: 40,
+    windowSeconds: 10 * 60,
+    bucketSeconds: 60,
+    message: "Muitos uploads de anúncio em pouco tempo. Aguarde alguns minutos e tente novamente.",
+  };
+}
+
 async function buildDeleteUrl(key: string, bucket: string) {
   if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !bucket) {
     throw new Error("Variáveis R2 não configuradas");
@@ -280,15 +331,18 @@ Deno.serve(async (req) => {
     }
 
     const mode = payload.mode || "put";
+    const normalizedAssetType = payload.assetType === "avatar"
+      ? "avatar"
+      : payload.assetType === "report"
+        ? "report"
+        : payload.assetType === "server"
+          ? "server"
+          : "listing";
+    const rateLimit = getRateLimitConfig(mode, normalizedAssetType);
+    await enforceUserRateLimit(supabase, authData.user.id, rateLimit.action, rateLimit);
 
     if (mode === "delete") {
-      const deleteAssetType = payload.assetType === "avatar"
-        ? "avatar"
-        : payload.assetType === "report"
-          ? "report"
-          : payload.assetType === "server"
-            ? "server"
-            : "listing";
+      const deleteAssetType = normalizedAssetType;
       const deleteBucket = deleteAssetType === "avatar"
         ? R2_PROFILE_BUCKET
         : deleteAssetType === "server"
@@ -352,13 +406,7 @@ Deno.serve(async (req) => {
       return errorResponse("Extensão inválida", 400);
     }
 
-    const assetType = payload.assetType === "avatar"
-      ? "avatar"
-      : payload.assetType === "report"
-        ? "report"
-        : payload.assetType === "server"
-          ? "server"
-          : "listing";
+    const assetType = normalizedAssetType;
     const bucket = assetType === "avatar"
       ? R2_PROFILE_BUCKET
       : assetType === "server"
@@ -451,6 +499,9 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error(err);
+    if (err instanceof RateLimitError) {
+      return errorResponse(err.message, err.status);
+    }
     return errorResponse("Erro ao gerar URL de upload", 500);
   }
 });

@@ -374,6 +374,47 @@
       padding: 16px 18px 18px;
     }
 
+    .partner-topup-amount-field {
+      width: min(260px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
+    .partner-topup-amount-prefix {
+      flex: 0 0 auto;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .partner-topup-amount-input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      padding: 14px 14px 14px 0;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .partner-topup-amount-input:focus {
+      outline: none;
+    }
+
+    .partner-topup-amount-field:focus-within {
+      outline: 2px solid rgba(116, 168, 255, 0.34);
+      outline-offset: 1px;
+    }
+
     .partner-withdraw-preview-list {
       display: grid;
       gap: 10px;
@@ -470,10 +511,15 @@
                     <small id="partner-highlights-label">Active highlights</small>
                     <strong id="partner-active-highlights-count">0</strong>
                   </div>
+                  <div class="partner-status-item">
+                    <small id="partner-boosted-servers-label">Boosted servers</small>
+                    <strong id="partner-boosted-servers-count">0</strong>
+                  </div>
                 </div>
                 <div class="inline-actions">
                   <button id="partner-account-action-btn" class="btn btn-primary" type="button">Register payout account</button>
-                  <button id="partner-withdraw-btn" class="btn btn-primary" type="button" disabled>Request withdrawal</button>
+                  <button id="partner-add-balance-btn" class="btn btn-ghost" type="button">Add balance</button>
+                  <button id="partner-withdraw-btn" class="btn btn-primary" type="button" disabled hidden>Request withdrawal</button>
                 </div>
                 <p id="partner-withdraw-note" class="partner-feedback"></p>
                 <p id="connect-feedback" class="partner-feedback"></p>
@@ -639,6 +685,61 @@
       </div>
     </div>
 
+    <div id="partner-server-boost-info-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3 id="partner-server-boost-info-title">Boost server in feed</h3>
+          <button id="partner-server-boost-info-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <p id="partner-server-boost-info-helper" class="partner-wise-note">Boosted servers get priority in the discovery areas of the home page, appearing before the regular ranking.</p>
+          <img
+            id="partner-server-boost-info-image"
+            src="img/server-ads.png"
+            alt="Example of the boosted server positions on the home page"
+            loading="lazy"
+            style="width:100%;border-radius:14px;border:1px solid var(--border);background:#fff;"
+          />
+          <p id="partner-server-boost-info-note" class="partner-wise-note">The highlighted areas in the image show the first position of the sidebar suggestions and the first position of the main feed.</p>
+          <p id="partner-server-boost-cpm-note" class="partner-wise-note">Estimated CPM for this server: R$ 0,00 / 1.000 views.</p>
+          <p id="partner-server-boost-policy-note" class="partner-wise-note">
+            By continuing, you agree to the
+            <a class="link-ghost" href="partner-policy.html" target="_blank" rel="noopener">partner policies</a>.
+          </p>
+          <p id="partner-server-boost-balance-note" class="partner-feedback"></p>
+          <div class="inline-actions">
+            <button id="partner-server-boost-info-confirm" class="btn btn-primary" type="button">Activate boost</button>
+            <button id="partner-server-boost-info-cancel" class="btn btn-ghost" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="partner-topup-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3 id="partner-topup-modal-title">Add balance</h3>
+          <button id="partner-topup-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <p id="partner-topup-modal-helper" class="partner-wise-note">Deposit any amount starting from R$ 5,00. The checkout currency is defined automatically by your verified phone country.</p>
+          <div>
+            <label id="partner-topup-amount-label" for="partner-topup-amount" class="helper">Amount</label>
+            <div class="partner-topup-amount-field">
+              <span id="partner-topup-amount-prefix" class="partner-topup-amount-prefix">$</span>
+              <input id="partner-topup-amount" class="partner-topup-amount-input" type="text" inputmode="decimal" placeholder="2.00" autocomplete="off" />
+            </div>
+          </div>
+          <p id="partner-topup-policy-note" class="partner-wise-note">By continuing, you agree to the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">ads policies</a>.</p>
+          <p id="partner-topup-feedback" class="partner-feedback"></p>
+          <div class="inline-actions">
+            <button id="partner-topup-confirm" class="btn btn-primary" type="button">Add balance and pay</button>
+            <button id="partner-topup-cancel" class="btn btn-ghost" type="button">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="env.js"></script>
@@ -680,6 +781,8 @@
     const partnerServersEmpty = document.getElementById("partner-servers-empty");
     const partnerAvailableAmount = document.getElementById("partner-available-amount");
     const partnerActiveHighlightsCount = document.getElementById("partner-active-highlights-count");
+    const partnerBoostedServersCount = document.getElementById("partner-boosted-servers-count");
+    const partnerAddBalanceBtn = document.getElementById("partner-add-balance-btn");
     const partnerEditModal = document.getElementById("partner-edit-modal");
     const partnerEditForm = document.getElementById("partner-edit-form");
     const partnerEditClose = document.getElementById("partner-edit-close");
@@ -721,6 +824,21 @@
     const partnerWithdrawPreviewFee = document.getElementById("partner-withdraw-preview-fee");
     const partnerWithdrawPreviewNet = document.getElementById("partner-withdraw-preview-net");
     const partnerWithdrawModalFeedback = document.getElementById("partner-withdraw-modal-feedback");
+    const partnerServerBoostInfoModal = document.getElementById("partner-server-boost-info-modal");
+    const partnerServerBoostInfoClose = document.getElementById("partner-server-boost-info-close");
+    const partnerServerBoostInfoHelper = document.getElementById("partner-server-boost-info-helper");
+    const partnerServerBoostCpmNote = document.getElementById("partner-server-boost-cpm-note");
+    const partnerServerBoostInfoConfirm = document.getElementById("partner-server-boost-info-confirm");
+    const partnerServerBoostInfoCancel = document.getElementById("partner-server-boost-info-cancel");
+    const partnerServerBoostBalanceNote = document.getElementById("partner-server-boost-balance-note");
+    const partnerTopupModal = document.getElementById("partner-topup-modal");
+    const partnerTopupClose = document.getElementById("partner-topup-close");
+    const partnerTopupCancel = document.getElementById("partner-topup-cancel");
+    const partnerTopupAmount = document.getElementById("partner-topup-amount");
+    const partnerTopupAmountPrefix = document.getElementById("partner-topup-amount-prefix");
+    const partnerTopupPolicyNote = document.getElementById("partner-topup-policy-note");
+    const partnerTopupFeedback = document.getElementById("partner-topup-feedback");
+    const partnerTopupConfirm = document.getElementById("partner-topup-confirm");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -730,7 +848,7 @@
 
     function applyStaticTranslations() {
       document.title = t("partner_page.title_default", "Gimerr - Partner area");
-      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      document.documentElement.lang = i18n.locale === "en" ? "en" : i18n.locale === "es" ? "es" : "pt-BR";
       const setText = (id, key, fallback) => {
         const node = document.getElementById(id);
         if (node) node.textContent = t(key, fallback);
@@ -748,7 +866,9 @@
       setText("partner-account-registered-label", "partner_page.account_registered_label", "Conta cadastrada");
       setText("partner-balance-label", "partner_page.balance_label", "Saldo");
       setText("partner-highlights-label", "partner_page.highlights_label", "Destaques ativos");
+      setText("partner-boosted-servers-label", "partner_page.boosted_servers_label", "Servidores impulsionados");
       setText("partner-account-action-btn", "partner_page.register_account", "Cadastrar conta de recebimento");
+      setText("partner-add-balance-btn", "partner_page.add_balance", "Adicionar saldo");
       setText("partner-withdraw-btn", "partner_page.request_withdraw", "Solicitar saque");
       setText("partner-account-id-toggle", "partner_page.show", "Mostrar");
       setText("partner-account-section-title", "partner_page.account_section_title", "Conta de recebimento");
@@ -800,8 +920,39 @@
       setHtml("partner-withdraw-policy-note", "partner_page.withdraw_policy_html", "By confirming, you agree to the <a class=\"link-ghost\" href=\"partner-policy.html\" target=\"_blank\" rel=\"noopener\">partner policies</a>.");
       setText("partner-withdraw-confirm-btn", "partner_page.request_withdraw", "Solicitar saque");
       setText("partner-withdraw-cancel-btn", "partner_page.cancel", "Cancelar");
+      setText("partner-server-boost-info-title", "partner_page.server_boost_modal_title", "Impulsionar servidor no feed");
+      setText("partner-server-boost-info-helper", "partner_page.server_boost_modal_helper", "Os servidores impulsionados ganham prioridade nas áreas de descoberta da página inicial, aparecendo antes da ordenação normal.");
+      setText("partner-server-boost-info-note", "partner_page.server_boost_info_note", "As áreas destacadas na imagem mostram a primeira posição das sugestões do menu lateral e a primeira posição do feed principal.");
+      setText("partner-server-boost-cpm-note", "partner_page.server_boost_estimated_cpm_generic", "Estimated CPM for this server varies according to the number of new listings received in the last 7 days.");
+      setHtml("partner-server-boost-policy-note", "partner_page.server_boost_policy_html", "Ao continuar, você concorda com as <a class=\"link-ghost\" href=\"partner-policy.html\" target=\"_blank\" rel=\"noopener\">políticas de parceiros</a>.");
+      setText("partner-server-boost-info-confirm", "partner_page.activate_server_boost", "Ativar impulso");
+      setText("partner-server-boost-info-cancel", "partner_page.cancel", "Cancelar");
       setAttr("partner-edit-close", "aria-label", "common.close", "Close");
       setAttr("partner-withdraw-close", "aria-label", "common.close", "Close");
+      setAttr("partner-server-boost-info-close", "aria-label", "common.close", "Close");
+      setAttr("partner-server-boost-info-image", "alt", "partner_page.server_boost_info_alt", "Exemplo das posições dos servidores impulsionados na página inicial");
+      setText("partner-topup-modal-title", "partner_page.topup_title", "Adicionar saldo");
+      const partnerTopupMinLabel = formatCurrency(getPartnerTopupMinimumDisplayAmount(), getPartnerTopupCheckoutCurrency());
+      const partnerTopupHelperText = i18n.locale === "en"
+        ? `Deposit any amount starting from ${partnerTopupMinLabel}. The checkout currency is defined automatically by your verified phone country.`
+        : i18n.locale === "es"
+          ? `Deposita cualquier importe a partir de ${partnerTopupMinLabel}. La moneda del checkout se define automáticamente según el país de tu teléfono verificado.`
+          : `Deposite qualquer valor a partir de ${partnerTopupMinLabel}. A moeda do checkout é definida automaticamente pelo país do seu telefone verificado.`;
+      if (document.getElementById("partner-topup-modal-helper")) {
+        document.getElementById("partner-topup-modal-helper").textContent = partnerTopupHelperText;
+      }
+      setText("partner-topup-amount-label", "partner_page.topup_amount_label", "Valor");
+      if (partnerTopupAmountPrefix) partnerTopupAmountPrefix.textContent = getCurrencySymbol(getPartnerTopupCheckoutCurrency());
+      if (partnerTopupAmount) partnerTopupAmount.placeholder = String(getPartnerTopupMinimumDisplayAmount().toFixed(2));
+      if (partnerTopupPolicyNote) {
+        partnerTopupPolicyNote.innerHTML = t(
+          "my_listings.topup_policy_html",
+          'Ao continuar, você concorda com as <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">políticas de anúncios</a>.',
+        );
+      }
+      setText("partner-topup-confirm", "partner_page.topup_confirm", "Adicionar saldo e pagar");
+      setText("partner-topup-cancel", "partner_page.cancel", "Cancelar");
+      setAttr("partner-topup-close", "aria-label", "common.close", "Close");
     }
 
     function hideLoader() {
@@ -844,6 +995,21 @@
     let lastWiseRequirementsSignature = "";
     let partnerPayoutRefreshTimer = null;
     let currentPartnerWithdrawPreview = null;
+    let pendingServerBoostTargetId = "";
+    let partnerTopupCheckoutCurrency = "usd";
+    let partnerTopupRateToBRL = 1;
+    const USD_BRL_RATE = (() => {
+      const parsed = Number(env.USD_BRL_RATE || 5.5);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
+    })();
+    const HIGHLIGHT_CPM_TIERS = [
+      { minAds7d: 0, maxAds7d: 25, cpmUsd: 0.4 },
+      { minAds7d: 26, maxAds7d: 75, cpmUsd: 0.9 },
+      { minAds7d: 76, maxAds7d: 150, cpmUsd: 2.0 },
+      { minAds7d: 151, maxAds7d: 400, cpmUsd: 4.0 },
+      { minAds7d: 401, maxAds7d: 900, cpmUsd: 7.0 },
+      { minAds7d: 901, maxAds7d: null, cpmUsd: 12.0 },
+    ];
     const SESSION_STORAGE_KEY = "gimerr-auth-session";
     const LOGO_MAX_BYTES = 5 * 1024 * 1024;
     const LOGO_MAX_DIMENSION = 1400;
@@ -852,6 +1018,33 @@
       const parsed = Number(env.PARTNER_WITHDRAW_MIN_BRL || 50);
       return Number.isFinite(parsed) && parsed > 0 ? parsed : 50;
     })();
+    const PARTNER_TOPUP_MIN_USD = 2;
+    const PARTNER_TOPUP_SUPPORTED_COUNTRIES = [
+      { code: "BR", currency: "brl" },
+      { code: "US", currency: "usd" },
+      { code: "CA", currency: "cad" },
+      { code: "GB", currency: "gbp" },
+      { code: "AU", currency: "aud" },
+      { code: "NZ", currency: "nzd" },
+      { code: "MX", currency: "mxn" },
+      { code: "CH", currency: "chf" },
+      { code: "SE", currency: "sek" },
+      { code: "NO", currency: "nok" },
+      { code: "DK", currency: "dkk" },
+      { code: "PL", currency: "pln" },
+      { code: "DE", currency: "eur" },
+      { code: "FR", currency: "eur" },
+      { code: "ES", currency: "eur" },
+      { code: "IT", currency: "eur" },
+      { code: "PT", currency: "eur" },
+      { code: "NL", currency: "eur" },
+      { code: "BE", currency: "eur" },
+      { code: "IE", currency: "eur" },
+      { code: "AT", currency: "eur" },
+      { code: "FI", currency: "eur" },
+      { code: "GR", currency: "eur" },
+      { code: "OTHER", currency: "usd" },
+    ];
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function revealPage() {
@@ -935,6 +1128,71 @@
       } catch (_err) {
         return "";
       }
+    }
+
+    function normalizePhone(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function inferCountryCodeFromPhone(phone) {
+      const normalized = normalizePhone(phone);
+      const prefixes = [
+        ["55", "BR"],
+        ["41", "CH"],
+        ["52", "MX"],
+        ["44", "GB"],
+        ["61", "AU"],
+        ["64", "NZ"],
+        ["46", "SE"],
+        ["47", "NO"],
+        ["45", "DK"],
+        ["48", "PL"],
+        ["49", "DE"],
+        ["33", "FR"],
+        ["34", "ES"],
+        ["39", "IT"],
+        ["351", "PT"],
+        ["31", "NL"],
+        ["32", "BE"],
+        ["353", "IE"],
+        ["43", "AT"],
+        ["358", "FI"],
+        ["30", "GR"],
+        ["1", "US"],
+      ];
+      for (const [prefix, countryCode] of prefixes) {
+        if (normalized.startsWith(prefix)) return countryCode;
+      }
+      return "OTHER";
+    }
+
+    function getPartnerTopupCountryConfig(countryCode) {
+      const normalized = String(countryCode || "").trim().toUpperCase();
+      return PARTNER_TOPUP_SUPPORTED_COUNTRIES.find((item) => item.code === normalized) || null;
+    }
+
+    async function getCurrencyRateToBRL(currencyCode) {
+      const normalizedCurrency = String(currencyCode || "usd").trim().toLowerCase();
+      if (normalizedCurrency === "brl") return 1;
+      try {
+        const response = await fetch(`https://api.frankfurter.dev/v1/latest?base=${normalizedCurrency.toUpperCase()}&symbols=BRL`);
+        const payload = await response.json().catch(() => ({}));
+        const parsed = Number(payload?.rates?.BRL);
+        if (response.ok && Number.isFinite(parsed) && parsed > 0) {
+          return parsed;
+        }
+      } catch (_err) {
+        // ignore
+      }
+      return normalizedCurrency === "usd" ? USD_BRL_RATE : USD_BRL_RATE;
+    }
+
+    async function refreshPartnerTopupCurrencyState() {
+      const resolvedCountryCode = getPartnerTopupCountryConfig(currentProfile?.country_code)?.code
+        || getPartnerTopupCountryConfig(inferCountryCodeFromPhone(currentProfile?.phone))?.code
+        || "OTHER";
+      partnerTopupCheckoutCurrency = String(getPartnerTopupCountryConfig(resolvedCountryCode)?.currency || "usd").trim().toLowerCase();
+      partnerTopupRateToBRL = await getCurrencyRateToBRL(partnerTopupCheckoutCurrency);
     }
 
     function resolveMediaUrl(raw) {
@@ -1801,6 +2059,52 @@
       }
     }
 
+    function getCurrencySymbol(currencyCode) {
+      try {
+        const parts = new Intl.NumberFormat(i18n.locale === "en" ? "en-US" : "pt-BR", {
+          style: "currency",
+          currency: String(currencyCode || "USD").toUpperCase(),
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).formatToParts(0);
+        return parts.find((part) => part.type === "currency")?.value || String(currencyCode || "").toUpperCase();
+      } catch (_err) {
+        return String(currencyCode || "").toUpperCase();
+      }
+    }
+
+    function getPartnerTopupCheckoutCurrency() {
+      return partnerTopupCheckoutCurrency || "usd";
+    }
+
+    function getPartnerTopupRateToBRL() {
+      return partnerTopupRateToBRL > 0 ? partnerTopupRateToBRL : USD_BRL_RATE;
+    }
+
+    function getPartnerTopupMinimumBRL() {
+      return Number((PARTNER_TOPUP_MIN_USD * USD_BRL_RATE).toFixed(2));
+    }
+
+    function getPartnerTopupMinimumDisplayAmount() {
+      return Number((getPartnerTopupMinimumBRL() / getPartnerTopupRateToBRL()).toFixed(2));
+    }
+
+    function getHighlightTierForAds7d(ads7dCount) {
+      const normalizedCount = Math.max(0, Math.floor(Number(ads7dCount || 0)));
+      return HIGHLIGHT_CPM_TIERS.find((tier) => {
+        if (tier.maxAds7d == null) return normalizedCount >= tier.minAds7d;
+        return normalizedCount >= tier.minAds7d && normalizedCount <= tier.maxAds7d;
+      }) || HIGHLIGHT_CPM_TIERS[0];
+    }
+
+    function getServerBoostPricing(server) {
+      const tier = getHighlightTierForAds7d(server?.recent_listing_count_7d || 0);
+      return {
+        cpmUsd: tier.cpmUsd,
+        cpmBRL: Number((tier.cpmUsd * USD_BRL_RATE).toFixed(2)),
+      };
+    }
+
     function resetPartnerWithdrawPreview() {
       currentPartnerWithdrawPreview = null;
       if (partnerWithdrawBtn) {
@@ -1851,6 +2155,162 @@
       }
     }
 
+    function openPartnerServerBoostInfoModal(serverId) {
+      if (!partnerServerBoostInfoModal) return;
+      pendingServerBoostTargetId = String(serverId || "").trim();
+      const server = currentServers.find((item) => String(item.id) === pendingServerBoostTargetId);
+      const helperText = server
+        ? t(
+            "partner_page.server_boost_modal_helper_named",
+            "Ao ativar, {name} ganha prioridade nas áreas de descoberta da página inicial, aparecendo antes da ordenação normal.",
+          ).replace("{name}", String(server.name || ""))
+        : t(
+            "partner_page.server_boost_modal_helper",
+            "Os servidores impulsionados ganham prioridade nas áreas de descoberta da página inicial, aparecendo antes da ordenação normal.",
+          );
+      if (partnerServerBoostInfoHelper) {
+        partnerServerBoostInfoHelper.textContent = helperText;
+      }
+      updatePartnerServerBoostModalState();
+      partnerServerBoostInfoModal.classList.add("open");
+      partnerServerBoostInfoModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closePartnerServerBoostInfoModal() {
+      if (!partnerServerBoostInfoModal) return;
+      pendingServerBoostTargetId = "";
+      partnerServerBoostInfoModal.classList.remove("open");
+      partnerServerBoostInfoModal.setAttribute("aria-hidden", "true");
+    }
+
+    function updatePartnerServerBoostModalState() {
+      const server = currentServers.find((item) => String(item.id) === pendingServerBoostTargetId);
+      const availableAmount = Number(currentPartnerPayoutSummary?.availableAmount || 0);
+      const hasBalance = availableAmount > 0;
+      if (partnerServerBoostInfoConfirm) {
+        partnerServerBoostInfoConfirm.disabled = !pendingServerBoostTargetId;
+        partnerServerBoostInfoConfirm.textContent = hasBalance
+          ? t("partner_page.activate_server_boost", "Activate boost")
+          : t("partner_page.add_balance", "Add balance");
+      }
+      if (partnerServerBoostBalanceNote) {
+        partnerServerBoostBalanceNote.textContent = hasBalance
+          ? t("partner_page.server_boost_balance_ready", "Your partner balance is ready to activate this boost.")
+          : t("partner_page.server_boost_balance_missing", "You need available balance in the partner account to activate this boost.");
+        partnerServerBoostBalanceNote.style.color = hasBalance ? "var(--muted)" : "#c62828";
+      }
+      if (partnerServerBoostCpmNote) {
+        if (server) {
+          const pricing = getServerBoostPricing(server);
+          partnerServerBoostCpmNote.textContent = t(
+            "partner_page.server_boost_estimated_cpm",
+            "Estimated CPM for this server: {amount} / 1,000 views.",
+          ).replace("{amount}", formatBRL(pricing.cpmBRL));
+        } else {
+          partnerServerBoostCpmNote.textContent = t(
+            "partner_page.server_boost_estimated_cpm_generic",
+            "Estimated CPM for this server varies according to the number of new listings received in the last 7 days.",
+          );
+        }
+      }
+    }
+
+    function setPartnerTopupFeedback(message, isError = false) {
+      if (!partnerTopupFeedback) return;
+      partnerTopupFeedback.textContent = message || "";
+      partnerTopupFeedback.style.color = isError ? "#c62828" : "var(--muted)";
+    }
+
+    function normalizePartnerTopupAmount(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      let normalized = raw.replace(/\s+/g, "").replace(/R\$/gi, "");
+      if (normalized.includes(",")) {
+        normalized = normalized.replace(/\./g, "").replace(",", ".");
+      }
+      normalized = normalized.replace(/[^0-9.]/g, "");
+      if (!normalized) return null;
+      const parsed = Number(normalized);
+      if (!Number.isFinite(parsed) || parsed <= 0) return null;
+      return Math.round(parsed * 100) / 100;
+    }
+
+    function openPartnerTopupModal() {
+      if (!currentProfile?.phone_verified) {
+        window.location.href = "profile.html?phone_required=1";
+        return;
+      }
+      if (!partnerTopupModal) return;
+      applyStaticTranslations();
+      if (partnerTopupAmount) partnerTopupAmount.value = "";
+      setPartnerTopupFeedback("");
+      partnerTopupModal.classList.add("open");
+      partnerTopupModal.setAttribute("aria-hidden", "false");
+      setTimeout(() => partnerTopupAmount?.focus(), 0);
+    }
+
+    function closePartnerTopupModal() {
+      if (!partnerTopupModal) return;
+      partnerTopupModal.classList.remove("open");
+      partnerTopupModal.setAttribute("aria-hidden", "true");
+      setPartnerTopupFeedback("");
+      if (partnerTopupConfirm) {
+        partnerTopupConfirm.disabled = false;
+        partnerTopupConfirm.textContent = t("partner_page.topup_confirm", "Add balance and pay");
+      }
+    }
+
+    async function startPartnerTopupCheckout() {
+      try {
+        const amount = normalizePartnerTopupAmount(partnerTopupAmount?.value);
+        const minimumTopupBRL = getPartnerTopupMinimumBRL();
+        const amountBRL = Number((Number(amount || 0) * getPartnerTopupRateToBRL()).toFixed(2));
+        if (!amount || !Number.isFinite(amountBRL) || amountBRL < minimumTopupBRL) {
+          const minAmountLabel = formatCurrency(getPartnerTopupMinimumDisplayAmount(), getPartnerTopupCheckoutCurrency());
+          const topupMinMessage = i18n.locale === "en"
+            ? `Enter a valid amount of at least ${minAmountLabel}.`
+            : i18n.locale === "es"
+              ? `Introduce un importe válido de al menos ${minAmountLabel}.`
+              : `Informe um valor válido de pelo menos ${minAmountLabel}.`;
+          throw new Error(t("partner_page.topup_min_amount_dynamic", topupMinMessage));
+        }
+
+        if (partnerTopupConfirm) {
+          partnerTopupConfirm.disabled = true;
+          partnerTopupConfirm.textContent = t("common.sending", "Sending...");
+        }
+        setPartnerTopupFeedback("");
+
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("partner_wallet_checkout", {
+          body: {
+            amount,
+            returnBaseUrl: window.location.origin,
+            userToken: token || null,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok || !data?.checkoutUrl) {
+          const message = await resolveFunctionErrorMessage(error, data, t("partner_page.topup_error", "Could not start partner checkout."));
+          throw new Error(message);
+        }
+
+        window.location.href = data.checkoutUrl;
+      } catch (err) {
+        console.error(err);
+        setPartnerTopupFeedback(err?.message || t("partner_page.topup_error", "Could not start partner checkout."), true);
+        if (partnerTopupConfirm) {
+          partnerTopupConfirm.disabled = false;
+          partnerTopupConfirm.textContent = t("partner_page.topup_confirm", "Add balance and pay");
+        }
+      }
+    }
+
     function normalizeConnectCountry(value) {
       return String(value || "").trim().toUpperCase() === "PT" ? "PT" : "BR";
     }
@@ -1881,7 +2341,9 @@
           : t("partner_page.register_account", "Register payout account");
       }
       if (partnerWithdrawBtn) {
-        partnerWithdrawBtn.hidden = !Boolean(account && account.status === "active");
+        const hasActiveWiseAccount = Boolean(account && account.status === "active");
+        const hasMinimumBalance = Number(currentPartnerPayoutSummary?.availableAmount || 0) >= PARTNER_WITHDRAW_MIN_BRL;
+        partnerWithdrawBtn.hidden = !hasActiveWiseAccount || !hasMinimumBalance;
       }
       syncPartnerWithdrawButtonStyle(true);
       if (wiseAccountStatus) {
@@ -2392,7 +2854,7 @@
     }
 
     async function fetchPartnerProfile() {
-      const fields = "id,email,first_name,last_name,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
+      const fields = "id,email,first_name,last_name,phone,phone_verified,country_code,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
       let { data, error } = await supabase
         .from("users")
         .select(fields)
@@ -2402,7 +2864,7 @@
       if (error && error.code === "42703") {
         const fallback = await supabase
           .from("users")
-          .select("id,email,first_name,last_name")
+          .select("id,email,first_name,last_name,phone,phone_verified,country_code")
           .eq("id", currentUser.id)
           .single();
         data = fallback.data
@@ -2427,6 +2889,10 @@
       if (partnerAccountLabel) partnerAccountLabel.textContent = t("partner_page.account_label", "Account");
       partnerAccountId.textContent = t("partner_page.not_registered", "Not registered");
       partnerPayouts.textContent = t("partner_page.no", "No");
+      if (partnerAddBalanceBtn) {
+        partnerAddBalanceBtn.disabled = false;
+        partnerAddBalanceBtn.hidden = true;
+      }
       if (wiseAccountHolderName) {
         wiseAccountHolderName.value = getDerivedWiseAccountHolderName();
       }
@@ -2476,9 +2942,23 @@
         }
       });
 
+      try {
+        const { data: walletRow, error: walletErr } = await supabase
+          .from("partner_wallets")
+          .select("available_cents")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+        if (!walletErr && walletRow) {
+          availableAmount += Math.max(0, Number(walletRow.available_cents || 0)) / 100;
+        }
+      } catch (_walletErr) {
+        // ignore wallet fallback errors and keep legacy payout fallback
+      }
+
       return {
         unsupported: false,
         availableAmount: Number(availableAmount.toFixed(2)),
+        boostAvailableAmount: Number(availableAmount.toFixed(2)),
         count,
       };
     }
@@ -2504,8 +2984,9 @@
       if (!summary || summary.unsupported) {
         partnerAvailableAmount.textContent = "-";
         partnerActiveHighlightsCount.textContent = "-";
+        updatePartnerServerBoostModalState();
         if (partnerWithdrawBtn) {
-          partnerWithdrawBtn.hidden = !Boolean(currentWiseAccount && currentWiseAccount.status === "active");
+          partnerWithdrawBtn.hidden = true;
           partnerWithdrawBtn.disabled = true;
         }
         syncPartnerWithdrawButtonStyle(true);
@@ -2529,12 +3010,13 @@
         resetPartnerWithdrawPreview();
       }
       if (partnerWithdrawBtn) {
-        partnerWithdrawBtn.hidden = !hasActiveWiseAccount;
+        partnerWithdrawBtn.hidden = !hasActiveWiseAccount || !hasMinimumBalance;
         partnerWithdrawBtn.disabled = Boolean(!hasActiveWiseAccount || !hasMinimumBalance);
         partnerWithdrawBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
       }
       syncPartnerWithdrawButtonStyle(Boolean(hasActiveWiseAccount && hasMinimumBalance));
       setPartnerWithdrawFeedback("");
+      updatePartnerServerBoostModalState();
     }
 
     function startPartnerPayoutAutoRefresh() {
@@ -2627,9 +3109,26 @@
     async function fetchOwnedServers() {
       let { data, error } = await supabase
         .from("servers")
-        .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id")
-        .eq("owner_id", currentUser.id)
+        .select("*")
+        .or(`owner_id.eq.${currentUser.id},admin_beneficiary_id.eq.${currentUser.id}`)
+        .neq("status", "deleted")
         .order("created_at", { ascending: false });
+      if (
+        error
+        && (
+          String(error.message || "").includes("admin_beneficiary_id")
+          || String(error.message || "").includes("feed_highlight_status")
+        )
+      ) {
+        const fallback = await supabase
+          .from("servers")
+          .select("id,name,official_site,status,created_at,discord_invite,description,banner_url,owner_id")
+          .eq("owner_id", currentUser.id)
+          .neq("status", "deleted")
+          .order("created_at", { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
       if (error && error.code === "42703") {
         connectFeedback.textContent = t("partner_page.missing_server_link_columns", "The server link columns do not exist yet. Apply the latest migrations.");
         return [];
@@ -2642,7 +3141,7 @@
       let listingRows = [];
       const { data: listingsData, error: listingsErr } = await supabase
         .from("listings")
-        .select("id,server_id,status,highlight_status")
+        .select("id,server_id,status,highlight_status,created_at")
         .in("server_id", serverIds);
       if (!listingsErr) {
         listingRows = listingsData || [];
@@ -2650,6 +3149,10 @@
 
       const listingCountMap = new Map();
       const highlightActiveCountMap = new Map();
+      const recentListingCountMap = new Map();
+      const recentCutoff = new Date();
+      recentCutoff.setUTCDate(recentCutoff.getUTCDate() - 7);
+      const recentCutoffMs = recentCutoff.getTime();
       listingRows.forEach((row) => {
         const key = String(row.server_id || "");
         if (!key) return;
@@ -2657,28 +3160,49 @@
         if (String(row.status || "") === "active" && String(row.highlight_status || "") === "active") {
           highlightActiveCountMap.set(key, (highlightActiveCountMap.get(key) || 0) + 1);
         }
+        const createdAtMs = new Date(String(row.created_at || "")).getTime();
+        if (Number.isFinite(createdAtMs) && createdAtMs >= recentCutoffMs && String(row.status || "") === "active") {
+          recentListingCountMap.set(key, (recentListingCountMap.get(key) || 0) + 1);
+        }
       });
 
       const decorated = await Promise.all(servers.map(async (server) => ({
         ...server,
         banner_url: await resolveServerBannerUrl(server.banner_url),
         listing_count: listingCountMap.get(String(server.id)) || 0,
+        recent_listing_count_7d: recentListingCountMap.get(String(server.id)) || 0,
         highlight_active_count: highlightActiveCountMap.get(String(server.id)) || 0,
+        feed_highlight_status: String(server.feed_highlight_status || "none"),
       })));
 
       return decorated;
     }
 
+    function canManageServerFeedHighlight(server) {
+      return String(server?.owner_id || "") === String(currentUser?.id || "")
+        && String(server?.status || "") === "active";
+    }
+
     function renderServers(servers) {
       currentServers = Array.isArray(servers) ? servers : [];
+      const hasOwnedServers = currentServers.some((server) => String(server?.owner_id || "") === String(currentUser?.id || ""));
+      if (partnerAddBalanceBtn) {
+        partnerAddBalanceBtn.hidden = !hasOwnedServers;
+      }
       partnerServerList.innerHTML = "";
       const total = currentServers.length;
       partnerServersCount.textContent = `${total} ${total === 1 ? t("partner_page.server_one", "server") : t("partner_page.server_many", "servers")}`;
       const activeHighlightsTotal = (currentServers || []).reduce((sum, server) => {
         return sum + Number(server?.highlight_active_count || 0);
       }, 0);
+      const boostedServersTotal = (currentServers || []).reduce((sum, server) => {
+        return sum + (String(server?.feed_highlight_status || "none") === "active" ? 1 : 0);
+      }, 0);
       if (partnerActiveHighlightsCount) {
         partnerActiveHighlightsCount.textContent = String(activeHighlightsTotal);
+      }
+      if (partnerBoostedServersCount) {
+        partnerBoostedServersCount.textContent = String(boostedServersTotal);
       }
       if (total === 0) {
         partnerServersEmpty.style.display = "block";
@@ -2693,6 +3217,24 @@
         const safeDiscord = server.discord_invite ? String(server.discord_invite) : "";
         const safeDescription = String(server.description || "").trim();
         const logo = resolveMediaUrl(server.banner_url || "");
+        const isFeedBoosted = String(server.feed_highlight_status || "none") === "active";
+        const canToggleFeedHighlight = canManageServerFeedHighlight(server);
+        const feedBoostBadge = isFeedBoosted
+          ? `<span class="pill">${escapeHtml(t("partner_page.server_boost_badge", "Impulsionado no feed"))}</span>`
+          : "";
+        const feedBoostButton = canToggleFeedHighlight
+          ? `
+            <button
+              class="btn ${isFeedBoosted ? "btn-ghost" : "btn-primary"} partner-toggle-server-boost-btn"
+              type="button"
+              data-server-id="${escapeHtml(server.id)}"
+              data-active="${isFeedBoosted ? "1" : "0"}">
+              ${escapeHtml(isFeedBoosted
+                ? t("partner_page.remove_server_boost", "Remover impulso")
+                : t("partner_page.boost_server", "Impulsionar no feed"))}
+            </button>
+          `
+          : "";
         const descHtml = safeDescription
           ? `<p class="partner-server-desc">${escapeHtml(safeDescription)}</p>`
           : "";
@@ -2708,6 +3250,7 @@
           </div>
           <div class="partner-server-meta">
             <span class="pill">${escapeHtml(t("partner_page.listings_count", "Listings"))}: ${server.listing_count}</span>
+            ${feedBoostBadge}
           </div>
           ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}</a>` : ""}
           ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}</a>` : ""}
@@ -2715,6 +3258,7 @@
           <p class="helper">${escapeHtml(t("partner_page.created_at", "Created on"))} ${formatDateTime(server.created_at)}</p>
           <div class="partner-server-actions">
             <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">${escapeHtml(t("partner_page.view_listings", "View listings"))}</a>
+            ${feedBoostButton}
             <button class="btn btn-ghost partner-edit-server-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.edit", "Edit"))}</button>
           </div>
         `;
@@ -2728,6 +3272,79 @@
         }
         partnerServerList.appendChild(card);
       });
+    }
+
+    async function toggleServerFeedHighlight(serverId, shouldActivate) {
+      const server = currentServers.find((item) => String(item.id) === String(serverId));
+      if (!server) return;
+      if (!canManageServerFeedHighlight(server)) {
+        connectFeedback.textContent = t("partner_page.server_boost_owner_only", "Only the owner can manage this server boost.");
+        connectFeedback.style.color = "#c62828";
+        return;
+      }
+
+      const button = partnerServerList?.querySelector(`.partner-toggle-server-boost-btn[data-server-id="${String(serverId)}"]`);
+      const originalLabel = button?.textContent || "";
+      try {
+        if (button) {
+          button.disabled = true;
+          button.textContent = shouldActivate
+            ? t("common.saving", "Saving...")
+            : t("common.saving", "Saving...");
+        }
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("server_feed_highlight", {
+          body: {
+            serverId,
+            action: shouldActivate ? "activate" : "deactivate",
+            userToken: token || null,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok || !data?.server) {
+          const message = await resolveFunctionErrorMessage(
+            error,
+            data,
+            t("partner_page.server_boost_error", "Could not update the server boost."),
+          );
+          throw new Error(message);
+        }
+
+        currentServers = currentServers.map((item) => (
+          String(item.id) === String(serverId)
+            ? {
+                ...item,
+                feed_highlight_status: String(data.server.feed_highlight_status || "none"),
+                feed_highlight_started_at: data.server.feed_highlight_started_at || null,
+              }
+            : item
+        ));
+        renderServers(currentServers);
+        connectFeedback.textContent = shouldActivate
+          ? t("partner_page.server_boost_activated", "Server boost activated successfully.")
+          : t("partner_page.server_boost_removed", "Server boost removed successfully.");
+        connectFeedback.style.color = "var(--muted)";
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || t("partner_page.server_boost_error", "Could not update the server boost.");
+        connectFeedback.style.color = "#c62828";
+      } finally {
+        if (button) {
+          button.disabled = false;
+          if (button.isConnected) {
+            button.textContent = button.getAttribute("data-active") === "1"
+              ? t("partner_page.remove_server_boost", "Remove boost")
+              : t("partner_page.boost_server", "Boost in feed");
+          } else if (originalLabel) {
+            button.textContent = originalLabel;
+          }
+        }
+      }
     }
 
     async function init() {
@@ -2747,6 +3364,8 @@
           fetchPartnerPayoutSummary(),
           fetchWiseAccount(),
         ]);
+        currentProfile = profile;
+        await refreshPartnerTopupCurrencyState();
         const hasPartnerAccess = Boolean(profile?.is_partner || profile?.is_admin || (servers || []).length > 0);
         if (!hasPartnerAccess) {
           window.location.replace("index.html");
@@ -2756,6 +3375,17 @@
         renderWiseAccount(wiseAccount?.unsupported ? null : wiseAccount);
         renderServers(servers);
         renderPartnerPayoutSummary(payoutSummary);
+        const topupResult = new URLSearchParams(window.location.search).get("partner_topup");
+        if (topupResult === "success") {
+          setPartnerTopupFeedback("");
+          connectFeedback.textContent = t("partner_page.topup_success_pending", "Payment received. Your partner balance will be updated after confirmation.");
+          connectFeedback.style.color = "var(--muted)";
+          window.history.replaceState({}, document.title, "partner.html");
+        } else if (topupResult === "cancel") {
+          connectFeedback.textContent = t("partner_page.topup_cancelled", "Partner balance top-up cancelled.");
+          connectFeedback.style.color = "var(--muted)";
+          window.history.replaceState({}, document.title, "partner.html");
+        }
         startPartnerPayoutAutoRefresh();
         if (wiseAccount?.unsupported) {
           setWiseFeedback(t("partner_page.missing_payout_accounts_table", "The payout accounts table does not exist yet. Apply the latest migrations."), true);
@@ -2808,6 +3438,18 @@
     });
 
     partnerServerList?.addEventListener("click", (event) => {
+      const boostButton = event.target?.closest?.(".partner-toggle-server-boost-btn");
+      if (boostButton) {
+        const serverId = boostButton.getAttribute("data-server-id");
+        if (!serverId) return;
+        const isActive = boostButton.getAttribute("data-active") === "1";
+        if (isActive) {
+          toggleServerFeedHighlight(serverId, false);
+        } else {
+          openPartnerServerBoostInfoModal(serverId);
+        }
+        return;
+      }
       const button = event.target?.closest?.(".partner-edit-server-btn");
       if (!button) return;
       const serverId = button.getAttribute("data-server-id");
@@ -2832,6 +3474,32 @@
     partnerWithdrawConfirmBtn?.addEventListener("click", () => {
       requestPartnerWithdraw({ confirm: true });
     });
+    partnerAddBalanceBtn?.addEventListener("click", openPartnerTopupModal);
+    partnerServerBoostInfoClose?.addEventListener("click", closePartnerServerBoostInfoModal);
+    partnerServerBoostInfoCancel?.addEventListener("click", closePartnerServerBoostInfoModal);
+    partnerServerBoostInfoConfirm?.addEventListener("click", () => {
+      if (!pendingServerBoostTargetId) return;
+      const availableAmount = Number(currentPartnerPayoutSummary?.availableAmount || 0);
+      if (availableAmount > 0) {
+        toggleServerFeedHighlight(pendingServerBoostTargetId, true);
+      } else {
+        openPartnerTopupModal();
+      }
+      closePartnerServerBoostInfoModal();
+    });
+    partnerServerBoostInfoModal?.addEventListener("click", (event) => {
+      if (event.target === partnerServerBoostInfoModal) {
+        closePartnerServerBoostInfoModal();
+      }
+    });
+    partnerTopupClose?.addEventListener("click", closePartnerTopupModal);
+    partnerTopupCancel?.addEventListener("click", closePartnerTopupModal);
+    partnerTopupConfirm?.addEventListener("click", startPartnerTopupCheckout);
+    partnerTopupModal?.addEventListener("click", (event) => {
+      if (event.target === partnerTopupModal) {
+        closePartnerTopupModal();
+      }
+    });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && partnerEditModal?.classList.contains("open")) {
@@ -2840,6 +3508,14 @@
       }
       if (event.key === "Escape" && partnerWithdrawModal?.classList.contains("open")) {
         closePartnerWithdrawModal();
+        return;
+      }
+      if (event.key === "Escape" && partnerServerBoostInfoModal?.classList.contains("open")) {
+        closePartnerServerBoostInfoModal();
+        return;
+      }
+      if (event.key === "Escape" && partnerTopupModal?.classList.contains("open")) {
+        closePartnerTopupModal();
       }
     });
 

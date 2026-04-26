@@ -7,7 +7,7 @@ if (!(Deno as any).writeAll) {
   (Deno as any).writeAll = writeAll;
 }
 
-type ActionType = "handled" | "delete-listing" | "ban-user";
+type ActionType = "handled" | "archive" | "delete-listing";
 type Payload = {
   reportId?: string;
   action?: ActionType;
@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
     const action = payload.action;
     const note = String(payload.note || "").trim();
     if (!reportId) return errorResponse("reportId é obrigatório.");
-    if (!action || !["handled", "delete-listing", "ban-user"].includes(action)) {
+    if (!action || !["handled", "archive", "delete-listing"].includes(action)) {
       return errorResponse("Ação inválida.");
     }
     if (action === "delete-listing" && note.length < 10) {
@@ -380,17 +380,34 @@ Deno.serve(async (req) => {
       admin_note: note || null,
     };
 
-    if (action === "handled") {
+    if (action === "handled" || action === "archive") {
       const reportEvidenceKeys = collectR2Keys(
         Array.isArray(report.evidence_images) ? report.evidence_images : [],
         ["reports/"],
       );
+      let handledTargetPayload: Record<string, unknown> = {};
+      if (action === "handled" && report.target_type === "listing" && report.listing_id) {
+        const { data: listingOwner, error: listingOwnerError } = await supabase
+          .from("listings")
+          .select("user_id")
+          .eq("id", report.listing_id)
+          .maybeSingle();
+        if (listingOwnerError) throw listingOwnerError;
+        if (listingOwner?.user_id) {
+          handledTargetPayload = {
+            target_type: "user",
+            listing_id: null,
+            reported_user_id: listingOwner.user_id,
+          };
+        }
+      }
 
       const { error: updateError } = await supabase
         .from("reports")
         .update({
           ...baseHandledPayload,
-          action_taken: "marked_handled",
+          ...handledTargetPayload,
+          action_taken: action === "handled" ? "confirmed_report" : "marked_handled",
           evidence_images: [],
         })
         .eq("id", report.id)
@@ -448,23 +465,26 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (ownerProfileError && ownerProfileError.code !== "PGRST116") throw ownerProfileError;
 
-      const { error: deleteListingError } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", listing.id);
-      if (deleteListingError) throw deleteListingError;
-
       if (reportIds.length > 0) {
         const { error: updateRelatedError } = await supabase
           .from("reports")
           .update({
             ...baseHandledPayload,
+            target_type: "user",
+            listing_id: null,
+            reported_user_id: listing.user_id,
             action_taken: "listing_deleted",
             evidence_images: [],
           })
           .in("id", reportIds);
         if (updateRelatedError) throw updateRelatedError;
       }
+
+      const { error: deleteListingError } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listing.id);
+      if (deleteListingError) throw deleteListingError;
 
       const listingDelete = await deleteR2Keys(listingImageKeys);
       const evidenceDelete = await deleteR2Keys(reportEvidenceKeys);
@@ -502,89 +522,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    let targetUserId = report.reported_user_id || null;
-    if (!targetUserId && report.listing_id) {
-      const { data: listingOwner, error: listingOwnerError } = await supabase
-        .from("listings")
-        .select("user_id")
-        .eq("id", report.listing_id)
-        .single();
-      if (listingOwnerError) throw listingOwnerError;
-      targetUserId = listingOwner?.user_id || null;
-    }
-    if (!targetUserId) {
-      return errorResponse("Não foi possível identificar o usuário denunciado.");
-    }
-
-    const { data: userListings, error: userListingsError } = await supabase
-      .from("listings")
-      .select("id,user_id,images")
-      .eq("user_id", targetUserId);
-    if (userListingsError) throw userListingsError;
-    const listingIds = (userListings || []).map((item) => item.id);
-
-    const listingImageKeys = collectR2Keys(
-      (userListings || []).flatMap((item) => Array.isArray(item?.images) ? item.images : []),
-      [`listings/${targetUserId}/`],
-    );
-
-    let listingReportsEvidenceKeys: string[] = [];
-    if (listingIds.length > 0) {
-      const { data: listingReports, error: listingReportsError } = await supabase
-        .from("reports")
-        .select("evidence_images")
-        .in("listing_id", listingIds);
-      if (!listingReportsError) {
-        listingReportsEvidenceKeys = collectR2Keys(
-          (listingReports || []).flatMap((item) => Array.isArray(item?.evidence_images) ? item.evidence_images : []),
-          ["reports/"],
-        );
-      }
-    }
-
-    const currentReportEvidenceKeys = collectR2Keys(
-      Array.isArray(report.evidence_images) ? report.evidence_images : [],
-      ["reports/"],
-    );
-    const reportEvidenceKeys = Array.from(new Set([...listingReportsEvidenceKeys, ...currentReportEvidenceKeys]));
-
-    const { error: banError } = await supabase
-      .from("users")
-      .update({ status: "banned" })
-      .eq("id", targetUserId);
-    if (banError) throw banError;
-
-    const { error: deleteListingsError } = await supabase
-      .from("listings")
-      .delete()
-      .eq("user_id", targetUserId);
-    if (deleteListingsError) throw deleteListingsError;
-
-    const { error: updateReportError } = await supabase
-      .from("reports")
-      .update({
-        ...baseHandledPayload,
-        action_taken: "user_banned",
-        evidence_images: [],
-      })
-      .eq("id", report.id);
-    if (updateReportError) throw updateReportError;
-
-    const listingDelete = await deleteR2Keys(listingImageKeys);
-    const evidenceDelete = await deleteR2Keys(reportEvidenceKeys);
-
-    return new Response(JSON.stringify({
-      ok: true,
-      action,
-      bannedUserId: targetUserId,
-      deletedListings: listingIds.length,
-      deletedListingImageKeys: listingDelete.deleted,
-      failedListingImageKeys: listingDelete.failed,
-      deletedEvidenceKeys: evidenceDelete.deleted,
-      failedEvidenceKeys: evidenceDelete.failed,
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders },
-    });
+    return errorResponse("Ação inválida.");
   } catch (err) {
     console.error(err);
     return errorResponse(err instanceof Error ? err.message : "Erro ao moderar denúncia.", 500);

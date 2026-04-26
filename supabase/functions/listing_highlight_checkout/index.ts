@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import { enforceUserRateLimit, RateLimitError } from "../_shared/rate_limit.ts";
 
 type Payload = {
   listingId?: string;
@@ -23,7 +24,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
-const MIN_TOPUP_BRL = 5;
+const MIN_TOPUP_USD = 2;
 const DAY_SECONDS = 24 * 60 * 60;
 const PRICE_PER_DAY_CENTS = 600;
 const DEFAULT_USD_BRL_RATE = 5.5;
@@ -207,12 +208,19 @@ Deno.serve(async (req) => {
     const amountFromPayload = normalizeAmountBRL(payload.amountBRL);
     const legacyDays = Number(payload.days || 0);
     const fallbackAmount = Number.isFinite(legacyDays) && legacyDays > 0
-      ? Math.round(legacyDays * MIN_TOPUP_BRL * 100) / 100
+      ? Math.round(legacyDays * MIN_TOPUP_USD * getUsdBrlRateFallback() * 100) / 100
       : null;
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !authData?.user) return errorResponse("Sessão inválida", 401);
+
+    await enforceUserRateLimit(supabase, authData.user.id, "listing_highlight_checkout", {
+      maxCount: 8,
+      windowSeconds: 15 * 60,
+      bucketSeconds: 60,
+      message: "Muitas tentativas de checkout. Aguarde alguns minutos e tente novamente.",
+    });
 
     const { data: profile, error: profileErr } = await supabase
       .from("users")
@@ -232,17 +240,19 @@ Deno.serve(async (req) => {
     const amountBRL = amountFromCurrencyPayload != null
       ? Number((amountFromCurrencyPayload * fxRateToBRL).toFixed(2))
       : (amountFromPayload ?? fallbackAmount);
-
-    if (!amountBRL || amountBRL < MIN_TOPUP_BRL) {
-      return errorResponse("Valor mínimo para depósito: R$ 5,00", 400);
-    }
-
-    const totalCents = Math.round(amountBRL * 100);
-    const purchasedSeconds = amountToSeconds(totalCents);
-    const equivalentDays = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
     const checkoutAmount = amountFromCurrencyPayload != null
       ? amountFromCurrencyPayload
-      : Number((amountBRL / fxRateToBRL).toFixed(2));
+      : Number(((amountBRL ?? 0) / fxRateToBRL).toFixed(2));
+
+    const minimumTopupBRL = Math.round(MIN_TOPUP_USD * getUsdBrlRateFallback() * 100) / 100;
+    if (amountBRL == null || !Number.isFinite(checkoutAmount) || !Number.isFinite(amountBRL) || amountBRL < minimumTopupBRL) {
+      return errorResponse("Valor mínimo para depósito: equivalente local a US$ 2,00", 400);
+    }
+    const amountBRLValue = Number(amountBRL);
+
+    const totalCents = Math.round(amountBRLValue * 100);
+    const purchasedSeconds = amountToSeconds(totalCents);
+    const equivalentDays = Math.max(1, Math.ceil(purchasedSeconds / DAY_SECONDS));
     const checkoutTotalCents = Math.round(checkoutAmount * 100);
 
     if (!Number.isFinite(checkoutTotalCents) || checkoutTotalCents <= 0) {
@@ -277,8 +287,8 @@ Deno.serve(async (req) => {
     if (shouldAutoActivate) {
       successParams.set("activate", "1");
     }
-    const successUrl = `${baseUrl}/ad-wallet.html?${successParams.toString()}`;
-    const cancelUrl = `${baseUrl}/ad-wallet.html?${cancelParams.toString()}`;
+    const successUrl = `${baseUrl}/my-listings.html?${successParams.toString()}`;
+    const cancelUrl = `${baseUrl}/my-listings.html?${cancelParams.toString()}`;
 
     const body = new URLSearchParams();
     body.set("mode", "payment");
@@ -299,7 +309,7 @@ Deno.serve(async (req) => {
     body.set("metadata[checkout_total_cents]", String(checkoutTotalCents));
     body.set("metadata[checkout_currency]", checkoutCurrency.toUpperCase());
     body.set("metadata[checkout_country_code]", resolvedCountryCode);
-    body.set("metadata[amount_brl]", amountBRL.toFixed(2));
+    body.set("metadata[amount_brl]", amountBRLValue.toFixed(2));
     body.set("metadata[fx_rate]", fxRateToBRL.toFixed(6));
     body.set("metadata[auto_activate]", shouldAutoActivate ? "1" : "0");
     if (listing?.id) {
@@ -339,6 +349,9 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error(err);
+    if (err instanceof RateLimitError) {
+      return errorResponse(err.message, err.status);
+    }
     return errorResponse(err instanceof Error ? err.message : "Erro interno", 500);
   }
 });

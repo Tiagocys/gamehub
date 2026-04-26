@@ -24,6 +24,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Advertising policy</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="ads-policy-guard-style">html{visibility:hidden;}</style>
   <style>
     .policy-page {
       max-width: 920px;
@@ -62,6 +63,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
@@ -74,10 +78,10 @@
       <article class="policy-card">
         <h3 id="ads-policy-section-1-title">1. Adding balance</h3>
         <ul>
-          <li id="ads-policy-section-1-item-1">The user adds balance to the ad wallet starting from R$ 5.00.</li>
+          <li id="ads-policy-section-1-item-1">The user adds balance to the ad wallet starting from the local equivalent of US$ 2.00.</li>
           <li id="ads-policy-section-1-item-2">Adding balance requires a verified phone number.</li>
-          <li id="ads-policy-section-1-item-3">The checkout currency is inferred from the country prefix of the verified phone number.</li>
-          <li id="ads-policy-section-1-item-4">When there is no supported local currency for that country, the system uses USD as fallback.</li>
+          <li id="ads-policy-section-1-item-3">The ad-wallet checkout currency is chosen automatically from the user's verified phone country, with USD as fallback.</li>
+          <li id="ads-policy-section-1-item-4">The minimum deposit amount for the ad wallet is the local equivalent of US$ 2.00.</li>
           <li id="ads-policy-section-1-item-5">Payment is processed via Stripe in a secure environment.</li>
         </ul>
       </article>
@@ -85,13 +89,13 @@
       <article class="policy-card">
         <h3 id="ads-policy-section-2-title">2. Wallet currency and activation</h3>
         <ul>
-          <li id="ads-policy-section-2-item-1">After payment confirmation, the deposit is converted to BRL and credited to the ad wallet.</li>
-          <li id="ads-policy-section-2-item-2">The wallet balance and CPM consumption are accounted for internally in BRL.</li>
-          <li id="ads-policy-section-2-item-3">The sidebar may display the balance in the user's most recent deposit currency for convenience, but internal accounting remains in BRL.</li>
-          <li id="ads-policy-section-2-item-4">Highlights are activated from the ad wallet dashboard.</li>
-          <li id="ads-policy-section-2-item-5">Highlights follow a billing model based exclusively on CPM.</li>
-          <li id="ads-policy-section-2-item-6">The CPM reference used by the system is based on US$ 2.00 per 1,000 tracked impressions and converted to BRL.</li>
-          <li id="ads-policy-section-2-item-7">When the balance reaches zero, active highlights are paused automatically.</li>
+          <li id="ads-policy-section-2-item-1">After payment confirmation, the deposit is credited to the ad wallet. The dashboard may display the most recent deposit currency for convenience.</li>
+          <li id="ads-policy-section-2-item-2">The CPM of each highlighted listing is estimated according to the number of new active listings created for that game in the last 7 days and may change over time.</li>
+          <li id="ads-policy-section-2-item-3">The available ad-wallet balance is used to feature listings and cover CPM consumption.</li>
+          <li id="ads-policy-section-2-item-4">Listing highlights are activated from the listings dashboard.</li>
+          <li id="ads-policy-section-2-item-5">Listing highlights follow a billing model based exclusively on CPM. Current estimated reference tiers:<br>0-25 new listings / 7 days: US$ 0.40<br>26-75: US$ 0.90<br>76-150: US$ 2.00<br>151-400: US$ 4.00<br>401-900: US$ 7.00<br>901+: US$ 12.00</li>
+          <li id="ads-policy-section-2-item-6">Checkout and minimum amounts follow the automatic currency chosen for the user. CPM tiers use USD as the billing reference.</li>
+          <li id="ads-policy-section-2-item-7">When the balance reaches zero, active highlights may be paused automatically.</li>
         </ul>
       </article>
 
@@ -99,9 +103,11 @@
         <h3 id="ads-policy-section-3-title">3. Impression counting and consumption</h3>
         <ul>
           <li id="ads-policy-section-3-item-1">An impression is counted only when the featured card reaches at least 65% visibility on screen.</li>
-          <li id="ads-policy-section-3-item-2">The same listing can only be counted again after 30 seconds in the same browser tab.</li>
+          <li id="ads-policy-section-3-item-2">The same listing can only be counted again after 120 seconds in the same browser.</li>
           <li id="ads-policy-section-3-item-3">Impressions are grouped by the system with a small technical delay of up to 800ms.</li>
-          <li id="ads-policy-section-3-item-4">Tracked impressions are charged in real time based on CPM.</li>
+          <li id="ads-policy-section-3-item-4">Only highlighted listing cards that actually appear to the user can generate billable impressions.</li>
+          <li id="ads-policy-section-3-item-5">Refreshing the page or reopening the same screen within the 120-second window does not create a new charge for the same listing in the same browser.</li>
+          <li id="ads-policy-section-3-item-6">Validated impressions are charged in real time using the tier active for that game at the moment of counting.</li>
         </ul>
       </article>
 
@@ -111,7 +117,7 @@
           <li id="ads-policy-section-4-item-1">When a listing is paused or deleted, its highlight ends immediately.</li>
           <li id="ads-policy-section-4-item-2">Amounts already consumed by impressions are not refunded.</li>
           <li id="ads-policy-section-4-item-3">Any remaining balance stays in the ad wallet for future use.</li>
-          <li id="ads-policy-section-4-item-4">You may request withdrawal of the available ad wallet balance starting from the same minimum amount required to add balance.</li>
+          <li id="ads-policy-section-4-item-4">You may request withdrawal of the available ad wallet balance starting from US$ 2.00, the same minimum amount required to add balance.</li>
           <li id="ads-policy-section-4-item-5">When a withdrawal is requested, active highlights are paused and the balance goes into review.</li>
           <li id="ads-policy-section-4-item-6">The final refunded amount may be lower than the requested balance because original payment fees, conversion, and other applicable costs may be deducted during refund review.</li>
         </ul>
@@ -176,10 +182,21 @@
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
+    const pageLoader = document.getElementById("page-loader");
 
     let supabase;
     let currentUser = null;
     let avatarLoaded = false;
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("ads-policy-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
 
     if (avatarImg) {
       avatarImg.referrerPolicy = "no-referrer";
@@ -204,29 +221,31 @@
       setText("ads-policy-hero-title", "ads_policy.hero_title", "Featured advertising policy");
       setText("ads-policy-hero-helper", "ads_policy.hero_helper", "Read carefully before adding balance and activating highlights.");
       setText("ads-policy-section-1-title", "ads_policy.section_1_title", "1. Adding balance");
-      setText("ads-policy-section-1-item-1", "ads_policy.section_1_item_1", "The user adds balance to the ad wallet starting from R$ 5.00.");
+      setText("ads-policy-section-1-item-1", "ads_policy.section_1_item_1", "The user adds balance to the ad wallet starting from the local equivalent of US$ 2.00.");
       setText("ads-policy-section-1-item-2", "ads_policy.section_1_item_2", "Adding balance requires a verified phone number.");
-      setText("ads-policy-section-1-item-3", "ads_policy.section_1_item_3", "The checkout currency is inferred from the country prefix of the verified phone number.");
-      setText("ads-policy-section-1-item-4", "ads_policy.section_1_item_4", "When there is no supported local currency for that country, the system uses USD as fallback.");
+      setText("ads-policy-section-1-item-3", "ads_policy.section_1_item_3", "The ad-wallet checkout currency is chosen automatically from the user's verified phone country, with USD as fallback.");
+      setText("ads-policy-section-1-item-4", "ads_policy.section_1_item_4", "The minimum deposit amount for the ad wallet is the local equivalent of US$ 2.00.");
       setText("ads-policy-section-1-item-5", "ads_policy.section_1_item_5", "Payment is processed via Stripe in a secure environment.");
       setText("ads-policy-section-2-title", "ads_policy.section_2_title", "2. Wallet currency and activation");
-      setText("ads-policy-section-2-item-1", "ads_policy.section_2_item_1", "After payment confirmation, the deposit is converted to BRL and credited to the ad wallet.");
-      setText("ads-policy-section-2-item-2", "ads_policy.section_2_item_2", "The wallet balance and CPM consumption are accounted for internally in BRL.");
-      setText("ads-policy-section-2-item-3", "ads_policy.section_2_item_3", "The sidebar may display the balance in the user's most recent deposit currency for convenience, but internal accounting remains in BRL.");
-      setText("ads-policy-section-2-item-4", "ads_policy.section_2_item_4", "Highlights are activated from the ad wallet dashboard.");
-      setText("ads-policy-section-2-item-5", "ads_policy.section_2_item_5", "Highlights follow a billing model based exclusively on CPM.");
-      setText("ads-policy-section-2-item-6", "ads_policy.section_2_item_6", "The CPM reference used by the system is based on US$ 2.00 per 1,000 tracked impressions and converted to BRL.");
-      setText("ads-policy-section-2-item-7", "ads_policy.section_2_item_7", "When the balance reaches zero, active highlights are paused automatically.");
+      setText("ads-policy-section-2-item-1", "ads_policy.section_2_item_1", "After payment confirmation, the deposit is credited to the ad wallet. The dashboard may display the most recent deposit currency for convenience.");
+      setText("ads-policy-section-2-item-2", "ads_policy.section_2_item_2", "The CPM of each highlighted listing is estimated according to the number of new active listings created for that game in the last 7 days and may change over time.");
+      setText("ads-policy-section-2-item-3", "ads_policy.section_2_item_3", "The available ad-wallet balance is used to feature listings and cover CPM consumption.");
+      setText("ads-policy-section-2-item-4", "ads_policy.section_2_item_4", "Listing highlights are activated from the listings dashboard.");
+      setHtml("ads-policy-section-2-item-5", "ads_policy.section_2_item_5", "Listing highlights follow a billing model based exclusively on CPM. Current estimated reference tiers:<br>0-25 new listings / 7 days: US$ 0.40<br>26-75: US$ 0.90<br>76-150: US$ 2.00<br>151-400: US$ 4.00<br>401-900: US$ 7.00<br>901+: US$ 12.00");
+      setText("ads-policy-section-2-item-6", "ads_policy.section_2_item_6", "Checkout and minimum amounts follow the automatic currency chosen for the user. CPM tiers use USD as the billing reference.");
+      setText("ads-policy-section-2-item-7", "ads_policy.section_2_item_7", "When the balance reaches zero, active highlights may be paused automatically.");
       setText("ads-policy-section-3-title", "ads_policy.section_3_title", "3. Impression counting and consumption");
       setText("ads-policy-section-3-item-1", "ads_policy.section_3_item_1", "An impression is counted only when the featured card reaches at least 65% visibility on screen.");
-      setText("ads-policy-section-3-item-2", "ads_policy.section_3_item_2", "The same listing can only be counted again after 30 seconds in the same browser tab.");
+      setText("ads-policy-section-3-item-2", "ads_policy.section_3_item_2", "The same listing can only be counted again after 120 seconds in the same browser.");
       setText("ads-policy-section-3-item-3", "ads_policy.section_3_item_3", "Impressions are grouped by the system with a small technical delay of up to 800ms.");
-      setText("ads-policy-section-3-item-4", "ads_policy.section_3_item_4", "Tracked impressions are charged in real time based on CPM.");
+      setText("ads-policy-section-3-item-4", "ads_policy.section_3_item_4", "Only highlighted listing cards that actually appear to the user can generate billable impressions.");
+      setText("ads-policy-section-3-item-5", "ads_policy.section_3_item_5", "Refreshing the page or reopening the same screen within the 120-second window does not create a new charge for the same listing in the same browser.");
+      setText("ads-policy-section-3-item-6", "ads_policy.section_3_item_6", "Validated impressions are charged in real time using the tier active for that game at the moment of counting.");
       setText("ads-policy-section-4-title", "ads_policy.section_4_title", "4. Pausing, deleting, and refunds");
       setText("ads-policy-section-4-item-1", "ads_policy.section_4_item_1", "When a listing is paused or deleted, its highlight ends immediately.");
       setText("ads-policy-section-4-item-2", "ads_policy.section_4_item_2", "Amounts already consumed by impressions are not refunded.");
       setText("ads-policy-section-4-item-3", "ads_policy.section_4_item_3", "Any remaining balance stays in the ad wallet for future use.");
-      setText("ads-policy-section-4-item-4", "ads_policy.section_4_item_4", "You may request withdrawal of the available ad wallet balance starting from the same minimum amount required to add balance.");
+      setText("ads-policy-section-4-item-4", "ads_policy.section_4_item_4", "You may request withdrawal of the available ad wallet balance starting from US$ 2.00, the same minimum amount required to add balance.");
       setText("ads-policy-section-4-item-5", "ads_policy.section_4_item_5", "When a withdrawal is requested, active highlights are paused and the balance goes into review.");
       setText("ads-policy-section-4-item-6", "ads_policy.section_4_item_6", "The final refunded amount may be lower than the requested balance because original payment fees, conversion, and other applicable costs may be deducted during refund review.");
       setText("ads-policy-section-5-title", "ads_policy.section_5_title", "5. Moderation");
@@ -358,6 +377,7 @@
     });
 
     applyTranslations();
+    revealPage();
     initAuth();
   </script>
 </body>

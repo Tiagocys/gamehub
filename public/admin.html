@@ -243,6 +243,19 @@ body {
     </section>
 
     <section class="card">
+      <h1>Mensagens de ajuda</h1>
+      <p>Mensagens enviadas pela página de ajuda. Apenas usuários com telefone verificado podem abrir solicitações.</p>
+      <div class="notice" id="support-status">Carregando...</div>
+      <div id="support-nav" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;">
+        <button id="support-prev" class="chip-btn" type="button">Anterior</button>
+        <span id="support-counter" class="muted">1 de 1</span>
+        <button id="support-next" class="chip-btn" type="button">Próxima</button>
+      </div>
+      <div id="support-empty" class="muted" style="display:none;">Nenhuma mensagem pendente.</div>
+      <div id="support-list" class="list"></div>
+    </section>
+
+    <section class="card">
       <h1>Saques de parceiros</h1>
       <p>Solicitações pendentes de saque para conferência manual e processamento.</p>
       <div class="notice" id="withdraws-status">Carregando...</div>
@@ -349,6 +362,13 @@ body {
     const requestsPrevBtn = document.getElementById("requests-prev");
     const requestsNextBtn = document.getElementById("requests-next");
     const requestsCounter = document.getElementById("requests-counter");
+    const supportList = document.getElementById("support-list");
+    const supportEmpty = document.getElementById("support-empty");
+    const supportStatus = document.getElementById("support-status");
+    const supportNav = document.getElementById("support-nav");
+    const supportPrevBtn = document.getElementById("support-prev");
+    const supportNextBtn = document.getElementById("support-next");
+    const supportCounter = document.getElementById("support-counter");
     const withdrawsList = document.getElementById("withdraws-list");
     const withdrawsEmpty = document.getElementById("withdraws-empty");
     const withdrawsStatus = document.getElementById("withdraws-status");
@@ -367,10 +387,12 @@ body {
     let avatarLoaded = false;
     let profile = null;
     let requestCache = [];
+    let supportCache = [];
     let serverCache = [];
     let withdrawCache = [];
     let reportCache = [];
     let requestCursor = 0;
+    let supportCursor = 0;
     let reportCursor = 0;
     let editingRequest = null;
     let editingServer = null;
@@ -1060,9 +1082,10 @@ body {
             : `Logado como ${profile?.username || user.email} (sem permissão de admin)`;
           if (profile?.is_admin) {
             revealAdminPage();
-            await Promise.all([fetchServers(), fetchRequests(), fetchWithdrawRequests(), fetchReports()]);
+            await Promise.all([fetchServers(), fetchRequests(), fetchSupportRequests(), fetchWithdrawRequests(), fetchReports()]);
           } else {
             requestsStatus.textContent = "Restrito aos admins.";
+            supportStatus.textContent = "Restrito aos admins.";
             withdrawsStatus.textContent = "Restrito aos admins.";
             reportsStatus.textContent = "Restrito aos admins.";
             redirectToIndex();
@@ -1078,6 +1101,10 @@ body {
           if (requestsNav) requestsNav.style.display = "none";
           requestsEmpty.style.display = "block";
           requestsEmpty.textContent = "Faça login para ver solicitações.";
+          supportList.innerHTML = "";
+          if (supportNav) supportNav.style.display = "none";
+          supportEmpty.style.display = "block";
+          supportEmpty.textContent = "Faça login para ver mensagens.";
           withdrawsList.innerHTML = "";
           withdrawsEmpty.style.display = "block";
           withdrawsEmpty.textContent = "Faça login para ver saques.";
@@ -1093,6 +1120,7 @@ body {
         setStatus(false, "Erro");
         sessionStatus.textContent = err?.message || "Erro ao checar sessão.";
         requestsStatus.textContent = "Erro ao checar sessão.";
+        supportStatus.textContent = "Erro ao checar sessão.";
         withdrawsStatus.textContent = "Erro ao checar sessão.";
         reportsStatus.textContent = "Erro ao checar sessão.";
         if (!currentUser || !profile?.is_admin) {
@@ -1228,12 +1256,14 @@ body {
         const { data, error } = await supabase
           .from("servers")
           .select("id,name,official_site,discord_invite,banner_url,status,created_at,owner_email")
+          .neq("status", "deleted")
           .order("created_at", { ascending: false })
           .limit(200);
         if (isMissingOwnerEmailColumnError(error)) {
           const fallback = await supabase
             .from("servers")
             .select("id,name,official_site,discord_invite,banner_url,status,created_at")
+            .neq("status", "deleted")
             .order("created_at", { ascending: false })
             .limit(200);
           if (fallback.error) throw fallback.error;
@@ -1594,7 +1624,7 @@ body {
           error = fallback.error;
         }
         if (error) throw error;
-        requestCache = await enhanceRequestsWithSignedUrls(data || []);
+        requestCache = await enhanceRequestsWithSignedUrls(await attachRequestUserData(data || []));
         renderRequests(requestCache);
         requestsStatus.textContent = "Pronto";
       } catch (err) {
@@ -1643,6 +1673,7 @@ body {
         </div>
         ${req.displayCoverUrl || req.cover_url ? `<img src="${req.displayCoverUrl || req.cover_url}" alt="${req.name}" style="width:100%;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--border);" />` : ""}
         <div class="muted">Usuário: ${req.user_email || "-"}</div>
+        <div class="muted">País do usuário: ${escapeHtml(String(req?.request_user?.country_code || "-"))}</div>
         <div class="muted">Tipo de envio: ${submitterLabel}</div>
         <div class="muted">${formatDiscordInviteHtml(req.discord_invite)}</div>
         ${missingFieldsMessage ? `<div class="muted" style="color:#b45309;">${missingFieldsMessage}</div>` : ""}
@@ -1653,6 +1684,118 @@ body {
         </div>
       `;
       requestsList.appendChild(card);
+    }
+
+    function getSupportUserLabel(row) {
+      const first = String(row?.users?.first_name || "").trim();
+      const last = String(row?.users?.last_name || "").trim();
+      const fullName = `${first} ${last}`.trim();
+      return fullName || row?.users?.email || row?.user_id || "Usuário";
+    }
+
+    async function attachRequestUserData(rows) {
+      const list = Array.isArray(rows) ? rows : [];
+      const userIds = Array.from(new Set(
+        list.map((row) => String(row?.user_id || "").trim()).filter(Boolean),
+      ));
+      if (userIds.length === 0) {
+        return list.map((row) => ({ ...row, request_user: null }));
+      }
+      const { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("id,email,first_name,last_name,country_code")
+        .in("id", userIds);
+      if (usersError) throw usersError;
+      const usersMap = new Map((usersData || []).map((user) => [String(user.id), user]));
+      return list.map((row) => ({
+        ...row,
+        request_user: usersMap.get(String(row?.user_id || "").trim()) || null,
+      }));
+    }
+
+    async function fetchSupportRequests() {
+      try {
+        supportStatus.textContent = "Carregando...";
+        const { data, error } = await supabase
+          .from("support_requests")
+          .select("id,user_id,subject,message,status,created_at,updated_at")
+          .eq("status", "pending")
+          .order("updated_at", { ascending: true });
+        if (error) throw error;
+
+        const rows = data || [];
+        const userIds = Array.from(new Set(rows.map((row) => row.user_id).filter(Boolean)));
+        let userMap = new Map();
+        if (userIds.length > 0) {
+          const { data: usersData, error: usersError } = await supabase
+            .from("users")
+            .select("id,email,first_name,last_name,phone,phone_verified,country_code")
+            .in("id", userIds);
+          if (usersError) throw usersError;
+          userMap = new Map((usersData || []).map((user) => [user.id, user]));
+        }
+
+        supportCache = rows.map((row) => ({
+          ...row,
+          users: userMap.get(row.user_id) || null,
+        }));
+        renderSupportRequests(supportCache);
+        supportStatus.textContent = "Pronto";
+      } catch (err) {
+        console.error(err);
+        supportList.innerHTML = "";
+        if (supportNav) supportNav.style.display = "none";
+        supportEmpty.style.display = "block";
+        supportEmpty.textContent = "Erro ao carregar mensagens.";
+        supportStatus.textContent = err?.message || "Erro ao carregar mensagens.";
+      }
+    }
+
+    function renderSupportRequests(list) {
+      supportList.innerHTML = "";
+      if (!list || list.length === 0) {
+        supportCursor = 0;
+        if (supportNav) supportNav.style.display = "none";
+        supportEmpty.style.display = "block";
+        return;
+      }
+      if (supportNav) supportNav.style.display = "flex";
+      supportEmpty.style.display = "none";
+      supportCursor = Math.min(Math.max(supportCursor, 0), list.length - 1);
+      if (supportCounter) {
+        supportCounter.textContent = `${supportCursor + 1} de ${list.length}`;
+      }
+      if (supportPrevBtn) supportPrevBtn.disabled = supportCursor <= 0;
+      if (supportNextBtn) supportNextBtn.disabled = supportCursor >= list.length - 1;
+
+      const row = list[supportCursor];
+      const card = document.createElement("div");
+      card.className = "notice";
+      card.style.display = "grid";
+      card.style.gap = "8px";
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+          <div>
+            <strong>${escapeHtml(getSupportUserLabel(row))}</strong>
+            <div class="muted">${escapeHtml(row?.users?.email || "")}</div>
+          </div>
+          <span class="pill">${escapeHtml(row?.status || "pending")}</span>
+        </div>
+        <div class="muted">Assunto: ${escapeHtml(row?.subject || "-")}</div>
+        <div class="muted">País do usuário: ${escapeHtml(String(row?.users?.country_code || "-"))}</div>
+        <div class="muted">Telefone verificado: ${row?.users?.phone_verified ? "sim" : "não"}</div>
+        <div class="muted">Criado em ${escapeHtml(formatDateTime(row?.created_at))}</div>
+        <div class="muted">Atualizado em ${escapeHtml(formatDateTime(row?.updated_at))}</div>
+        <div style="padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(15,37,87,0.03);white-space:pre-wrap;">${escapeHtml(row?.message || "")}</div>
+        <div style="display:grid;gap:8px;">
+          <label for="support-response-${row.id}" style="font-size:12px;color:#0f2557;font-weight:600;">Resposta para o usuário</label>
+          <textarea id="support-response-${row.id}" data-support-response rows="5" placeholder="Escreva aqui a resposta que será enviada por e-mail ao usuário." style="width:100%;border:1px solid var(--border);border-radius:10px;padding:8px 10px;font:inherit;resize:vertical;min-height:120px;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="chip-btn" type="button" data-action="support-reply" data-id="${row.id}">Enviar resposta</button>
+        </div>
+      `;
+      supportList.appendChild(card);
     }
 
     function escapeHtml(value) {
@@ -1882,7 +2025,7 @@ body {
         if (allUserIds.length > 0) {
           const { data: userRows, error: userError } = await supabase
             .from("users")
-            .select("id,first_name,last_name,email,status")
+            .select("id,username,first_name,last_name,email,status,country_code")
             .in("id", allUserIds);
           if (userError) throw userError;
           (userRows || []).forEach((user) => usersMap.set(user.id, user));
@@ -1933,6 +2076,9 @@ body {
 
       const report = list[reportCursor];
       const reporterName = getUserDisplayName(report.reporter);
+      const reporterUsername = String(report?.reporter?.username || "").trim();
+      const reporterEmail = String(report?.reporter?.email || "").trim();
+      const targetCountryCode = String(report?.reported_user?.country_code || "").trim();
       const targetUserName = getUserDisplayName(report.reported_user);
       const listingTitle = report.listing?.title || "Anúncio removido";
       const listingServer = report.listing_server_name ? ` (${report.listing_server_name})` : "";
@@ -1958,6 +2104,9 @@ body {
       const listingLinkHtml = report.target_type === "listing" && report.listing_id
         ? `<div class="muted">Link do anúncio: <a class="link-ghost" href="listing.html?id=${encodeURIComponent(report.listing_id)}" target="_blank" rel="noopener">Abrir anúncio</a></div>`
         : "";
+      const profileLinkHtml = report.resolved_user_id
+        ? `<div class="muted">Perfil do usuário: <a class="link-ghost" href="user?id=${encodeURIComponent(report.resolved_user_id)}" target="_blank" rel="noopener">Abrir perfil</a></div>`
+        : "";
       const moderationNoteHtml = report.target_type === "listing"
         ? `
           <div style="display:grid;gap:6px;">
@@ -1971,8 +2120,14 @@ body {
           <strong>${report.target_type === "listing" ? "Denúncia de anúncio" : "Denúncia de perfil"}</strong>
           <span class="pill">pending</span>
         </div>
-        <div class="muted">Denunciante: ${escapeHtml(reporterName)}</div>
+        <div class="muted">Denunciante: ${escapeHtml([
+          reporterName,
+          reporterUsername ? `@${reporterUsername}` : "",
+          reporterEmail,
+        ].filter(Boolean).join(" · "))}</div>
         <div class="muted">${escapeHtml(targetLabel)}</div>
+        <div class="muted">País do usuário: ${escapeHtml(targetCountryCode || "-")}</div>
+        ${profileLinkHtml}
         ${listingLinkHtml}
         <div class="muted">Enviado em: ${escapeHtml(formatDateTime(report.created_at))}</div>
         <div style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(15,37,87,0.03);">${escapeHtml(report.reason || "")}</div>
@@ -1980,8 +2135,7 @@ body {
         ${moderationNoteHtml}
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn secondary" data-report-action="handled" data-report-id="${report.id}" style="flex:1;">Tratado</button>
-          ${report.target_type === "listing" && report.listing_id ? `<button class="btn secondary" data-report-action="delete-listing" data-report-id="${report.id}" style="flex:1;">Excluir anúncio</button>` : ""}
-          ${report.resolved_user_id ? `<button class="btn secondary" data-report-action="ban-user" data-report-id="${report.id}" style="flex:1;">Banir usuário</button>` : ""}
+          <button class="btn secondary" data-report-action="archive" data-report-id="${report.id}" style="flex:1;">Arquivado</button>
         </div>
       `;
       reportsList.appendChild(card);
@@ -2053,6 +2207,18 @@ body {
       if (requestCursor >= requestCache.length - 1) return;
       requestCursor += 1;
       renderRequests(requestCache);
+    });
+
+    supportPrevBtn?.addEventListener("click", () => {
+      if (supportCursor <= 0) return;
+      supportCursor -= 1;
+      renderSupportRequests(supportCache);
+    });
+
+    supportNextBtn?.addEventListener("click", () => {
+      if (supportCursor >= supportCache.length - 1) return;
+      supportCursor += 1;
+      renderSupportRequests(supportCache);
     });
 
     reportsPrevBtn?.addEventListener("click", () => {
@@ -2158,6 +2324,62 @@ body {
       }
     });
 
+    supportList?.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const action = String(button.dataset.action || "");
+      if (action !== "support-reply") return;
+      if (!profile?.is_admin) {
+        supportStatus.textContent = "Apenas admins podem revisar mensagens.";
+        return;
+      }
+
+      const requestId = String(button.dataset.id || "");
+      if (!requestId) return;
+      const card = button.closest(".notice");
+      const responseInput = card?.querySelector("textarea[data-support-response]");
+      const responseMessage = String(responseInput?.value || "").trim();
+      if (responseMessage.length < 10) {
+        supportStatus.textContent = "Escreva uma resposta com pelo menos 10 caracteres.";
+        responseInput?.focus();
+        return;
+      }
+      const confirmed = window.confirm("Enviar esta resposta por e-mail e marcar a solicitação como tratada?");
+      if (!confirmed) return;
+
+      try {
+        button.disabled = true;
+        button.textContent = "Enviando...";
+        supportStatus.textContent = "Enviando resposta...";
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token || "";
+        const { data, error } = await supabase.functions.invoke("support_request_reply", {
+          body: {
+            requestId,
+            responseMessage,
+            userToken: accessToken,
+          },
+          headers: accessToken
+            ? {
+                Authorization: `Bearer ${accessToken}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok) {
+          throw new Error(data?.error || error?.message || "Erro ao enviar resposta.");
+        }
+        await fetchSupportRequests();
+        supportStatus.textContent = "Resposta enviada e solicitação tratada.";
+      } catch (err) {
+        console.error(err);
+        supportStatus.textContent = err?.message || "Erro ao enviar resposta.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Enviar resposta";
+      }
+    });
+
     withdrawsList?.addEventListener("click", async (event) => {
       const button = event.target.closest("button[data-action]");
       if (!button) return;
@@ -2232,17 +2454,6 @@ body {
           noteInput?.focus();
           return;
         }
-        if (action === "ban-user") {
-          if (!report.resolved_user_id) {
-            throw new Error("Não foi possível identificar o usuário denunciado.");
-          }
-          const confirmBan = window.confirm("Confirma o banimento deste usuário? Os anúncios dele serão removidos.");
-          if (!confirmBan) {
-            setReportButtonsProcessing(card, action, false);
-            reportsStatus.textContent = "Ação cancelada.";
-            return;
-          }
-        }
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData.session?.access_token || "";
         const { data: moderateData, error: moderateErr } = await supabase.functions.invoke("report_moderate", {
@@ -2272,10 +2483,10 @@ body {
           } else {
             reportsStatus.textContent = "Anúncio excluído, denúncia tratada e e-mail enviado ao anunciante.";
           }
-        } else if (action === "ban-user") {
-          reportsStatus.textContent = "Usuário banido e denúncia tratada.";
+        } else if (action === "archive") {
+          reportsStatus.textContent = "Denúncia arquivada.";
         } else {
-          reportsStatus.textContent = "Denúncia tratada.";
+          reportsStatus.textContent = "Denúncia tratada e contabilizada no rating.";
         }
       } catch (err) {
         console.error(err);

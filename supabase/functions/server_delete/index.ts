@@ -1,6 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
-import { deleteLogoFromR2, extractLogoR2Key, extractSupabaseLogoPath } from "../_shared/r2_logo.ts";
 
 type Payload = {
   serverId?: string;
@@ -71,41 +70,48 @@ Deno.serve(async (req) => {
 
     const { data: server, error: serverErr } = await supabase
       .from("servers")
-      .select("id,name,banner_url")
+      .select("id,name,website_domain,status")
       .eq("id", serverId)
       .maybeSingle();
     if (serverErr) throw serverErr;
     if (!server) {
       return errorResponse("Servidor não encontrado", 404);
     }
+    if (String(server.status || "") === "deleted") {
+      return jsonResponse({
+        ok: true,
+        deletedServer: {
+          id: server.id,
+          name: server.name,
+        },
+        alreadyDeleted: true,
+      });
+    }
 
-    const logoR2Key = extractLogoR2Key(server.banner_url);
-    const logoSupabasePath = extractSupabaseLogoPath(server.banner_url);
-    const { error: deleteErr } = await supabase
+    const { error: updateServerErr } = await supabase
       .from("servers")
-      .delete()
+      .update({ status: "deleted" })
       .eq("id", serverId);
-    if (deleteErr) throw deleteErr;
+    if (updateServerErr) throw updateServerErr;
 
-    let logoDeleted = false;
-    if (logoR2Key || logoSupabasePath) {
-      if (logoR2Key) {
-        try {
-          await deleteLogoFromR2(logoR2Key);
-          logoDeleted = true;
-        } catch (storageErr) {
-          console.error("Falha ao excluir logo do servidor no R2:", storageErr);
-        }
-      } else if (logoSupabasePath) {
-        const { error: storageErr } = await supabase.storage
-          .from("server_logos")
-          .remove([logoSupabasePath]);
-        if (storageErr) {
-          console.error("Falha ao excluir logo do servidor no Supabase Storage:", storageErr);
-        } else {
-          logoDeleted = true;
-        }
-      }
+    const { error: listingsErr } = await supabase
+      .from("listings")
+      .update({
+        status: "removed",
+        highlight_status: "none",
+        highlight_started_at: null,
+        highlight_expires_at: null,
+      })
+      .eq("server_id", serverId);
+    if (listingsErr) throw listingsErr;
+
+    if (String(server.website_domain || "").trim()) {
+      const { error: requestErr } = await supabase
+        .from("game_requests")
+        .update({ status: "deleted" })
+        .eq("website_domain", server.website_domain)
+        .eq("status", "approved");
+      if (requestErr) throw requestErr;
     }
 
     return jsonResponse({
@@ -114,7 +120,7 @@ Deno.serve(async (req) => {
         id: server.id,
         name: server.name,
       },
-      logoDeleted,
+      archived: true,
     });
   } catch (err) {
     console.error(err);

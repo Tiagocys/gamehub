@@ -516,14 +516,86 @@ main.home-layout.sidebar-collapsed {
   gap: 10px;
 }
 
+.sidebar-list-scroll {
+  max-height: min(56vh, 640px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sidebar-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(12, 21, 51, 0.16);
+  border-radius: 999px;
+}
+
 .sidebar-item {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 8px;
   border-radius: 16px;
   overflow: hidden;
+}
+
+.sidebar-game-entry {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-game-entry-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(118, 168, 255, 0.34);
+  background: rgba(118, 168, 255, 0.12);
+  color: var(--accent-2);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.sidebar-item-with-action {
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-areas:
+    "thumb action"
+    "body body";
+  align-items: center;
+}
+
+.sidebar-item-thumb-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  grid-area: thumb;
+}
+
+.sidebar-item-body {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  grid-area: body;
+}
+
+.sidebar-item-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sidebar-item-title-link:hover .sidebar-item-title {
+  color: var(--accent);
+}
+
+.sidebar-item-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
 .sidebar-item-thumb {
@@ -574,25 +646,29 @@ main.home-layout.sidebar-collapsed {
   border-radius: 999px;
 }
 
-.sidebar-item-copy {
-  min-width: 0;
-  display: grid;
+.sidebar-item-title {
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.25;
 }
 
-.sidebar-item-copy strong,
-.sidebar-item-copy span {
+.sidebar-item-subtitle {
+  color: var(--muted);
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.sidebar-item-copy strong {
-  font-size: 14px;
-}
-
-.sidebar-item-copy span {
-  color: var(--muted);
-  font-size: 12px;
+.sidebar-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-height: 18px;
 }
 
 .sidebar-item-chip {
@@ -605,6 +681,27 @@ main.home-layout.sidebar-collapsed {
   font-size: 11px;
   font-weight: 700;
   vertical-align: middle;
+}
+
+.sidebar-follow-btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  grid-area: action;
+  justify-self: stretch;
+}
+
+.sidebar-follow-btn.is-following {
+  background: rgba(118, 168, 255, 0.16);
+  border-color: rgba(118, 168, 255, 0.34);
+  color: var(--accent-2);
+}
+
+.sidebar-item-highlighted {
+  border: 1px solid rgba(118, 168, 255, 0.32);
+  background: rgba(248, 250, 252, 0.98);
+  box-shadow: 0 10px 24px rgba(118, 168, 255, 0.08);
 }
 
 .home-sidebar.collapsed {
@@ -634,6 +731,9 @@ main.home-layout.sidebar-collapsed {
   min-width: 0;
   display: grid;
   gap: 0;
+  width: 100%;
+  align-content: start;
+  justify-items: stretch;
 }
 
 .home-feed .hero {
@@ -641,12 +741,16 @@ main.home-layout.sidebar-collapsed {
 }
 
 .home-feed-sections {
+  width: 100%;
+  max-width: none;
+  margin: 0;
   padding: 0 0 60px;
 }
 
 .home-game-sections {
   display: grid;
   gap: 22px;
+  width: 100%;
 }
 
 .home-game-section {
@@ -656,6 +760,7 @@ main.home-layout.sidebar-collapsed {
   border-radius: 28px;
   border: 1px solid rgba(12, 21, 51, 0.08);
   background: rgba(248, 250, 252, 0.96);
+  width: 100%;
 }
 
 .home-game-section-head {
@@ -692,6 +797,27 @@ main.home-layout.sidebar-collapsed {
   gap: 14px;
   overflow-x: auto;
   padding: 4px 4px 8px;
+  width: 100%;
+  justify-content: start;
+}
+
+.home-game-section-featured {
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.home-game-row-featured {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 4px 8px;
+  scroll-behavior: smooth;
+}
+
+.home-game-row-featured > .home-feed-card {
+  flex: 0 0 min(220px, 32vw);
 }
 
 .home-game-row::-webkit-scrollbar {
@@ -713,6 +839,10 @@ main.home-layout.sidebar-collapsed {
   min-height: 100%;
 }
 
+.home-feed-card-game-boost {
+  align-content: start;
+}
+
 .home-feed-card-media {
   position: relative;
   aspect-ratio: 1 / 1;
@@ -720,6 +850,12 @@ main.home-layout.sidebar-collapsed {
   overflow: hidden;
   padding: 10px;
   box-sizing: border-box;
+}
+
+.home-feed-card-media-link {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .home-feed-card-media img {
@@ -752,6 +888,15 @@ main.home-layout.sidebar-collapsed {
   line-height: 1.3;
 }
 
+.home-feed-card-title-link {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.home-feed-card-title-link:hover {
+  color: var(--accent);
+}
+
 .home-feed-card-badge {
   position: absolute;
   top: 10px;
@@ -763,6 +908,26 @@ main.home-layout.sidebar-collapsed {
   font-size: 11px;
   font-weight: 700;
   z-index: 1;
+}
+
+.home-feed-card-follow-chip {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  min-height: 32px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(12, 21, 51, 0.08);
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(12, 21, 51, 0.14);
+}
+
+.home-feed-card-follow-chip.is-following {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(12, 21, 51, 0.08);
+  color: var(--ink);
 }
 
 .hero {
@@ -1953,8 +2118,11 @@ main.home-layout.sidebar-collapsed {
 @media (max-width: 900px) {
   .site-nav {
     padding: 14px 18px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
+  }
+  .brand {
+    flex: 0 0 auto;
   }
   main.home-layout {
     grid-template-columns: 1fr;
@@ -1974,8 +2142,20 @@ main.home-layout.sidebar-collapsed {
   .sidebar-item {
     grid-template-columns: minmax(0, 1fr) !important;
   }
-  .sidebar-item-thumb {
-    display: none !important;
+  .sidebar-item-with-action {
+    grid-template-columns: 44px minmax(0, 1fr) !important;
+    grid-template-areas:
+      "thumb action"
+      "body body";
+  }
+  .sidebar-game-entry-tag {
+    margin-bottom: -2px;
+  }
+  .sidebar-item-body {
+    gap: 4px;
+  }
+  .sidebar-follow-btn {
+    width: auto;
   }
   .home-sidebar-toggle {
     width: 34px;
@@ -2032,9 +2212,13 @@ main.home-layout.sidebar-collapsed {
   }
   .brand-copy { display: none; }
   .nav-search {
-    order: 3;
-    flex: 1 1 100%;
+    order: 0;
+    flex: 1 1 auto;
+    min-width: 0;
     max-width: none;
+  }
+  .nav-actions {
+    flex: 0 0 auto;
   }
   .nav-search-bar {
     flex-direction: row;
@@ -2063,6 +2247,14 @@ main.home-layout.sidebar-collapsed {
   .home-game-row {
     grid-auto-columns: minmax(180px, 70vw);
   }
+  .home-game-row-featured {
+    display: flex;
+    flex-wrap: nowrap;
+  }
+
+  .home-game-row-featured > .home-feed-card {
+    flex-basis: min(220px, 68vw);
+  }
   .section { padding: 0 18px 60px; }
   .site-footer-inner { padding: 22px 18px 26px; }
   .search-bar { flex-direction: column; }
@@ -2077,6 +2269,64 @@ main.home-layout.sidebar-collapsed {
   .suggestions-panel { max-height: 40vh; }
   .create-listing-btn { display: none !important; }
   .menu-item.create-listing-menu { display: inline-flex; }
+}
+
+@media (max-width: 600px) {
+  .site-nav {
+    flex-wrap: wrap;
+  }
+
+  .nav-search {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+@media (min-width: 451px) and (max-width: 900px) {
+  .home-game-row {
+    grid-auto-columns: 220px;
+  }
+
+  .home-feed-card {
+    width: 220px;
+  }
+
+  #sidebar-games.sidebar-list-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-height: none;
+    padding: 2px 2px 8px;
+  }
+
+  #sidebar-games.sidebar-list-scroll::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .sidebar-game-entry {
+    flex: 0 0 min(320px, 62vw);
+    justify-content: end;
+  }
+
+  .sidebar-item-with-action {
+    grid-template-columns: 44px minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "thumb body action" !important;
+    align-items: center;
+  }
+
+  .sidebar-item-body {
+    align-self: center;
+  }
+
+  .sidebar-follow-btn {
+    justify-self: end;
+    width: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

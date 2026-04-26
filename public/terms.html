@@ -24,6 +24,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Terms of use</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="terms-guard-style">html{visibility:hidden;}</style>
   <style>
     .terms-page {
       max-width: 980px;
@@ -62,6 +63,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
@@ -144,10 +148,21 @@
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
+    const pageLoader = document.getElementById("page-loader");
 
     let supabase;
     let currentUser = null;
     let avatarLoaded = false;
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("terms-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
 
     if (avatarImg) {
       avatarImg.referrerPolicy = "no-referrer";
@@ -164,7 +179,7 @@
           heroHelper: "Ao usar a plataforma, você concorda com os termos e políticas aplicáveis.",
           sections: [
             { title: "1. Conta e acesso", items: ["Você é responsável pelo uso da sua conta e pela segurança das suas credenciais.", "Os dados do perfil devem ser corretos e mantidos atualizados.", "Podemos restringir acesso em casos de abuso, fraude ou violação de regras."] },
-            { title: "2. Anúncios e conteúdo", items: ["O usuário é responsável pelas informações publicadas em seus anúncios.", "É proibido publicar conteúdo enganoso, malicioso, ilegal ou que viole direitos de terceiros.", "Conteúdos denunciados podem ser revisados, editados ou removidos pela moderação."] },
+            { title: "2. Anúncios e conteúdo", items: ["O usuário é responsável pelas informações publicadas em seus anúncios.", "É proibido publicar conteúdo enganoso, malicioso, ilegal ou que viole direitos de terceiros.", "Conteúdos denunciados podem ser revisados, editados ou removidos pela moderação.", "O Gimerr não se responsabiliza por negociações, acordos, trocas ou pagamentos realizados entre usuários fora da plataforma, pois não operamos sistema próprio de trade, intermediação ou custódia."] },
             { title: "3. Recursos pagos", items: ["Os destaques de anúncios são recursos pagos e seguem regras específicas de consumo de saldo.", "As regras completas de destaque estão descritas na política de anúncios."], body: 'Veja: <a class="link-ghost" href="ads-policy.html">Políticas de anúncios</a>' },
             { title: "4. Moderação e sanções", items: ["Podemos remover anúncios e perfis que violem os termos de uso ou as regras da comunidade.", "Em casos graves ou recorrentes, a conta pode ser suspensa ou banida."] },
             { title: "5. Suporte", body: 'E-mail de suporte: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
@@ -178,7 +193,7 @@
           heroHelper: "Al usar la plataforma, aceptas los términos y políticas aplicables.",
           sections: [
             { title: "1. Cuenta y acceso", items: ["Eres responsable del uso de tu cuenta y de la seguridad de tus credenciales.", "Los datos del perfil deben ser correctos y mantenerse actualizados.", "Podemos restringir el acceso en casos de abuso, fraude o violación de reglas."] },
-            { title: "2. Anuncios y contenido", items: ["El usuario es responsable de la información publicada en sus anuncios.", "Está prohibido publicar contenido engañoso, malicioso, ilegal o que viole derechos de terceros.", "El contenido denunciado puede ser revisado, editado o eliminado por moderación."] },
+            { title: "2. Anuncios y contenido", items: ["El usuario es responsable de la información publicada en sus anuncios.", "Está prohibido publicar contenido engañoso, malicioso, ilegal o que viole derechos de terceros.", "El contenido denunciado puede ser revisado, editado o eliminado por moderación.", "Gimerr no se responsabiliza por negociaciones, acuerdos, intercambios o pagos realizados entre usuarios fuera de la plataforma, ya que no operamos un sistema propio de trade, intermediación o custodia."] },
             { title: "3. Funciones de pago", items: ["Los destacados de anuncios son funciones de pago y siguen reglas específicas de consumo de saldo.", "Las reglas completas de los destacados están descritas en la política de anuncios."], body: 'Ver: <a class="link-ghost" href="ads-policy.html">Política de anuncios</a>' },
             { title: "4. Moderación y sanciones", items: ["Podemos eliminar anuncios y perfiles que violen los términos de uso o las reglas de la comunidad.", "En casos graves o reiterados, la cuenta puede ser suspendida o bloqueada."] },
             { title: "5. Soporte", body: 'Correo de soporte: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
@@ -191,7 +206,7 @@
         heroHelper: "By using the platform, you agree to the applicable terms and policies.",
         sections: [
           { title: "1. Account and access", items: ["You are responsible for the use of your account and the security of your credentials.", "Profile data must be accurate and kept up to date.", "We may restrict access in cases of abuse, fraud or rule violations."] },
-          { title: "2. Listings and content", items: ["The user is responsible for the information published in their listings.", "Publishing misleading, malicious, illegal content or content that violates third-party rights is prohibited.", "Reported content may be reviewed, edited or removed by moderation."] },
+          { title: "2. Listings and content", items: ["The user is responsible for the information published in their listings.", "Publishing misleading, malicious, illegal content or content that violates third-party rights is prohibited.", "Reported content may be reviewed, edited or removed by moderation.", "Gimerr is not responsible for negotiations, agreements, trades, or payments made between users outside the platform, since we do not operate our own trade, escrow, or custody system."] },
           { title: "3. Paid features", items: ["Listing highlights are paid features and follow specific balance consumption rules.", "The complete highlight rules are described in the advertising policy."], body: 'See: <a class="link-ghost" href="ads-policy.html">Advertising policy</a>' },
           { title: "4. Moderation and sanctions", items: ["We may remove listings and profiles that violate the terms of use or community rules.", "In serious or repeated cases, the account may be suspended or banned."] },
           { title: "5. Support", body: 'Support email: <a class="link-ghost" href="mailto:admin@gimerr.com">admin@gimerr.com</a>' },
@@ -337,6 +352,7 @@
     });
 
     renderTermsPage();
+    revealPage();
     initAuth();
   </script>
 </body>

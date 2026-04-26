@@ -6,6 +6,7 @@ import {
   safeInt,
   syncHighlightWallet,
 } from "../_shared/highlight_wallet.ts";
+import { ensurePartnerWallet, isMissingPartnerWalletTablesError } from "../_shared/partner_wallet.ts";
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
@@ -19,7 +20,8 @@ const corsHeaders = {
 };
 
 const NET_ESTIMATE_RATIO = 0.921;
-const PARTNER_SHARE_RATIO = 0.5;
+const OWNER_SHARE_RATIO = 0.5;
+const ADMIN_BENEFICIARY_SHARE_RATIO = 0.25;
 const PRICE_PER_DAY_CENTS = 600;
 const DEFAULT_USD_BRL_RATE = 5.5;
 const SUPPORTED_CHECKOUT_CURRENCIES = new Set([
@@ -243,6 +245,7 @@ Deno.serve(async (req) => {
 
     if (eventType === "checkout.session.completed" || eventType === "checkout.session.async_payment_succeeded") {
       const metadata = session?.metadata || {};
+      const walletTarget = String(metadata.wallet_target || "").trim().toLowerCase();
       const listingIdRaw = typeof metadata.listing_id === "string" ? metadata.listing_id.trim() : "";
       const listingId = listingIdRaw || null;
       const userId = typeof metadata.user_id === "string" ? metadata.user_id : "";
@@ -268,6 +271,83 @@ Deno.serve(async (req) => {
       }
 
       const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+      if (walletTarget === "partner") {
+        const nowIso = new Date().toISOString();
+        const reservePayload = {
+          user_id: userId,
+          event_type: "topup",
+          amount_delta_cents: totalCents,
+          balance_after_cents: 0,
+          checkout_session_id: sessionId,
+          payment_intent_id: paymentIntentId,
+          currency: "BRL",
+          metadata: {
+            source: "stripe_webhook",
+            wallet_target: "partner",
+            checkout_currency: checkoutCurrency,
+            checkout_amount_paid: Number((checkoutTotalCents / 100).toFixed(2)),
+            checkout_country_code: String(metadata.checkout_country_code || "").trim().toUpperCase() || null,
+            fx_rate: brlFxRate,
+          },
+        };
+        let topupReserved = false;
+        let topupApplied = false;
+        try {
+          const { error: reserveErr } = await supabase
+            .from("partner_wallet_events")
+            .insert(reservePayload);
+          if (reserveErr) {
+            if (reserveErr.code === "23505") {
+              return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+                headers: { "content-type": "application/json", ...corsHeaders },
+              });
+            }
+            if (!isMissingPartnerWalletTablesError(reserveErr)) {
+              throw reserveErr;
+            }
+          } else {
+            topupReserved = true;
+          }
+
+          const beforeWallet = await ensurePartnerWallet(supabase, userId, nowIso);
+          const nextAvailableCents = safeInt(beforeWallet.available_cents) + totalCents;
+          const nextTotalPurchasedCents = safeInt(beforeWallet.total_purchased_cents) + totalCents;
+          const { data: toppedWallet, error: topupErr } = await supabase
+            .from("partner_wallets")
+            .update({
+              available_cents: nextAvailableCents,
+              total_purchased_cents: nextTotalPurchasedCents,
+              last_consumed_at: nowIso,
+            })
+            .eq("user_id", userId)
+            .select("available_cents")
+            .single();
+          if (topupErr) throw topupErr;
+          topupApplied = true;
+
+          await supabase
+            .from("partner_wallet_events")
+            .update({
+              balance_after_cents: safeInt(toppedWallet?.available_cents, nextAvailableCents),
+            })
+            .eq("checkout_session_id", sessionId)
+            .eq("event_type", "topup");
+        } catch (partnerTopupErr) {
+          if (topupReserved && !topupApplied) {
+            await supabase
+              .from("partner_wallet_events")
+              .delete()
+              .eq("checkout_session_id", sessionId)
+              .eq("event_type", "topup");
+          }
+          throw partnerTopupErr;
+        }
+
+        return new Response(JSON.stringify({ ok: true }), {
+          headers: { "content-type": "application/json", ...corsHeaders },
+        });
+      }
+
       let listing: {
         id: string;
         user_id: string;
@@ -375,18 +455,31 @@ Deno.serve(async (req) => {
       const projectedExpire = new Date(now.getTime() + projectedSeconds * 1000);
 
       let ownerId: string | null = null;
+      let adminBeneficiaryId: string | null = null;
       if (listing?.server_id) {
-        const { data: serverData, error: serverErr } = await supabase
+        let { data: serverData, error: serverErr } = await supabase
           .from("servers")
-          .select("owner_id")
+          .select("owner_id,admin_beneficiary_id")
           .eq("id", listing.server_id)
           .single();
+        if (serverErr && String(serverErr.message || "").includes("admin_beneficiary_id")) {
+          const fallback = await supabase
+            .from("servers")
+            .select("owner_id")
+            .eq("id", listing.server_id)
+            .single();
+          serverData = fallback.data ? { ...fallback.data, admin_beneficiary_id: null } : null;
+          serverErr = fallback.error;
+        }
         if (!serverErr) {
           ownerId = typeof serverData?.owner_id === "string" ? serverData.owner_id : null;
+          adminBeneficiaryId = typeof serverData?.admin_beneficiary_id === "string"
+            ? serverData.admin_beneficiary_id
+            : null;
         }
       }
 
-      if (ownerId && listing) {
+      if ((ownerId || adminBeneficiaryId) && listing) {
         const stripeNetDetails = await fetchStripeNetDetails(paymentIntentId);
         const platformNetCents = stripeNetDetails.netCents == null
           ? Math.round(totalCents * NET_ESTIMATE_RATIO)
@@ -394,9 +487,17 @@ Deno.serve(async (req) => {
         const grossAmount = centsToMoney(totalCents);
         const payoutStatus = projectedExpire <= now ? "eligible" : "pending";
 
-        const recipients: Array<{ userId: string; role: "owner"; ratio: number }> = [
-          { userId: ownerId, role: "owner", ratio: PARTNER_SHARE_RATIO },
-        ];
+        const recipients: Array<{ userId: string; role: "owner" | "admin"; ratio: number }> = [];
+        if (ownerId) {
+          recipients.push({ userId: ownerId, role: "owner", ratio: OWNER_SHARE_RATIO });
+        }
+        if (adminBeneficiaryId && adminBeneficiaryId !== ownerId) {
+          recipients.push({
+            userId: adminBeneficiaryId,
+            role: "admin",
+            ratio: ADMIN_BENEFICIARY_SHARE_RATIO,
+          });
+        }
 
         for (const recipient of recipients) {
           const recipientNetCents = Math.round(platformNetCents * recipient.ratio);

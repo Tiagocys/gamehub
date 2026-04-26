@@ -143,6 +143,19 @@
       cursor: pointer;
     }
 
+    .seller-rating {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
     .seller-recommendations img {
       width: 14px;
       height: 14px;
@@ -431,6 +444,7 @@
           <h1 id="listing-title">Loading...</h1>
           <div class="seller-meta-row">
             <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
+            <span id="seller-rating" class="seller-rating" style="display:none;"></span>
             <button id="seller-recommendations" class="seller-recommendations" type="button" style="display:none;" aria-expanded="false"></button>
           </div>
           <span id="seller-discord" class="seller-discord" style="display:none;"></span>
@@ -453,7 +467,7 @@
           <section id="report-listing-card" class="hero-card listing-report-card">
             <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
               <img src="img/flag.png" alt="" class="report-icon" />
-              Report listing
+              <span id="report-listing-btn-label">Report listing</span>
             </button>
             <button id="listing-share-btn" class="btn btn-ghost report-trigger" type="button">
               Share listing
@@ -466,6 +480,7 @@
               <div id="report-listing-files-info" class="helper">No images selected.</div>
               <div class="inline-actions">
                 <button id="report-listing-submit" class="btn btn-primary" type="button">Submit report</button>
+                <button id="report-listing-delete" class="btn btn-danger" type="button" style="display:none;">Delete listing</button>
                 <button id="report-listing-cancel" class="btn btn-ghost" type="button">Cancel</button>
               </div>
               <div id="report-listing-feedback" class="report-feedback"></div>
@@ -544,6 +559,7 @@
     const profileLink = document.getElementById("profile-link");
     const titleEl = document.getElementById("listing-title");
     const sellerProfileLink = document.getElementById("seller-profile-link");
+    const sellerRating = document.getElementById("seller-rating");
     const sellerDiscord = document.getElementById("seller-discord");
     const sellerRecommendations = document.getElementById("seller-recommendations");
     const shareBtn = document.getElementById("listing-share-btn");
@@ -558,12 +574,14 @@
     const mainMedia = document.getElementById("listing-main");
     const thumbGrid = document.getElementById("listing-thumbs");
     const reportListingBtn = document.getElementById("report-listing-btn");
+    const reportListingBtnLabel = document.getElementById("report-listing-btn-label");
     const reportListingCard = document.getElementById("report-listing-card");
     const reportListingForm = document.getElementById("report-listing-form");
     const reportListingReason = document.getElementById("report-listing-reason");
     const reportListingFiles = document.getElementById("report-listing-files");
     const reportListingFilesInfo = document.getElementById("report-listing-files-info");
     const reportListingSubmit = document.getElementById("report-listing-submit");
+    const reportListingDelete = document.getElementById("report-listing-delete");
     const reportListingCancel = document.getElementById("report-listing-cancel");
     const reportListingFeedback = document.getElementById("report-listing-feedback");
     const reportListingSuccess = document.getElementById("report-listing-success");
@@ -646,7 +664,7 @@
     if (whatsappChat) {
       whatsappChat.childNodes[0].textContent = t("listing.whatsapp_cta", "Chat on WhatsApp");
     }
-    if (reportListingBtn) reportListingBtn.lastChild.textContent = ` ${t("listing.report_button", "Report listing")}`;
+    if (reportListingBtnLabel) reportListingBtnLabel.textContent = t("listing.report_button", "Report listing");
     if (shareBtn) shareBtn.textContent = t("listing.share_button", "Share listing");
     const reportReasonLabel = document.querySelector('label[for="report-listing-reason"]');
     if (reportReasonLabel) reportReasonLabel.textContent = t("listing.report_problem_label", "Describe the issue");
@@ -655,6 +673,7 @@
     if (reportFilesLabel) reportFilesLabel.textContent = t("listing.report_files_label", "Attachments (optional, up to 4 images)");
     if (reportListingFilesInfo) reportListingFilesInfo.textContent = t("listing.report_files_empty", "No images selected.");
     if (reportListingSubmit) reportListingSubmit.textContent = t("listing.report_submit", "Submit report");
+    if (reportListingDelete) reportListingDelete.textContent = t("listing.report_delete_submit", "Delete listing");
     if (reportListingCancel) reportListingCancel.textContent = t("listing.cancel", "Cancel");
     const recommendersTitle = document.querySelector(".recommenders-modal-head h3");
     if (recommendersTitle) recommendersTitle.textContent = t("listing.recommenders_title", "Users who recommended");
@@ -727,6 +746,18 @@
           currentUser = session?.user || null;
           currentUserProfile = null;
           updateAuthUI();
+          if (currentUser) {
+            fetchCurrentUserProfile()
+              .then((profile) => {
+                currentUserProfile = profile;
+                if (currentListing) renderListing(currentListing);
+              })
+              .catch((err) => {
+                console.error(err);
+              });
+          } else if (currentListing) {
+            renderListing(currentListing);
+          }
         });
       }
       return supabase;
@@ -736,7 +767,7 @@
       if (!currentUser?.id) return null;
       const { data, error } = await supabase
         .from("users")
-        .select("id,phone_verified")
+        .select("id,phone_verified,is_admin")
         .eq("id", currentUser.id)
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
@@ -1138,6 +1169,31 @@
         if (typeof onProgress === "function") onProgress(index + 1, files.length);
       }
       return uploaded.filter(Boolean);
+    }
+
+    async function submitAdminListingModeration({ listingId, reason, evidenceImages, action }) {
+      ensureClient();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token || "";
+      if (!token) throw new Error(t("listing.session_expired", "Session expired. Please sign in again."));
+
+      const { data: responseData, error } = await supabase.functions.invoke("admin_listing_moderate", {
+        body: {
+          listingId,
+          reason,
+          evidenceImages,
+          action,
+          userToken: token,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !responseData?.ok) {
+        throw new Error(responseData?.error || error?.message || t("listing.report_send_error", "Error sending report."));
+      }
+      return responseData;
     }
 
     async function setAvatarImage(src) {
@@ -1600,6 +1656,21 @@
         sellerRecommendations.style.display = listing.user_profile_id ? "inline-flex" : "none";
         sellerRecommendations.setAttribute("aria-expanded", "false");
       }
+      if (sellerRating) {
+        const score = Number(listing.user_reputation_score);
+        if (listing.user_is_verified && Number.isFinite(score)) {
+          sellerRating.textContent = formatMessage("common.rating_out_of_ten", "Rating {score}/10", { score: score.toFixed(1) });
+          sellerRating.title = formatMessage("common.reputation_breakdown", "Recommendations: {recommendations} • Reports: {reports}", {
+            recommendations: Number(listing.user_recommendations_count || 0),
+            reports: Number(listing.user_reports_count || 0),
+          });
+          sellerRating.style.display = "inline-flex";
+        } else {
+          sellerRating.textContent = "";
+          sellerRating.removeAttribute("title");
+          sellerRating.style.display = "none";
+        }
+      }
       recommendersTargetUserId = listing.user_profile_id || null;
       recommendersFetched = false;
 
@@ -1632,21 +1703,42 @@
       }
 
       const ownListing = !!currentUser && !!listing.user_profile_id && currentUser.id === listing.user_profile_id;
+      const isAdminViewer = !!currentUserProfile?.is_admin;
       if (reportListingCard) {
         reportListingCard.style.display = "block";
       }
       if (reportListingBtn) {
         reportListingBtn.style.display = ownListing ? "none" : "inline-flex";
       }
+      if (reportListingBtnLabel) {
+        reportListingBtnLabel.textContent = isAdminViewer
+          ? t("listing.moderate_button", "Treat listing")
+          : t("listing.report_button", "Report listing");
+      }
       if (reportListingForm) {
         reportListingForm.style.display = "none";
+      }
+      const reportReasonLabel = document.querySelector('label[for="report-listing-reason"]');
+      if (reportReasonLabel) {
+        reportReasonLabel.textContent = isAdminViewer
+          ? t("listing.report_admin_reason_label", "Internal reason for removal")
+          : t("listing.report_problem_label", "Describe the issue");
+      }
+      if (reportListingReason) {
+        reportListingReason.value = "";
+        reportListingReason.placeholder = isAdminViewer
+          ? t("listing.report_admin_reason_placeholder", "Explain internally why this listing is being removed.")
+          : t("listing.report_problem_placeholder", "Explain why this listing should be reviewed.");
+      }
+      if (reportListingSubmit) {
+        reportListingSubmit.style.display = isAdminViewer && !ownListing ? "none" : "inline-flex";
+      }
+      if (reportListingDelete) {
+        reportListingDelete.style.display = isAdminViewer && !ownListing ? "inline-flex" : "none";
       }
       if (reportListingSuccess) {
         reportListingSuccess.style.display = "none";
         reportListingSuccess.textContent = "";
-      }
-      if (reportListingReason) {
-        reportListingReason.value = "";
       }
       if (reportListingFeedback) {
         reportListingFeedback.textContent = "";
@@ -1671,6 +1763,80 @@
         console.warn("Failed to load seller recommendations.", err);
         return 0;
       }
+    }
+
+    async function fetchReputationStats(userIds) {
+      const ids = Array.from(new Set(
+        (Array.isArray(userIds) ? userIds : [])
+          .map((value) => String(value || "").trim())
+          .filter(Boolean),
+      ));
+      if (ids.length === 0) return new Map();
+      const entries = await Promise.all(ids.map(async (userId) => {
+        try {
+          const [{ data: userRow, error: userError }, { count: recommendationsCount, error: recommendationsError }, { count: profileReportsCount, error: profileReportsError }, { data: userListings, error: listingsError }] = await Promise.all([
+            supabase
+              .from("users")
+              .select("id,phone_verified")
+              .eq("id", userId)
+              .maybeSingle(),
+            supabase
+              .from("recommendations")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", userId),
+            supabase
+              .from("reports")
+              .select("id", { count: "exact", head: true })
+              .eq("target_type", "user")
+              .eq("reported_user_id", userId)
+              .eq("status", "handled")
+              .in("action_taken", ["confirmed_report", "user_banned", "listing_deleted"]),
+            supabase
+              .from("listings")
+              .select("id")
+              .eq("user_id", userId),
+          ]);
+          if (userError) throw userError;
+          if (recommendationsError) throw recommendationsError;
+          if (profileReportsError) throw profileReportsError;
+          if (listingsError) throw listingsError;
+
+          const listingIds = (userListings || []).map((item) => item?.id).filter(Boolean);
+          let listingReportsCount = 0;
+          if (listingIds.length > 0) {
+            const { count, error } = await supabase
+              .from("reports")
+              .select("id", { count: "exact", head: true })
+              .eq("target_type", "listing")
+              .eq("status", "handled")
+              .in("action_taken", ["confirmed_report", "listing_deleted"])
+              .in("listing_id", listingIds);
+            if (error) throw error;
+            listingReportsCount = Number(count || 0);
+          }
+
+          const recommendations = Number(recommendationsCount || 0);
+          const reports = Number(profileReportsCount || 0) + listingReportsCount;
+          const isVerified = !!userRow?.phone_verified;
+          const score = !isVerified
+            ? null
+            : recommendations + reports === 0
+              ? 0
+              : Math.round((recommendations / (recommendations + reports)) * 100) / 10;
+
+          return [userId, {
+            user_id: userId,
+            is_verified: isVerified,
+            recommendations_count: recommendations,
+            reports_count: reports,
+            reputation_score: score,
+          }];
+        } catch (err) {
+          console.warn("Failed to load seller reputation stats.", err);
+          return null;
+        }
+      }));
+      return new Map(entries.filter(Boolean));
     }
 
     async function fetchServerSummary(serverId) {
@@ -1722,7 +1888,11 @@
         const userAvatarUrl = resolvedAvatarUrl || "";
         const userDiscordUsername = data?.users?.discord_username || "";
         const userProfileId = data?.users?.id || data?.user_id || null;
-        const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
+        const [userRecommendationsCount, reputationMap] = await Promise.all([
+          fetchRecommendationsCount(userProfileId),
+          fetchReputationStats([userProfileId]),
+        ]);
+        const userReputation = reputationMap.get(String(userProfileId || "")) || null;
         const serverSummary = await fetchServerSummary(data?.server_id);
         return {
           listing: {
@@ -1738,6 +1908,9 @@
             user_discord_username: userDiscordUsername,
             user_profile_id: userProfileId,
             user_recommendations_count: userRecommendationsCount,
+            user_reputation_score: userReputation?.reputation_score ?? null,
+            user_reports_count: Number(userReputation?.reports_count || 0),
+            user_is_verified: !!userReputation?.is_verified,
           },
         };
       } catch (err) {
@@ -1781,7 +1954,11 @@
             : "";
           userDiscordUsername = userData?.discord_username || "";
         }
-        const userRecommendationsCount = await fetchRecommendationsCount(userProfileId);
+        const [userRecommendationsCount, reputationMap] = await Promise.all([
+          fetchRecommendationsCount(userProfileId),
+          fetchReputationStats([userProfileId]),
+        ]);
+        const userReputation = reputationMap.get(String(userProfileId || "")) || null;
         const serverSummary = await fetchServerSummary(data?.server_id);
         return {
           listing: {
@@ -1797,6 +1974,9 @@
             user_discord_username: userDiscordUsername || "",
             user_profile_id: userProfileId,
             user_recommendations_count: userRecommendationsCount,
+            user_reputation_score: userReputation?.reputation_score ?? null,
+            user_reports_count: Number(userReputation?.reports_count || 0),
+            user_is_verified: !!userReputation?.is_verified,
           },
         };
       }
@@ -1808,6 +1988,7 @@
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
         updateAuthUI();
+        currentUserProfile = currentUser ? await fetchCurrentUserProfile() : null;
 
         const params = new URLSearchParams(window.location.search);
         const listingId = params.get("id");
@@ -1841,7 +2022,7 @@
     }
 
     authBtn?.addEventListener("click", handleAuthClick);
-    reportListingBtn?.addEventListener("click", () => {
+    reportListingBtn?.addEventListener("click", async () => {
       if (!currentUser) {
         redirectToGoogleLogin().catch((err) => {
           console.error(err);
@@ -1852,6 +2033,13 @@
       if (!currentListing) return;
       if (currentListing.user_profile_id && currentUser.id === currentListing.user_profile_id) {
         if (reportListingFeedback) reportListingFeedback.textContent = t("listing.own_report_blocked", "You cannot report your own listing.");
+        return;
+      }
+      if (!currentUserProfile) {
+        currentUserProfile = await fetchCurrentUserProfile();
+      }
+      if (!currentUserProfile?.is_admin && !currentUserProfile?.phone_verified) {
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a verified phone number can submit reports.");
         return;
       }
       if (reportListingForm) {
@@ -1949,7 +2137,7 @@
       }
     });
     reportListingFiles?.addEventListener("change", updateReportFilesInfo);
-    reportListingSubmit?.addEventListener("click", async () => {
+    async function handleListingModeration(action = "delete") {
       try {
         if (!currentUser) {
           await redirectToGoogleLogin();
@@ -1958,7 +2146,8 @@
         if (!currentUserProfile) {
           currentUserProfile = await fetchCurrentUserProfile();
         }
-        if (!currentUserProfile?.phone_verified) {
+        const isAdminViewer = !!currentUserProfile?.is_admin;
+        if (!isAdminViewer && !currentUserProfile?.phone_verified) {
           if (reportListingFeedback) {
             reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a verified phone number can submit reports.");
           }
@@ -1971,8 +2160,13 @@
           if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_min_reason", "Describe the issue using at least 10 characters.");
           return;
         }
+        if (isAdminViewer && action === "delete") {
+          const confirmed = window.confirm(t("listing.report_delete_confirm", "Delete this listing now? The seller will receive an e-mail."));
+          if (!confirmed) return;
+        }
         const files = getReportFiles();
-        reportListingSubmit.disabled = true;
+        if (reportListingSubmit) reportListingSubmit.disabled = true;
+        if (reportListingDelete) reportListingDelete.disabled = true;
         if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sending", "Sending report...");
         let evidenceImages = [];
         if (files.length > 0) {
@@ -1983,26 +2177,45 @@
           });
         }
         if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_registering", "Registering report...");
-        ensureClient();
-        const { error } = await supabase.from("reports").insert({
-          reporter_id: currentUser.id,
-          target_type: "listing",
-          listing_id: currentListing.id,
-          reason,
-          evidence_images: evidenceImages,
-        });
-        if (error) {
-          if (error.code === "23505") {
-            throw new Error(t("listing.report_duplicate", "You already have a pending report for this listing."));
+        if (isAdminViewer) {
+          await submitAdminListingModeration({
+            listingId: currentListing.id,
+            reason,
+            evidenceImages,
+            action,
+          });
+        } else {
+          ensureClient();
+          const { error } = await supabase.from("reports").insert({
+            reporter_id: currentUser.id,
+            target_type: "listing",
+            listing_id: currentListing.id,
+            reason,
+            evidence_images: evidenceImages,
+          });
+          if (error) {
+            if (error.code === "23505") {
+              throw new Error(t("listing.report_duplicate", "You already have a pending report for this listing."));
+            }
+            throw error;
           }
-          throw error;
         }
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.report_sent", "Report sent for review.");
-        showReportSuccess(t("listing.report_success_banner", "Your report was sent successfully. Our team will review the case."));
+        if (reportListingFeedback) {
+          reportListingFeedback.textContent = isAdminViewer
+            ? t("listing.report_deleted_admin", "Listing removed and seller notified by e-mail.")
+            : t("listing.report_sent", "Report sent for review.");
+        }
+        showReportSuccess(isAdminViewer
+          ? t("listing.report_delete_success_banner", "The listing was removed successfully and the seller was notified.")
+          : t("listing.report_success_banner", "Your report was sent successfully. Our team will review the case."));
         if (reportListingReason) reportListingReason.value = "";
         if (reportListingFiles) reportListingFiles.value = "";
         updateReportFilesInfo();
         if (reportListingForm) reportListingForm.style.display = "none";
+        if (isAdminViewer && action === "delete") {
+          window.location.href = `game.html?id=${encodeURIComponent(currentListing.server_id || "")}`;
+          return;
+        }
       } catch (err) {
         if (!isExpectedReportDuplicateError(err)) {
           console.error(err);
@@ -2012,7 +2225,14 @@
         }
       } finally {
         if (reportListingSubmit) reportListingSubmit.disabled = false;
+        if (reportListingDelete) reportListingDelete.disabled = false;
       }
+    }
+    reportListingSubmit?.addEventListener("click", () => {
+      handleListingModeration("report");
+    });
+    reportListingDelete?.addEventListener("click", () => {
+      handleListingModeration("delete");
     });
     avatarBtn?.addEventListener("click", (event) => {
       event.stopPropagation();

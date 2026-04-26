@@ -1,10 +1,36 @@
 export const DAY_SECONDS = 24 * 60 * 60;
 export const HIGHLIGHT_MIN_DAILY_CENTS = 0;
-export const HIGHLIGHT_CPM_USD = 2;
 const DEFAULT_USD_BRL_RATE = 5.5;
 const FRANKFURTER_API_BASE = "https://api.frankfurter.dev/v1";
+const HIGHLIGHT_LOOKBACK_DAYS = 7;
+
+export const HIGHLIGHT_CPM_TIERS = [
+  { minAds7d: 0, maxAds7d: 25, cpmUsd: 0.4, label: "0-25" },
+  { minAds7d: 26, maxAds7d: 75, cpmUsd: 0.9, label: "26-75" },
+  { minAds7d: 76, maxAds7d: 150, cpmUsd: 2.0, label: "76-150" },
+  { minAds7d: 151, maxAds7d: 400, cpmUsd: 4.0, label: "151-400" },
+  { minAds7d: 401, maxAds7d: 900, cpmUsd: 7.0, label: "401-900" },
+  { minAds7d: 901, maxAds7d: null, cpmUsd: 12.0, label: "901+" },
+] as const;
 
 let cachedUsdBrlRate: { date: string; value: number } | null = null;
+
+type HighlightRateInfo = {
+  usdBrlRate: number;
+  rateDate: string | null;
+};
+
+type HighlightPricing = {
+  minimumDailyCents: number;
+  cpmCents: number;
+  cpmUsd: number;
+  usdBrlRate: number;
+  rateDate: string | null;
+  ads7dCount: number;
+  tierLabel: string;
+  tierMinAds7d: number;
+  tierMaxAds7d: number | null;
+};
 
 type WalletRow = {
   user_id: string;
@@ -18,6 +44,7 @@ type WalletRow = {
 type ActiveHighlightRow = {
   id: string;
   user_id: string;
+  server_id?: string | null;
   highlight_started_at: string | null;
   highlight_expires_at?: string | null;
 };
@@ -71,7 +98,7 @@ async function fetchUsdBrlRateFromFrankfurter() {
   return cachedUsdBrlRate;
 }
 
-export async function getHighlightPricing() {
+async function getHighlightRateInfo(): Promise<HighlightRateInfo> {
   let usdBrlRate = getDefaultUsdBrlRate();
   let rateDate = null as string | null;
   try {
@@ -89,13 +116,144 @@ export async function getHighlightPricing() {
     console.warn("[highlight-pricing] failed to refresh USD/BRL rate, using fallback", err);
   }
 
-  const cpmCents = Math.max(1, Math.round(HIGHLIGHT_CPM_USD * usdBrlRate * 100));
+  return { usdBrlRate, rateDate };
+}
+
+function getHighlightTierForAds7d(ads7dCount: number) {
+  const normalizedCount = Math.max(0, safeInt(ads7dCount));
+  return HIGHLIGHT_CPM_TIERS.find((tier) => {
+    if (tier.maxAds7d == null) return normalizedCount >= tier.minAds7d;
+    return normalizedCount >= tier.minAds7d && normalizedCount <= tier.maxAds7d;
+  }) || HIGHLIGHT_CPM_TIERS[0];
+}
+
+export function getHighlightPricingForAds7d(
+  ads7dCount: number,
+  {
+    usdBrlRate = getDefaultUsdBrlRate(),
+    rateDate = null,
+  }: Partial<HighlightRateInfo> = {},
+): HighlightPricing {
+  const tier = getHighlightTierForAds7d(ads7dCount);
+  const cpmCents = Math.max(1, Math.round(tier.cpmUsd * usdBrlRate * 100));
   return {
     minimumDailyCents: HIGHLIGHT_MIN_DAILY_CENTS,
     cpmCents,
-    cpmUsd: HIGHLIGHT_CPM_USD,
+    cpmUsd: tier.cpmUsd,
     usdBrlRate,
     rateDate,
+    ads7dCount: Math.max(0, safeInt(ads7dCount)),
+    tierLabel: tier.label,
+    tierMinAds7d: tier.minAds7d,
+    tierMaxAds7d: tier.maxAds7d,
+  };
+}
+
+export async function getHighlightPricing() {
+  return getHighlightPricingForAds7d(100, await getHighlightRateInfo());
+}
+
+async function loadServerAds7dCounts(
+  supabase: any,
+  serverIds: string[],
+  now = new Date(),
+) {
+  const uniqueServerIds = Array.from(new Set(
+    (Array.isArray(serverIds) ? serverIds : []).map((value) => String(value || "").trim()).filter(Boolean),
+  ));
+  const counts = new Map<string, number>();
+  uniqueServerIds.forEach((serverId) => counts.set(serverId, 0));
+  if (uniqueServerIds.length === 0) return counts;
+
+  const cutoff = new Date(now);
+  cutoff.setUTCDate(cutoff.getUTCDate() - HIGHLIGHT_LOOKBACK_DAYS);
+  const cutoffIso = cutoff.toISOString();
+
+  const { data, error } = await supabase
+    .from("listings")
+    .select("server_id")
+    .in("server_id", uniqueServerIds)
+    .eq("status", "active")
+    .gte("created_at", cutoffIso);
+  if (error) throw error;
+
+  (Array.isArray(data) ? data : []).forEach((row: any) => {
+    const serverId = String(row?.server_id || "").trim();
+    if (!serverId) return;
+    counts.set(serverId, safeInt(counts.get(serverId), 0) + 1);
+  });
+
+  return counts;
+}
+
+export async function getHighlightPricingByServerIds(
+  supabase: any,
+  serverIds: string[],
+  now = new Date(),
+) {
+  const rateInfo = await getHighlightRateInfo();
+  const counts = await loadServerAds7dCounts(supabase, serverIds, now);
+  const pricingByServerId = new Map<string, HighlightPricing>();
+  counts.forEach((ads7dCount, serverId) => {
+    pricingByServerId.set(serverId, getHighlightPricingForAds7d(ads7dCount, rateInfo));
+  });
+  return pricingByServerId;
+}
+
+export async function getHighlightPricingForServer(
+  supabase: any,
+  serverId: string,
+  now = new Date(),
+) {
+  const normalizedServerId = String(serverId || "").trim();
+  if (!normalizedServerId) {
+    return getHighlightPricingForAds7d(0, await getHighlightRateInfo());
+  }
+  const pricingByServerId = await getHighlightPricingByServerIds(supabase, [normalizedServerId], now);
+  return pricingByServerId.get(normalizedServerId) || getHighlightPricingForAds7d(0, await getHighlightRateInfo());
+}
+
+async function getUserHighlightPricingSummary(
+  supabase: any,
+  userId: string,
+  now = new Date(),
+) {
+  const { data, error } = await supabase
+    .from("listings")
+    .select("server_id")
+    .eq("user_id", userId)
+    .eq("status", "active")
+    .not("server_id", "is", null);
+  if (error) throw error;
+
+  const serverIds = Array.from(new Set(
+    (Array.isArray(data) ? data : []).map((row: any) => String(row?.server_id || "").trim()).filter(Boolean),
+  ));
+  const pricingByServerId = await getHighlightPricingByServerIds(supabase, serverIds, now);
+  const pricingList = Array.from(pricingByServerId.values());
+  if (pricingList.length === 0) {
+    const fallback = getHighlightPricingForAds7d(0, await getHighlightRateInfo());
+    return {
+      minimumDailyCents: HIGHLIGHT_MIN_DAILY_CENTS,
+      minCpmCents: fallback.cpmCents,
+      maxCpmCents: fallback.cpmCents,
+      minCpmUsd: fallback.cpmUsd,
+      maxCpmUsd: fallback.cpmUsd,
+      usdBrlRate: fallback.usdBrlRate,
+      rateDate: fallback.rateDate,
+    };
+  }
+
+  const cpmCentsList = pricingList.map((item) => item.cpmCents);
+  const cpmUsdList = pricingList.map((item) => item.cpmUsd);
+  return {
+    minimumDailyCents: HIGHLIGHT_MIN_DAILY_CENTS,
+    minCpmCents: Math.min(...cpmCentsList),
+    maxCpmCents: Math.max(...cpmCentsList),
+    minCpmUsd: Math.min(...cpmUsdList),
+    maxCpmUsd: Math.max(...cpmUsdList),
+    usdBrlRate: pricingList[0].usdBrlRate,
+    rateDate: pricingList[0].rateDate,
   };
 }
 
@@ -158,7 +316,7 @@ async function deactivateExpiredHighlightsForUser(supabase: any, userId: string,
 async function fetchActiveHighlights(supabase: any, userId: string, listingIds?: string[]) {
   let query = supabase
     .from("listings")
-    .select("id,user_id,highlight_started_at")
+    .select("id,user_id,server_id,highlight_started_at")
     .eq("user_id", userId)
     .eq("status", "active")
     .eq("highlight_status", "active");
@@ -486,9 +644,9 @@ export async function syncHighlightWallet(
   userId: string,
   reason: string,
 ) {
-  const pricing = await getHighlightPricing();
   const now = new Date();
   const nowIso = now.toISOString();
+  const pricing = await getUserHighlightPricingSummary(supabase, userId, now);
   await deactivateExpiredHighlightsForUser(supabase, userId, nowIso);
   const wallet = await ensureWallet(supabase, userId, nowIso);
   const normalized = normalizeWalletRow(wallet);
@@ -520,8 +678,10 @@ export async function syncHighlightWallet(
     lastConsumedAt: updatedWallet.last_consumed_at,
     pricing: {
       minimumDailyBRL: centsToMoney(HIGHLIGHT_MIN_DAILY_CENTS),
-      cpmBRL: centsToMoney(pricing.cpmCents),
-      cpmUSD: pricing.cpmUsd,
+      minCpmBRL: centsToMoney(pricing.minCpmCents),
+      maxCpmBRL: centsToMoney(pricing.maxCpmCents),
+      minCpmUSD: pricing.minCpmUsd,
+      maxCpmUSD: pricing.maxCpmUsd,
       usdBrlRate: Number(pricing.usdBrlRate.toFixed(4)),
       rateDate: pricing.rateDate,
     },
@@ -534,7 +694,6 @@ export async function recordHighlightImpressions(
   listingIds: string[],
   reason = "index-impression",
 ) {
-  const pricing = await getHighlightPricing();
   const normalizedIds = Array.from(new Set(
     (Array.isArray(listingIds) ? listingIds : []).map((value) => String(value || "").trim()).filter(Boolean),
   ));
@@ -544,7 +703,7 @@ export async function recordHighlightImpressions(
 
   const { data, error } = await supabase
     .from("listings")
-    .select("id,user_id,highlight_started_at,highlight_expires_at")
+    .select("id,user_id,server_id,highlight_started_at,highlight_expires_at")
     .in("id", normalizedIds)
     .eq("status", "active")
     .eq("highlight_status", "active");
@@ -555,6 +714,12 @@ export async function recordHighlightImpressions(
     const expiresAt = row?.highlight_expires_at ? String(row.highlight_expires_at) : "";
     return !expiresAt || expiresAt >= nowIso;
   }) as ActiveHighlightRow[];
+  const defaultPricing = await getHighlightPricing();
+  const pricingByServerId = await getHighlightPricingByServerIds(
+    supabase,
+    rows.map((row) => row.server_id || "").filter(Boolean),
+    new Date(nowIso),
+  );
   const byUser = new Map<string, string[]>();
   rows.forEach((row) => {
     const existing = byUser.get(row.user_id) || [];
@@ -575,6 +740,10 @@ export async function recordHighlightImpressions(
     const toDeactivate = new Set<string>();
 
     for (const listingId of userListingIds) {
+      const listingRow = rows.find((row) => row.id === listingId) || null;
+      const pricing = listingRow?.server_id
+        ? pricingByServerId.get(String(listingRow.server_id)) || defaultPricing
+        : defaultPricing;
       const key = metricKey(listingId, today);
       let metric = metrics.get(key);
       if (!metric) {
@@ -614,6 +783,8 @@ export async function recordHighlightImpressions(
             impressions_count: nextImpressions,
             cpm_cents: pricing.cpmCents,
             cpm_usd: pricing.cpmUsd,
+            ads_7d_count: pricing.ads7dCount,
+            cpm_tier_label: pricing.tierLabel,
             usd_brl_rate: Number(pricing.usdBrlRate.toFixed(4)),
             rate_date: pricing.rateDate,
           },

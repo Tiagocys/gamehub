@@ -43,7 +43,7 @@
               <a href="#" class="${i18n.locale === "en" ? "active" : ""}" data-locale="en">English</a>
             </nav>
             <nav class="site-footer-links" aria-label="Links úteis">
-              <a href="partner.html" data-partner-link style="display:none;">${t("footer.partner_area", "Área de parceiros")}</a>
+              <a href="partner-policy.html">${t("footer.partner_policy", "Políticas de parceiros")}</a>
               <a href="ads-policy.html">${t("footer.ads_policy", "Políticas de anúncios")}</a>
               <a href="privacy-policy.html">${t("footer.privacy_policy", "Políticas de privacidade")}</a>
               <a href="terms.html">${t("footer.terms", "Termos de uso")}</a>

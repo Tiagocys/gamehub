@@ -24,6 +24,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Privacy policy</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="privacy-policy-guard-style">html{visibility:hidden;}</style>
   <style>
     .policy-page {
       max-width: 920px;
@@ -62,6 +63,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
@@ -197,10 +201,21 @@
     const createListingBtn = document.getElementById("create-listing-btn");
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
+    const pageLoader = document.getElementById("page-loader");
 
     let supabase;
     let currentUser = null;
     let avatarLoaded = false;
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("privacy-policy-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
 
     if (avatarImg) {
       avatarImg.referrerPolicy = "no-referrer";
@@ -574,6 +589,7 @@
     });
 
     renderPrivacyPolicy();
+    revealPage();
     initAuth();
   </script>
 </body>

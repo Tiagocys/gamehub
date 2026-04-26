@@ -45,15 +45,6 @@
             <input id="game-website" class="input" placeholder="https://miracle74.com" required />
             <span id="website-helper" class="helper"></span>
           </div>
-          <div class="field">
-            <label id="game-discord-label" for="game-discord">Official Discord invite</label>
-            <input id="game-discord" class="input" placeholder="https://discord.gg/your-server" />
-            <span id="discord-helper" class="helper"></span>
-          </div>
-          <div class="field">
-            <label id="game-logo-label" for="game-logo">Server logo (png/jpg/webp)</label>
-            <input id="game-logo" type="file" accept="image/png,image/jpeg,image/webp" />
-          </div>
           <div class="field" style="grid-column: 1 / -1;">
             <button type="submit" class="btn btn-primary" id="submit-btn">Send request</button>
             <div id="form-feedback" class="helper"></div>
@@ -94,21 +85,15 @@
     const feedback = document.getElementById("form-feedback");
     const submitBtn = document.getElementById("submit-btn");
     const websiteInput = document.getElementById("game-website");
-    const discordInput = document.getElementById("game-discord");
     const titleNode = document.getElementById("game-submit-title");
     const helperNode = document.getElementById("game-submit-helper");
     const gameNameLabel = document.getElementById("game-name-label");
     const gameWebsiteLabel = document.getElementById("game-website-label");
-    const gameDiscordLabel = document.getElementById("game-discord-label");
-    const gameLogoLabel = document.getElementById("game-logo-label");
     const websiteHelper = document.getElementById("website-helper");
-    const discordHelper = document.getElementById("discord-helper");
-    const logoInput = document.getElementById("game-logo");
-    const MAX_LOGO_BYTES = 3 * 1024 * 1024;
-    const MAX_WIDTH = 512;
     const WEBSITE_PREFIX_REGEX = /^https:\/\/.+/i;
-    const DISCORD_INVITE_PREFIX = "https://discord.gg/";
-    const SUBMIT_DEFAULT_TEXT = submitBtn?.textContent || t("game_submit.submit", "Send request");
+    function getSubmitDefaultText() {
+      return t("game_submit.submit", "Send request");
+    }
 
     let supabase;
     let currentUser = null;
@@ -120,18 +105,21 @@
 
     function applyStaticTranslations() {
       document.title = t("game_submit.title_default", "Gimerr - Submit game");
-      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+      document.documentElement.lang = String(i18n.locale || "").startsWith("pt")
+        ? "pt-BR"
+        : String(i18n.locale || "") === "es"
+          ? "es"
+          : "en";
       if (titleNode) titleNode.textContent = t("game_submit.title", "Submit a new game");
       if (helperNode) helperNode.textContent = t("game_submit.helper", "Send one request at a time.");
       if (gameNameLabel) gameNameLabel.textContent = t("game_submit.name_label", "Game or server name *");
       if (document.getElementById("game-name")) document.getElementById("game-name").placeholder = t("game_submit.name_placeholder", "Ex: Miracle 7.4");
       if (gameWebsiteLabel) gameWebsiteLabel.textContent = t("game_submit.website_label", "Official website *");
       if (websiteInput) websiteInput.placeholder = t("game_submit.website_placeholder", "https://miracle74.com");
-      if (gameDiscordLabel) gameDiscordLabel.textContent = t("game_submit.discord_label", "Official Discord invite");
-      if (discordInput) discordInput.placeholder = t("game_submit.discord_placeholder", "https://discord.gg/your-server");
-      if (gameLogoLabel) gameLogoLabel.textContent = t("game_submit.logo_label", "Server logo (png/jpg/webp)");
-      if (submitBtn) submitBtn.textContent = t("game_submit.submit", "Send request");
+      if (submitBtn) submitBtn.textContent = getSubmitDefaultText();
     }
+
+    applyStaticTranslations();
 
     function revealPage() {
       if (pageRevealed) return;
@@ -280,24 +268,6 @@
       }
     }
 
-    function normalizeDiscordInvite(raw) {
-      const trimmed = (raw || "").trim();
-      if (!trimmed) return null;
-      try {
-        const withProtocol = ensureHttpsPrefix(trimmed);
-        const url = new URL(withProtocol);
-        if (url.hostname.toLowerCase() !== "discord.gg") return null;
-        if (!url.pathname || url.pathname === "/") return null;
-        url.protocol = "https:";
-        url.hash = "";
-        const normalizedPath = url.pathname.replace(/\/+$/, "");
-        const normalized = `${url.origin}${normalizedPath}`;
-        return normalized.startsWith(DISCORD_INVITE_PREFIX) ? normalized : null;
-      } catch (_err) {
-        return null;
-      }
-    }
-
     function extractDomainKey(raw) {
       try {
         const url = new URL(ensureHttpsPrefix(raw));
@@ -305,11 +275,6 @@
       } catch (_err) {
         return null;
       }
-    }
-
-    function isMissingDiscordInviteColumnError(error) {
-      if (!error) return false;
-      return String(error.message || "").includes("discord_invite");
     }
 
     function isMissingOwnerColumnError(error) {
@@ -320,11 +285,6 @@
     function setWebsiteHelper(message) {
       if (!websiteHelper) return;
       websiteHelper.textContent = message || "";
-    }
-
-    function setDiscordHelper(message) {
-      if (!discordHelper) return;
-      discordHelper.textContent = message || "";
     }
 
     function handleWebsiteInput() {
@@ -344,33 +304,6 @@
         websiteInput.value = formatted;
       }
       handleWebsiteInput();
-    }
-
-    function handleDiscordInput() {
-      if (!discordInput) return;
-      const value = discordInput.value.trim();
-      if (!value) {
-        setDiscordHelper("");
-        return;
-      }
-      const normalized = normalizeDiscordInvite(value);
-      setDiscordHelper(normalized ? "" : t("game_submit.discord_helper_invalid", "Use an invite that starts with https://discord.gg/"));
-    }
-
-    function handleDiscordBlur() {
-      if (!discordInput) return;
-      const value = discordInput.value.trim();
-      if (!value) {
-        setDiscordHelper("");
-        return;
-      }
-      const normalized = normalizeDiscordInvite(value);
-      if (normalized) {
-        discordInput.value = normalized;
-        setDiscordHelper("");
-      } else {
-        setDiscordHelper(t("game_submit.discord_helper_invalid", "Use an invite that starts with https://discord.gg/"));
-      }
     }
 
     function updateOfficialAdminNote() {}
@@ -420,73 +353,13 @@
       if (!hasPending) {
         pendingInfo.style.display = "none";
         submitBtn.disabled = false;
-        submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+        submitBtn.textContent = getSubmitDefaultText();
         return;
       }
       pendingInfo.style.display = "inline-flex";
       pendingInfo.textContent = t("game_submit.pending_info", "You already have a pending request: {name}").replace("{name}", hasPending.name);
       submitBtn.disabled = true;
-      submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-    }
-
-    async function notifyAdminAboutNewGameRequest(params) {
-      try {
-        const { data } = await supabase.auth.getSession();
-        const accessToken = data.session?.access_token;
-        if (!accessToken) {
-          throw new Error(t("game_submit.session_expired", "Session expired. Sign in again."));
-        }
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/game_request_notify_email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            apikey: SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            gameName: params.gameName,
-            website: params.website,
-            requestId: params.requestId || undefined,
-            userToken: accessToken,
-            requesterEmail: currentUser?.email || undefined,
-            requesterName: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || undefined,
-          }),
-        });
-        if (!response.ok) {
-          let message = t("game_submit.notify_error", "Error notifying admin about the new game request.");
-          try {
-            const payload = await response.json();
-            message = payload?.error || message;
-          } catch (_err) {
-            const text = await response.text();
-            if (text) message = text;
-          }
-          throw new Error(message);
-        }
-      } catch (err) {
-        console.warn("Failed to notify admin about the new game request.", err);
-      }
-    }
-
-    async function deleteServerLogo(logoRef, accessToken) {
-      const raw = String(logoRef || "").trim();
-      if (!raw) return { ok: true };
-      const { data, error } = await supabase.functions.invoke("server_logo_delete", {
-        body: {
-          logoUrl: raw,
-          userToken: accessToken,
-        },
-        headers: accessToken
-          ? {
-              Authorization: `Bearer ${accessToken}`,
-              apikey: SUPABASE_ANON_KEY,
-            }
-          : {},
-      });
-      if (error || !data?.ok) {
-        throw new Error(data?.error || error?.message || "Error deleting unused server logo.");
-      }
-      return data;
+      submitBtn.textContent = getSubmitDefaultText();
     }
 
     function goToCreateListing() {
@@ -503,19 +376,18 @@
       submitBtn.disabled = true;
       submitBtn.textContent = t("game_submit.submitting", "Sending...");
       let accessToken = "";
-      let uploadedLogo = null;
 
       try {
         ensureClient();
         if (!currentUser) {
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          submitBtn.textContent = getSubmitDefaultText();
           await redirectToGoogleOAuth();
           return;
         }
         if (hasPending) {
           feedback.textContent = t("game_submit.already_pending", "You already have a pending request.");
           submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          submitBtn.textContent = getSubmitDefaultText();
           return;
         }
         const { data: currentSession } = await supabase.auth.getSession();
@@ -523,8 +395,6 @@
 
         const name = document.getElementById("game-name").value.trim();
         const websiteRaw = document.getElementById("game-website").value.trim();
-        const discordRaw = discordInput?.value?.trim() || "";
-        const logoFile = logoInput.files[0];
         const isOwner = false;
 
         const website = normalizeWebsite(websiteRaw);
@@ -536,203 +406,51 @@
           setWebsiteHelper(!website ? t("game_submit.website_helper_invalid", "Use an address that starts with https://.") : "");
           feedback.textContent = t("game_submit.fill_name_site", "Fill in the name and website with https://.");
           submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          submitBtn.textContent = getSubmitDefaultText();
           return;
         }
 
         if (!domainKey) {
           feedback.textContent = t("game_submit.domain_error", "Could not read the website domain. Check the format.");
           submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+          submitBtn.textContent = getSubmitDefaultText();
           return;
         }
 
-        const discordInvite = discordRaw ? normalizeDiscordInvite(discordRaw) : null;
-        if (discordRaw && !discordInvite) {
-          setDiscordHelper(t("game_submit.discord_helper_invalid", "Use an invite that starts with https://discord.gg/"));
-          feedback.textContent = t("game_submit.discord_invalid", "Invalid Discord invite.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          return;
-        }
-        setDiscordHelper("");
-
-        if (logoFile && logoFile.size > MAX_LOGO_BYTES) {
-          feedback.textContent = t("game_submit.logo_max_size", "Logo must be at most 3MB.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          return;
-        }
-
-        const websiteRecord = await findWebsiteRecord(website, domainKey);
-        if (websiteRecord.inServers) {
-          feedback.textContent = t("game_submit.game_exists", "This game is already registered or under review.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          return;
-        }
-        if (websiteRecord.request && ["pending", "under_review", "approved"].includes(websiteRecord.request.status)) {
-          feedback.textContent = t("game_submit.game_exists", "This game is already registered or under review.");
-          submitBtn.disabled = false;
-          submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
-          return;
-        }
-
-        let logoUrl = null;
-        if (logoFile) {
-          const compressed = await compressImage(logoFile, MAX_WIDTH);
-          uploadedLogo = await uploadLogo(compressed, accessToken);
-          logoUrl = uploadedLogo.publicUrl;
-        }
-
-        const requestPayload = {
-          name,
-          website,
-          discord_invite: discordInvite,
-          is_owner: isOwner,
-          cover_url: logoUrl,
-          status: "pending",
-          user_id: currentUser.id,
-          user_email: currentUser.email
-        };
-        if (websiteRecord.request?.id && websiteRecord.request.website === website) {
-          requestPayload.id = websiteRecord.request.id;
-        }
-        const shouldNotifyAdmin = !websiteRecord.request?.id;
-        let requestData = null;
-        let { data: upsertData, error } = await supabase
-          .from("game_requests")
-          .upsert(requestPayload, { onConflict: "website" })
-          .select("id")
-          .single();
-        requestData = upsertData;
-        if (isMissingDiscordInviteColumnError(error)) {
-          const { discord_invite: _discordInvite, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (isMissingOwnerColumnError(error)) {
-          const { is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
-          const { discord_invite: _discordInvite, is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (error) throw error;
-        if (shouldNotifyAdmin) {
-          await notifyAdminAboutNewGameRequest({
-            gameName: name,
+        const { data: requestData, error: requestErr } = await supabase.functions.invoke("game_request_upsert", {
+          body: {
+            name,
             website,
-            requestId: requestData?.id || null,
-          });
+            is_owner: isOwner,
+            userToken: accessToken,
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+        if (requestErr || !requestData?.ok) {
+          const message = requestData?.error || requestErr?.message || t("game_submit.game_exists", "This game is already registered or under review.");
+          throw new Error(message);
         }
-
         feedback.textContent = t("game_submit.success", "Your request will be reviewed. Thanks for helping the Gimerr community.");
         hasPending = { name, website, status: "pending" };
         renderPending();
         form.reset();
         setWebsiteHelper("");
-        setDiscordHelper("");
         updateOfficialAdminNote();
       } catch (err) {
         console.error(err);
-        if (uploadedLogo?.path) {
-          try {
-            await deleteServerLogo(uploadedLogo.path, accessToken);
-          } catch (cleanupErr) {
-            console.warn("Could not delete unused uploaded server logo.", cleanupErr);
-          }
-        }
         feedback.textContent = err?.message || t("game_submit.submit_error", "Error sending request.");
         submitBtn.disabled = false;
-        submitBtn.textContent = SUBMIT_DEFAULT_TEXT;
+        submitBtn.textContent = getSubmitDefaultText();
       }
-    }
-
-    async function uploadLogo(file, accessToken) {
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          contentType: file.type || "image/webp",
-          extension: "webp",
-          userToken: accessToken,
-          assetType: "server",
-        }),
-      });
-      if (!response.ok) {
-        let message = "Error requesting logo upload.";
-        try {
-          const payload = await response.json();
-          message = payload?.error || message;
-        } catch (_err) {
-          const text = await response.text().catch(() => "");
-          if (text) message = text;
-        }
-        throw new Error(message);
-      }
-      const signed = await response.json();
-      const uploadRes = await fetch(signed.uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": file.type || "image/webp",
-        },
-        body: file,
-      });
-      if (!uploadRes.ok) {
-        const body = await uploadRes.text().catch(() => "");
-        throw new Error(body || "Error uploading logo to storage.");
-      }
-      return { path: signed.key, publicUrl: signed.publicUrl };
-    }
-
-    async function compressImage(file, maxWidth) {
-      const imageBitmap = await createImageBitmap(file);
-      const ratio = Math.min(1, maxWidth / imageBitmap.width);
-      const width = Math.round(imageBitmap.width * ratio);
-      const height = Math.round(imageBitmap.height * ratio);
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(imageBitmap, 0, 0, width, height);
-      return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error(t("game_submit.compress_error", "Failed to compress the image.")));
-            return;
-          }
-          resolve(blob);
-        }, "image/webp", 0.82);
-      });
     }
 
     async function findWebsiteRecord(website, domainKey) {
       const { data: inServers, error: srvErr } = await supabase
         .from("servers")
-        .select("id,official_site,website_domain")
+        .select("id,official_site,website_domain,status")
         .eq("website_domain", domainKey)
         .limit(1);
       if (srvErr) throw srvErr;
@@ -741,12 +459,11 @@
         .from("game_requests")
         .select("id,status,website,website_domain")
         .eq("website_domain", domainKey)
-        .in("status", ["pending", "under_review", "approved"])
         .limit(1);
       if (reqErr) throw reqErr;
 
       return {
-        inServers: Boolean(inServers && inServers.length > 0),
+        inServers: Boolean((inServers || []).some((row) => String(row?.status || "") !== "deleted")),
         request: inRequests?.[0] || null
       };
     }
@@ -785,8 +502,6 @@
     form?.addEventListener("submit", handleSubmit);
     websiteInput?.addEventListener("input", handleWebsiteInput);
     websiteInput?.addEventListener("blur", handleWebsiteBlur);
-    discordInput?.addEventListener("input", handleDiscordInput);
-    discordInput?.addEventListener("blur", handleDiscordBlur);
 
     (async function init() {
       try {

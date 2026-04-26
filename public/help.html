@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-1GK06ZGKW2"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-1GK06ZGKW2');
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <title>Gimerr - Help</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="help-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .help-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .help-main {
+      flex: 1;
+      width: min(980px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .help-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .help-card form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .help-card textarea {
+      min-height: 220px;
+      resize: vertical;
+    }
+
+    .help-feedback {
+      min-height: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .help-feedback.is-error {
+      color: #b42318;
+    }
+
+    .help-card .btn {
+      width: 100%;
+      justify-content: center;
+      min-height: 48px;
+    }
+  </style>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
+  <div class="page help-shell">
+    <site-navbar search-enabled="games"></site-navbar>
+
+    <main class="help-main">
+      <section class="hero-card">
+        <h2 id="help-title">Help</h2>
+        <p id="help-helper" class="helper">Send a direct message to Gimerr support.</p>
+        <p id="help-single-request-helper" class="helper">We keep one support request per user. If you submit again, your previous message will be updated.</p>
+      </section>
+
+      <section class="help-card">
+        <form id="help-form">
+          <div class="field">
+            <label id="help-subject-label" for="help-subject">Subject *</label>
+            <input id="help-subject" type="text" maxlength="120" placeholder="Example: I want to update my game page" required />
+          </div>
+
+          <div class="field">
+            <label id="help-message-label" for="help-message">Message *</label>
+            <p id="help-message-helper" class="helper">Include links, game or listing names, and what you have already tried.</p>
+            <textarea id="help-message" maxlength="5000" placeholder="Explain what you need with as much context as possible." required></textarea>
+          </div>
+
+          <p id="help-feedback" class="help-feedback"></p>
+          <button id="help-submit-btn" class="btn btn-primary" type="submit">Send email</button>
+        </form>
+      </section>
+    </main>
+
+    <site-footer></site-footer>
+  </div>
+
+  <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/es.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
+    await (window.__FOOTER_READY__ || Promise.resolve());
+
+    const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const authBtn = document.getElementById("auth-btn");
+    const userMenu = document.getElementById("user-menu");
+    const avatarBtn = document.getElementById("avatar-btn");
+    const avatarImg = document.getElementById("avatar-img");
+    const logoutBtn = document.getElementById("logout-btn");
+    const createListingBtn = document.getElementById("create-listing-btn");
+    const menuCreateListing = document.getElementById("menu-create-listing");
+    const profileLink = document.getElementById("profile-link");
+    const helpTitle = document.getElementById("help-title");
+    const helpHelper = document.getElementById("help-helper");
+    const helpSingleRequestHelper = document.getElementById("help-single-request-helper");
+    const subjectLabel = document.getElementById("help-subject-label");
+    const subjectInput = document.getElementById("help-subject");
+    const messageLabel = document.getElementById("help-message-label");
+    const messageHelper = document.getElementById("help-message-helper");
+    const messageInput = document.getElementById("help-message");
+    const feedback = document.getElementById("help-feedback");
+    const submitBtn = document.getElementById("help-submit-btn");
+    const form = document.getElementById("help-form");
+    const pageLoader = document.getElementById("page-loader");
+
+    let supabase;
+    let currentUser = null;
+    let avatarLoaded = false;
+    let hasPendingSupportRequest = false;
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("help-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
+
+    document.title = t("help.title_default", "Gimerr - Help");
+    document.documentElement.lang = String(i18n.locale || "").startsWith("pt")
+      ? "pt-BR"
+      : String(i18n.locale || "") === "es"
+        ? "es"
+        : "en";
+    if (helpTitle) helpTitle.textContent = t("help.hero_title", "Help");
+    if (helpHelper) helpHelper.textContent = t("help.hero_helper", "Send a direct message to Gimerr support.");
+    if (helpSingleRequestHelper) helpSingleRequestHelper.textContent = t("help.single_request_helper", "You can keep only one pending help request at a time.");
+    if (subjectLabel) subjectLabel.textContent = t("help.subject_label", "Subject *");
+    if (subjectInput) subjectInput.placeholder = t("help.subject_placeholder", "Example: I want to update my game page");
+    if (messageLabel) messageLabel.textContent = t("help.message_label", "Message *");
+    if (messageHelper) messageHelper.textContent = t("help.message_helper", "Include links, game or listing names, and what you have already tried.");
+    if (messageInput) messageInput.placeholder = t("help.message_placeholder", "Explain what you need with as much context as possible.");
+    if (submitBtn) submitBtn.textContent = t("help.submit", "Send email");
+    revealPage();
+
+    if (avatarImg) {
+      avatarImg.referrerPolicy = "no-referrer";
+      avatarImg.addEventListener("error", () => {
+        avatarImg.src = "img/avatar.svg";
+      });
+    }
+
+    function getSubmitText() {
+      return t("help.submit", "Send email");
+    }
+
+    function getClient() {
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        throw new Error("Supabase is not configured.");
+      }
+      if (!supabase) {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "gimerr-auth-token",
+          },
+        });
+        supabase.auth.onAuthStateChange((_event, session) => {
+          currentUser = session?.user || null;
+          updateAuthUI();
+        });
+      }
+      return supabase;
+    }
+
+    function goToSignIn() {
+      const next = encodeURIComponent("/help.html");
+      window.location.replace(`sign-in.html?next=${next}`);
+    }
+
+    async function setAvatarImage(src) {
+      if (!avatarImg) return;
+      avatarImg.src = src || "img/avatar.svg";
+      try {
+        await avatarImg.decode();
+      } catch (_err) {
+        // ignore decode failures
+      }
+    }
+
+    async function loadUserAvatar() {
+      if (!currentUser || avatarLoaded) return;
+      avatarLoaded = true;
+      const candidate = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || "";
+      await setAvatarImage(candidate);
+    }
+
+    function updateAuthUI() {
+      if (!authBtn) return;
+      authBtn.disabled = false;
+      if (currentUser) {
+        authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(currentUser.id)}`;
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        loadUserAvatar();
+        return;
+      }
+      authBtn.style.display = "inline-flex";
+      if (userMenu) userMenu.style.display = "none";
+      if (profileLink) profileLink.href = "profile.html";
+      if (createListingBtn) createListingBtn.style.display = "none";
+      if (menuCreateListing) menuCreateListing.style.display = "none";
+      avatarLoaded = false;
+    }
+
+    function setFeedback(message, isError = false) {
+      if (!feedback) return;
+      feedback.textContent = message || "";
+      feedback.classList.toggle("is-error", Boolean(message && isError));
+    }
+
+    async function bootstrap() {
+      try {
+        const client = getClient();
+        const { data } = await client.auth.getSession();
+        currentUser = data.session?.user || null;
+        updateAuthUI();
+        if (!currentUser) {
+          setFeedback(t("help.auth_required", "Sign in to send a message to support."), true);
+          goToSignIn();
+          return;
+        }
+        const { data: profile, error: profileErr } = await client
+          .from("users")
+          .select("phone_verified")
+          .eq("id", currentUser.id)
+          .single();
+        if (profileErr || !profile?.phone_verified) {
+          setFeedback(t("help.phone_required", "Verify your phone number before sending a message to support."), true);
+          window.location.replace("profile.html?phone_required=1");
+          return;
+        }
+        const { data: pendingRequest, error: pendingErr } = await client
+          .from("support_requests")
+          .select("id,status")
+          .eq("user_id", currentUser.id)
+          .eq("status", "pending")
+          .maybeSingle();
+        if (pendingErr) throw pendingErr;
+        hasPendingSupportRequest = Boolean(pendingRequest?.id);
+        if (submitBtn) submitBtn.disabled = hasPendingSupportRequest;
+        if (hasPendingSupportRequest) {
+          setFeedback(
+            t("help.pending_request_feedback", "Você tem um pedido de ajuda pendente, aguarde uma resposta da nossa equipe."),
+            true,
+          );
+        }
+      } catch (err) {
+        setFeedback(err?.message || t("help.auth_required", "Sign in to send a message to support."), true);
+      }
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+      setFeedback("");
+      submitBtn.disabled = true;
+      submitBtn.textContent = t("help.submitting", "Sending...");
+
+      try {
+        const client = getClient();
+        if (!currentUser) {
+          throw new Error(t("help.auth_required", "Sign in to send a message to support."));
+        }
+        if (hasPendingSupportRequest) {
+          throw new Error(t("help.pending_request_feedback", "Você tem um pedido de ajuda pendente, aguarde uma resposta da nossa equipe."));
+        }
+        const { data } = await client.auth.getSession();
+        const accessToken = data.session?.access_token || "";
+        if (!accessToken) {
+          throw new Error(t("help.auth_required", "Sign in to send a message to support."));
+        }
+
+        const subject = String(subjectInput?.value || "").trim();
+        const message = String(messageInput?.value || "").trim();
+        if (subject.length < 5) {
+          throw new Error(t("help.subject_error", "Enter a subject with at least 5 characters."));
+        }
+        if (message.length < 20) {
+          throw new Error(t("help.message_error", "Enter a message with at least 20 characters."));
+        }
+
+        const { data: responseData, error } = await client.functions.invoke("support_contact_email", {
+          body: {
+            subject,
+            message,
+            userToken: accessToken,
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+        if (error || !responseData?.ok) {
+          throw new Error(responseData?.error || error?.message || t("help.submit_error", "Could not send your message right now."));
+        }
+
+        form.reset();
+        hasPendingSupportRequest = true;
+        if (submitBtn) submitBtn.disabled = true;
+        setFeedback(t("help.success", "Your message was sent to support."));
+      } catch (err) {
+        setFeedback(err?.message || t("help.submit_error", "Could not send your message right now."), true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = getSubmitText();
+      }
+    }
+
+    authBtn?.addEventListener("click", (event) => {
+      event.preventDefault();
+      goToSignIn();
+    });
+
+    avatarBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      userMenu?.classList.toggle("open");
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!userMenu?.contains(event.target)) {
+        userMenu?.classList.remove("open");
+      }
+    });
+
+    logoutBtn?.addEventListener("click", async () => {
+      try {
+        const client = getClient();
+        await client.auth.signOut();
+      } catch (_err) {
+        // ignore
+      }
+      window.location.replace("index.html");
+    });
+
+    createListingBtn?.addEventListener("click", () => {
+      window.location.href = "listing-create.html";
+    });
+    menuCreateListing?.addEventListener("click", () => {
+      window.location.href = "listing-create.html";
+    });
+    form?.addEventListener("submit", handleSubmit);
+
+    bootstrap();
+  </script>
+</body>
+</html>

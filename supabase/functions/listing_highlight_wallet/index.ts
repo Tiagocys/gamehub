@@ -19,7 +19,16 @@ type Payload = {
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
 const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY");
-const MIN_WITHDRAW_CENTS = 500;
+const DEFAULT_USD_BRL_RATE = 5.5;
+
+function getUsdBrlRate() {
+  const parsed = Number(Deno.env.get("USD_BRL_RATE") || DEFAULT_USD_BRL_RATE);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_USD_BRL_RATE;
+}
+
+function getMinimumWithdrawCents() {
+  return Math.round(2 * getUsdBrlRate() * 100);
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,8 +91,8 @@ Deno.serve(async (req) => {
       if (availableCents <= 0) {
         return errorResponse("Você não possui saldo disponível para saque.", 409);
       }
-      if (availableCents < MIN_WITHDRAW_CENTS) {
-        return errorResponse("O valor mínimo para solicitar saque é R$ 5,00.", 409);
+      if (availableCents < getMinimumWithdrawCents()) {
+        return errorResponse("O valor mínimo para solicitar saque é US$ 2,00.", 409);
       }
 
       await supabase

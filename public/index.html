@@ -24,6 +24,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Marketplace gamer</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="index-guard-style">html{visibility:hidden;}</style>
 </head>
 <body>
   <div id="page-loader" class="page-loader">
@@ -58,18 +59,21 @@
           <div class="home-sidebar-section-head">
             <h3>Suggested games</h3>
           </div>
-          <div id="sidebar-games" class="sidebar-list"></div>
+          <div id="sidebar-games" class="sidebar-list sidebar-list-scroll"></div>
           <p id="sidebar-games-empty" class="helper" style="display:none;">No games with active listings right now.</p>
         </section>
       </aside>
 
-      <section class="home-feed">
+        <section class="home-feed">
         <section class="section home-feed-sections">
-          <div class="section-header">
-            <div>
-              <h2>Recommended games</h2>
+          <section id="home-featured-games-section" class="home-game-section home-game-section-featured" style="display:none;">
+            <div class="home-game-section-head">
+              <div>
+                <h3 id="home-featured-games-title">Games destacados</h3>
+              </div>
             </div>
-          </div>
+            <div id="home-featured-games-row" class="home-game-row home-game-row-featured"></div>
+          </section>
           <div id="home-game-sections" class="home-game-sections"></div>
           <p id="home-game-sections-empty" class="helper" style="display:none;">No active listings to build the feed.</p>
         </section>
@@ -119,6 +123,8 @@
     const sidebarUsersEmpty = document.getElementById("sidebar-users-empty");
     const sidebarGames = document.getElementById("sidebar-games");
     const sidebarGamesEmpty = document.getElementById("sidebar-games-empty");
+    const homeFeaturedGamesSection = document.getElementById("home-featured-games-section");
+    const homeFeaturedGamesRow = document.getElementById("home-featured-games-row");
     const homeGameSections = document.getElementById("home-game-sections");
     const homeGameSectionsEmpty = document.getElementById("home-game-sections-empty");
 
@@ -136,17 +142,30 @@
     let searchablePlayers = [];
     let serverMap = new Map();
     let recommendationCountMap = new Map();
+    let sellerRatingMap = new Map();
     let serverFollowerCountMap = new Map();
     let followedGameIds = new Set();
     const SIDEBAR_USERS_LIMIT = 8;
     const SIDEBAR_GAMES_LIMIT = 8;
     const HOME_GAME_SECTION_LIMIT = 6;
     const HOME_GAME_CARD_LIMIT = 6;
+    const HIGHLIGHT_IMPRESSION_WINDOW_MS = 120 * 1000;
+    const HIGHLIGHT_IMPRESSION_STORAGE_PREFIX = "gimerr-highlight-impression:";
+    const SERVER_FEED_IMPRESSION_WINDOW_MS = 120 * 1000;
+    const SERVER_FEED_IMPRESSION_STORAGE_PREFIX = "gimerr-server-feed-impression:";
+    const SERVER_FEED_VIEWER_KEY_STORAGE = "gimerr-server-feed-viewer-key";
     let avatarLoaded = false;
     let homeHighlightImpressionObserver = null;
     let homeHighlightImpressionFlushTimer = null;
     const trackedHomeHighlightImpressions = new Map();
     const pendingHomeHighlightImpressionIds = new Set();
+    let homeServerBoostImpressionObserver = null;
+    const pendingServerBoostImpressionIds = new Set();
+    let selectedHomeBoostedServerIds = [];
+    let selectedSidebarBoostedServerIds = [];
+    const homeFeedRowStates = new Map();
+    let homeSectionFeedState = null;
+    let homeSectionFeedScrollBound = false;
     let sidebarCollapsed = window.innerWidth < 960;
     let sidebarAutoManaged = true;
     if (avatarImg) {
@@ -311,6 +330,8 @@
         cover_url: row.banner_url || row.cover_url || row.image || row.image_url || row.photo,
         website: row.website || row.site || row.official_site,
         category: row.category || row.type || row.game_type || "Game",
+        feed_highlight_status: row.feed_highlight_status || "none",
+        feed_highlight_started_at: row.feed_highlight_started_at || null,
       };
     }
 
@@ -431,6 +452,423 @@
         highlightedServerIds.add(key);
       });
       return highlightedServerIds;
+    }
+
+    function buildFeedBoostedServerSet(servers) {
+      const boostedServerIds = new Set();
+      (servers || []).forEach((row) => {
+        if (String(row?.feed_highlight_status || "none") !== "active") return;
+        const key = String(row?.id || "").trim();
+        if (!key) return;
+        boostedServerIds.add(key);
+      });
+      return boostedServerIds;
+    }
+
+    function getLastHighlightImpressionAt(listingId) {
+      try {
+        return Number(localStorage.getItem(`${HIGHLIGHT_IMPRESSION_STORAGE_PREFIX}${listingId}`) || 0);
+      } catch (_err) {
+        return Number(trackedHomeHighlightImpressions.get(listingId) || 0);
+      }
+    }
+
+    function setLastHighlightImpressionAt(listingId, timestamp) {
+      trackedHomeHighlightImpressions.set(listingId, timestamp);
+      try {
+        localStorage.setItem(`${HIGHLIGHT_IMPRESSION_STORAGE_PREFIX}${listingId}`, String(timestamp));
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    function getOrCreateServerFeedViewerKey() {
+      try {
+        const existing = localStorage.getItem(SERVER_FEED_VIEWER_KEY_STORAGE);
+        if (existing) return existing;
+        const nextValue = typeof crypto?.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(SERVER_FEED_VIEWER_KEY_STORAGE, nextValue);
+        return nextValue;
+      } catch (_err) {
+        return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+    }
+
+    function getLastServerFeedImpressionAt(serverId) {
+      try {
+        return Number(localStorage.getItem(`${SERVER_FEED_IMPRESSION_STORAGE_PREFIX}${serverId}`) || 0);
+      } catch (_err) {
+        return 0;
+      }
+    }
+
+    function setLastServerFeedImpressionAt(serverId, timestamp) {
+      try {
+        localStorage.setItem(`${SERVER_FEED_IMPRESSION_STORAGE_PREFIX}${serverId}`, String(timestamp));
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    function shuffleArray(items) {
+      const copy = [...(items || [])];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function sortListingsForHomeRow(listings) {
+      const ordered = [...(Array.isArray(listings) ? listings : [])]
+        .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      const highlighted = ordered.filter((listing) => String(listing?.highlight_status || "none") === "active");
+      const regular = ordered.filter((listing) => String(listing?.highlight_status || "none") !== "active");
+      return [...shuffleArray(highlighted), ...regular];
+    }
+
+    function selectHomeBoostedServers() {
+      const boosted = allSortedGames.filter((game) => String(game?.feed_highlight_status || "none") === "active");
+      if (boosted.length === 0) {
+        selectedHomeBoostedServerIds = [];
+        selectedSidebarBoostedServerIds = [];
+        return;
+      }
+      const shuffledBoosted = shuffleArray(boosted);
+      selectedHomeBoostedServerIds = shuffledBoosted
+        .map((game) => String(game?.id || "").trim())
+        .filter(Boolean);
+      selectedSidebarBoostedServerIds = shuffledBoosted
+        .slice(0, 1)
+        .map((game) => String(game?.id || "").trim())
+        .filter(Boolean);
+    }
+
+    function makeHomeFeedRowKey(prefix, value) {
+      return `${prefix}:${String(value || "").trim()}`;
+    }
+
+    function resetHomeFeedRowStates() {
+      homeFeedRowStates.clear();
+    }
+
+    function resetHomeSectionFeedState() {
+      homeSectionFeedState = null;
+    }
+
+    function getHomeFeedRowElement(rowKey) {
+      if (!rowKey) return null;
+      return document.querySelector(`[data-row-key="${CSS.escape(String(rowKey))}"]`);
+    }
+
+    function estimateHomeFeedRowBatchSize(row) {
+      const width = row?.clientWidth
+        || row?.parentElement?.clientWidth
+        || window.innerWidth
+        || document.documentElement.clientWidth
+        || 1024;
+      const isFeatured = row?.classList?.contains("home-game-row-featured");
+      const cardMinWidth = isFeatured ? 220 : 220;
+      const gap = 14;
+      const visibleCards = Math.max(1, Math.floor((width + gap) / (cardMinWidth + gap)));
+      return Math.max(2, visibleCards + 1);
+    }
+
+    function estimateHomeSectionBatchSize() {
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 900;
+      const estimatedSectionHeight = 320;
+      const visibleSections = Math.max(1, Math.floor(viewportHeight / estimatedSectionHeight));
+      return Math.max(2, visibleSections + 1);
+    }
+
+    async function renderFeaturedBoostCards(gamesBatch) {
+      return gamesBatch.map((game) => {
+        const listings = (activeListingsCatalog || [])
+          .filter((listing) => String(listing?.server_id || "").trim() === String(game?.id || "").trim())
+          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+        const subtitleText = listings.length > 0
+          ? formatMessage("home.active_listings_count", "{count} active listings", { count: listings.length })
+          : t("home.no_active_listings_yet", "No active listings yet");
+        const gameId = String(game?.id || "").trim();
+        const gameName = escapeHtml(game?.name || t("home.listing_untitled", "Untitled listing"));
+        const coverUrl = game?.cover_url ? encodeURI(game.cover_url) : "";
+        return `
+          <article
+            class="home-feed-card home-feed-card-game-boost"
+            data-server-feed-boost-track="1"
+            data-server-id="${escapeHtml(gameId)}">
+            <div class="home-feed-card-media${coverUrl ? "" : " empty"}">
+              <button
+                class="btn btn-ghost home-feed-card-follow-chip${isFollowedGame(gameId) ? " is-following" : ""}"
+                type="button"
+                data-action="toggle-follow"
+                data-game-id="${escapeHtml(gameId)}">
+                ${escapeHtml(isFollowedGame(gameId) ? t("home.following", "Following") : t("home.follow_game", "Follow game"))}
+              </button>
+              <a class="home-feed-card-media-link" href="game.html?id=${encodeURIComponent(gameId)}" aria-label="${gameName}">
+                ${coverUrl
+                  ? `<img src="${coverUrl}" alt="${gameName}" loading="lazy" />`
+                  : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
+              </a>
+            </div>
+            <div class="home-feed-card-copy">
+              <strong><a class="home-feed-card-title-link" href="game.html?id=${encodeURIComponent(gameId)}">${gameName}</a></strong>
+              <span class="helper">${escapeHtml(subtitleText)}</span>
+            </div>
+          </article>
+        `;
+      });
+    }
+
+    function buildHomeFeedGames(gamesList, limit = HOME_GAME_SECTION_LIMIT) {
+      const normalizedLimit = Math.max(0, Number(limit || HOME_GAME_SECTION_LIMIT));
+      const items = [...(Array.isArray(gamesList) ? gamesList : [])];
+      if (items.length === 0 || normalizedLimit === 0) return [];
+      const followedGames = shuffleArray(items.filter((game) => isFollowedGame(game?.id)));
+      const otherGames = shuffleArray(items.filter((game) => !isFollowedGame(game?.id)));
+      return [...followedGames, ...otherGames].slice(0, normalizedLimit);
+    }
+
+    async function renderListingCardsBatch(listingsBatch) {
+      return Promise.all(listingsBatch.map(async (listing) => {
+        const imageUrl = Array.isArray(listing.images) && listing.images[0]
+          ? await resolveImageUrl(listing.images[0])
+          : "";
+        const highlightBadge = listing?.highlight_status === "active"
+          ? `<span class="home-feed-card-badge">${escapeHtml(t("home.featured_badge", "Featured"))}</span>`
+          : "";
+        const highlightAttrs = listing?.highlight_status === "active"
+          ? ` data-highlight-track="1" data-listing-id="${escapeHtml(String(listing.id || ""))}"`
+          : "";
+        return `
+          <a class="home-feed-card" href="listing.html?id=${encodeURIComponent(listing.id)}"${highlightAttrs}>
+            <div class="home-feed-card-media${imageUrl ? "" : " empty"}">
+              ${highlightBadge}
+              ${imageUrl
+                ? `<img src="${encodeURI(imageUrl)}" alt="${escapeHtml(listing.title || "Listing")}" loading="lazy" />`
+                : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
+            </div>
+            <div class="home-feed-card-copy">
+              <strong>${escapeHtml(listing.title || t("home.listing_untitled", "Untitled listing"))}</strong>
+            </div>
+          </a>
+        `;
+      }));
+    }
+
+    async function renderHomeFeedGameRowItemsBatch(itemsBatch) {
+      const markup = await Promise.all((itemsBatch || []).map(async (item) => {
+        if (item?.kind === "boost" && item?.game) {
+          const [cardMarkup] = await renderFeaturedBoostCards([item.game]);
+          return cardMarkup || "";
+        }
+        if (item?.kind === "listing" && item?.listing) {
+          const [cardMarkup] = await renderListingCardsBatch([item.listing]);
+          return cardMarkup || "";
+        }
+        return "";
+      }));
+      return markup.filter(Boolean);
+    }
+
+    async function renderNextHomeFeedRowBatch(rowKey, batchSizeOverride = 0) {
+      const state = homeFeedRowStates.get(rowKey);
+      if (!state || state.loading) return;
+      const row = getHomeFeedRowElement(rowKey);
+      if (!row) return;
+      if (state.nextIndex >= state.items.length) return;
+      state.loading = true;
+      try {
+        const batchSize = Math.max(1, Number(batchSizeOverride || state.batchSize || 1));
+        const nextItems = state.items.slice(state.nextIndex, state.nextIndex + batchSize);
+        const cardMarkup = await state.render(nextItems);
+        row.insertAdjacentHTML("beforeend", cardMarkup.join(""));
+        state.nextIndex += nextItems.length;
+        if (state.nextIndex >= state.items.length) {
+          row.dataset.rowExhausted = "1";
+        }
+        observeHomeHighlightImpressions();
+        observeServerFeedBoostImpressions();
+      } finally {
+        state.loading = false;
+      }
+    }
+
+    async function bindHomeFeedRowInfiniteLoading() {
+      const rows = Array.from(document.querySelectorAll("[data-row-key]"));
+      const initialLoads = [];
+      rows.forEach((row) => {
+        const rowKey = String(row.getAttribute("data-row-key") || "").trim();
+        const state = homeFeedRowStates.get(rowKey);
+        if (!rowKey || !state) return;
+        const initialBatchSize = estimateHomeFeedRowBatchSize(row);
+        state.batchSize = Math.max(1, initialBatchSize - 1);
+        if (row.dataset.initialized !== "1") {
+          row.dataset.initialized = "1";
+          initialLoads.push(renderNextHomeFeedRowBatch(rowKey, initialBatchSize));
+          row.addEventListener("scroll", () => {
+            if (row.dataset.rowExhausted === "1") return;
+            const remaining = row.scrollWidth - (row.scrollLeft + row.clientWidth);
+            if (remaining <= Math.max(120, row.clientWidth * 0.35)) {
+              void renderNextHomeFeedRowBatch(rowKey);
+            }
+          }, { passive: true });
+        }
+      });
+      await Promise.all(initialLoads);
+    }
+
+    async function renderNextHomeSectionBatch(batchSizeOverride = 0) {
+      if (!homeGameSections || !homeSectionFeedState || homeSectionFeedState.loading) return;
+      if (homeSectionFeedState.nextIndex >= homeSectionFeedState.items.length) return;
+      homeSectionFeedState.loading = true;
+      try {
+        const batchSize = Math.max(1, Number(batchSizeOverride || homeSectionFeedState.batchSize || 1));
+        const nextItems = homeSectionFeedState.items.slice(
+          homeSectionFeedState.nextIndex,
+          homeSectionFeedState.nextIndex + batchSize,
+        );
+        const sectionsMarkup = await Promise.all(nextItems.map(async (game) => {
+          const listings = sortListingsForHomeRow(homeSectionFeedState.groupedListings.get(String(game.id)) || []);
+          const rowKey = makeHomeFeedRowKey("game", game.id);
+          const rowItems = listings.map((listing) => ({ kind: "listing", listing }));
+          if (rowItems.length > 0) {
+            homeFeedRowStates.set(rowKey, {
+              items: rowItems,
+              render: renderHomeFeedGameRowItemsBatch,
+              nextIndex: 0,
+              batchSize: 1,
+              loading: false,
+            });
+          }
+
+          const subtitleText = listings.length > 0
+            ? formatMessage("home.active_listings_count", "{count} active listings", { count: listings.length })
+            : t("home.server_boost_spotlight", "Visit the game page");
+
+          return `
+            <section class="home-game-section">
+              <div class="home-game-section-head">
+                <div>
+                  <h3>
+                    <a class="home-game-title-link" href="game.html?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
+                  </h3>
+                  <p class="helper">${escapeHtml(subtitleText)}</p>
+                </div>
+                <button
+                  class="btn btn-ghost home-game-follow-btn${isFollowedGame(game.id) ? " is-following" : ""}"
+                  type="button"
+                  data-action="toggle-follow"
+                  data-game-id="${escapeHtml(game.id)}">
+                  ${isFollowedGame(game.id) ? t("home.following", "Following") : t("home.follow_game", "Follow game")}
+                </button>
+              </div>
+              ${rowItems.length > 0
+                ? `<div class="home-game-row" data-row-key="${escapeHtml(rowKey)}"></div>`
+                : `<div class="home-game-row"></div>`}
+            </section>
+          `;
+        }));
+        homeGameSections.insertAdjacentHTML("beforeend", sectionsMarkup.join(""));
+        homeSectionFeedState.nextIndex += nextItems.length;
+        if (homeSectionFeedState.nextIndex >= homeSectionFeedState.items.length) {
+          homeGameSections.dataset.sectionsExhausted = "1";
+        }
+        await bindHomeFeedRowInfiniteLoading();
+        observeHomeHighlightImpressions();
+        observeServerFeedBoostImpressions();
+      } finally {
+        homeSectionFeedState.loading = false;
+      }
+    }
+
+    function bindHomeSectionInfiniteLoading() {
+      if (!homeGameSections || homeSectionFeedScrollBound) return;
+      homeSectionFeedScrollBound = true;
+      window.addEventListener("scroll", () => {
+        if (!homeSectionFeedState || homeGameSections.dataset.sectionsExhausted === "1") return;
+        const remaining = document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
+        if (remaining <= Math.max(240, window.innerHeight * 0.5)) {
+          void renderNextHomeSectionBatch();
+        }
+      }, { passive: true });
+    }
+
+    async function renderFeaturedGamesSection() {
+      if (!homeFeaturedGamesSection || !homeFeaturedGamesRow) return;
+      const featuredGames = selectedHomeBoostedServerIds
+        .map((serverId) => allSortedGames.find((game) => String(game?.id || "").trim() === String(serverId || "").trim()))
+        .filter(Boolean);
+      if (featuredGames.length === 0) {
+        homeFeaturedGamesSection.style.display = "none";
+        homeFeaturedGamesRow.removeAttribute("data-row-key");
+        homeFeaturedGamesRow.innerHTML = "";
+        return;
+      }
+      const rowKey = makeHomeFeedRowKey("featured", "games");
+      homeFeedRowStates.set(rowKey, {
+        items: featuredGames,
+        render: renderFeaturedBoostCards,
+        nextIndex: 0,
+        batchSize: 1,
+        loading: false,
+      });
+      homeFeaturedGamesSection.style.display = "";
+      homeFeaturedGamesRow.innerHTML = "";
+      homeFeaturedGamesRow.dataset.rowKey = rowKey;
+      homeFeaturedGamesRow.dataset.initialized = "0";
+      homeFeaturedGamesRow.dataset.rowExhausted = "0";
+    }
+
+    async function trackServerFeedImpression(serverId) {
+      const normalizedServerId = String(serverId || "").trim();
+      if (!normalizedServerId || pendingServerBoostImpressionIds.has(normalizedServerId)) return;
+      const now = Date.now();
+      const lastTrackedAt = getLastServerFeedImpressionAt(normalizedServerId);
+      if (now - lastTrackedAt < SERVER_FEED_IMPRESSION_WINDOW_MS) return;
+
+      pendingServerBoostImpressionIds.add(normalizedServerId);
+      try {
+        ensureClient();
+        const viewerKey = getOrCreateServerFeedViewerKey();
+        const { error } = await supabase.functions.invoke("server_feed_impression", {
+          body: {
+            serverId: normalizedServerId,
+            viewerKey,
+            pagePath: `${window.location.pathname}${window.location.search || ""}`,
+          },
+        });
+        if (!error) {
+          setLastServerFeedImpressionAt(normalizedServerId, now);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        pendingServerBoostImpressionIds.delete(normalizedServerId);
+      }
+    }
+
+    function observeServerFeedBoostImpressions() {
+      if (homeServerBoostImpressionObserver) {
+        homeServerBoostImpressionObserver.disconnect();
+        homeServerBoostImpressionObserver = null;
+      }
+      const targets = Array.from(document.querySelectorAll("[data-server-feed-boost-track='1']"));
+      if (targets.length === 0) return;
+      homeServerBoostImpressionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.65) return;
+          const serverId = String(entry.target?.dataset?.serverId || "").trim();
+          if (!serverId) return;
+          trackServerFeedImpression(serverId);
+        });
+      }, {
+        root: null,
+        threshold: [0.65],
+      });
+      targets.forEach((target) => homeServerBoostImpressionObserver.observe(target));
     }
 
     async function attachRecommendationsScore(listings) {
@@ -578,6 +1016,11 @@
       return recommendationCountMap.get(String(userId || "").trim()) || 0;
     }
 
+    function getSellerRating(userId) {
+      const normalizedUserId = String(userId || "").trim();
+      return Number(sellerRatingMap.get(normalizedUserId) || 0);
+    }
+
     async function fetchFollowedGames() {
       followedGameIds = new Set();
       if (!currentUser?.id) return;
@@ -652,6 +1095,8 @@
         .sort((a, b) => {
           const followedDiff = Number(b.followedListingsCount || 0) - Number(a.followedListingsCount || 0);
           if (followedDiff !== 0) return followedDiff;
+          const ratingDiff = getSellerRating(b.userId) - getSellerRating(a.userId);
+          if (ratingDiff !== 0) return ratingDiff;
           const scoreDiff = getRecommendationCount(b.userId) - getRecommendationCount(a.userId);
           if (scoreDiff !== 0) return scoreDiff;
           const totalListingsDiff = Number(b.totalListingsCount || 0) - Number(a.totalListingsCount || 0);
@@ -660,6 +1105,78 @@
         })
         .slice(0, limit)
         .map((item) => item.userId);
+    }
+
+    async function fetchSellerRatings() {
+      const sellerIds = Array.from(new Set(
+        (activeListingsCatalog || [])
+          .map((listing) => String(listing?.user_id || "").trim())
+          .filter(Boolean),
+      ));
+      sellerRatingMap = new Map();
+      if (sellerIds.length === 0) return;
+
+      const listingOwnerMap = new Map();
+      (activeListingsCatalog || []).forEach((listing) => {
+        const listingId = String(listing?.id || "").trim();
+        const userId = String(listing?.user_id || "").trim();
+        if (!listingId || !userId) return;
+        listingOwnerMap.set(listingId, userId);
+      });
+
+      const [usersResult, profileReportsResult, listingReportsResult] = await Promise.all([
+        supabase
+          .from("users")
+          .select("id,phone_verified")
+          .in("id", sellerIds),
+        supabase
+          .from("reports")
+          .select("reported_user_id")
+          .eq("target_type", "user")
+          .eq("status", "handled")
+          .in("action_taken", ["confirmed_report", "user_banned", "listing_deleted"])
+          .in("reported_user_id", sellerIds),
+        supabase
+          .from("reports")
+          .select("listing_id")
+          .eq("target_type", "listing")
+          .eq("status", "handled")
+          .in("action_taken", ["confirmed_report", "listing_deleted"])
+          .in("listing_id", Array.from(listingOwnerMap.keys())),
+      ]);
+
+      if (usersResult.error) throw usersResult.error;
+      if (profileReportsResult.error) throw profileReportsResult.error;
+      if (listingReportsResult.error) throw listingReportsResult.error;
+
+      const profileReportCountMap = new Map();
+      (profileReportsResult.data || []).forEach((row) => {
+        const userId = String(row?.reported_user_id || "").trim();
+        if (!userId) return;
+        profileReportCountMap.set(userId, (profileReportCountMap.get(userId) || 0) + 1);
+      });
+
+      const listingReportCountMap = new Map();
+      (listingReportsResult.data || []).forEach((row) => {
+        const listingId = String(row?.listing_id || "").trim();
+        const userId = listingOwnerMap.get(listingId);
+        if (!userId) return;
+        listingReportCountMap.set(userId, (listingReportCountMap.get(userId) || 0) + 1);
+      });
+
+      (usersResult.data || []).forEach((user) => {
+        const userId = String(user?.id || "").trim();
+        if (!userId) return;
+        const recommendations = getRecommendationCount(userId);
+        const reports = Number(profileReportCountMap.get(userId) || 0) + Number(listingReportCountMap.get(userId) || 0);
+        const isVerified = !!user?.phone_verified;
+        const rating = !isVerified
+          ? 0
+          : recommendations + reports === 0
+            ? 0
+            : Math.round((recommendations / (recommendations + reports)) * 100) / 10;
+        sellerRatingMap.set(userId, rating);
+      });
     }
 
     async function fetchUserProfiles(userIds) {
@@ -680,18 +1197,22 @@
     function renderSidebarGames() {
       if (!sidebarGames || !sidebarGamesEmpty) return;
       const counts = buildPopularityMap(activeListingsCatalog);
-      const items = allSortedGames
-        .filter((game) => (counts.get(String(game.id)) || 0) > 0)
-        .slice(0, SIDEBAR_GAMES_LIMIT);
+      const baseItems = allSortedGames
+        .filter((game) => {
+          const gameId = String(game.id);
+          return (counts.get(gameId) || 0) > 0
+            || isFollowedGame(gameId)
+            || selectedSidebarBoostedServerIds.includes(gameId);
+        });
 
-      if (items.length === 0) {
+      if (baseItems.length === 0) {
         sidebarGames.innerHTML = "";
         sidebarGamesEmpty.style.display = "block";
         return;
       }
 
       sidebarGamesEmpty.style.display = "none";
-      const sortedItems = [...items].sort((a, b) => {
+      const sortedItems = [...baseItems].sort((a, b) => {
         const followedDiff = Number(isFollowedGame(b.id)) - Number(isFollowedGame(a.id));
         if (followedDiff !== 0) return followedDiff;
         const countA = counts.get(String(a.id)) || 0;
@@ -703,24 +1224,79 @@
           { sensitivity: "base" },
         );
       });
-      sidebarGames.innerHTML = sortedItems
-        .map((game) => {
+      const selectedBoostedGames = selectedSidebarBoostedServerIds
+        .map((serverId) => sortedItems.find((game) => String(game.id) === serverId))
+        .filter(Boolean);
+      const followedItems = sortedItems.filter((game) => isFollowedGame(game.id));
+      const nonFollowedItems = sortedItems.filter((game) => !isFollowedGame(game.id));
+      const finalItems = Array.from(new Map([
+        ...selectedBoostedGames,
+        ...followedItems,
+        ...nonFollowedItems.slice(0, SIDEBAR_GAMES_LIMIT),
+      ].map((game) => [String(game.id), game])).values());
+      sidebarGames.innerHTML = finalItems.map((game) => {
+        const isSelectedBoostedGame = selectedSidebarBoostedServerIds.includes(String(game.id));
         const count = counts.get(String(game.id)) || 0;
-        const followedTag = isFollowedGame(game.id) ? `<span class="sidebar-item-chip">${t("home.following", "Following")}</span>` : "";
+        const listingsText = count > 0
+          ? formatMessage("home.active_listings_count", "{count} active listings", { count })
+          : t("home.no_active_listings_yet", "No active listings yet");
+        const followButtonLabel = isFollowedGame(game.id) ? t("home.following", "Following") : t("home.follow_game", "Follow game");
         const safeGameName = escapeHtml(game.name);
         const gameThumb = game.cover_url
           ? `<span class="sidebar-item-thumb game-logo"><img src="${encodeURI(game.cover_url)}" alt="${safeGameName}" loading="lazy" /></span>`
           : `<span class="sidebar-item-thumb game">${escapeHtml(String(game.name || "G").slice(0, 1))}</span>`;
+        const boostAttrs = isSelectedBoostedGame ? ` data-server-feed-boost-track="1" data-server-id="${escapeHtml(String(game.id))}"` : "";
         return `
-          <a class="sidebar-item" href="game.html?id=${encodeURIComponent(game.id)}">
-            ${gameThumb}
-            <span class="sidebar-item-copy">
-              <strong>${safeGameName} ${followedTag}</strong>
-              <span>${escapeHtml(formatMessage("home.active_listings_count", "{count} active listings", { count }))}</span>
-            </span>
-          </a>
+          <div class="sidebar-game-entry${isSelectedBoostedGame ? " is-highlighted" : ""}"${boostAttrs}>
+            ${isSelectedBoostedGame
+              ? `<span class="sidebar-game-entry-tag">${escapeHtml(t("home.highlight_simple", "Featured"))}</span>`
+              : ""}
+            <article class="sidebar-item sidebar-item-with-action${isSelectedBoostedGame ? " sidebar-item-highlighted" : ""}">
+              <a class="sidebar-item-thumb-link" href="game.html?id=${encodeURIComponent(game.id)}" aria-label="${safeGameName}">
+                ${gameThumb}
+              </a>
+              <button
+                class="btn btn-ghost sidebar-follow-btn${isFollowedGame(game.id) ? " is-following" : ""}"
+                type="button"
+                data-action="toggle-follow"
+                data-game-id="${escapeHtml(String(game.id))}">
+                ${escapeHtml(followButtonLabel)}
+              </button>
+              <div class="sidebar-item-body">
+                <a class="sidebar-item-title-link" href="game.html?id=${encodeURIComponent(game.id)}">
+                  <strong class="sidebar-item-title">${safeGameName}</strong>
+                </a>
+                <span class="sidebar-item-subtitle">${escapeHtml(listingsText)}</span>
+              </div>
+            </article>
+          </div>
         `;
       }).join("");
+      observeServerFeedBoostImpressions();
+    }
+
+    async function handleHomeFollowButtonClick(event) {
+      const button = event.target.closest('[data-action="toggle-follow"][data-game-id]');
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const gameId = button.getAttribute("data-game-id") || "";
+      if (!gameId) return;
+      const originalText = button.textContent;
+      try {
+        button.disabled = true;
+        button.textContent = isFollowedGame(gameId) ? t("home.removing", "Removing...") : t("home.following", "Following...");
+        await toggleFollowGame(gameId);
+        renderSidebarGames();
+        const sellerIds = followedGameIds.size > 0 ? getTopSellerIds() : [];
+        const userMap = await fetchUserProfiles(sellerIds);
+        renderSidebarUsers(userMap);
+        await renderHomeGameSections();
+      } catch (err) {
+        console.error(err);
+        button.disabled = false;
+        button.textContent = originalText || t("home.follow_game", "Follow game");
+      }
     }
 
     function renderSidebarUsers(userMap) {
@@ -750,8 +1326,8 @@
           <a class="sidebar-item" href="user?id=${encodeURIComponent(userId)}">
             <span class="sidebar-item-thumb avatar"><img src="${encodeURI(user.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(sellerName)}" loading="lazy" referrerpolicy="no-referrer" /></span>
             <span class="sidebar-item-copy">
-              <strong>${escapeHtml(sellerName)}</strong>
-              <span>${formatRecommendations(getRecommendationCount(userId))}</span>
+              <strong class="sidebar-item-title">${escapeHtml(sellerName)}</strong>
+              <span class="sidebar-item-subtitle">${formatRecommendations(getRecommendationCount(userId))}</span>
             </span>
           </a>
         `;
@@ -819,9 +1395,9 @@
           const listingId = entry.target?.dataset?.listingId;
           if (!listingId) return;
           const now = Date.now();
-          const lastTrackedAt = Number(trackedHomeHighlightImpressions.get(listingId) || 0);
-          if (now - lastTrackedAt < 30000) return;
-          trackedHomeHighlightImpressions.set(listingId, now);
+          const lastTrackedAt = getLastHighlightImpressionAt(listingId);
+          if (now - lastTrackedAt < HIGHLIGHT_IMPRESSION_WINDOW_MS) return;
+          setLastHighlightImpressionAt(listingId, now);
           queueHomeHighlightImpression(listingId);
         });
       }, {
@@ -871,6 +1447,8 @@
 
     async function renderHomeGameSections() {
       if (!homeGameSections || !homeGameSectionsEmpty) return;
+      resetHomeFeedRowStates();
+      resetHomeSectionFeedState();
       const groupedListings = new Map();
       activeListingsCatalog.forEach((listing) => {
         const serverId = String(listing?.server_id || "").trim();
@@ -878,89 +1456,33 @@
         if (!groupedListings.has(serverId)) groupedListings.set(serverId, []);
         groupedListings.get(serverId).push(listing);
       });
-      const activeListingCountMap = buildPopularityMap(activeListingsCatalog);
-      const highlightedServerIds = buildHighlightedServerSet(activeListingsCatalog);
-
-      const selectedGames = [...allSortedGames]
-        .filter((game) => groupedListings.has(String(game.id)))
-        .sort((a, b) => {
-          const highlightedDiff = Number(highlightedServerIds.has(String(b.id))) - Number(highlightedServerIds.has(String(a.id)));
-          if (highlightedDiff !== 0) return highlightedDiff;
-          const followerDiff = (serverFollowerCountMap.get(String(b.id)) || 0) - (serverFollowerCountMap.get(String(a.id)) || 0);
-          if (followerDiff !== 0) return followerDiff;
-          const activeDiff = (activeListingCountMap.get(String(b.id)) || 0) - (activeListingCountMap.get(String(a.id)) || 0);
-          if (activeDiff !== 0) return activeDiff;
-          return String(a.name || "").localeCompare(
-            String(b.name || ""),
-            i18n.locale === "en" ? "en-US" : "pt-BR",
-            { sensitivity: "base" },
-          );
-        })
-        .slice(0, HOME_GAME_SECTION_LIMIT);
+      const baseGames = [...allSortedGames]
+        .filter((game) => groupedListings.has(String(game.id)));
+      await renderFeaturedGamesSection();
+      const selectedGames = buildHomeFeedGames(baseGames, HOME_GAME_SECTION_LIMIT);
+      const hasFeaturedGames = homeFeaturedGamesSection?.style.display !== "none";
 
       if (selectedGames.length === 0) {
         homeGameSections.innerHTML = "";
-        homeGameSectionsEmpty.style.display = "block";
+        homeGameSections.dataset.sectionsExhausted = "1";
+        homeGameSectionsEmpty.style.display = hasFeaturedGames ? "none" : "block";
+        await bindHomeFeedRowInfiniteLoading();
+        observeServerFeedBoostImpressions();
         return;
       }
 
       homeGameSectionsEmpty.style.display = "none";
-      const sectionsMarkup = await Promise.all(selectedGames.map(async (game) => {
-        const listings = (groupedListings.get(String(game.id)) || [])
-          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
-          .slice(0, HOME_GAME_CARD_LIMIT);
-
-        const cards = await Promise.all(listings.map(async (listing) => {
-          const imageUrl = Array.isArray(listing.images) && listing.images[0]
-            ? await resolveImageUrl(listing.images[0])
-            : "";
-          const highlightBadge = listing?.highlight_status === "active"
-            ? `<span class="home-feed-card-badge">${escapeHtml(t("home.featured_badge", "Featured"))}</span>`
-            : "";
-          const highlightAttrs = listing?.highlight_status === "active"
-            ? ` data-highlight-track="1" data-listing-id="${escapeHtml(String(listing.id || ""))}"`
-            : "";
-          return `
-            <a class="home-feed-card" href="listing.html?id=${encodeURIComponent(listing.id)}"${highlightAttrs}>
-              <div class="home-feed-card-media${imageUrl ? "" : " empty"}">
-                ${highlightBadge}
-                ${imageUrl
-                  ? `<img src="${encodeURI(imageUrl)}" alt="${escapeHtml(listing.title || "Listing")}" loading="lazy" />`
-                  : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
-              </div>
-              <div class="home-feed-card-copy">
-                <strong>${escapeHtml(listing.title || t("home.listing_untitled", "Untitled listing"))}</strong>
-              </div>
-            </a>
-          `;
-        }));
-
-        return `
-          <section class="home-game-section">
-            <div class="home-game-section-head">
-              <div>
-                <h3>
-                  <a class="home-game-title-link" href="game.html?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
-                </h3>
-                <p class="helper">${escapeHtml(formatMessage("home.active_listings_count", "{count} active listings", { count: (groupedListings.get(String(game.id)) || []).length }))}</p>
-              </div>
-              <button
-                class="btn btn-ghost home-game-follow-btn${isFollowedGame(game.id) ? " is-following" : ""}"
-                type="button"
-                data-action="toggle-follow"
-                data-game-id="${escapeHtml(game.id)}">
-                ${isFollowedGame(game.id) ? t("home.following", "Following") : t("home.follow_game", "Follow game")}
-              </button>
-            </div>
-            <div class="home-game-row">
-              ${cards.join("")}
-            </div>
-          </section>
-        `;
-      }));
-
-      homeGameSections.innerHTML = sectionsMarkup.join("");
-      observeHomeHighlightImpressions();
+      homeGameSections.innerHTML = "";
+      homeGameSections.dataset.sectionsExhausted = "0";
+      homeSectionFeedState = {
+        items: selectedGames,
+        groupedListings,
+        nextIndex: 0,
+        batchSize: Math.max(1, estimateHomeSectionBatchSize() - 1),
+        loading: false,
+      };
+      bindHomeSectionInfiniteLoading();
+      await renderNextHomeSectionBatch(estimateHomeSectionBatchSize());
     }
 
     async function loadHomeLayout() {
@@ -969,7 +1491,9 @@
         const { data: sessionData } = await supabase.auth.getSession();
         currentUser = sessionData?.session?.user || currentUser;
         await fetchGamesCatalog();
+        selectHomeBoostedServers();
         await fetchRecommendationCounts();
+        await fetchSellerRatings();
         await fetchServerFollowerCounts();
         await fetchSearchablePlayers();
         await fetchFollowedGames();
@@ -1185,9 +1709,13 @@
       userMenu?.classList.remove("open");
       goToCreateListing();
     });
-    homeGameSections?.addEventListener("click", async (event) => {
+    homeFeaturedGamesSection?.addEventListener("click", handleHomeFollowButtonClick);
+    homeGameSections?.addEventListener("click", handleHomeFollowButtonClick);
+    sidebarGames?.addEventListener("click", async (event) => {
       const button = event.target.closest('[data-action="toggle-follow"][data-game-id]');
       if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
       const gameId = button.getAttribute("data-game-id") || "";
       if (!gameId) return;
       const originalText = button.textContent;
@@ -1258,6 +1786,9 @@
       if (loaderDone || !pageLoader) return;
       if (!windowLoaded || !avatarReady || !contentReady) return;
       loaderDone = true;
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("index-guard-style");
+      if (guard) guard.remove();
       pageLoader.classList.add("hidden");
       pageLoader.remove();
     }

@@ -24,22 +24,89 @@
   <link rel="stylesheet" href="css/global.css" />
   <style id="my-listings-guard-style">html{visibility:hidden;}</style>
   <style>
-    #my-listings-main.empty-state {
-      gap: 10px;
+    .my-listings-page {
+      display: grid;
+      gap: 16px;
+    }
+
+    .my-listings-page.empty-state {
       min-height: 45vh;
       align-content: start;
     }
 
-    #my-listings-main.empty-state #my-listings-header-card {
+    .my-listings-page.empty-state #my-listings-grid-card {
       display: none;
     }
 
-    #my-listings-main.empty-state #my-listings-empty {
+    .my-listings-page.empty-state #my-listings-empty {
+      display: block;
       margin-top: 6px;
       padding: 12px 14px;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: rgba(12, 21, 51, 0.03);
+    }
+
+    .my-listings-wallet-card,
+    .my-listings-grid-card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .my-listings-wallet-layout {
+      display: flex;
+      gap: 16px;
+      align-items: start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .my-listings-wallet-copy {
+      display: grid;
+      gap: 10px;
+      flex: 1 1 420px;
+      min-width: 0;
+    }
+
+    .my-listings-wallet-actions {
+      display: grid;
+      gap: 8px;
+      align-content: center;
+      align-self: center;
+      min-width: min(240px, 100%);
+      flex: 0 1 260px;
+    }
+
+    .my-listings-wallet-actions .btn {
+      width: 100%;
+    }
+
+    .my-listings-status-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    .my-listings-status-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.03);
+      padding: 10px 12px;
+      display: grid;
+      gap: 4px;
+    }
+
+    .my-listings-status-item small {
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .my-listings-status-item strong {
+      color: var(--ink);
+      font-size: 15px;
     }
 
     #my-listings-feedback {
@@ -107,6 +174,163 @@
       margin-top: auto;
       padding-top: 8px;
     }
+
+    #my-listings-empty {
+      display: none;
+    }
+
+    .my-listings-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(12, 21, 51, 0.56);
+    }
+
+    .my-listings-modal-backdrop.open {
+      display: flex;
+    }
+
+    .my-listings-modal-card {
+      width: min(620px, 100%);
+      max-height: min(92vh, 760px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .my-listings-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 10px;
+    }
+
+    .my-listings-modal-head h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .my-listings-modal-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .my-listings-modal-body {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px 18px;
+      overflow-y: auto;
+    }
+
+    .my-listings-modal-feedback {
+      min-height: 18px;
+      font-size: 14px;
+      color: #7a4a00;
+      margin: 0;
+    }
+
+    .my-listings-amount-field {
+      width: min(260px, 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+    }
+
+    .my-listings-amount-prefix {
+      flex: 0 0 auto;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+    }
+
+    .my-listings-amount-input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      padding: 14px 14px 14px 0;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      text-align: left;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .my-listings-amount-input:focus {
+      outline: none;
+    }
+
+    .my-listings-amount-field:focus-within {
+      outline: 2px solid rgba(116, 168, 255, 0.34);
+      outline-offset: 1px;
+    }
+
+    .my-listings-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .my-listings-input-feedback {
+      min-height: 18px;
+      margin: -2px 0 0;
+      font-size: 13px;
+      color: #7a4a00;
+    }
+
+    .my-listings-highlight-image {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: block;
+      object-fit: contain;
+    }
+
+    .my-listings-live-cpm {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(118, 168, 255, 0.24);
+      background: rgba(118, 168, 255, 0.1);
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 860px) {
+      .my-listings-wallet-actions {
+        min-width: 0;
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .my-listings-modal-card {
+        width: min(100%, 100%);
+      }
+    }
   </style>
   <script>
     (() => {
@@ -128,18 +352,118 @@
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
-    <main class="section game-page" id="my-listings-main">
-      <section class="hero-card" id="my-listings-header-card">
-        <h2 id="my-listings-title">My listings</h2>
-        <p id="my-listings-helper" class="helper">Manage your listings: edit, boost, or delete them whenever you want.</p>
-        <p id="my-listings-feedback"></p>
+    <main class="section my-listings-page" id="my-listings-main">
+      <section class="hero-card my-listings-wallet-card" id="my-listings-wallet-card">
+        <div class="my-listings-wallet-layout">
+          <div class="my-listings-wallet-copy">
+            <h3 id="wallet-summary-title" style="margin:0;">Ad account summary</h3>
+            <div id="wallet-summary-grid" class="my-listings-status-list" hidden>
+              <div class="my-listings-status-item">
+                <small id="wallet-balance-label">Balance</small>
+                <strong id="wallet-balance-brl">R$ 0,00</strong>
+              </div>
+              <div class="my-listings-status-item">
+                <small id="wallet-active-label">Active highlights</small>
+                <strong id="wallet-active-count">0</strong>
+              </div>
+            </div>
+          </div>
+          <div class="my-listings-wallet-actions">
+            <button id="open-topup-modal-btn" class="btn btn-primary" type="button">Add balance</button>
+            <button id="open-withdraw-modal-btn" class="btn btn-ghost" type="button">Request withdrawal</button>
+          </div>
+        </div>
+        <p id="wallet-withdraw-note" class="helper" style="margin:0;"></p>
       </section>
-      <section>
+
+      <section class="hero-card my-listings-grid-card" id="my-listings-grid-card">
+        <h3 id="wallet-listings-title" style="margin:0;">Manage listings</h3>
         <div id="my-listings-grid" class="listing-grid"></div>
-        <p id="my-listings-empty" class="helper" style="display:none;">You have not published any listings yet.</p>
+        <p id="my-listings-empty" class="helper">You have not published any listings yet.</p>
       </section>
     </main>
+  </div>
 
+  <div id="listing-highlight-info-modal" class="my-listings-modal-backdrop" aria-hidden="true">
+    <div class="my-listings-modal-card">
+      <div class="my-listings-modal-head">
+        <h3 id="listing-highlight-info-title">Boost listing</h3>
+        <button id="listing-highlight-info-close" class="my-listings-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="my-listings-modal-body">
+        <p id="listing-highlight-info-helper" class="helper">Your highlighted listings will appear in a privileged position both on the game page and in Gimerr's home feed.</p>
+        <img
+          id="listing-highlight-info-image"
+          class="my-listings-highlight-image"
+          src="img/listings-ads.png"
+          alt="Example of highlighted listing positions"
+          loading="lazy"
+        />
+        <p id="listing-highlight-info-note" class="helper">We use the CPM model to bill your listings. For more information, read the ads policies.</p>
+        <p id="listing-highlight-info-feedback" class="my-listings-modal-feedback"></p>
+        <div class="inline-actions">
+          <button id="listing-highlight-info-confirm" class="btn btn-primary" type="button">Add balance</button>
+          <button id="listing-highlight-info-cancel" class="btn btn-ghost" type="button">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="topup-modal-backdrop" class="my-listings-modal-backdrop" aria-hidden="true">
+    <div class="my-listings-modal-card">
+      <div class="my-listings-modal-head">
+        <div>
+          <h3 id="topup-modal-title">Add balance</h3>
+          <p id="topup-modal-helper" class="helper">Deposit any amount starting from US$ 2.00.</p>
+        </div>
+        <button id="topup-modal-close" class="my-listings-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="my-listings-modal-body">
+        <div id="topup-details">
+          <label id="deposit-amount-label" for="deposit-amount" class="helper">Deposit amount</label>
+          <div class="my-listings-amount-field">
+            <span id="deposit-amount-prefix" class="my-listings-amount-prefix">$</span>
+            <input id="deposit-amount" class="my-listings-amount-input" type="text" inputmode="decimal" placeholder="2.00" autocomplete="off" />
+          </div>
+          <p id="deposit-amount-feedback" class="my-listings-input-feedback"></p>
+
+          <p id="wallet-policy-text" class="helper">By continuing, you agree to the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">ads policies</a>.</p>
+
+          <p id="topup-feedback" class="my-listings-modal-feedback"></p>
+
+          <div class="inline-actions">
+            <button id="wallet-checkout-btn" class="btn btn-primary" type="button" disabled>Add balance and pay</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="withdraw-modal-backdrop" class="my-listings-modal-backdrop" aria-hidden="true">
+    <div class="my-listings-modal-card">
+      <div class="my-listings-modal-head">
+        <div>
+          <h3 id="withdraw-modal-title">Request withdrawal</h3>
+          <p id="withdraw-modal-helper" class="helper">Your available balance will be paused immediately for refund review.</p>
+        </div>
+        <button id="withdraw-modal-close" class="my-listings-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="my-listings-modal-body">
+        <div class="my-listings-status-item">
+          <small id="withdraw-estimate-label">Estimated withdrawal amount</small>
+          <strong id="withdraw-estimate-value">$0.00</strong>
+        </div>
+        <label class="checkbox-row">
+          <input id="withdraw-policy-accept" type="checkbox" />
+          <span id="withdraw-policy-text">I have read and agree with the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.</span>
+        </label>
+        <p id="withdraw-fee-helper" class="helper">The final amount may be lower because of payment processing fees (Stripe).</p>
+        <p id="withdraw-feedback" class="my-listings-modal-feedback"></p>
+        <div class="inline-actions">
+          <button id="withdraw-confirm-btn" class="btn btn-primary" type="button" disabled>Confirm request</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="env.js"></script>
@@ -164,6 +488,48 @@
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
     const R2_BUCKET = env.R2_BUCKET || "";
+    const HIGHLIGHT_CPM_TIERS = [
+      { minAds7d: 0, maxAds7d: 25, cpmUsd: 0.4, label: "0-25" },
+      { minAds7d: 26, maxAds7d: 75, cpmUsd: 0.9, label: "26-75" },
+      { minAds7d: 76, maxAds7d: 150, cpmUsd: 2.0, label: "76-150" },
+      { minAds7d: 151, maxAds7d: 400, cpmUsd: 4.0, label: "151-400" },
+      { minAds7d: 401, maxAds7d: 900, cpmUsd: 7.0, label: "401-900" },
+      { minAds7d: 901, maxAds7d: null, cpmUsd: 12.0, label: "901+" },
+    ];
+    const USD_BRL_RATE = (() => {
+      const parsed = Number(env.USD_BRL_RATE || 5.5);
+      return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
+    })();
+    const CHECKOUT_RATE_API = "https://api.frankfurter.dev/v1/latest";
+    const MIN_TOPUP_USD = 2;
+    const MIN_TOPUP_BRL = Number((MIN_TOPUP_USD * USD_BRL_RATE).toFixed(2));
+    const MIN_WITHDRAW_BRL = MIN_TOPUP_BRL;
+    const SUPPORTED_CHECKOUT_COUNTRIES = [
+      { code: "BR", currency: "brl" },
+      { code: "US", currency: "usd" },
+      { code: "CA", currency: "cad" },
+      { code: "GB", currency: "gbp" },
+      { code: "AU", currency: "aud" },
+      { code: "NZ", currency: "nzd" },
+      { code: "MX", currency: "mxn" },
+      { code: "CH", currency: "chf" },
+      { code: "SE", currency: "sek" },
+      { code: "NO", currency: "nok" },
+      { code: "DK", currency: "dkk" },
+      { code: "PL", currency: "pln" },
+      { code: "DE", currency: "eur" },
+      { code: "FR", currency: "eur" },
+      { code: "ES", currency: "eur" },
+      { code: "IT", currency: "eur" },
+      { code: "PT", currency: "eur" },
+      { code: "NL", currency: "eur" },
+      { code: "BE", currency: "eur" },
+      { code: "IE", currency: "eur" },
+      { code: "AT", currency: "eur" },
+      { code: "FI", currency: "eur" },
+      { code: "GR", currency: "eur" },
+      { code: "OTHER", currency: "usd" },
+    ];
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -174,12 +540,54 @@
     const menuCreateListing = document.getElementById("menu-create-listing");
     const profileLink = document.getElementById("profile-link");
 
-    const listingsGrid = document.getElementById("my-listings-grid");
-    const myListingsTitle = document.getElementById("my-listings-title");
-    const myListingsHelper = document.getElementById("my-listings-helper");
-    const listingsEmpty = document.getElementById("my-listings-empty");
     const myListingsMain = document.getElementById("my-listings-main");
     const feedbackEl = document.getElementById("my-listings-feedback");
+    const walletSummaryTitle = document.getElementById("wallet-summary-title");
+    const walletSummaryGrid = document.getElementById("wallet-summary-grid");
+    const walletBalanceLabel = document.getElementById("wallet-balance-label");
+    const walletActiveLabel = document.getElementById("wallet-active-label");
+    const balanceEl = document.getElementById("wallet-balance-brl");
+    const activeCountEl = document.getElementById("wallet-active-count");
+    const openTopupModalBtn = document.getElementById("open-topup-modal-btn");
+    const openWithdrawModalBtn = document.getElementById("open-withdraw-modal-btn");
+    const walletWithdrawNote = document.getElementById("wallet-withdraw-note");
+    const walletListingsTitle = document.getElementById("wallet-listings-title");
+    const listingsGrid = document.getElementById("my-listings-grid");
+    const listingsEmpty = document.getElementById("my-listings-empty");
+
+    const listingHighlightInfoModal = document.getElementById("listing-highlight-info-modal");
+    const listingHighlightInfoTitle = document.getElementById("listing-highlight-info-title");
+    const listingHighlightInfoHelper = document.getElementById("listing-highlight-info-helper");
+    const listingHighlightInfoImage = document.getElementById("listing-highlight-info-image");
+    const listingHighlightInfoNote = document.getElementById("listing-highlight-info-note");
+    const listingHighlightInfoFeedback = document.getElementById("listing-highlight-info-feedback");
+    const listingHighlightInfoClose = document.getElementById("listing-highlight-info-close");
+    const listingHighlightInfoCancel = document.getElementById("listing-highlight-info-cancel");
+    const listingHighlightInfoConfirm = document.getElementById("listing-highlight-info-confirm");
+
+    const topupModalBackdrop = document.getElementById("topup-modal-backdrop");
+    const topupModalTitle = document.getElementById("topup-modal-title");
+    const topupModalHelper = document.getElementById("topup-modal-helper");
+    const topupModalClose = document.getElementById("topup-modal-close");
+    const depositAmountLabel = document.getElementById("deposit-amount-label");
+    const depositAmountPrefix = document.getElementById("deposit-amount-prefix");
+    const amountInput = document.getElementById("deposit-amount");
+    const depositAmountFeedbackEl = document.getElementById("deposit-amount-feedback");
+    const walletPolicyText = document.getElementById("wallet-policy-text");
+    const topupFeedbackEl = document.getElementById("topup-feedback");
+    const checkoutBtn = document.getElementById("wallet-checkout-btn");
+
+    const withdrawModalBackdrop = document.getElementById("withdraw-modal-backdrop");
+    const withdrawModalTitle = document.getElementById("withdraw-modal-title");
+    const withdrawModalHelper = document.getElementById("withdraw-modal-helper");
+    const withdrawModalClose = document.getElementById("withdraw-modal-close");
+    const withdrawEstimateLabel = document.getElementById("withdraw-estimate-label");
+    const withdrawEstimateValue = document.getElementById("withdraw-estimate-value");
+    const withdrawPolicyAccept = document.getElementById("withdraw-policy-accept");
+    const withdrawPolicyText = document.getElementById("withdraw-policy-text");
+    const withdrawFeeHelper = document.getElementById("withdraw-fee-helper");
+    const withdrawFeedbackEl = document.getElementById("withdraw-feedback");
+    const withdrawConfirmBtn = document.getElementById("withdraw-confirm-btn");
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -207,19 +615,25 @@
     let supabase;
     let currentUser = null;
     let avatarLoaded = false;
+    let currentProfile = null;
+    let walletState = null;
     let myListings = [];
+    let walletDisplayCurrency = "";
+    let walletDisplayRateToBRL = 1;
+    let pendingHighlightListingId = null;
+    let listingHighlightInfoCarouselTimer = null;
+    let listingHighlightInfoCarouselIndex = 0;
+    let selectedCheckoutCurrency = "usd";
+    let selectedCheckoutRateToBRL = USD_BRL_RATE;
+    let serverPricingById = {};
+    const LISTING_HIGHLIGHT_INFO_IMAGES = [
+      "img/listings-ads.png",
+      "img/listings-ads-2.png",
+    ];
+
+    const displayLocale = i18n.locale === "en" ? "en-US" : i18n.locale === "es" ? "es-ES" : "pt-BR";
 
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
-
-    function applyStaticTranslations() {
-      document.title = t("my_listings.title_default", "Gimerr - My listings");
-      document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
-      const loaderImage = pageLoader?.querySelector("img");
-      if (loaderImage) loaderImage.alt = t("my_listings.loading", "Loading");
-      if (myListingsTitle) myListingsTitle.textContent = t("my_listings.page_title", "My listings");
-      if (myListingsHelper) myListingsHelper.textContent = t("my_listings.page_helper", "Manage your listings: edit, boost, or delete them whenever you want.");
-      if (listingsEmpty) listingsEmpty.textContent = t("my_listings.empty", "You have not published any listings yet.");
-    }
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
@@ -249,10 +663,430 @@
       return supabase;
     }
 
-    function showFeedback(message) {
-      if (!feedbackEl || !message) return;
+    function showFeedback(message, isError = false) {
+      if (!feedbackEl) return;
+      if (!message) {
+        feedbackEl.style.display = "none";
+        feedbackEl.textContent = "";
+        return;
+      }
       feedbackEl.textContent = message;
       feedbackEl.style.display = "block";
+      feedbackEl.style.color = isError ? "#9b1c1c" : "#145532";
+      feedbackEl.style.borderColor = isError ? "rgba(155, 28, 28, 0.25)" : "rgba(26, 122, 67, 0.25)";
+      feedbackEl.style.background = isError ? "rgba(155, 28, 28, 0.08)" : "rgba(26, 122, 67, 0.08)";
+    }
+
+    function setTopupFeedback(message, isError = false) {
+      if (!topupFeedbackEl) return;
+      topupFeedbackEl.textContent = message || "";
+      topupFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function setDepositAmountFeedback(message, isError = false) {
+      if (!depositAmountFeedbackEl) return;
+      depositAmountFeedbackEl.textContent = message || "";
+      depositAmountFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function setWithdrawFeedback(message, isError = false) {
+      if (!withdrawFeedbackEl) return;
+      withdrawFeedbackEl.textContent = message || "";
+      withdrawFeedbackEl.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function setHighlightInfoFeedback(message, isError = false) {
+      if (!listingHighlightInfoFeedback) return;
+      listingHighlightInfoFeedback.textContent = message || "";
+      listingHighlightInfoFeedback.style.color = isError ? "#9b1c1c" : "#7a4a00";
+    }
+
+    function formatMoney(value, currency = "brl") {
+      const normalizedCurrency = String(currency || "brl").trim().toUpperCase();
+      return new Intl.NumberFormat(displayLocale, {
+        style: "currency",
+        currency: normalizedCurrency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Number(value || 0));
+    }
+
+    function formatBRLMoney(valueBRL) {
+      return formatMoney(valueBRL, "brl");
+    }
+
+    function getWalletDisplayCurrency() {
+      return String(walletDisplayCurrency || "").trim().toLowerCase();
+    }
+
+    function formatWalletMoneyFromBRL(valueBRL) {
+      const currency = getWalletDisplayCurrency();
+      if (!currency) return "";
+      const normalized = Number(valueBRL || 0);
+      if (!Number.isFinite(normalized)) return formatMoney(0, currency);
+      const converted = walletDisplayRateToBRL > 0 ? normalized / walletDisplayRateToBRL : normalized;
+      return formatMoney(Number(converted.toFixed(2)), currency);
+    }
+
+    function getCurrencySymbol(currencyCode) {
+      try {
+        const parts = new Intl.NumberFormat(displayLocale, {
+          style: "currency",
+          currency: String(currencyCode || "USD").toUpperCase(),
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).formatToParts(0);
+        return parts.find((part) => part.type === "currency")?.value || String(currencyCode || "").toUpperCase();
+      } catch (_err) {
+        return String(currencyCode || "").toUpperCase();
+      }
+    }
+
+    function normalizePhone(value) {
+      return String(value || "").replace(/\D/g, "");
+    }
+
+    function inferCountryCodeFromPhone(phone) {
+      const normalized = normalizePhone(phone);
+      const prefixes = [
+        ["55", "BR"],
+        ["41", "CH"],
+        ["52", "MX"],
+        ["44", "GB"],
+        ["61", "AU"],
+        ["64", "NZ"],
+        ["46", "SE"],
+        ["47", "NO"],
+        ["45", "DK"],
+        ["48", "PL"],
+        ["49", "DE"],
+        ["33", "FR"],
+        ["34", "ES"],
+        ["39", "IT"],
+        ["351", "PT"],
+        ["31", "NL"],
+        ["32", "BE"],
+        ["353", "IE"],
+        ["43", "AT"],
+        ["358", "FI"],
+        ["30", "GR"],
+        ["1", "US"],
+      ];
+      for (const [prefix, countryCode] of prefixes) {
+        if (normalized.startsWith(prefix)) return countryCode;
+      }
+      return "OTHER";
+    }
+
+    function getCheckoutCountryConfig(countryCode) {
+      const normalized = String(countryCode || "").trim().toUpperCase();
+      return SUPPORTED_CHECKOUT_COUNTRIES.find((item) => item.code === normalized) || null;
+    }
+
+    async function getCurrencyRateToBRL(currencyCode) {
+      const normalizedCurrency = String(currencyCode || "usd").trim().toLowerCase();
+      if (normalizedCurrency === "brl") return 1;
+      try {
+        const response = await fetch(`${CHECKOUT_RATE_API}?base=${normalizedCurrency.toUpperCase()}&symbols=BRL`);
+        const payload = await response.json().catch(() => ({}));
+        const parsed = Number(payload?.rates?.BRL);
+        if (response.ok && Number.isFinite(parsed) && parsed > 0) {
+          return parsed;
+        }
+      } catch (_err) {
+        // ignore
+      }
+      return normalizedCurrency === "usd" ? USD_BRL_RATE : USD_BRL_RATE;
+    }
+
+    async function refreshCheckoutCurrencyState() {
+      const resolvedCountryCode = getCheckoutCountryConfig(currentProfile?.country_code)?.code
+        || getCheckoutCountryConfig(inferCountryCodeFromPhone(currentProfile?.phone))?.code
+        || "OTHER";
+      selectedCheckoutCurrency = String(getCheckoutCountryConfig(resolvedCountryCode)?.currency || "usd").trim().toLowerCase();
+      selectedCheckoutRateToBRL = await getCurrencyRateToBRL(selectedCheckoutCurrency);
+    }
+
+    function getSelectedCheckoutCurrency() {
+      return selectedCheckoutCurrency || "usd";
+    }
+
+    function getSelectedCheckoutRateToBRL() {
+      return selectedCheckoutRateToBRL > 0 ? selectedCheckoutRateToBRL : USD_BRL_RATE;
+    }
+
+    function getMinimumDisplayAmount() {
+      return Number((MIN_TOPUP_BRL / getSelectedCheckoutRateToBRL()).toFixed(2));
+    }
+
+    function getMinimumTopupBRL() {
+      return MIN_TOPUP_BRL;
+    }
+
+    function formatCheckoutMoneyFromBRL(valueBRL) {
+      const converted = Number(valueBRL || 0) / getSelectedCheckoutRateToBRL();
+      return formatMoney(Number(converted.toFixed(2)), getSelectedCheckoutCurrency());
+    }
+
+    function formatCheckoutInputAmountFromBRL(valueBRL) {
+      const amount = Number(valueBRL || 0) / getSelectedCheckoutRateToBRL();
+      return i18n.locale === "en"
+        ? amount.toFixed(2)
+        : amount.toFixed(2).replace(".", ",");
+    }
+
+    function parseDisplayAmount(raw) {
+      let text = String(raw || "").trim();
+      if (!text) return NaN;
+      text = text.replace(/\s+/g, "");
+      if (i18n.locale === "en") {
+        if (text.includes(",") && !text.includes(".")) text = text.replace(",", ".");
+        text = text.replace(/,/g, "");
+      } else {
+        text = text.replace(/\./g, "").replace(",", ".");
+      }
+      text = text.replace(/[^0-9.]/g, "");
+      if (!text) return NaN;
+      const amount = Number(text);
+      return Number.isFinite(amount) ? Math.round(amount * 100) / 100 : NaN;
+    }
+
+    function formatDisplayAmountInputValue(value) {
+      const normalized = Number(value || 0);
+      if (!Number.isFinite(normalized) || normalized < 0) return "";
+      return i18n.locale === "en"
+        ? normalized.toFixed(2)
+        : normalized.toFixed(2).replace(".", ",");
+    }
+
+    function normalizeAmountInputOnBlur() {
+      if (!amountInput) return;
+      const parsed = parseDisplayAmount(amountInput.value);
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        amountInput.value = "";
+        updateCheckoutButtonState();
+        return;
+      }
+      amountInput.value = formatDisplayAmountInputValue(parsed);
+      updateCheckoutButtonState();
+    }
+
+    function checkoutAmountToBRL(value) {
+      const normalized = Number(value || 0);
+      if (!Number.isFinite(normalized)) return NaN;
+      return Number((normalized * getSelectedCheckoutRateToBRL()).toFixed(2));
+    }
+
+    function getHighlightTierForAds7d(ads7dCount) {
+      const normalizedCount = Math.max(0, Math.floor(Number(ads7dCount || 0)));
+      return HIGHLIGHT_CPM_TIERS.find((tier) => {
+        if (tier.maxAds7d == null) return normalizedCount >= tier.minAds7d;
+        return normalizedCount >= tier.minAds7d && normalizedCount <= tier.maxAds7d;
+      }) || HIGHLIGHT_CPM_TIERS[0];
+    }
+
+    function buildServerPricing(ads7dCount) {
+      const tier = getHighlightTierForAds7d(ads7dCount);
+      return {
+        ads7dCount: Math.max(0, Math.floor(Number(ads7dCount || 0))),
+        cpmUsd: tier.cpmUsd,
+        cpmBRL: Number((tier.cpmUsd * USD_BRL_RATE).toFixed(2)),
+        tierLabel: tier.label,
+      };
+    }
+
+    function getListingPricing(listingId) {
+      const listing = findListingById(listingId);
+      if (!listing?.server_id) return null;
+      return serverPricingById[String(listing.server_id)] || null;
+    }
+
+    function getAllListingPricings() {
+      return Array.from(new Map(
+        myListings
+          .map((listing) => [String(listing?.server_id || ""), serverPricingById[String(listing?.server_id || "")]])
+          .filter(([serverId, pricing]) => serverId && pricing),
+      ).values());
+    }
+
+    function getCurrentHighlightPricingSummary() {
+      const selectedPricing = pendingHighlightListingId ? getListingPricing(pendingHighlightListingId) : null;
+      if (selectedPricing) {
+        return { mode: "selected", pricing: selectedPricing };
+      }
+      const pricingList = getAllListingPricings();
+      if (!pricingList.length) {
+        return { mode: "generic", pricing: buildServerPricing(0) };
+      }
+      const cpmUsdValues = pricingList.map((item) => Number(item?.cpmUsd || 0)).filter((value) => Number.isFinite(value) && value > 0);
+      if (!cpmUsdValues.length) {
+        return { mode: "generic", pricing: buildServerPricing(0) };
+      }
+      const minCpmUsd = Math.min(...cpmUsdValues);
+      const maxCpmUsd = Math.max(...cpmUsdValues);
+      return {
+        mode: minCpmUsd === maxCpmUsd ? "single" : "range",
+        minCpmUsd,
+        maxCpmUsd,
+      };
+    }
+
+    function convertUsdToSelectedCurrency(usdValue) {
+      const normalized = Number(usdValue || 0);
+      if (!Number.isFinite(normalized) || normalized <= 0) return 0;
+      return Number(((normalized * USD_BRL_RATE) / getSelectedCheckoutRateToBRL()).toFixed(2));
+    }
+
+    function getListingEstimatedCpmLabel(listingId) {
+      const pricing = getListingPricing(listingId);
+      if (!pricing) return "";
+      return formatMoney(convertUsdToSelectedCurrency(pricing.cpmUsd), getSelectedCheckoutCurrency());
+    }
+
+    function getAvailableBalanceBRL() {
+      const explicit = Number(walletState?.availableAmountBRL);
+      if (Number.isFinite(explicit)) return explicit;
+      const cents = Number(walletState?.availableCents || 0);
+      return Number((Math.max(0, cents) / 100).toFixed(2));
+    }
+
+    function isHighlightActive(listing) {
+      if (!listing || String(listing.highlight_status || "").toLowerCase() !== "active") return false;
+      const expiresAt = String(listing.highlight_expires_at || "").trim();
+      if (!expiresAt) return true;
+      const expiresMs = new Date(expiresAt).getTime();
+      if (!Number.isFinite(expiresMs)) return true;
+      return expiresMs >= Date.now();
+    }
+
+    function updateWalletSummaryUI() {
+      if (walletSummaryGrid) {
+        walletSummaryGrid.hidden = !getWalletDisplayCurrency();
+      }
+      if (balanceEl) {
+        balanceEl.textContent = getWalletDisplayCurrency()
+          ? formatWalletMoneyFromBRL(getAvailableBalanceBRL())
+          : "";
+      }
+      if (activeCountEl) {
+        activeCountEl.textContent = String(Number(walletState?.activeListingCount || 0));
+      }
+      updateWithdrawButtonState();
+    }
+
+    function updateListingHighlightInfoModalState() {
+      const hasBalance = getAvailableBalanceBRL() > 0;
+      const estimatedAmount = getListingEstimatedCpmLabel(pendingHighlightListingId);
+      if (listingHighlightInfoConfirm) {
+        listingHighlightInfoConfirm.textContent = hasBalance
+          ? t("my_listings.highlight_info_confirm_activate", "Activate boost")
+          : t("ad_wallet.open_topup", "Add balance");
+      }
+      if (listingHighlightInfoNote) {
+        const key = estimatedAmount
+          ? "my_listings.highlight_info_note_with_estimate"
+          : "my_listings.highlight_info_note";
+        const fallback = estimatedAmount
+          ? 'We use the CPM model to bill your listings. Estimated CPM for this game: {amount} / 1,000 views. For more information, read the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">ads policies</a>.'
+          : 'We use the CPM model to bill your listings. For more information, read the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">ads policies</a>.';
+        listingHighlightInfoNote.innerHTML = formatMessage(key, fallback, { amount: estimatedAmount });
+      }
+    }
+
+    function updateCheckoutButtonState() {
+      const displayAmount = parseDisplayAmount(amountInput?.value || "");
+      const amountBRL = checkoutAmountToBRL(displayAmount);
+      const minimumTopupBRL = getMinimumTopupBRL();
+      const canPay = Boolean(currentProfile?.phone_verified)
+        && Number.isFinite(displayAmount)
+        && Number.isFinite(amountBRL)
+        && amountBRL >= minimumTopupBRL;
+      if (!String(amountInput?.value || "").trim()) {
+        setDepositAmountFeedback("");
+      } else if (!Number.isFinite(displayAmount) || !Number.isFinite(amountBRL) || amountBRL < minimumTopupBRL) {
+        setDepositAmountFeedback(
+          formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
+            amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
+          }),
+          true,
+        );
+      } else {
+        setDepositAmountFeedback("");
+      }
+      if (checkoutBtn) checkoutBtn.disabled = !canPay;
+    }
+
+    function updateWithdrawButtonState() {
+      const availableBalance = getAvailableBalanceBRL();
+      const hasMinimumBalance = availableBalance >= MIN_WITHDRAW_BRL;
+      if (openWithdrawModalBtn) {
+        openWithdrawModalBtn.disabled = !hasMinimumBalance;
+        openWithdrawModalBtn.style.display = hasMinimumBalance ? "" : "none";
+      }
+      if (withdrawEstimateValue) {
+        withdrawEstimateValue.textContent = formatWalletMoneyFromBRL(availableBalance) || formatMoney(availableBalance / USD_BRL_RATE, "usd");
+      }
+      if (withdrawConfirmBtn) withdrawConfirmBtn.disabled = !hasMinimumBalance || !Boolean(withdrawPolicyAccept?.checked);
+      if (walletWithdrawNote) walletWithdrawNote.textContent = "";
+    }
+
+    function applyStaticTranslations() {
+      document.title = t("my_listings.title_default", "Gimerr - My listings");
+      document.documentElement.lang = i18n.locale === "en" ? "en" : i18n.locale === "es" ? "es" : "pt-BR";
+      const loaderImage = pageLoader?.querySelector("img");
+      if (loaderImage) loaderImage.alt = t("my_listings.loading", "Loading");
+      if (walletSummaryTitle) walletSummaryTitle.textContent = t("ad_wallet.summary_title", "Ad account summary");
+      if (walletBalanceLabel) walletBalanceLabel.textContent = t("ad_wallet.balance_label", "Balance");
+      if (walletActiveLabel) walletActiveLabel.textContent = t("ad_wallet.active_highlights_label", "Active highlights");
+      if (openTopupModalBtn) openTopupModalBtn.textContent = t("ad_wallet.open_topup", "Add balance");
+      if (openWithdrawModalBtn) openWithdrawModalBtn.textContent = t("ad_wallet.open_withdraw", "Request withdrawal");
+      if (walletListingsTitle) walletListingsTitle.textContent = t("ad_wallet.manage_title", "Manage listings");
+      if (listingsEmpty) listingsEmpty.textContent = t("my_listings.empty", "You have not published any listings yet.");
+      if (listingHighlightInfoTitle) listingHighlightInfoTitle.textContent = t("my_listings.highlight_info_title", "Boost listing");
+      if (listingHighlightInfoHelper) listingHighlightInfoHelper.textContent = t("my_listings.highlight_info_helper", "Your highlighted listings will appear in a privileged position both on the game page and in Gimerr's home feed.");
+      updateListingHighlightInfoModalState();
+      if (listingHighlightInfoCancel) listingHighlightInfoCancel.textContent = t("common.cancel", "Cancel");
+      if (listingHighlightInfoClose) listingHighlightInfoClose.setAttribute("aria-label", t("common.close", "Close"));
+      if (listingHighlightInfoImage) listingHighlightInfoImage.alt = t("my_listings.highlight_info_alt", "Example of highlighted listing positions");
+      if (topupModalTitle) topupModalTitle.textContent = t("ad_wallet.topup_title", "Add balance");
+      if (topupModalHelper) {
+        topupModalHelper.textContent = formatMessage("ad_wallet.topup_helper_dynamic", "Deposit any amount starting from {amount}.", {
+          amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
+        });
+      }
+      if (topupModalClose) topupModalClose.setAttribute("aria-label", t("common.close", "Close"));
+      if (depositAmountLabel) {
+        depositAmountLabel.textContent = formatMessage(
+          "ad_wallet.deposit_label_dynamic",
+          "Deposit amount ({currency})",
+          { currency: String(getSelectedCheckoutCurrency() || "usd").toUpperCase() },
+        );
+      }
+      if (depositAmountPrefix) depositAmountPrefix.textContent = getCurrencySymbol(getSelectedCheckoutCurrency());
+      if (amountInput && !String(amountInput.value || "").trim()) {
+        amountInput.placeholder = formatMessage("ad_wallet.deposit_placeholder_dynamic", "{amount}", {
+          amount: formatDisplayAmountInputValue(getMinimumDisplayAmount()),
+        });
+      }
+      if (walletPolicyText) {
+        walletPolicyText.innerHTML = t(
+          "my_listings.topup_policy_html",
+          'By continuing, you agree to the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">ads policies</a>.',
+        );
+      }
+      if (checkoutBtn) checkoutBtn.textContent = t("ad_wallet.checkout_balance", "Add balance and pay");
+      if (withdrawModalTitle) withdrawModalTitle.textContent = t("ad_wallet.withdraw_title", "Request withdrawal");
+      if (withdrawModalHelper) withdrawModalHelper.textContent = t("ad_wallet.withdraw_helper", "Your available balance will be paused immediately for refund review.");
+      if (withdrawModalClose) withdrawModalClose.setAttribute("aria-label", t("common.close", "Close"));
+      if (withdrawEstimateLabel) withdrawEstimateLabel.textContent = t("ad_wallet.withdraw_estimate_label", "Estimated withdrawal amount");
+      if (withdrawPolicyText) {
+        withdrawPolicyText.innerHTML = t(
+          "ad_wallet.policy_text",
+          'I have read and agree with the <a class="link-ghost" href="ads-policy.html" target="_blank" rel="noopener">advertising policies</a>.',
+        );
+      }
+      if (withdrawFeeHelper) withdrawFeeHelper.textContent = t("ad_wallet.withdraw_fee_helper", "The final amount may be lower because of payment processing fees (Stripe).");
+      if (withdrawConfirmBtn) withdrawConfirmBtn.textContent = t("ad_wallet.withdraw_confirm", "Confirm request");
     }
 
     function updateAuthUI() {
@@ -361,7 +1195,7 @@
               return `${R2_PUBLIC_URL.replace(/\/$/, "")}/${path}`;
             }
           } catch (_e) {
-            // ignore and return original
+            // ignore
           }
         }
         return rawUrl;
@@ -375,7 +1209,7 @@
           return signedData.publicUrl;
         }
       } catch (_err) {
-        // ignore and fallback
+        // ignore
       }
       const parsed = parseStoragePath(rawUrl);
       if (!parsed) return rawUrl;
@@ -400,8 +1234,8 @@
         .replace(/'/g, "&#39;");
     }
 
-    function isHighlightActive(listing) {
-      return Boolean(listing && listing.highlight_status === "active");
+    function findListingById(id) {
+      return myListings.find((item) => String(item.id) === String(id)) || null;
     }
 
     function renderListings(list) {
@@ -422,14 +1256,16 @@
         const safeTitle = escapeHtml(listing.title || t("my_listings.no_title", "Untitled"));
         const safeDescription = escapeHtml(listing.description || t("my_listings.no_description", "No description."));
         const safeServerName = escapeHtml(listing.server_name || "");
-
         const imageUrl = listing.imageUrl || listing.images?.[0];
         const image = imageUrl
           ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${safeTitle}" loading="lazy" /></div>`
           : `<div class="listing-media empty">${escapeHtml(t("my_listings.no_image", "No image"))}</div>`;
 
-        const promoteLink = (!highlightActive && listing.status === "active")
-          ? `<a class="btn btn-primary" href="ad-wallet.html">${escapeHtml(t("my_listings.highlight_listing", "Boost listing"))}</a>`
+        const promoteButton = (!highlightActive && listing.status === "active")
+          ? `<button class="btn btn-primary" type="button" data-action="activate" data-id="${escapeHtml(listing.id)}">${escapeHtml(t("my_listings.highlight_listing", "Boost listing"))}</button>`
+          : "";
+        const pauseButton = (highlightActive && listing.status === "active")
+          ? `<button class="btn btn-ghost" type="button" data-action="deactivate" data-id="${escapeHtml(listing.id)}">${escapeHtml(t("ad_wallet.pause_button", "Pause highlight"))}</button>`
           : "";
 
         card.innerHTML = `
@@ -437,14 +1273,16 @@
           <div class="listing-body">
             <div class="listing-meta">
               ${safeServerName ? `<span class="pill">${safeServerName}</span>` : `<span class="pill">${escapeHtml(t("my_listings.game_not_informed", "Game: not informed"))}</span>`}
+              <span class="pill">${escapeHtml(highlightActive ? t("ad_wallet.highlight_active", "Highlight active") : t("ad_wallet.highlight_inactive", "No highlight"))}</span>
             </div>
             <h3>${safeTitle}</h3>
             <p class="listing-description-preserve listing-description-preview">${safeDescription}</p>
             <div class="inline-actions">
               <a class="btn btn-ghost" href="listing.html?id=${encodeURIComponent(listing.id)}">${escapeHtml(t("my_listings.view_listing", "View listing"))}</a>
-              <button class="btn btn-ghost" type="button" data-action="edit" data-id="${listing.id}">${escapeHtml(t("my_listings.edit", "Editar"))}</button>
-              ${promoteLink}
-              <button class="btn btn-ghost" type="button" data-action="delete" data-id="${listing.id}">${escapeHtml(t("my_listings.delete", "Excluir"))}</button>
+              <button class="btn btn-ghost" type="button" data-action="edit" data-id="${listing.id}">${escapeHtml(t("my_listings.edit", "Edit"))}</button>
+              ${promoteButton}
+              ${pauseButton}
+              <button class="btn btn-ghost" type="button" data-action="delete" data-id="${listing.id}">${escapeHtml(t("my_listings.delete", "Delete"))}</button>
             </div>
           </div>
         `;
@@ -456,7 +1294,7 @@
       ensureClient();
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,description,images,status,server_id,user_id,created_at,highlight_status")
+        .select("id,title,description,images,status,server_id,user_id,created_at,highlight_status,highlight_expires_at")
         .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -471,21 +1309,45 @@
           .in("id", uniqueServerIds);
         if (!serverError && Array.isArray(serverRows)) {
           serverRows.forEach((row) => {
-            if (row?.id) {
-              serverNameById[row.id] = row.name || "";
-            }
+            if (row?.id) serverNameById[row.id] = row.name || "";
           });
         }
       }
 
-      const resolved = await Promise.all(
+      serverPricingById = {};
+      if (uniqueServerIds.length > 0) {
+        const cutoff = new Date();
+        cutoff.setUTCDate(cutoff.getUTCDate() - 7);
+        const { data: recentRows, error: recentError } = await supabase
+          .from("listings")
+          .select("server_id")
+          .in("server_id", uniqueServerIds)
+          .eq("status", "active")
+          .gte("created_at", cutoff.toISOString());
+        if (!recentError && Array.isArray(recentRows)) {
+          const countsByServerId = {};
+          recentRows.forEach((row) => {
+            const serverId = String(row?.server_id || "").trim();
+            if (!serverId) return;
+            countsByServerId[serverId] = Number(countsByServerId[serverId] || 0) + 1;
+          });
+          uniqueServerIds.forEach((serverId) => {
+            serverPricingById[String(serverId)] = buildServerPricing(countsByServerId[String(serverId)] || 0);
+          });
+        } else {
+          uniqueServerIds.forEach((serverId) => {
+            serverPricingById[String(serverId)] = buildServerPricing(0);
+          });
+        }
+      }
+
+      myListings = await Promise.all(
         list.map(async (item) => ({
           ...item,
           server_name: item.server_id ? (serverNameById[item.server_id] || "") : "",
           imageUrl: item.images?.[0] ? await resolveImageUrl(item.images[0]) : null,
-        }))
+        })),
       );
-      myListings = resolved;
       renderListings(myListings);
     }
 
@@ -506,6 +1368,272 @@
         throw new Error(data?.error || t("my_listings.delete_error", "Error deleting listing."));
       }
       await fetchMyListings();
+      await syncWallet();
+    }
+
+    async function loadCurrentProfile() {
+      ensureClient();
+      const { data, error } = await supabase
+        .from("users")
+        .select("phone,phone_verified,country_code")
+        .eq("id", currentUser.id)
+        .single();
+      if (error) throw error;
+      currentProfile = data || null;
+      await refreshCheckoutCurrencyState();
+      applyStaticTranslations();
+      updateCheckoutButtonState();
+    }
+
+    async function syncWallet() {
+      ensureClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+        body: { action: "status" },
+        headers: token
+          ? {
+              Authorization: `Bearer ${token}`,
+              apikey: SUPABASE_ANON_KEY,
+            }
+          : {},
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || t("ad_wallet.status_error", "Failed to check balance."));
+      walletState = data.wallet || null;
+      try {
+        const { data: topupRows, error: topupError } = await supabase
+          .from("wallet_events")
+          .select("metadata,created_at")
+          .eq("user_id", currentUser.id)
+          .eq("event_type", "topup")
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (topupError) throw topupError;
+        const lastTopup = Array.isArray(topupRows) ? topupRows[0] : null;
+        const checkoutCurrency = String(lastTopup?.metadata?.checkout_currency || "").trim().toLowerCase();
+        const fxRate = Number(lastTopup?.metadata?.fx_rate || 0);
+        if (checkoutCurrency) {
+          walletDisplayCurrency = checkoutCurrency;
+          walletDisplayRateToBRL = checkoutCurrency === "brl"
+            ? 1
+            : (Number.isFinite(fxRate) && fxRate > 0 ? fxRate : USD_BRL_RATE);
+        } else {
+          walletDisplayCurrency = "";
+          walletDisplayRateToBRL = 1;
+        }
+      } catch (_err) {
+        walletDisplayCurrency = "";
+        walletDisplayRateToBRL = 1;
+      }
+      updateWalletSummaryUI();
+      applyStaticTranslations();
+    }
+
+    function openListingHighlightInfoModal(listingId) {
+      pendingHighlightListingId = listingId || null;
+      setHighlightInfoFeedback("", false);
+      startListingHighlightInfoCarousel();
+      const listing = findListingById(listingId);
+      if (listing && listingHighlightInfoTitle) {
+        listingHighlightInfoTitle.textContent = formatMessage(
+          "my_listings.highlight_info_title_named",
+          "Boost: {title}",
+          { title: listing.title || t("my_listings.no_title", "Untitled") },
+        );
+      } else if (listingHighlightInfoTitle) {
+        listingHighlightInfoTitle.textContent = t("my_listings.highlight_info_title", "Boost listing");
+      }
+      updateListingHighlightInfoModalState();
+      listingHighlightInfoModal?.classList.add("open");
+      listingHighlightInfoModal?.setAttribute("aria-hidden", "false");
+    }
+
+    function closeListingHighlightInfoModal({ preservePendingListingId = false } = {}) {
+      if (!preservePendingListingId) pendingHighlightListingId = null;
+      stopListingHighlightInfoCarousel();
+      applyStaticTranslations();
+      listingHighlightInfoModal?.classList.remove("open");
+      listingHighlightInfoModal?.setAttribute("aria-hidden", "true");
+    }
+
+    function openTopupModal({ preservePendingListingId = false } = {}) {
+      if (!currentProfile?.phone_verified) {
+        window.location.href = "profile.html?phone_required=1";
+        return;
+      }
+      if (!preservePendingListingId) {
+        pendingHighlightListingId = null;
+      }
+      setTopupFeedback("");
+      applyStaticTranslations();
+      updateCheckoutButtonState();
+      topupModalBackdrop?.classList.add("open");
+      topupModalBackdrop?.setAttribute("aria-hidden", "false");
+    }
+
+    function closeTopupModal() {
+      topupModalBackdrop?.classList.remove("open");
+      topupModalBackdrop?.setAttribute("aria-hidden", "true");
+    }
+
+    function updateListingHighlightInfoImage() {
+      if (!listingHighlightInfoImage) return;
+      const nextSrc = LISTING_HIGHLIGHT_INFO_IMAGES[listingHighlightInfoCarouselIndex] || LISTING_HIGHLIGHT_INFO_IMAGES[0];
+      listingHighlightInfoImage.src = nextSrc;
+    }
+
+    function stopListingHighlightInfoCarousel() {
+      if (listingHighlightInfoCarouselTimer) {
+        clearInterval(listingHighlightInfoCarouselTimer);
+        listingHighlightInfoCarouselTimer = null;
+      }
+      listingHighlightInfoCarouselIndex = 0;
+      updateListingHighlightInfoImage();
+    }
+
+    function startListingHighlightInfoCarousel() {
+      stopListingHighlightInfoCarousel();
+      updateListingHighlightInfoImage();
+      if (LISTING_HIGHLIGHT_INFO_IMAGES.length <= 1) return;
+      listingHighlightInfoCarouselTimer = window.setInterval(() => {
+        listingHighlightInfoCarouselIndex = (listingHighlightInfoCarouselIndex + 1) % LISTING_HIGHLIGHT_INFO_IMAGES.length;
+        updateListingHighlightInfoImage();
+      }, 3000);
+    }
+
+    function openWithdrawModal() {
+      if (getAvailableBalanceBRL() < MIN_WITHDRAW_BRL) {
+        setWithdrawFeedback(
+          formatMessage("ad_wallet.withdraw_minimum_error", "The minimum amount to request withdrawal is {amount}.", {
+            amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
+          }),
+          true,
+        );
+      } else {
+        setWithdrawFeedback("");
+      }
+      updateWithdrawButtonState();
+      withdrawModalBackdrop?.classList.add("open");
+      withdrawModalBackdrop?.setAttribute("aria-hidden", "false");
+    }
+
+    function closeWithdrawModal() {
+      withdrawModalBackdrop?.classList.remove("open");
+      withdrawModalBackdrop?.setAttribute("aria-hidden", "true");
+    }
+
+    async function toggleHighlight(listingId, action) {
+      ensureClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token || "";
+      if (!token) {
+        window.location.href = "index.html";
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+        body: { action, listingId },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error) throw error;
+      if (!data?.ok) {
+        throw new Error(data?.error || t("ad_wallet.highlight_update_error", "Could not update highlight."));
+      }
+    }
+
+    async function startCheckout() {
+      const displayAmount = parseDisplayAmount(amountInput?.value || "");
+      const amountBRL = checkoutAmountToBRL(displayAmount);
+      const minimumTopupBRL = getMinimumTopupBRL();
+      if (!Number.isFinite(displayAmount) || !Number.isFinite(amountBRL) || amountBRL < minimumTopupBRL) {
+        setDepositAmountFeedback(formatMessage("ad_wallet.topup_min_amount_dynamic", "Enter a valid amount of at least {amount}.", {
+          amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
+        }), true);
+        return;
+      }
+      try {
+        ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        checkoutBtn.disabled = true;
+        checkoutBtn.textContent = t("ad_wallet.please_wait", "Please wait...");
+        const { data, error } = await supabase.functions.invoke("listing_highlight_checkout", {
+          body: {
+            amount: displayAmount,
+            amountBRL,
+            currency: getSelectedCheckoutCurrency(),
+            returnBaseUrl: window.location.origin,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+        if (error) throw error;
+        if (!data?.ok || !data?.checkoutUrl) {
+          throw new Error(data?.error || t("ad_wallet.checkout_start_error", "Could not start checkout."));
+        }
+        window.location.href = data.checkoutUrl;
+      } catch (err) {
+        console.error(err);
+        setTopupFeedback(err?.message || t("ad_wallet.checkout_error", "Failed to start checkout."), true);
+        checkoutBtn.disabled = false;
+        checkoutBtn.textContent = t("ad_wallet.checkout_balance", "Add balance and pay");
+        updateCheckoutButtonState();
+      }
+    }
+
+    async function requestWithdraw() {
+      if (!withdrawPolicyAccept?.checked) {
+        setWithdrawFeedback(t("ad_wallet.accept_policy_required", "You must accept the policies before continuing."), true);
+        return;
+      }
+      if (getAvailableBalanceBRL() < MIN_WITHDRAW_BRL) {
+        setWithdrawFeedback(
+          formatMessage("ad_wallet.withdraw_minimum_error", "The minimum amount to request withdrawal is {amount}.", {
+            amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
+          }),
+          true,
+        );
+        updateWithdrawButtonState();
+        return;
+      }
+
+      try {
+        ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        withdrawConfirmBtn.disabled = true;
+        withdrawConfirmBtn.textContent = t("ad_wallet.sending", "Sending...");
+        setWithdrawFeedback(t("ad_wallet.withdraw_registering", "Registering request..."));
+
+        const { data, error } = await supabase.functions.invoke("listing_highlight_wallet", {
+          body: {
+            action: "withdraw_request",
+            policyAccepted: true,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+        });
+        if (error) throw error;
+        if (!data?.ok) {
+          throw new Error(data?.error || t("ad_wallet.withdraw_request_error", "Could not request withdrawal."));
+        }
+        closeWithdrawModal();
+        await syncWallet();
+        showFeedback(t("ad_wallet.withdraw_registering", "Registering request..."));
+      } catch (err) {
+        console.error(err);
+        setWithdrawFeedback(err?.message || t("ad_wallet.withdraw_error", "Failed to request withdrawal."), true);
+      } finally {
+        withdrawConfirmBtn.textContent = t("ad_wallet.withdraw_confirm", "Confirm request");
+        updateWithdrawButtonState();
+      }
     }
 
     async function handleAuthClick() {
@@ -529,20 +1657,27 @@
         button.disabled = true;
         if (action === "edit") {
           window.location.href = `listing-create.html?edit=${encodeURIComponent(id)}`;
-        } else if (action === "delete") {
-          button.textContent = t("my_listings.please_wait", "Aguarde...");
+          return;
+        }
+        if (action === "delete") {
+          button.textContent = t("my_listings.please_wait", "Please wait...");
           await deleteListing(id);
+          return;
+        }
+        if (action === "activate") {
+          openListingHighlightInfoModal(id);
+          return;
+        }
+        if (action === "deactivate") {
+          button.textContent = t("ad_wallet.pausing", "Pausing...");
+          await toggleHighlight(id, "deactivate");
+          await Promise.all([syncWallet(), fetchMyListings()]);
         }
       } catch (err) {
         console.error(err);
-        alert(err?.message || t("my_listings.manage_error", "Error managing listing."));
+        showFeedback(err?.message || t("my_listings.manage_error", "Failed to manage listing."), true);
       } finally {
-        if (action === "edit") {
-          button.disabled = false;
-          return;
-        }
-        // After a successful deletion, the card disappears on re-render.
-        if (listingsGrid.contains(button)) {
+        if (button.isConnected) {
           button.disabled = false;
           button.textContent = originalLabel;
         }
@@ -586,6 +1721,67 @@
       goToCreateListing();
     });
 
+    openTopupModalBtn?.addEventListener("click", openTopupModal);
+    openWithdrawModalBtn?.addEventListener("click", openWithdrawModal);
+    topupModalClose?.addEventListener("click", closeTopupModal);
+    topupModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === topupModalBackdrop) closeTopupModal();
+    });
+    withdrawModalClose?.addEventListener("click", closeWithdrawModal);
+    withdrawModalBackdrop?.addEventListener("click", (event) => {
+      if (event.target === withdrawModalBackdrop) closeWithdrawModal();
+    });
+    listingHighlightInfoClose?.addEventListener("click", closeListingHighlightInfoModal);
+    listingHighlightInfoCancel?.addEventListener("click", closeListingHighlightInfoModal);
+    listingHighlightInfoModal?.addEventListener("click", (event) => {
+      if (event.target === listingHighlightInfoModal) closeListingHighlightInfoModal();
+    });
+    listingHighlightInfoConfirm?.addEventListener("click", async () => {
+      if (!pendingHighlightListingId) return;
+      if (getAvailableBalanceBRL() > 0) {
+        const originalLabel = listingHighlightInfoConfirm.textContent || "";
+        try {
+          listingHighlightInfoConfirm.disabled = true;
+          listingHighlightInfoConfirm.textContent = t("ad_wallet.activating", "Activating...");
+          await toggleHighlight(pendingHighlightListingId, "activate");
+          closeListingHighlightInfoModal();
+          await Promise.all([syncWallet(), fetchMyListings()]);
+          showFeedback(t("my_listings.highlight_activated_success", "Boost activated successfully for the selected listing."));
+        } catch (err) {
+          console.error(err);
+          setHighlightInfoFeedback(err?.message || t("ad_wallet.highlight_update_error", "Could not update highlight."), true);
+        } finally {
+          if (listingHighlightInfoConfirm?.isConnected) {
+            listingHighlightInfoConfirm.disabled = false;
+            updateListingHighlightInfoModalState();
+            if (listingHighlightInfoModal?.classList.contains("open")) {
+              listingHighlightInfoConfirm.textContent = originalLabel;
+              updateListingHighlightInfoModalState();
+            }
+          }
+        }
+        return;
+      }
+      closeListingHighlightInfoModal({ preservePendingListingId: true });
+      openTopupModal({ preservePendingListingId: true });
+    });
+    checkoutBtn?.addEventListener("click", startCheckout);
+    withdrawConfirmBtn?.addEventListener("click", requestWithdraw);
+    amountInput?.addEventListener("input", () => {
+      updateCheckoutButtonState();
+      if (topupFeedbackEl?.textContent) setTopupFeedback("");
+    });
+    amountInput?.addEventListener("blur", normalizeAmountInputOnBlur);
+    withdrawPolicyAccept?.addEventListener("change", () => {
+      updateWithdrawButtonState();
+      if (withdrawFeedbackEl?.textContent) setWithdrawFeedback("");
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && listingHighlightInfoModal?.classList.contains("open")) closeListingHighlightInfoModal();
+      if (event.key === "Escape" && topupModalBackdrop?.classList.contains("open")) closeTopupModal();
+      if (event.key === "Escape" && withdrawModalBackdrop?.classList.contains("open")) closeWithdrawModal();
+    });
+
     (async function init() {
       try {
         applyStaticTranslations();
@@ -597,20 +1793,37 @@
           window.location.replace("index.html");
           return;
         }
-        await fetchMyListings();
+        await loadCurrentProfile();
+        await Promise.all([syncWallet(), fetchMyListings()]);
 
         const params = new URLSearchParams(window.location.search);
+        const highlightResult = params.get("highlight");
+        const autoActivate = params.get("activate") === "1";
+        const returnListingId = params.get("listing");
+
         if (params.get("highlight_activated") === "1") {
           showFeedback(t("my_listings.highlight_activated_success", "Boost activated successfully for the selected listing."));
-        } else if (params.get("highlight") === "success") {
-          showFeedback(t("my_listings.highlight_payment_success", "Payment confirmed. Your ad wallet balance was updated."));
-        } else if (params.get("highlight") === "cancel") {
-          showFeedback(t("my_listings.highlight_payment_cancel", "Pagamento cancelado."));
+        } else if (highlightResult === "success" && autoActivate && returnListingId && getAvailableBalanceBRL() > 0) {
+          try {
+            await toggleHighlight(returnListingId, "activate");
+            await Promise.all([syncWallet(), fetchMyListings()]);
+            showFeedback(t("my_listings.highlight_activated_success", "Boost activated successfully for the selected listing."));
+          } catch (_err) {
+            showFeedback(t("my_listings.highlight_payment_success", "Payment confirmed. Your ad balance has been updated."));
+          }
+        } else if (highlightResult === "success") {
+          showFeedback(t("my_listings.highlight_payment_success", "Payment confirmed. Your ad balance has been updated."));
+        } else if (highlightResult === "cancel") {
+          showFeedback(t("my_listings.highlight_payment_cancel", "Payment canceled."));
+        }
+
+        if (highlightResult === "success" || highlightResult === "cancel" || params.get("highlight_activated") === "1") {
+          window.history.replaceState({}, "", `${window.location.origin}/my-listings.html`);
         }
       } catch (err) {
         console.error(err);
+        showFeedback(err?.message || t("my_listings.load_error", "Failed to load your listings."), true);
         listingsEmpty.style.display = "block";
-        listingsEmpty.textContent = err?.message || t("my_listings.load_error", "Error loading your listings.");
       } finally {
         revealPage();
       }

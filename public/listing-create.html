@@ -209,14 +209,6 @@
           <label id="custom-game-site-label" for="custom-game-site">Official website *</label>
           <input id="custom-game-site" class="input" type="url" placeholder="https://nomedogame.com" inputmode="url" autocomplete="off" />
         </div>
-        <div class="field">
-          <label id="custom-game-discord-label" for="custom-game-discord">Official Discord invite (optional)</label>
-          <input id="custom-game-discord" class="input" placeholder="https://discord.gg/your-server" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label id="custom-game-logo-label" for="custom-game-logo">Server logo (png/jpg/webp) (optional)</label>
-          <input id="custom-game-logo" type="file" accept="image/png,image/jpeg,image/webp" />
-        </div>
         <div id="custom-game-feedback" class="helper"></div>
         <div class="listing-create-modal-actions">
           <button type="button" class="btn btn-ghost" id="close-custom-game-modal-btn">Cancel</button>
@@ -276,12 +268,8 @@
     const customGameModalHelper = document.getElementById("custom-game-modal-helper");
     const customGameNameLabel = document.getElementById("custom-game-name-label");
     const customGameSiteLabel = document.getElementById("custom-game-site-label");
-    const customGameDiscordLabel = document.getElementById("custom-game-discord-label");
-    const customGameLogoLabel = document.getElementById("custom-game-logo-label");
     const customGameNameInput = document.getElementById("custom-game-name");
     const customGameSiteInput = document.getElementById("custom-game-site");
-    const customGameDiscordInput = document.getElementById("custom-game-discord");
-    const customGameLogoInput = document.getElementById("custom-game-logo");
     const customGameFeedback = document.getElementById("custom-game-feedback");
     const closeCustomGameModalBtn = document.getElementById("close-custom-game-modal-btn");
     const saveCustomGameBtn = document.getElementById("save-custom-game-btn");
@@ -318,8 +306,6 @@
     const MAX_DESC = 10000;
     const MAX_TITLE = 70;
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-    const MAX_LOGO_BYTES = 3 * 1024 * 1024;
-    const MAX_LOGO_WIDTH = 512;
     const MAX_IMAGE_DIMENSION = 1600;
     const WEBP_QUALITY = 0.8;
     const DEFAULT_GAME_HELPER_TEXT = t("listing_create.game_helper", "Select an existing game from the list or submit a new one.");
@@ -364,9 +350,6 @@
       if (customGameNameInput) customGameNameInput.placeholder = t("listing_create.modal_name_placeholder", "Ex: Miracle 7.4");
       if (customGameSiteLabel) customGameSiteLabel.textContent = t("listing_create.modal_site_label", "Official website *");
       if (customGameSiteInput) customGameSiteInput.placeholder = t("listing_create.modal_site_placeholder", "https://nomedogame.com");
-      if (customGameDiscordLabel) customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Official Discord invite (optional)");
-      if (customGameDiscordInput) customGameDiscordInput.placeholder = t("listing_create.modal_discord_placeholder", "https://discord.gg/your-server");
-      if (customGameLogoLabel) customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Server logo (png/jpg/webp) (optional)");
       if (closeCustomGameModalBtn) closeCustomGameModalBtn.textContent = t("listing_create.cancel", "Cancel");
       if (saveCustomGameBtn) saveCustomGameBtn.textContent = t("listing_create.modal_submit", "Use this game");
       if (submitBtn) {
@@ -396,8 +379,6 @@
         if (customGameFeedback) customGameFeedback.textContent = "";
         if (customGameNameInput) customGameNameInput.value = "";
         if (customGameSiteInput) customGameSiteInput.value = "";
-        if (customGameDiscordInput) customGameDiscordInput.value = "";
-        if (customGameLogoInput) customGameLogoInput.value = "";
       }
       if (!enabled && suggestionsPanel) {
         suggestionsPanel.style.display = "none";
@@ -407,14 +388,6 @@
     }
 
     function updateCustomPartnerPolicyField() {
-      if (customGameDiscordInput) customGameDiscordInput.required = false;
-      if (customGameLogoInput) customGameLogoInput.required = false;
-      if (customGameDiscordLabel) {
-        customGameDiscordLabel.textContent = t("listing_create.modal_discord_label", "Official Discord invite (optional)");
-      }
-      if (customGameLogoLabel) {
-        customGameLogoLabel.textContent = t("listing_create.modal_logo_label", "Server logo (png/jpg/webp) (optional)");
-      }
     }
 
     function openCustomGameModal() {
@@ -424,9 +397,6 @@
       }
       if (customGameSiteInput) {
         customGameSiteInput.value = customGamePayload?.website || "";
-      }
-      if (customGameDiscordInput) {
-        customGameDiscordInput.value = customGamePayload?.discord_invite || "";
       }
       updateCustomPartnerPolicyField();
       if (customGameFeedback) customGameFeedback.textContent = "";
@@ -725,22 +695,6 @@
       }
     }
 
-    function normalizeDiscordInvite(raw) {
-      const trimmed = String(raw || "").trim();
-      if (!trimmed) return null;
-      try {
-        const withProtocol = ensureHttpsPrefix(trimmed);
-        const url = new URL(withProtocol);
-        if (url.hostname.toLowerCase() !== "discord.gg") return null;
-        if (!url.pathname || url.pathname === "/") return null;
-        url.protocol = "https:";
-        url.hash = "";
-        return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
-      } catch (_err) {
-        return null;
-      }
-    }
-
     function normalizeR2PublicUrl(urlString) {
       if (!urlString) return "";
       try {
@@ -798,10 +752,6 @@
       } catch (_err) {
         return normalized;
       }
-    }
-
-    function isMissingDiscordInviteColumnError(error) {
-      return Boolean(error && String(error.message || "").includes("discord_invite"));
     }
 
     function isMissingOwnerColumnError(error) {
@@ -899,13 +849,16 @@
       const normalizedDomain = String(websiteDomain || "").trim().toLowerCase();
       if (!normalizedDomain) return null;
 
-      const localMatch = games.find((game) => String(game.website_domain || "").trim().toLowerCase() === normalizedDomain);
+      const localMatch = games.find((game) =>
+        String(game.website_domain || "").trim().toLowerCase() === normalizedDomain
+        && String(game.status || "") !== "deleted"
+      );
       if (localMatch) return localMatch;
 
       const { data, error } = await supabase
         .from("servers")
         .select("id,name,official_site,website_domain,status")
-        .eq("status", "active")
+        .neq("status", "deleted")
         .eq("website_domain", normalizedDomain)
         .limit(1)
         .maybeSingle();
@@ -916,9 +869,6 @@
     async function saveCustomGameSelection() {
       const customName = customGameNameInput?.value?.trim() || "";
       const rawWebsite = customGameSiteInput?.value?.trim() || "";
-      const rawDiscord = customGameDiscordInput?.value?.trim() || "";
-      const logoFile = customGameLogoInput?.files?.[0] || null;
-
       if (!customName || !rawWebsite) {
         if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_fill_required", "Fill in the game name and official website.");
         return;
@@ -933,17 +883,6 @@
 
       if (customGameSiteInput) {
         customGameSiteInput.value = normalizedWebsite;
-      }
-
-      const discordInvite = rawDiscord ? normalizeDiscordInvite(rawDiscord) : null;
-      if (rawDiscord && !discordInvite) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_discord", "Use an invite that starts with https://discord.gg/");
-        return;
-      }
-
-      if (logoFile && logoFile.size > MAX_LOGO_BYTES) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_logo_max_size", "Logo deve ter no máximo 3MB.");
-        return;
       }
 
       try {
@@ -964,9 +903,7 @@
           name: customName,
           website: normalizedWebsite,
           websiteDomain,
-          discord_invite: discordInvite,
           is_owner: false,
-          logoFile,
         };
         if (gameInput) {
           gameInput.value = customName;
@@ -1061,82 +998,10 @@
       descCounter.textContent = `${count}/${MAX_DESC}`;
     }
 
-    async function compressLogo(file, maxWidth) {
-      const imageBitmap = await createImageBitmap(file);
-      const ratio = Math.min(1, maxWidth / imageBitmap.width);
-      const width = Math.round(imageBitmap.width * ratio);
-      const height = Math.round(imageBitmap.height * ratio);
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(imageBitmap, 0, 0, width, height);
-      return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            reject(new Error(t("listing_create.logo_compress_error", "Failed to compress the image.")));
-            return;
-          }
-          resolve(blob);
-        }, "image/webp", 0.82);
-      });
-    }
-
-    async function uploadGameLogo(file) {
-      const compressed = await compressLogo(file, MAX_LOGO_WIDTH);
-      await ensureValidSession();
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
-      }
-
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          contentType: compressed.type || "image/webp",
-          extension: "webp",
-          userToken: token,
-          assetType: "server",
-        }),
-      });
-      if (!response.ok) {
-        let message = "Error requesting logo upload.";
-        try {
-          const payload = await response.json();
-          message = payload?.error || message;
-        } catch (_err) {
-          const text = await response.text().catch(() => "");
-          if (text) message = text;
-        }
-        throw new Error(message);
-      }
-
-      const signed = await response.json();
-      const uploadRes = await fetch(signed.uploadUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": compressed.type || "image/webp",
-        },
-        body: compressed,
-      });
-      if (!uploadRes.ok) {
-        const body = await uploadRes.text().catch(() => "");
-        throw new Error(body || "Error uploading logo to storage.");
-      }
-
-      return { path: signed.key, publicUrl: signed.publicUrl };
-    }
-
     async function findWebsiteRecord(website, domainKey) {
       const { data: inServers, error: srvErr } = await supabase
         .from("servers")
-        .select("id,official_site,website_domain")
+        .select("id,official_site,website_domain,status")
         .eq("website_domain", domainKey)
         .limit(1);
       if (srvErr) throw srvErr;
@@ -1145,12 +1010,11 @@
         .from("game_requests")
         .select("id,status,website,website_domain,user_id,cover_url")
         .eq("website_domain", domainKey)
-        .in("status", ["pending", "under_review", "approved"])
         .limit(1);
       if (reqErr) throw reqErr;
 
       return {
-        inServers: Boolean(inServers && inServers.length > 0),
+        inServers: Boolean((inServers || []).some((row) => String(row?.status || "") !== "deleted")),
         request: inRequests?.[0] || null,
       };
     }
@@ -1318,129 +1182,49 @@
       if (error) throw error;
     }
 
-    async function notifyAdminAboutNewGameRequest(params) {
-      try {
-        await ensureValidSession();
-        const { data } = await supabase.auth.getSession();
-        const accessToken = data.session?.access_token;
-        if (!accessToken) {
-          throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
-        }
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/game_request_notify_email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-            apikey: SUPABASE_ANON_KEY,
-          },
-          body: JSON.stringify({
-            gameName: params.gameName,
-            website: params.website,
-            requestId: params.requestId || undefined,
-            userToken: accessToken,
-            requesterEmail: currentUser?.email || undefined,
-            requesterName: currentUser?.user_metadata?.full_name || currentUser?.user_metadata?.name || undefined,
-          }),
-        });
-        if (!response.ok) {
-          let message = "Error notifying admin about the new game request.";
-          try {
-            const payload = await response.json();
-            message = payload?.error || message;
-          } catch (_err) {
-            const text = await response.text();
-            if (text) message = text;
-          }
-          throw new Error(message);
-        }
-      } catch (err) {
-        console.warn("Failed to notify admin about the new game request.", err);
-      }
-    }
-
     async function createOrReuseGameRequest(payload) {
       const websiteRecord = await findWebsiteRecord(payload.website, payload.websiteDomain);
       if (websiteRecord.inServers) {
         return { status: "server_exists", request: websiteRecord.request || null };
       }
-      if (!websiteRecord.request || websiteRecord.request.user_id === currentUser.id) {
-        const shouldNotifyAdmin = !websiteRecord.request?.id;
-        const requestPayload = {
+      await ensureValidSession();
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
+      }
+
+      const { data: requestData, error } = await supabase.functions.invoke("game_request_upsert", {
+        body: {
           name: payload.name,
           website: payload.website,
-          discord_invite: payload.discord_invite || null,
           is_owner: Boolean(payload.is_owner),
           cover_url: payload.cover_url || null,
-          status: "pending",
-          user_id: currentUser.id,
-          user_email: currentUser.email || null,
-        };
-        if (websiteRecord.request?.id && websiteRecord.request.website === payload.website) {
-          requestPayload.id = websiteRecord.request.id;
-        }
-        let requestData = null;
-        let { data: upsertData, error } = await supabase
-          .from("game_requests")
-          .upsert(requestPayload, { onConflict: "website" })
-          .select("id")
-          .single();
-        requestData = upsertData;
-        if (isMissingDiscordInviteColumnError(error)) {
-          const { discord_invite: _discordInvite, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (isMissingOwnerColumnError(error)) {
-          const { is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (isMissingDiscordInviteColumnError(error) && isMissingOwnerColumnError(error)) {
-          const { discord_invite: _discordInvite, is_owner: _isOwner, ...fallbackPayload } = requestPayload;
-          const fallback = await supabase
-            .from("game_requests")
-            .upsert(fallbackPayload, { onConflict: "website" })
-            .select("id")
-            .single();
-          requestData = fallback.data;
-          error = fallback.error;
-        }
-        if (error) throw error;
-        const oldCoverUrl = String(websiteRecord.request?.cover_url || "").trim() || null;
-        if (oldCoverUrl && payload.cover_url && oldCoverUrl !== payload.cover_url) {
-          try {
-            await deleteServerLogo(oldCoverUrl);
-          } catch (cleanupErr) {
-            console.warn("Could not delete previous game request logo.", cleanupErr);
-          }
-        }
-        if (shouldNotifyAdmin) {
-          await notifyAdminAboutNewGameRequest({
-            gameName: payload.name,
-            website: payload.website,
-            requestId: requestData?.id || null,
-          });
-        }
-        return { status: "created_or_updated", request: websiteRecord.request || null };
+          userToken: token,
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+      });
+      if (error || !requestData?.ok) {
+        throw new Error(requestData?.error || error?.message || "Error saving game request.");
       }
-      return { status: "reused_other_request", request: websiteRecord.request };
+      const oldCoverUrl = String(requestData?.previousCoverUrl || "").trim() || null;
+      if (oldCoverUrl && payload.cover_url && oldCoverUrl !== payload.cover_url) {
+        try {
+          await deleteServerLogo(oldCoverUrl);
+        } catch (cleanupErr) {
+          console.warn("Could not delete previous game request logo.", cleanupErr);
+        }
+      }
+      return { status: "created_or_updated", request: websiteRecord.request || null };
     }
 
     async function handleSubmit(event) {
       event.preventDefault();
       feedback.textContent = "";
       setSubmitLoading(true);
-      let uploadedGameLogo = null;
       let customGameRequestSaved = false;
 
       try {
@@ -1517,7 +1301,6 @@
           const normalizedWebsite = customGamePayload.website;
           const websiteDomain = customGamePayload.websiteDomain;
           const manualGameName = customGamePayload.name || gameName;
-          let gameLogoUrl = customGamePayload.cover_url || null;
 
           const existingServer = await findExistingServerByDomain(websiteDomain);
           if (existingServer?.id) {
@@ -1536,19 +1319,12 @@
             return;
           }
 
-          if (!gameLogoUrl && customGamePayload.logoFile) {
-            uploadedGameLogo = await uploadGameLogo(customGamePayload.logoFile);
-            gameLogoUrl = uploadedGameLogo.publicUrl;
-            customGamePayload.cover_url = gameLogoUrl;
-          }
-
           await createOrReuseGameRequest({
             name: manualGameName,
             website: normalizedWebsite,
             websiteDomain,
-            discord_invite: customGamePayload.discord_invite || null,
             is_owner: customGamePayload.is_owner || false,
-            cover_url: gameLogoUrl,
+            cover_url: null,
           });
           customGameRequestSaved = true;
 
@@ -1641,13 +1417,6 @@
         return;
       } catch (err) {
         console.error(err);
-        if (!customGameRequestSaved && uploadedGameLogo?.path) {
-          try {
-            await deleteServerLogo(uploadedGameLogo.path);
-          } catch (cleanupErr) {
-            console.warn("Could not delete unused uploaded game logo.", cleanupErr);
-          }
-        }
         feedback.textContent = err?.message || t("listing_create.publish_error", "Error publishing listing.");
       } finally {
         setSubmitLoading(false);

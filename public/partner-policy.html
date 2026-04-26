@@ -24,6 +24,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Partner policy</title>
   <link rel="stylesheet" href="css/global.css" />
+  <style id="partner-policy-guard-style">html{visibility:hidden;}</style>
   <style>
     .policy-page {
       max-width: 980px;
@@ -62,6 +63,9 @@
   </style>
 </head>
 <body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
 
@@ -78,7 +82,7 @@
           <li id="partner-policy-section-1-item-1"><strong>Account:</strong> shows the summarized identifier of the payout account registered by the partner.</li>
           <li id="partner-policy-section-1-item-2"><strong>Registered account:</strong> indicates whether there is an active account able to receive withdrawals.</li>
           <li id="partner-policy-section-1-item-3"><strong>Balance:</strong> shows the gross amount accumulated by the partner from the real consumption of featured listings linked to their servers.</li>
-          <li id="partner-policy-section-1-item-4"><strong>Active boosts:</strong> indicates how many listings linked to their servers are currently boosted.</li>
+          <li id="partner-policy-section-1-item-4"><strong>Boosted servers:</strong> indicates how many servers are currently boosted in the home feed.</li>
         </ul>
       </article>
 
@@ -86,7 +90,7 @@
         <h3 id="partner-policy-section-2-title">2. Calculation basis</h3>
         <ul>
           <li id="partner-policy-section-2-item-1">The advertiser pays for the boost based on the platform's current CPM.</li>
-          <li id="partner-policy-section-2-item-2">The eligible partner receives <strong>50%</strong> of the amount consumed by featured listings linked to their servers.</li>
+          <li id="partner-policy-section-2-item-2">The game owner receives <strong>50%</strong> of the amount consumed by featured listings linked to their servers.</li>
           <li id="partner-policy-section-2-item-3">The balance shown to the partner is gross and does not include conversion, transfer, or payout fees.</li>
         </ul>
       </article>
@@ -102,7 +106,7 @@
       <article class="policy-card">
         <h3 id="partner-policy-section-4-title">4. Withdrawal request</h3>
         <ul>
-          <li id="partner-policy-section-4-item-1">A withdrawal can only be requested when there is an active payout account and the platform's configured minimum balance is met.</li>
+          <li id="partner-policy-section-4-item-1">A withdrawal can only be requested when there is an active payout account and at least R$ 50.00 is available.</li>
           <li id="partner-policy-section-4-item-2">Before the withdrawal is confirmed, the system shows a preview with:
             <br><strong>estimated fee</strong>
             <br><strong>estimated net amount</strong>
@@ -129,6 +133,17 @@
           <li id="partner-policy-section-6-item-3">When applicable, the partner will be informed through the dashboard or by email about withdrawal status changes.</li>
         </ul>
       </article>
+
+      <article class="policy-card">
+        <h3 id="partner-policy-section-7-title">7. Boosted servers in feed</h3>
+        <ul>
+          <li id="partner-policy-section-7-item-1">Only the game owner can activate or remove server boosts from the partner area.</li>
+          <li id="partner-policy-section-7-item-2">Boosted servers may receive highlighted positions in the home feed and in the sidebar suggestions.</li>
+          <li id="partner-policy-section-7-item-3">When the same boosted server appears in more than one slot, the system validates at most one billable view per server within each 120-second window in the same browser.</li>
+          <li id="partner-policy-section-7-item-4">If the partner balance reaches zero or a withdrawal enters review, active server boosts may be paused automatically.</li>
+          <li id="partner-policy-section-7-item-5">Boosted servers use the same estimated 7-day CPM tiers as highlighted listings. These values may change over time: 0-25 new listings / 7 days = US$ 0.40; 26-75 = US$ 0.90; 76-150 = US$ 2.00; 151-400 = US$ 4.00; 401-900 = US$ 7.00; 901+ = US$ 12.00.</li>
+        </ul>
+      </article>
     </main>
 
   </div>
@@ -141,6 +156,7 @@
   <script>
     const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
     const t = (key, fallback = "") => i18n.t(key, fallback);
+    const pageLoader = document.getElementById("page-loader");
     const setHtml = (id, key, fallback) => {
       const node = document.getElementById(id);
       if (node) node.innerHTML = t(key, fallback);
@@ -149,9 +165,18 @@
       const node = document.getElementById(id);
       if (node) node.textContent = t(key, fallback);
     };
+    const revealPage = () => {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("partner-policy-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    };
 
     document.title = t("partner_policy.title_default", "Gimerr - Partner policy");
-    document.documentElement.lang = i18n.locale === "en" ? "en" : "pt-BR";
+    document.documentElement.lang = i18n.locale === "pt-BR" ? "pt-BR" : i18n.locale === "es" ? "es" : "en";
     setText("partner-policy-title", "partner_policy.hero_title", "Partner policy");
     setText("partner-policy-helper", "partner_policy.hero_helper", "Rules for balance calculation, withdrawal requests, and fee deductions applied to payouts.");
     setHtml("partner-policy-cta", "partner_policy.hero_cta", "If you are a game developer, <a class=\"link-ghost\" href=\"game-submit.html\">click here</a> and submit it to Gimerr.");
@@ -159,16 +184,16 @@
     setHtml("partner-policy-section-1-item-1", "partner_policy.section_1_item_1", "<strong>Account:</strong> shows the summarized identifier of the payout account registered by the partner.");
     setHtml("partner-policy-section-1-item-2", "partner_policy.section_1_item_2", "<strong>Registered account:</strong> indicates whether there is an active account able to receive withdrawals.");
     setHtml("partner-policy-section-1-item-3", "partner_policy.section_1_item_3", "<strong>Balance:</strong> shows the gross amount accumulated by the partner from the real consumption of featured listings linked to their servers.");
-    setHtml("partner-policy-section-1-item-4", "partner_policy.section_1_item_4", "<strong>Active boosts:</strong> indicates how many listings linked to their servers are currently boosted.");
+    setHtml("partner-policy-section-1-item-4", "partner_policy.section_1_item_4", "<strong>Boosted servers:</strong> indicates how many servers are currently boosted in the home feed.");
     setText("partner-policy-section-2-title", "partner_policy.section_2_title", "2. Calculation basis");
     setHtml("partner-policy-section-2-item-1", "partner_policy.section_2_item_1", "The advertiser pays for the boost based on the platform's current CPM.");
-    setHtml("partner-policy-section-2-item-2", "partner_policy.section_2_item_2", "The eligible partner receives <strong>50%</strong> of the amount consumed by featured listings linked to their servers.");
+    setHtml("partner-policy-section-2-item-2", "partner_policy.section_2_item_2", "The game owner receives <strong>50%</strong> of the amount consumed by featured listings linked to their servers.");
     setHtml("partner-policy-section-2-item-3", "partner_policy.section_2_item_3", "The balance shown to the partner is gross and does not include conversion, transfer, or payout fees.");
     setText("partner-policy-section-3-title", "partner_policy.section_3_title", "3. When the balance appears");
     setHtml("partner-policy-section-3-item-1", "partner_policy.section_3_item_1", "The balance is calculated according to the real consumption of featured listings linked to their servers.");
     setHtml("partner-policy-section-3-item-2", "partner_policy.section_3_item_2", "Updates may take a few minutes to appear in the dashboard, depending on impression accounting and balance refresh timing.");
     setText("partner-policy-section-4-title", "partner_policy.section_4_title", "4. Withdrawal request");
-    setHtml("partner-policy-section-4-item-1", "partner_policy.section_4_item_1", "A withdrawal can only be requested when there is an active payout account and the platform's configured minimum balance is met.");
+    setHtml("partner-policy-section-4-item-1", "partner_policy.section_4_item_1", "A withdrawal can only be requested when there is an active payout account and at least R$ 50.00 is available.");
     setHtml("partner-policy-section-4-item-2", "partner_policy.section_4_item_2", "Before the withdrawal is confirmed, the system shows a preview with:<br><strong>estimated fee</strong><br><strong>estimated net amount</strong>");
     setHtml("partner-policy-section-4-item-3", "partner_policy.section_4_item_3", "By confirming the withdrawal, the partner agrees that applicable fees will be deducted from the requested gross amount.");
     setHtml("partner-policy-section-4-item-4", "partner_policy.section_4_item_4", "If the registered account is a Pix key, the request may be processed manually using the key provided by the partner.");
@@ -180,6 +205,13 @@
     setHtml("partner-policy-section-6-item-1", "partner_policy.section_6_item_1", "If there is any adjustment, reversal, or cancellation affecting listings linked to the partner, the balance may be recalculated.");
     setHtml("partner-policy-section-6-item-2", "partner_policy.section_6_item_2", "Withdrawals already started may be rejected, cancelled, or adjusted in case of operational or financial inconsistency.");
     setHtml("partner-policy-section-6-item-3", "partner_policy.section_6_item_3", "When applicable, the partner will be informed through the dashboard or by email about withdrawal status changes.");
+    setText("partner-policy-section-7-title", "partner_policy.section_7_title", "7. Boosted servers in feed");
+    setHtml("partner-policy-section-7-item-1", "partner_policy.section_7_item_1", "Only the game owner can activate or remove server boosts from the partner area.");
+    setHtml("partner-policy-section-7-item-2", "partner_policy.section_7_item_2", "Boosted servers may receive highlighted positions in the home feed and in the sidebar suggestions.");
+    setHtml("partner-policy-section-7-item-3", "partner_policy.section_7_item_3", "When the same boosted server appears in more than one slot, the system validates at most one billable view per server within each 120-second window in the same browser.");
+    setHtml("partner-policy-section-7-item-4", "partner_policy.section_7_item_4", "If the partner balance reaches zero or a withdrawal enters review, active server boosts may be paused automatically.");
+    setHtml("partner-policy-section-7-item-5", "partner_policy.section_7_item_5", "Boosted servers use the same estimated 7-day CPM tiers as highlighted listings. These values may change over time: 0-25 new listings / 7 days = US$ 0.40; 26-75 = US$ 0.90; 76-150 = US$ 2.00; 151-400 = US$ 4.00; 401-900 = US$ 7.00; 901+ = US$ 12.00.");
+    revealPage();
   </script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
