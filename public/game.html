@@ -1533,6 +1533,10 @@
         currentUser = data.session?.user || null;
         updateAuthUI();
         const params = new URLSearchParams(window.location.search);
+        if (window.location.pathname.endsWith("/game.html")) {
+          const normalizedPath = `${window.location.origin}/game${window.location.search || ""}`;
+          window.history.replaceState({}, "", normalizedPath);
+        }
         currentGameId = params.get("id") || "";
         if (!currentGameId) {
           titleEl.textContent = t("game.not_found", "Game not found.");

@@ -534,7 +534,7 @@
         if (userName) searchInput.value = userName;
         searchSuggestions.style.display = "none";
         if (kind === "game" && gameId) {
-          window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+          window.location.href = `game?id=${encodeURIComponent(gameId)}`;
           return;
         }
         if (kind === "player" && userId) {
@@ -552,7 +552,7 @@
         const normalizedTerm = normalizeSearchText(term);
         const gameMatch = state.games.find((game) => normalizeSearchText(game.name) === normalizedTerm);
         if (gameMatch) {
-          window.location.href = `game.html?id=${encodeURIComponent(gameMatch.id)}`;
+          window.location.href = `game?id=${encodeURIComponent(gameMatch.id)}`;
           return;
         }
         const playerMatch = state.players.find((player) => {

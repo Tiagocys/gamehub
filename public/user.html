@@ -1866,7 +1866,7 @@
       uniqueGames.forEach((server) => {
         const link = document.createElement("a");
         link.className = "pill pill-link";
-        link.href = `game.html?id=${encodeURIComponent(server.id)}`;
+        link.href = `game?id=${encodeURIComponent(server.id)}`;
         link.textContent = server.name;
         publicGames.appendChild(link);
       });

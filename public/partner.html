@@ -3212,7 +3212,7 @@
       currentServers.forEach((server) => {
         const safeName = escapeHtml(server.name || t("partner_page.untitled_server", "Untitled server"));
         const safeStatus = escapeHtml(server.status || "active");
-        const gameUrl = `game.html?id=${encodeURIComponent(String(server.id || ""))}`;
+        const gameUrl = `game?id=${encodeURIComponent(String(server.id || ""))}`;
         const safeSite = server.official_site ? String(server.official_site) : "";
         const safeDiscord = server.discord_invite ? String(server.discord_invite) : "";
         const safeDescription = String(server.description || "").trim();

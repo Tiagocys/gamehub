@@ -607,14 +607,14 @@
                 data-game-id="${escapeHtml(gameId)}">
                 ${escapeHtml(isFollowedGame(gameId) ? t("home.following", "Following") : t("home.follow_game", "Follow game"))}
               </button>
-              <a class="home-feed-card-media-link" href="game.html?id=${encodeURIComponent(gameId)}" aria-label="${gameName}">
+              <a class="home-feed-card-media-link" href="game?id=${encodeURIComponent(gameId)}" aria-label="${gameName}">
                 ${coverUrl
                   ? `<img src="${coverUrl}" alt="${gameName}" loading="lazy" />`
                   : `<img src="img/logo.png" alt="" class="home-feed-card-fallback" loading="lazy" />`}
               </a>
             </div>
             <div class="home-feed-card-copy">
-              <strong><a class="home-feed-card-title-link" href="game.html?id=${encodeURIComponent(gameId)}">${gameName}</a></strong>
+              <strong><a class="home-feed-card-title-link" href="game?id=${encodeURIComponent(gameId)}">${gameName}</a></strong>
               <span class="helper">${escapeHtml(subtitleText)}</span>
             </div>
           </article>
@@ -753,7 +753,7 @@
               <div class="home-game-section-head">
                 <div>
                   <h3>
-                    <a class="home-game-title-link" href="game.html?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
+                    <a class="home-game-title-link" href="game?id=${encodeURIComponent(game.id)}">${escapeHtml(game.name)}</a>
                   </h3>
                   <p class="helper">${escapeHtml(subtitleText)}</p>
                 </div>
@@ -1252,7 +1252,7 @@
               ? `<span class="sidebar-game-entry-tag">${escapeHtml(t("home.highlight_simple", "Featured"))}</span>`
               : ""}
             <article class="sidebar-item sidebar-item-with-action${isSelectedBoostedGame ? " sidebar-item-highlighted" : ""}">
-              <a class="sidebar-item-thumb-link" href="game.html?id=${encodeURIComponent(game.id)}" aria-label="${safeGameName}">
+              <a class="sidebar-item-thumb-link" href="game?id=${encodeURIComponent(game.id)}" aria-label="${safeGameName}">
                 ${gameThumb}
               </a>
               <button
@@ -1263,7 +1263,7 @@
                 ${escapeHtml(followButtonLabel)}
               </button>
               <div class="sidebar-item-body">
-                <a class="sidebar-item-title-link" href="game.html?id=${encodeURIComponent(game.id)}">
+                <a class="sidebar-item-title-link" href="game?id=${encodeURIComponent(game.id)}">
                   <strong class="sidebar-item-title">${safeGameName}</strong>
                 </a>
                 <span class="sidebar-item-subtitle">${escapeHtml(listingsText)}</span>
@@ -1615,7 +1615,7 @@
       if (userName && searchInput) searchInput.value = userName;
       searchSuggestions.style.display = "none";
       if (kind === "game" && gameId) {
-        window.location.href = `game.html?id=${encodeURIComponent(gameId)}`;
+        window.location.href = `game?id=${encodeURIComponent(gameId)}`;
         return;
       }
       if (kind === "player" && userId) {
@@ -1633,7 +1633,7 @@
       const normalizedTerm = normalizeSearchText(term);
       const gameMatch = games.find((g) => normalizeSearchText(g.name) === normalizedTerm);
       if (gameMatch) {
-        window.location.href = `game.html?id=${encodeURIComponent(gameMatch.id)}`;
+        window.location.href = `game?id=${encodeURIComponent(gameMatch.id)}`;
         searchSuggestions.style.display = "none";
         return;
       }

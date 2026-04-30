@@ -1581,7 +1581,7 @@
       document.title = `${listing.title} | Gimerr`;
       if (listingServerLink && listingServerName && listingServerLogo) {
         if (listing.server_id && listing.server_name) {
-          listingServerLink.href = `game.html?id=${encodeURIComponent(listing.server_id)}`;
+          listingServerLink.href = `game?id=${encodeURIComponent(listing.server_id)}`;
           listingServerName.textContent = listing.server_name;
           listingServerLogo.src = listing.server_banner_url || "img/logo.png";
           listingServerLogo.alt = formatMessage("listing.server_logo_alt", "Logo of {name}", { name: listing.server_name });
@@ -2213,7 +2213,7 @@
         updateReportFilesInfo();
         if (reportListingForm) reportListingForm.style.display = "none";
         if (isAdminViewer && action === "delete") {
-          window.location.href = `game.html?id=${encodeURIComponent(currentListing.server_id || "")}`;
+          window.location.href = `game?id=${encodeURIComponent(currentListing.server_id || "")}`;
           return;
         }
       } catch (err) {
