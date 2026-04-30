@@ -1325,6 +1325,27 @@ body {
         }
 
         if (editingServer) {
+          let ownerRecord = null;
+          if (ownerEmailRaw) {
+            ownerRecord = await findUserByEmail(ownerEmailRaw);
+            if (!ownerRecord) {
+              formError.textContent = "E-mail do owner não encontrado. Selecione um usuário válido.";
+              setOwnerEmailHelper("E-mail inválido para owner.", true);
+              return;
+            }
+            if (ownerRecord.id === user.id) {
+              formError.textContent = "Regra antifraude: o owner não pode ser o mesmo usuário admin.";
+              setOwnerEmailHelper("Defina um owner diferente do admin que está salvando.", true);
+              return;
+            }
+            if (serverOwnerEmailInput) {
+              serverOwnerEmailInput.value = ownerRecord.email;
+            }
+            setOwnerEmailHelper("Owner encontrado.");
+          } else {
+            setOwnerEmailHelper("Sem owner definido para este servidor.");
+          }
+
           if (file && file.size > MAX_LOGO_BYTES) {
             formError.textContent = "Logo deve ter no máximo 3MB.";
             return;
@@ -1334,6 +1355,7 @@ body {
             `Servidor: ${name}`,
             `Site: ${site}`,
             `Discord: ${discordInvite || "não informado"}`,
+            `Owner: ${ownerRecord?.email || "não definido"}`,
             `Logo: ${file ? `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)` : "mantida"}`,
           ].join("\n");
           const confirmUpdate = window.confirm(`${summary}\n\nDeseja salvar as alterações deste servidor?`);
@@ -1355,6 +1377,8 @@ body {
               officialSite: site,
               discordInvite,
               bannerUrl,
+              ownerId: ownerRecord?.id || null,
+              ownerEmail: ownerRecord?.email || null,
             },
             headers: accessToken
               ? {
@@ -2486,7 +2510,7 @@ body {
         } else if (action === "archive") {
           reportsStatus.textContent = "Denúncia arquivada.";
         } else {
-          reportsStatus.textContent = "Denúncia tratada e contabilizada no rating.";
+          reportsStatus.textContent = "Denúncia tratada e contabilizada na reputação.";
         }
       } catch (err) {
         console.error(err);

@@ -417,3 +417,7 @@ entrypoint = "./functions/admin_user_report/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/admin_listing_moderate/index.ts"
+
+[functions.r2_sign_upload]
+enabled = true
+verify_jwt = false

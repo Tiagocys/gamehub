@@ -1659,7 +1659,7 @@
       if (sellerRating) {
         const score = Number(listing.user_reputation_score);
         if (listing.user_is_verified && Number.isFinite(score)) {
-          sellerRating.textContent = formatMessage("common.rating_out_of_ten", "Rating {score}/10", { score: score.toFixed(1) });
+          sellerRating.textContent = formatMessage("common.rating_out_of_ten", "Reputation {score}/10", { score: score.toFixed(1) });
           sellerRating.title = formatMessage("common.reputation_breakdown", "Recommendations: {recommendations} • Reports: {reports}", {
             recommendations: Number(listing.user_recommendations_count || 0),
             reports: Number(listing.user_reports_count || 0),

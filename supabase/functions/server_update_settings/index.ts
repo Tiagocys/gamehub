@@ -9,6 +9,8 @@ type Payload = {
   discordInvite?: string | null;
   description?: string | null;
   bannerUrl?: string | null;
+  ownerId?: string | null;
+  ownerEmail?: string | null;
 };
 
 const SUPABASE_URL = Deno.env.get("PROJECT_URL");
@@ -193,6 +195,24 @@ Deno.serve(async (req) => {
         const normalizedBanner = normalizeBannerUrl(raw);
         if (!normalizedBanner) return errorResponse("URL da logo inválida.", 400);
         updatePayload.banner_url = normalizedBanner;
+      }
+    }
+
+    if (isAdmin && (
+      Object.prototype.hasOwnProperty.call(payload, "ownerId")
+      || Object.prototype.hasOwnProperty.call(payload, "ownerEmail")
+    )) {
+      const ownerId = String(payload.ownerId || "").trim();
+      const ownerEmail = String(payload.ownerEmail || "").trim().toLowerCase();
+      if (!ownerId) {
+        updatePayload.owner_id = null;
+        updatePayload.owner_email = null;
+      } else {
+        if (ownerId === userId) {
+          return errorResponse("Regra antifraude: o owner do servidor não pode ser o mesmo usuário que aprovou ou editou o cadastro.", 400);
+        }
+        updatePayload.owner_id = ownerId;
+        updatePayload.owner_email = ownerEmail || null;
       }
     }
 

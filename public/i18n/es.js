@@ -31,7 +31,7 @@ window.__I18N_MESSAGES__.es = {
 
   "common.recommendation_one": "1 recomendación",
   "common.recommendation_many": "{count} recomendaciones",
-  "common.rating_out_of_ten": "Calificación {score}/10",
+  "common.rating_out_of_ten": "Reputación {score}/10",
   "common.reputation_breakdown": "Recomendaciones: {recommendations} • Reportes: {reports}",
   "common.brand_tagline": "Marketplace de la comunidad gamer construido por jugadores.",
   "help.title_default": "Gimerr - Ayuda",

@@ -1734,7 +1734,7 @@
         const score = Number(currentPublicReputation?.reputation_score);
         if (profile?.phone_verified && Number.isFinite(score)) {
           publicReputation.innerHTML = `
-            <span class="reputation-score-pill">${escapeHtml(formatMessage("common.rating_out_of_ten", "Rating {score}/10", { score: score.toFixed(1) }))}</span>
+            <span class="reputation-score-pill">${escapeHtml(formatMessage("common.rating_out_of_ten", "Reputation {score}/10", { score: score.toFixed(1) }))}</span>
           `;
           publicReputation.style.display = "inline-flex";
         } else {
@@ -2248,7 +2248,7 @@
           reportUserFeedback.textContent = isAdminReporter
             ? (action === "ban"
               ? t("user.report_ban_sent_admin", "Account banned and user notified by e-mail.")
-              : t("user.report_sent_admin", "Report recorded and counted in the rating."))
+              : t("user.report_sent_admin", "Report recorded and counted in reputation."))
             : t("user.report_sent", "Report sent for review.");
         }
         if (reportUserReason) reportUserReason.value = "";
