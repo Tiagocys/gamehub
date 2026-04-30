@@ -88,6 +88,29 @@
       text-decoration: underline;
     }
 
+    .game-discord-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-decoration: none;
+    }
+
+    .game-discord-link:hover {
+      text-decoration: underline;
+    }
+
+    .game-discord-link img {
+      width: 16px;
+      height: 16px;
+      display: block;
+      flex: 0 0 auto;
+    }
+
     .game-site-link.is-unavailable {
       color: var(--muted);
       pointer-events: none;
@@ -449,6 +472,10 @@
               <div class="game-title-block">
                 <h1 id="game-title">Loading...</h1>
                 <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+                <a id="game-discord-link" class="game-discord-link" href="#" target="_blank" rel="noopener" style="display:none;">
+                  <img src="img/discord.svg" alt="" />
+                  <span id="game-discord-link-text">Discord Oficial</span>
+                </a>
               </div>
               <div id="game-actions" class="game-actions"></div>
             </div>
@@ -533,6 +560,8 @@
     const descriptionEl = document.getElementById("game-description");
     const logoEl = document.getElementById("game-logo");
     const siteLinkEl = document.getElementById("game-site-link");
+    const discordLinkEl = document.getElementById("game-discord-link");
+    const discordLinkTextEl = document.getElementById("game-discord-link-text");
     const actionsEl = document.getElementById("game-actions");
     const listingSearchInput = document.getElementById("listing-search");
     const listingSearchMeta = document.getElementById("listing-search-meta");
@@ -677,6 +706,7 @@
 
     document.title = t("game.title_default", "Gimerr - Game");
     if (logoEl) logoEl.alt = t("game.logo_alt", "Game logo");
+    if (discordLinkTextEl) discordLinkTextEl.textContent = t("game.official_discord", "Discord Oficial");
     if (titleEl) titleEl.textContent = t("game.loading", "Loading...");
     updateListingSearchPlaceholder();
     if (feedSentinel) feedSentinel.textContent = t("game.scroll_more", "Scroll to load more");
@@ -854,6 +884,13 @@
       }
     }
 
+    function ensureHttpsPrefix(value) {
+      const trimmed = String(value || "").trim();
+      if (!trimmed) return "";
+      if (/^https?:\/\//i.test(trimmed)) return trimmed;
+      return `https://${trimmed.replace(/^\/+/, "")}`;
+    }
+
     function normalizeR2PublicUrl(urlString) {
       try {
         const url = new URL(urlString);
@@ -929,7 +966,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("servers")
-          .select("id,name,official_site,banner_url,description,status")
+          .select("id,name,official_site,discord_invite,banner_url,description,status")
           .eq("id", id)
           .eq("status", "active")
           .single();
@@ -938,6 +975,7 @@
           id: data.id,
           name: data.name,
           website: data.official_site,
+          discord_invite: data.discord_invite,
           cover_url: data.banner_url,
           description: data.description,
         } : null;
@@ -953,6 +991,7 @@
           id: data.id,
           name: data.name,
           website: data.website,
+          discord_invite: null,
           cover_url: data.cover_url,
           description: null,
         } : null;
@@ -978,6 +1017,7 @@
         updateListingSearchPlaceholder();
         logoEl.style.display = "none";
         if (siteLinkEl) siteLinkEl.style.display = "none";
+        if (discordLinkEl) discordLinkEl.style.display = "none";
         if (descriptionEl) descriptionEl.style.display = "none";
         if (actionsEl) actionsEl.innerHTML = "";
         return;
@@ -996,6 +1036,16 @@
           siteLinkEl.textContent = t("game.site_unavailable", "Official site unavailable");
           siteLinkEl.style.display = "inline-flex";
           siteLinkEl.classList.add("is-unavailable");
+        }
+      }
+      if (discordLinkEl) {
+        const discordInvite = ensureHttpsPrefix(game.discord_invite || "");
+        if (discordInvite) {
+          discordLinkEl.href = discordInvite;
+          discordLinkEl.style.display = "inline-flex";
+        } else {
+          discordLinkEl.removeAttribute("href");
+          discordLinkEl.style.display = "none";
         }
       }
       if (descriptionEl) {

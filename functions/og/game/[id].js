@@ -184,7 +184,7 @@ export async function onRequestGet(context) {
     }
 
     const gameTitle = truncateText(game.name || "Game no Gimerr", 110);
-    const title = `${gameTitle} | Gimerr`;
+    const title = gameTitle;
     const description = truncateText(
       game.description || "Confira este game e seus anúncios no marketplace da comunidade Gimerr.",
       200,

@@ -32,6 +32,7 @@ window.__I18N_MESSAGES__.es = {
   "common.recommendation_one": "1 recomendación",
   "common.recommendation_many": "{count} recomendaciones",
   "common.rating_out_of_ten": "Reputación {score}/10",
+  "common.reputation_out_of_ten": "Reputación {score}/10",
   "common.reputation_breakdown": "Recomendaciones: {recommendations} • Reportes: {reports}",
   "common.brand_tagline": "Marketplace de la comunidad gamer construido por jugadores.",
   "help.title_default": "Gimerr - Ayuda",
@@ -93,6 +94,7 @@ window.__I18N_MESSAGES__.es = {
 
   "game.title_default": "Gimerr - Juego",
   "game.logo_alt": "Logo del juego",
+  "game.official_discord": "Discord oficial",
   "game.loading": "Cargando...",
   "game.search_placeholder": "¿Qué buscas en este juego?",
   "game.search_placeholder_named": "¿Qué buscas en {game}?",

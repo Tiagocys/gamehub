@@ -1734,7 +1734,7 @@
         const score = Number(currentPublicReputation?.reputation_score);
         if (profile?.phone_verified && Number.isFinite(score)) {
           publicReputation.innerHTML = `
-            <span class="reputation-score-pill">${escapeHtml(formatMessage("common.rating_out_of_ten", "Reputation {score}/10", { score: score.toFixed(1) }))}</span>
+            <span class="reputation-score-pill">${escapeHtml(formatMessage("common.reputation_out_of_ten", "Reputation {score}/10", { score: score.toFixed(1) }))}</span>
           `;
           publicReputation.style.display = "inline-flex";
         } else {
