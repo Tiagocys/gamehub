@@ -155,7 +155,7 @@ export async function onRequestGet(context) {
     return new Response("SUPABASE_URL/SUPABASE_ANON_KEY não configuradas no Pages.", { status: 500 });
   }
 
-  const appUrl = `${siteUrl}/game.html?id=${encodeURIComponent(gameId)}`;
+  const appUrl = `${siteUrl}/game?id=${encodeURIComponent(gameId)}`;
   const ogUrl = `${siteUrl}/og/game/${encodeURIComponent(gameId)}`;
   const userAgent = context.request.headers.get("user-agent") || "";
 
