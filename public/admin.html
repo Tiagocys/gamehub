@@ -879,9 +879,9 @@ body {
       if (serverSiteInput) serverSiteInput.value = server.official_site || "";
       if (serverDiscordInput) serverDiscordInput.value = server.discord_invite || "";
       if (serverOwnerEmailInput) serverOwnerEmailInput.value = server.owner_email || "";
-      if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = true;
+      if (serverOwnerEmailInput) serverOwnerEmailInput.disabled = false;
       clearOwnerEmailSuggestions();
-      setOwnerEmailHelper("O owner atual não é alterado por este formulário.");
+      setOwnerEmailHelper("Confirme ou altere o e-mail do owner.");
       if (serverLogoInput) {
         serverLogoInput.value = "";
         serverLogoInput.required = false;

@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     }
 
     const summary = await getPartnerPayoutSummary(supabase, userId);
-    const availableAmount = Number(summary?.availableAmount || 0);
+    const availableAmount = Number(summary?.withdrawAvailableAmount || summary?.availableAmount || 0);
     if (!Number.isFinite(availableAmount) || availableAmount <= 0) {
       return errorResponse("Você não possui saldo disponível para saque.", 409);
     }

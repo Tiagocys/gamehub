@@ -65,14 +65,11 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileErr } = await supabase
       .from("users")
-      .select("id,email,first_name,last_name,phone_verified")
+      .select("id,email,first_name,last_name")
       .eq("id", authData.user.id)
       .single();
     if (profileErr || !profile) {
       return jsonResponse({ ok: false, error: "Perfil não encontrado" }, 404);
-    }
-    if (!profile.phone_verified) {
-      return jsonResponse({ ok: false, error: "Verifique seu telefone antes de enviar uma mensagem ao suporte." }, 403);
     }
 
     await enforceUserRateLimit(supabase, authData.user.id, "support_contact_email", {

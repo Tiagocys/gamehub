@@ -420,6 +420,8 @@
       </div>
       <div class="my-listings-modal-body">
         <div id="topup-details">
+          <label id="deposit-country-label" for="deposit-country" class="helper">Country of residence</label>
+          <select id="deposit-country" class="input"></select>
           <label id="deposit-amount-label" for="deposit-amount" class="helper">Deposit amount</label>
           <div class="my-listings-amount-field">
             <span id="deposit-amount-prefix" class="my-listings-amount-prefix">$</span>
@@ -571,6 +573,8 @@
     const topupModalTitle = document.getElementById("topup-modal-title");
     const topupModalHelper = document.getElementById("topup-modal-helper");
     const topupModalClose = document.getElementById("topup-modal-close");
+    const depositCountryLabel = document.getElementById("deposit-country-label");
+    const depositCountry = document.getElementById("deposit-country");
     const depositAmountLabel = document.getElementById("deposit-amount-label");
     const depositAmountPrefix = document.getElementById("deposit-amount-prefix");
     const amountInput = document.getElementById("deposit-amount");
@@ -627,6 +631,7 @@
     let listingHighlightInfoCarouselIndex = 0;
     let selectedCheckoutCurrency = "usd";
     let selectedCheckoutRateToBRL = USD_BRL_RATE;
+    let selectedCheckoutCountryCode = "";
     let serverPricingById = {};
     const LISTING_HIGHLIGHT_INFO_IMAGES = [
       "img/listings-ads.png",
@@ -785,6 +790,35 @@
       return SUPPORTED_CHECKOUT_COUNTRIES.find((item) => item.code === normalized) || null;
     }
 
+    function getCountryOptionLabel(code) {
+      if (String(code || "").trim().toUpperCase() === "OTHER") {
+        return t("common.other_country", "Other country");
+      }
+      try {
+        const locale = i18n.locale === "en" ? "en" : i18n.locale === "es" ? "es" : "pt-BR";
+        const names = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames([locale], { type: "region" }) : null;
+        return names?.of(code) || code;
+      } catch (_err) {
+        return code;
+      }
+    }
+
+    function getResolvedCheckoutCountryCode() {
+      return getCheckoutCountryConfig(selectedCheckoutCountryCode)?.code
+        || getCheckoutCountryConfig(currentProfile?.country_code)?.code
+        || "OTHER";
+    }
+
+    function populateCheckoutCountryOptions() {
+      if (!depositCountry) return;
+      const currentValue = getResolvedCheckoutCountryCode();
+      depositCountry.innerHTML = SUPPORTED_CHECKOUT_COUNTRIES.map((item) => `
+        <option value="${item.code}">${escapeHtml(getCountryOptionLabel(item.code))}</option>
+      `).join("");
+      depositCountry.value = currentValue;
+      selectedCheckoutCountryCode = currentValue;
+    }
+
     async function getCurrencyRateToBRL(currencyCode) {
       const normalizedCurrency = String(currencyCode || "usd").trim().toLowerCase();
       if (normalizedCurrency === "brl") return 1;
@@ -802,9 +836,7 @@
     }
 
     async function refreshCheckoutCurrencyState() {
-      const resolvedCountryCode = getCheckoutCountryConfig(currentProfile?.country_code)?.code
-        || getCheckoutCountryConfig(inferCountryCodeFromPhone(currentProfile?.phone))?.code
-        || "OTHER";
+      const resolvedCountryCode = getResolvedCheckoutCountryCode();
       selectedCheckoutCurrency = String(getCheckoutCountryConfig(resolvedCountryCode)?.currency || "usd").trim().toLowerCase();
       selectedCheckoutRateToBRL = await getCurrencyRateToBRL(selectedCheckoutCurrency);
     }
@@ -1014,7 +1046,7 @@
       const displayAmount = parseDisplayAmount(amountInput?.value || "");
       const amountBRL = checkoutAmountToBRL(displayAmount);
       const minimumTopupBRL = getMinimumTopupBRL();
-      const canPay = Boolean(currentProfile?.phone_verified)
+      const canPay = Boolean(getResolvedCheckoutCountryCode())
         && Number.isFinite(displayAmount)
         && Number.isFinite(amountBRL)
         && amountBRL >= minimumTopupBRL;
@@ -1073,11 +1105,12 @@
       if (listingHighlightInfoImage) listingHighlightInfoImage.alt = t("my_listings.highlight_info_alt", "Example of highlighted listing positions");
       if (topupModalTitle) topupModalTitle.textContent = t("ad_wallet.topup_title", "Add balance");
       if (topupModalHelper) {
-        topupModalHelper.textContent = formatMessage("ad_wallet.topup_helper_dynamic", "Deposit any amount starting from {amount}.", {
+        topupModalHelper.textContent = formatMessage("ad_wallet.topup_helper_dynamic", "Deposit any amount starting from {amount}. The checkout currency is defined by your current country of residence.", {
           amount: formatMoney(getMinimumDisplayAmount(), getSelectedCheckoutCurrency()),
         });
       }
       if (topupModalClose) topupModalClose.setAttribute("aria-label", t("common.close", "Close"));
+      if (depositCountryLabel) depositCountryLabel.textContent = t("ad_wallet.deposit_country_label", "Country of residence");
       if (depositAmountLabel) {
         depositAmountLabel.textContent = formatMessage(
           "ad_wallet.deposit_label_dynamic",
@@ -1399,7 +1432,7 @@
       ensureClient();
       const { data, error } = await supabase
         .from("users")
-        .select("phone,phone_verified,country_code")
+        .select("country_code")
         .eq("id", currentUser.id)
         .single();
       if (error) throw error;
@@ -1482,16 +1515,18 @@
     }
 
     function openTopupModal({ preservePendingListingId = false } = {}) {
-      if (!currentProfile?.phone_verified) {
-        window.location.href = "profile.html?phone_required=1";
-        return;
-      }
       if (!preservePendingListingId) {
         pendingHighlightListingId = null;
       }
+      populateCheckoutCountryOptions();
       setTopupFeedback("");
       applyStaticTranslations();
-      updateCheckoutButtonState();
+      refreshCheckoutCurrencyState()
+        .then(() => {
+          applyStaticTranslations();
+          updateCheckoutButtonState();
+        })
+        .catch((err) => console.error(err));
       topupModalBackdrop?.classList.add("open");
       topupModalBackdrop?.setAttribute("aria-hidden", "false");
     }
@@ -1589,6 +1624,7 @@
             amount: displayAmount,
             amountBRL,
             currency: getSelectedCheckoutCurrency(),
+            countryCode: getResolvedCheckoutCountryCode(),
             returnBaseUrl: window.location.origin,
           },
           headers: {
@@ -1796,6 +1832,12 @@
       if (topupFeedbackEl?.textContent) setTopupFeedback("");
     });
     amountInput?.addEventListener("blur", normalizeAmountInputOnBlur);
+    depositCountry?.addEventListener("change", async () => {
+      selectedCheckoutCountryCode = String(depositCountry.value || "").trim().toUpperCase();
+      await refreshCheckoutCurrencyState();
+      applyStaticTranslations();
+      updateCheckoutButtonState();
+    });
     withdrawPolicyAccept?.addEventListener("change", () => {
       updateWithdrawButtonState();
       if (withdrawFeedbackEl?.textContent) setWithdrawFeedback("");

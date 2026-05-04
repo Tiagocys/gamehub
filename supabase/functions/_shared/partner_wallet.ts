@@ -24,7 +24,7 @@ export function isMissingPartnerWalletTablesError(err: { code?: string; message?
 export async function ensurePartnerWallet(supabase: any, userId: string, nowIso: string) {
   let { data, error } = await supabase
     .from("partner_wallets")
-    .select("user_id,available_cents,total_purchased_cents,total_consumed_cents,last_consumed_at")
+    .select("user_id,available_cents,total_purchased_cents,total_consumed_cents,earned_consumed_cents,total_refunded_cents,last_consumed_at")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -41,9 +41,11 @@ export async function ensurePartnerWallet(supabase: any, userId: string, nowIso:
       available_cents: 0,
       total_purchased_cents: 0,
       total_consumed_cents: 0,
+      earned_consumed_cents: 0,
+      total_refunded_cents: 0,
       last_consumed_at: nowIso,
     })
-    .select("user_id,available_cents,total_purchased_cents,total_consumed_cents,last_consumed_at")
+    .select("user_id,available_cents,total_purchased_cents,total_consumed_cents,earned_consumed_cents,total_refunded_cents,last_consumed_at")
     .single();
   if (insertErr) throw insertErr;
   return inserted;
@@ -51,10 +53,53 @@ export async function ensurePartnerWallet(supabase: any, userId: string, nowIso:
 
 export async function getPartnerWalletSummary(supabase: any, userId: string) {
   const wallet = await ensurePartnerWallet(supabase, userId, new Date().toISOString());
+  const topupAvailableCents = safeInt(wallet?.available_cents);
   return {
-    availableCents: safeSignedInt(wallet?.available_cents),
+    availableCents: topupAvailableCents,
+    topupAvailableCents,
     totalPurchasedCents: safeInt(wallet?.total_purchased_cents),
     totalConsumedCents: safeInt(wallet?.total_consumed_cents),
-    availableAmountBRL: Number((Number(wallet?.available_cents || 0) / 100).toFixed(2)),
+    earnedConsumedCents: safeInt(wallet?.earned_consumed_cents),
+    totalRefundedCents: safeInt(wallet?.total_refunded_cents),
+    availableAmountBRL: Number((topupAvailableCents / 100).toFixed(2)),
+    refundableTopupAmountBRL: Number((topupAvailableCents / 100).toFixed(2)),
+  };
+}
+
+export async function consumePartnerBoostBalance(supabase: any, userId: string, chargeCents: number, nowIso: string) {
+  const normalizedChargeCents = safeInt(chargeCents, 0);
+  const wallet = await ensurePartnerWallet(supabase, userId, nowIso);
+  if (normalizedChargeCents <= 0) {
+    return {
+      nextTopupAvailableCents: safeInt(wallet.available_cents),
+      consumedTopupCents: 0,
+      consumedEarnedCents: 0,
+      wallet,
+    };
+  }
+
+  const currentTopupAvailableCents = safeInt(wallet.available_cents);
+  const consumedTopupCents = Math.min(currentTopupAvailableCents, normalizedChargeCents);
+  const consumedEarnedCents = Math.max(0, normalizedChargeCents - consumedTopupCents);
+  const nextTopupAvailableCents = currentTopupAvailableCents - consumedTopupCents;
+  const nextTotalConsumedCents = safeInt(wallet.total_consumed_cents) + consumedTopupCents;
+  const nextEarnedConsumedCents = safeInt(wallet.earned_consumed_cents) + consumedEarnedCents;
+
+  const { error } = await supabase
+    .from("partner_wallets")
+    .update({
+      available_cents: nextTopupAvailableCents,
+      total_consumed_cents: nextTotalConsumedCents,
+      earned_consumed_cents: nextEarnedConsumedCents,
+      last_consumed_at: nowIso,
+    })
+    .eq("user_id", userId);
+  if (error) throw error;
+
+  return {
+    nextTopupAvailableCents,
+    consumedTopupCents,
+    consumedEarnedCents,
+    wallet,
   };
 }

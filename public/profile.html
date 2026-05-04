@@ -986,6 +986,8 @@
         const linkedDiscord = getCurrentDiscordLink();
         const aboutMe = aboutMeInput?.value?.trim() || null;
         const previousAvatarUrl = currentProfile?.avatar_url || null;
+        const nextDiscordUsername = linkedDiscord.username || normalizeDiscordUsername(currentProfile?.discord_username || "") || null;
+        const nextDiscordId = linkedDiscord.id || String(currentProfile?.discord_id || "").trim() || null;
         let avatarUrl = previousAvatarUrl;
 
         if (!validateDisplayName(displayName)) {
@@ -1000,6 +1002,19 @@
           feedback.textContent = t("profile.username_invalid_save", "Fix the username before saving.");
           return;
         }
+
+        const profileUnchanged = !pendingAvatarFile
+          && username === normalizeProfileUsername(currentProfile?.username || "")
+          && displayName === String(currentProfile?.first_name || "").trim()
+          && aboutMe === (String(currentProfile?.about_me || "").trim() || null)
+          && (previousAvatarUrl || null) === (currentProfile?.avatar_url || null)
+          && nextDiscordUsername === (normalizeDiscordUsername(currentProfile?.discord_username || "") || null)
+          && nextDiscordId === (String(currentProfile?.discord_id || "").trim() || null);
+        if (profileUnchanged) {
+          feedback.textContent = t("profile.saved_success", "Profile saved successfully!");
+          return;
+        }
+
         if (pendingAvatarFile) {
           avatarUrl = await uploadProfileAvatar(pendingAvatarFile);
         }
@@ -1009,8 +1024,8 @@
           body: {
             username,
             displayName,
-            discordUsername: linkedDiscord.username || currentProfile?.discord_username || null,
-            discordId: linkedDiscord.id || currentProfile?.discord_id || null,
+            discordUsername: nextDiscordUsername,
+            discordId: nextDiscordId,
             aboutMe,
             avatarUrl,
           },

@@ -4,6 +4,7 @@ import { enforceUserRateLimit } from "../_shared/rate_limit.ts";
 
 type Payload = {
   amount?: number | string;
+  countryCode?: string;
   returnBaseUrl?: string;
   userToken?: string;
 };
@@ -83,6 +84,12 @@ function normalizeBaseUrl(input?: string) {
 function normalizeCheckoutCurrency(value: unknown) {
   const normalized = String(value || "").trim().toLowerCase();
   return SUPPORTED_CHECKOUT_CURRENCIES.has(normalized) ? normalized : "usd";
+}
+
+function normalizeCountryCode(value: unknown) {
+  const normalized = String(value || "").trim().toUpperCase().replace(/[^A-Z]/g, "");
+  if (!normalized) return null;
+  return getCheckoutCountryConfig(normalized)?.code || (normalized === "OTHER" ? "OTHER" : null);
 }
 
 function normalizePhone(value: unknown) {
@@ -201,15 +208,12 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileErr } = await supabase
       .from("users")
-      .select("phone,phone_verified,country_code")
+      .select("country_code")
       .eq("id", authData.user.id)
       .single();
     if (profileErr || !profile) return errorResponse("Perfil não encontrado", 404);
-    if (!profile.phone_verified) {
-      return errorResponse("Verifique seu telefone antes de adicionar saldo.", 403);
-    }
-    const resolvedCountryCode = getCheckoutCountryConfig(profile.country_code)?.code
-      || getCheckoutCountryConfig(inferCountryCodeFromPhone(profile.phone))?.code
+    const resolvedCountryCode = normalizeCountryCode(payload.countryCode)
+      || getCheckoutCountryConfig(profile.country_code)?.code
       || "OTHER";
     const checkoutCurrency = normalizeCheckoutCurrency(getCheckoutCountryConfig(resolvedCountryCode)?.currency || "usd");
     const fxRateToBRL = await getCurrencyRateToBRL(checkoutCurrency);

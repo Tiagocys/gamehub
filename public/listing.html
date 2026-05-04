@@ -820,11 +820,15 @@
       if (!currentUser?.id) return null;
       const { data, error } = await supabase
         .from("users")
-        .select("id,phone_verified,is_admin")
+        .select("id,phone_verified,is_admin,discord_id")
         .eq("id", currentUser.id)
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data || null;
+    }
+
+    function hasConnectedDiscord(profile) {
+      return /^[0-9]{17,20}$/.test(String(profile?.discord_id || "").trim());
     }
 
     function updateAuthUI() {
@@ -2126,8 +2130,8 @@
       if (!currentUserProfile) {
         currentUserProfile = await fetchCurrentUserProfile();
       }
-      if (!currentUserProfile?.is_admin && !currentUserProfile?.phone_verified) {
-        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a verified phone number can submit reports.");
+      if (!currentUserProfile?.is_admin && !hasConnectedDiscord(currentUserProfile)) {
+        if (reportListingFeedback) reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a connected Discord account can submit reports.");
         return;
       }
       if (reportListingForm) {
@@ -2235,9 +2239,9 @@
           currentUserProfile = await fetchCurrentUserProfile();
         }
         const isAdminViewer = !!currentUserProfile?.is_admin;
-        if (!isAdminViewer && !currentUserProfile?.phone_verified) {
+        if (!isAdminViewer && !hasConnectedDiscord(currentUserProfile)) {
           if (reportListingFeedback) {
-            reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a verified phone number can submit reports.");
+            reportListingFeedback.textContent = t("listing.phone_verified_required", "Only users with a connected Discord account can submit reports.");
           }
           return;
         }

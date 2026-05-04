@@ -21,12 +21,14 @@ export function isMissingWalletTablesError(err: { code?: string; message?: strin
 }
 
 export async function getPartnerPayoutSummary(supabase: any, userId: string) {
-  let walletAvailableAmount = 0;
-  let walletAvailableCents = 0;
+  let topupAvailableAmount = 0;
+  let topupAvailableCents = 0;
+  let earnedConsumedCents = 0;
   try {
     const partnerWallet = await getPartnerWalletSummary(supabase, userId);
-    walletAvailableAmount = Number(partnerWallet.availableAmountBRL || 0);
-    walletAvailableCents = safeInt(partnerWallet.availableCents, 0);
+    topupAvailableAmount = Number(partnerWallet.availableAmountBRL || 0);
+    topupAvailableCents = safeInt(partnerWallet.topupAvailableCents, 0);
+    earnedConsumedCents = safeInt(partnerWallet.earnedConsumedCents, 0);
   } catch (walletErr) {
     const typedWalletErr = walletErr as { code?: string; message?: string } | null | undefined;
     if (!isMissingPartnerWalletTablesError(typedWalletErr)) {
@@ -55,12 +57,16 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
   if (serverRows.length === 0) {
     return {
       unsupported: false,
-      totalExpected: Number(walletAvailableAmount.toFixed(2)),
-      availableAmount: Number(walletAvailableAmount.toFixed(2)),
-      boostAvailableAmount: Number(walletAvailableAmount.toFixed(2)),
+      totalExpected: Number(topupAvailableAmount.toFixed(2)),
+      availableAmount: 0,
+      withdrawAvailableAmount: 0,
+      earnedAvailableAmount: 0,
+      boostAvailableAmount: Number(topupAvailableAmount.toFixed(2)),
+      topupAvailableAmount: Number(topupAvailableAmount.toFixed(2)),
+      refundableTopupAmount: Number(topupAvailableAmount.toFixed(2)),
       pendingAmount: 0,
       count: 0,
-      method: "wallet-consume-by-listing-v3",
+      method: "partner-wallet-split-v1",
       withdrawRequest: null,
     };
   }
@@ -109,16 +115,21 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
   });
 
   if (listingIds.length === 0) {
-    const availableCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents - pendingCentsFromEvents);
-    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents);
+    const earnedAvailableCents = Math.max(0, totalExpectedCentsFromEvents - earnedConsumedCents - pendingCentsFromEvents);
+    const boostAvailableCents = Math.max(0, earnedAvailableCents + topupAvailableCents);
+    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + topupAvailableCents);
     return {
       unsupported: false,
       totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
-      availableAmount: Number((availableCents / 100).toFixed(2)),
-      boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
+      availableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      withdrawAvailableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      earnedAvailableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      boostAvailableAmount: Number((boostAvailableCents / 100).toFixed(2)),
+      topupAvailableAmount: Number((topupAvailableCents / 100).toFixed(2)),
+      refundableTopupAmount: Number((topupAvailableCents / 100).toFixed(2)),
       pendingAmount: Number((pendingCentsFromEvents / 100).toFixed(2)),
       count: 0,
-      method: "wallet-consume-by-listing-v3",
+      method: "partner-wallet-split-v1",
       withdrawRequest: null,
     };
   }
@@ -129,16 +140,21 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     .in("listing_id", listingIds)
     .order("stat_date", { ascending: false });
   if (isMissingWalletTablesError(metricsErr)) {
-    const availableCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents - pendingCentsFromEvents);
-    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + walletAvailableCents);
+    const earnedAvailableCents = Math.max(0, totalExpectedCentsFromEvents - earnedConsumedCents - pendingCentsFromEvents);
+    const boostAvailableCents = Math.max(0, earnedAvailableCents + topupAvailableCents);
+    const totalExpectedCents = Math.max(0, totalExpectedCentsFromEvents + topupAvailableCents);
     return {
       unsupported: false,
       totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
-      availableAmount: Number((availableCents / 100).toFixed(2)),
-      boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
+      availableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      withdrawAvailableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      earnedAvailableAmount: Number((earnedAvailableCents / 100).toFixed(2)),
+      boostAvailableAmount: Number((boostAvailableCents / 100).toFixed(2)),
+      topupAvailableAmount: Number((topupAvailableCents / 100).toFixed(2)),
+      refundableTopupAmount: Number((topupAvailableCents / 100).toFixed(2)),
       pendingAmount: 0,
       count: 0,
-      method: "partner-payout-events-fallback-v1",
+      method: "partner-wallet-split-fallback-v1",
       withdrawRequest: null,
     };
   }
@@ -206,18 +222,24 @@ export async function getPartnerPayoutSummary(supabase: any, userId: string) {
     }
   });
 
-  const availableCents = Math.max(0, grossAvailableCents + walletAvailableCents - lockedCents - paidCents);
-  const totalExpectedCents = Math.max(totalExpectedCentsFromEvents, grossAvailableCents) + walletAvailableCents;
+  const earnedGrossCents = Math.max(totalExpectedCentsFromEvents, grossAvailableCents);
+  const withdrawAvailableCents = Math.max(0, earnedGrossCents - earnedConsumedCents - lockedCents - paidCents);
+  const boostAvailableCents = Math.max(0, withdrawAvailableCents + topupAvailableCents);
+  const totalExpectedCents = Math.max(totalExpectedCentsFromEvents, grossAvailableCents) + topupAvailableCents;
   const pendingAmountCents = Math.max(pendingCentsFromEvents, lockedCents);
 
   return {
     unsupported: false,
     totalExpected: Number((totalExpectedCents / 100).toFixed(2)),
-    availableAmount: Number((availableCents / 100).toFixed(2)),
-    boostAvailableAmount: Number((availableCents / 100).toFixed(2)),
+    availableAmount: Number((withdrawAvailableCents / 100).toFixed(2)),
+    withdrawAvailableAmount: Number((withdrawAvailableCents / 100).toFixed(2)),
+    earnedAvailableAmount: Number((withdrawAvailableCents / 100).toFixed(2)),
+    boostAvailableAmount: Number((boostAvailableCents / 100).toFixed(2)),
+    topupAvailableAmount: Number((topupAvailableCents / 100).toFixed(2)),
+    refundableTopupAmount: Number((topupAvailableCents / 100).toFixed(2)),
     pendingAmount: Number((pendingAmountCents / 100).toFixed(2)),
     count: pendingListingCount,
-    method: "wallet-consume-by-listing-v3",
+    method: "partner-wallet-split-v1",
     withdrawRequest,
   };
 }

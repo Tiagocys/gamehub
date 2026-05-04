@@ -105,6 +105,29 @@
       font-weight: 700;
     }
 
+    .partner-status-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .partner-status-label .info-icon {
+      width: 17px;
+      height: 17px;
+      font-size: 10px;
+      vertical-align: middle;
+    }
+
+    .partner-status-label .info-tooltip {
+      right: auto;
+      left: 0;
+      width: min(260px, 72vw);
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 500;
+    }
+
     .partner-status-item strong {
       color: var(--ink);
       font-size: 15px;
@@ -511,15 +534,53 @@
                     <strong id="partner-payouts">No</strong>
                   </div>
                   <div class="partner-status-item">
-                    <small id="partner-balance-label">Balance</small>
+                    <small class="partner-status-label">
+                      <span id="partner-withdraw-balance-label">Withdrawable balance</span>
+                      <span class="info-icon" tabindex="0" aria-label="Info">
+                        i
+                        <span id="partner-withdraw-balance-tooltip" class="info-tooltip">This balance comes from partner commissions and can be withdrawn when the minimum amount is reached.</span>
+                      </span>
+                    </small>
                     <strong id="partner-available-amount">R$ 0,00</strong>
                   </div>
                   <div class="partner-status-item">
-                    <small id="partner-highlights-label">Active highlights</small>
+                    <small class="partner-status-label">
+                      <span id="partner-boost-balance-label">Balance for boosts</span>
+                      <span class="info-icon" tabindex="0" aria-label="Info">
+                        i
+                        <span id="partner-boost-balance-tooltip" class="info-tooltip">This balance is used to boost servers and includes commissions plus added balance.</span>
+                      </span>
+                    </small>
+                    <strong id="partner-boost-available-amount">R$ 0,00</strong>
+                  </div>
+                  <div class="partner-status-item">
+                    <small class="partner-status-label">
+                      <span id="partner-topup-balance-label">Refundable added balance</span>
+                      <span class="info-icon" tabindex="0" aria-label="Info">
+                        i
+                        <span id="partner-topup-balance-tooltip" class="info-tooltip">This shows only the added balance that has not yet been consumed and can still be requested as a refund.</span>
+                      </span>
+                    </small>
+                    <strong id="partner-topup-available-amount">R$ 0,00</strong>
+                  </div>
+                  <div class="partner-status-item">
+                    <small class="partner-status-label">
+                      <span id="partner-highlights-label">Active highlights</span>
+                      <span class="info-icon" tabindex="0" aria-label="Info">
+                        i
+                        <span id="partner-highlights-tooltip" class="info-tooltip">This counts highlighted ads that are currently active in games linked to your partner account.</span>
+                      </span>
+                    </small>
                     <strong id="partner-active-highlights-count">0</strong>
                   </div>
                   <div class="partner-status-item">
-                    <small id="partner-boosted-servers-label">Boosted servers</small>
+                    <small class="partner-status-label">
+                      <span id="partner-boosted-servers-label">Boosted servers</span>
+                      <span class="info-icon" tabindex="0" aria-label="Info">
+                        i
+                        <span id="partner-boosted-servers-tooltip" class="info-tooltip">This counts the servers that currently have feed boost enabled in the partner area.</span>
+                      </span>
+                    </small>
                     <strong id="partner-boosted-servers-count">0</strong>
                   </div>
                 </div>
@@ -729,7 +790,11 @@
           <button id="partner-topup-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
         </div>
         <div class="partner-withdraw-modal-body">
-          <p id="partner-topup-modal-helper" class="partner-wise-note">Deposit any amount starting from R$ 5,00. The checkout currency is defined automatically by your verified phone country.</p>
+          <p id="partner-topup-modal-helper" class="partner-wise-note">Deposit any amount starting from R$ 5,00. The checkout currency is defined by your current country of residence.</p>
+          <div>
+            <label id="partner-topup-country-label" for="partner-topup-country" class="helper">Country of residence</label>
+            <select id="partner-topup-country" class="input"></select>
+          </div>
           <div>
             <label id="partner-topup-amount-label" for="partner-topup-amount" class="helper">Amount</label>
             <div class="partner-topup-amount-field">
@@ -787,6 +852,8 @@
     const partnerServerList = document.getElementById("partner-server-list");
     const partnerServersEmpty = document.getElementById("partner-servers-empty");
     const partnerAvailableAmount = document.getElementById("partner-available-amount");
+    const partnerBoostAvailableAmount = document.getElementById("partner-boost-available-amount");
+    const partnerTopupAvailableAmount = document.getElementById("partner-topup-available-amount");
     const partnerActiveHighlightsCount = document.getElementById("partner-active-highlights-count");
     const partnerBoostedServersCount = document.getElementById("partner-boosted-servers-count");
     const partnerAddBalanceBtn = document.getElementById("partner-add-balance-btn");
@@ -841,6 +908,8 @@
     const partnerTopupModal = document.getElementById("partner-topup-modal");
     const partnerTopupClose = document.getElementById("partner-topup-close");
     const partnerTopupCancel = document.getElementById("partner-topup-cancel");
+    const partnerTopupCountryLabel = document.getElementById("partner-topup-country-label");
+    const partnerTopupCountry = document.getElementById("partner-topup-country");
     const partnerTopupAmount = document.getElementById("partner-topup-amount");
     const partnerTopupAmountPrefix = document.getElementById("partner-topup-amount-prefix");
     const partnerTopupPolicyNote = document.getElementById("partner-topup-policy-note");
@@ -871,13 +940,20 @@
       setText("partner-page-title", "partner_page.title", "Painel de parceiro");
       setText("partner-account-label", "partner_page.account_label", "Conta");
       setText("partner-account-registered-label", "partner_page.account_registered_label", "Conta cadastrada");
-      setText("partner-balance-label", "partner_page.balance_label", "Saldo");
+      setText("partner-withdraw-balance-label", "partner_page.withdraw_balance_label", "Saldo sacável");
+      setText("partner-boost-balance-label", "partner_page.boost_balance_label", "Saldo para impulso");
+      setText("partner-topup-balance-label", "partner_page.topup_balance_label", "Saldo adicionado reembolsável");
       setText("partner-highlights-label", "partner_page.highlights_label", "Destaques ativos");
       setText("partner-boosted-servers-label", "partner_page.boosted_servers_label", "Servidores impulsionados");
       setText("partner-account-action-btn", "partner_page.register_account", "Cadastrar conta de recebimento");
       setText("partner-add-balance-btn", "partner_page.add_balance", "Adicionar saldo");
       setText("partner-withdraw-btn", "partner_page.request_withdraw", "Solicitar saque");
       setText("partner-account-id-toggle", "partner_page.show", "Mostrar");
+      setText("partner-withdraw-balance-tooltip", "partner_page.withdraw_balance_tooltip", "Este saldo vem das comissões do programa de parceria e pode ser sacado quando atingir o valor mínimo.");
+      setText("partner-boost-balance-tooltip", "partner_page.boost_balance_tooltip", "Este saldo é usado para impulsionar servidores e inclui comissões mais saldo adicionado.");
+      setText("partner-topup-balance-tooltip", "partner_page.topup_balance_tooltip", "Aqui aparece apenas o saldo adicionado que ainda não foi consumido e que ainda pode ser solicitado como reembolso.");
+      setText("partner-highlights-tooltip", "partner_page.highlights_tooltip", "Este número contabiliza os anúncios destacados que estão ativos nos games vinculados à sua conta de parceiro.");
+      setText("partner-boosted-servers-tooltip", "partner_page.boosted_servers_tooltip", "Este número contabiliza os servidores que estão com impulso no feed ativo na área de parceiros.");
       setText("partner-account-section-title", "partner_page.account_section_title", "Conta de recebimento");
       setText("partner-account-section-helper", "partner_page.account_section_helper", "Register your account to receive platform withdrawals. Conversion and transfer fees may be deducted from the requested amount.");
       setText("wise-edit-btn", "partner_page.edit", "Edit");
@@ -939,12 +1015,13 @@
       setAttr("partner-server-boost-info-close", "aria-label", "common.close", "Close");
       setAttr("partner-server-boost-info-image", "alt", "partner_page.server_boost_info_alt", "Exemplo das posições dos servidores impulsionados na página inicial");
       setText("partner-topup-modal-title", "partner_page.topup_title", "Adicionar saldo");
+      setText("partner-topup-country-label", "partner_page.topup_country_label", "País de residência");
       const partnerTopupMinLabel = formatCurrency(getPartnerTopupMinimumDisplayAmount(), getPartnerTopupCheckoutCurrency());
       const partnerTopupHelperText = i18n.locale === "en"
-        ? `Deposit any amount starting from ${partnerTopupMinLabel}. The checkout currency is defined automatically by your verified phone country.`
+        ? `Deposit any amount starting from ${partnerTopupMinLabel}. The checkout currency is defined by your current country of residence.`
         : i18n.locale === "es"
-          ? `Deposita cualquier importe a partir de ${partnerTopupMinLabel}. La moneda del checkout se define automáticamente según el país de tu teléfono verificado.`
-          : `Deposite qualquer valor a partir de ${partnerTopupMinLabel}. A moeda do checkout é definida automaticamente pelo país do seu telefone verificado.`;
+          ? `Deposita cualquier importe a partir de ${partnerTopupMinLabel}. La moneda del checkout se define según tu país de residencia actual.`
+          : `Deposite qualquer valor a partir de ${partnerTopupMinLabel}. A moeda do checkout é definida pelo seu país de residência atual.`;
       if (document.getElementById("partner-topup-modal-helper")) {
         document.getElementById("partner-topup-modal-helper").textContent = partnerTopupHelperText;
       }
@@ -1005,6 +1082,7 @@
     let pendingServerBoostTargetId = "";
     let partnerTopupCheckoutCurrency = "usd";
     let partnerTopupRateToBRL = 1;
+    let selectedPartnerTopupCountryCode = "";
     const USD_BRL_RATE = (() => {
       const parsed = Number(env.USD_BRL_RATE || 5.5);
       return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
@@ -1178,6 +1256,35 @@
       return PARTNER_TOPUP_SUPPORTED_COUNTRIES.find((item) => item.code === normalized) || null;
     }
 
+    function getCountryOptionLabel(code) {
+      if (String(code || "").trim().toUpperCase() === "OTHER") {
+        return t("common.other_country", "Other country");
+      }
+      try {
+        const locale = i18n.locale === "en" ? "en" : i18n.locale === "es" ? "es" : "pt-BR";
+        const names = typeof Intl.DisplayNames === "function" ? new Intl.DisplayNames([locale], { type: "region" }) : null;
+        return names?.of(code) || code;
+      } catch (_err) {
+        return code;
+      }
+    }
+
+    function getResolvedPartnerTopupCountryCode() {
+      return getPartnerTopupCountryConfig(selectedPartnerTopupCountryCode)?.code
+        || getPartnerTopupCountryConfig(currentProfile?.country_code)?.code
+        || "OTHER";
+    }
+
+    function populatePartnerTopupCountryOptions() {
+      if (!partnerTopupCountry) return;
+      const currentValue = getResolvedPartnerTopupCountryCode();
+      partnerTopupCountry.innerHTML = PARTNER_TOPUP_SUPPORTED_COUNTRIES.map((item) => `
+        <option value="${item.code}">${escapeHtml(getCountryOptionLabel(item.code))}</option>
+      `).join("");
+      partnerTopupCountry.value = currentValue;
+      selectedPartnerTopupCountryCode = currentValue;
+    }
+
     async function getCurrencyRateToBRL(currencyCode) {
       const normalizedCurrency = String(currencyCode || "usd").trim().toLowerCase();
       if (normalizedCurrency === "brl") return 1;
@@ -1195,9 +1302,7 @@
     }
 
     async function refreshPartnerTopupCurrencyState() {
-      const resolvedCountryCode = getPartnerTopupCountryConfig(currentProfile?.country_code)?.code
-        || getPartnerTopupCountryConfig(inferCountryCodeFromPhone(currentProfile?.phone))?.code
-        || "OTHER";
+      const resolvedCountryCode = getResolvedPartnerTopupCountryCode();
       partnerTopupCheckoutCurrency = String(getPartnerTopupCountryConfig(resolvedCountryCode)?.currency || "usd").trim().toLowerCase();
       partnerTopupRateToBRL = await getCurrencyRateToBRL(partnerTopupCheckoutCurrency);
     }
@@ -2192,7 +2297,7 @@
 
     function updatePartnerServerBoostModalState() {
       const server = currentServers.find((item) => String(item.id) === pendingServerBoostTargetId);
-      const availableAmount = Number(currentPartnerPayoutSummary?.availableAmount || 0);
+      const availableAmount = Number(currentPartnerPayoutSummary?.boostAvailableAmount || 0);
       const hasBalance = availableAmount > 0;
       if (partnerServerBoostInfoConfirm) {
         partnerServerBoostInfoConfirm.disabled = !pendingServerBoostTargetId;
@@ -2243,12 +2348,12 @@
     }
 
     function openPartnerTopupModal() {
-      if (!currentProfile?.phone_verified) {
-        window.location.href = "profile.html?phone_required=1";
-        return;
-      }
       if (!partnerTopupModal) return;
+      populatePartnerTopupCountryOptions();
       applyStaticTranslations();
+      refreshPartnerTopupCurrencyState()
+        .then(() => applyStaticTranslations())
+        .catch((err) => console.error(err));
       if (partnerTopupAmount) partnerTopupAmount.value = "";
       setPartnerTopupFeedback("");
       partnerTopupModal.classList.add("open");
@@ -2292,6 +2397,7 @@
         const { data, error } = await supabase.functions.invoke("partner_wallet_checkout", {
           body: {
             amount,
+            countryCode: getResolvedPartnerTopupCountryCode(),
             returnBaseUrl: window.location.origin,
             userToken: token || null,
           },
@@ -2349,7 +2455,7 @@
       }
       if (partnerWithdrawBtn) {
         const hasActiveWiseAccount = Boolean(account && account.status === "active");
-        const hasMinimumBalance = Number(currentPartnerPayoutSummary?.availableAmount || 0) >= PARTNER_WITHDRAW_MIN_BRL;
+        const hasMinimumBalance = Number(currentPartnerPayoutSummary?.withdrawAvailableAmount || currentPartnerPayoutSummary?.availableAmount || 0) >= PARTNER_WITHDRAW_MIN_BRL;
         partnerWithdrawBtn.hidden = !hasActiveWiseAccount || !hasMinimumBalance;
       }
       syncPartnerWithdrawButtonStyle(true);
@@ -2933,7 +3039,8 @@
       }
       if (error) throw error;
 
-      let availableAmount = 0;
+      let withdrawAvailableAmount = 0;
+      let pendingAmount = 0;
       const count = (data || []).length;
 
       (data || []).forEach((row) => {
@@ -2945,27 +3052,50 @@
         if (effective <= 0) return;
 
         if (payoutStatus === "eligible") {
-          availableAmount += effective;
+          withdrawAvailableAmount += effective;
+        } else if (payoutStatus === "pending") {
+          pendingAmount += effective;
         }
       });
 
+      let topupAvailableAmount = 0;
+      let earnedConsumedAmount = 0;
       try {
-        const { data: walletRow, error: walletErr } = await supabase
+        let { data: walletRow, error: walletErr } = await supabase
           .from("partner_wallets")
-          .select("available_cents")
+          .select("available_cents,earned_consumed_cents")
           .eq("user_id", currentUser.id)
           .maybeSingle();
+        if (walletErr && walletErr.code === "42703") {
+          const fallbackWallet = await supabase
+            .from("partner_wallets")
+            .select("available_cents")
+            .eq("user_id", currentUser.id)
+            .maybeSingle();
+          walletRow = fallbackWallet.data
+            ? { ...fallbackWallet.data, earned_consumed_cents: 0 }
+            : null;
+          walletErr = fallbackWallet.error;
+        }
         if (!walletErr && walletRow) {
-          availableAmount += Math.max(0, Number(walletRow.available_cents || 0)) / 100;
+          topupAvailableAmount = Math.max(0, Number(walletRow.available_cents || 0)) / 100;
+          earnedConsumedAmount = Math.max(0, Number(walletRow.earned_consumed_cents || 0)) / 100;
         }
       } catch (_walletErr) {
         // ignore wallet fallback errors and keep legacy payout fallback
       }
 
+      withdrawAvailableAmount = Math.max(0, withdrawAvailableAmount - earnedConsumedAmount);
+      const boostAvailableAmount = Math.max(0, withdrawAvailableAmount + topupAvailableAmount);
       return {
         unsupported: false,
-        availableAmount: Number(availableAmount.toFixed(2)),
-        boostAvailableAmount: Number(availableAmount.toFixed(2)),
+        availableAmount: Number(withdrawAvailableAmount.toFixed(2)),
+        withdrawAvailableAmount: Number(withdrawAvailableAmount.toFixed(2)),
+        earnedAvailableAmount: Number(withdrawAvailableAmount.toFixed(2)),
+        boostAvailableAmount: Number(boostAvailableAmount.toFixed(2)),
+        topupAvailableAmount: Number(topupAvailableAmount.toFixed(2)),
+        refundableTopupAmount: Number(topupAvailableAmount.toFixed(2)),
+        pendingAmount: Number(pendingAmount.toFixed(2)),
         count,
       };
     }
@@ -2990,6 +3120,8 @@
 
       if (!summary || summary.unsupported) {
         partnerAvailableAmount.textContent = "-";
+        if (partnerBoostAvailableAmount) partnerBoostAvailableAmount.textContent = "-";
+        if (partnerTopupAvailableAmount) partnerTopupAvailableAmount.textContent = "-";
         partnerActiveHighlightsCount.textContent = "-";
         updatePartnerServerBoostModalState();
         if (partnerWithdrawBtn) {
@@ -3001,17 +3133,22 @@
         return;
       }
 
-      partnerAvailableAmount.textContent = formatBRL(summary.availableAmount);
+      const withdrawAvailableAmount = Number(summary.withdrawAvailableAmount || summary.availableAmount || 0);
+      const boostAvailableAmount = Number(summary.boostAvailableAmount || 0);
+      const topupAvailableAmount = Number(summary.refundableTopupAmount || summary.topupAvailableAmount || 0);
+      partnerAvailableAmount.textContent = formatBRL(withdrawAvailableAmount);
+      if (partnerBoostAvailableAmount) partnerBoostAvailableAmount.textContent = formatBRL(boostAvailableAmount);
+      if (partnerTopupAvailableAmount) partnerTopupAvailableAmount.textContent = formatBRL(topupAvailableAmount);
       // Este indicador é calculado em renderServers() com base nos servidores vinculados.
       const pendingRequest = summary.withdrawRequest;
       const hasActiveWiseAccount = Boolean(currentWiseAccount && currentWiseAccount.status === "active");
-      const hasMinimumBalance = Number(summary.availableAmount || 0) >= PARTNER_WITHDRAW_MIN_BRL;
+      const hasMinimumBalance = withdrawAvailableAmount >= PARTNER_WITHDRAW_MIN_BRL;
       if (
         currentPartnerWithdrawPreview
         && (
           !hasActiveWiseAccount
           || !hasMinimumBalance
-          || Math.abs(Number(currentPartnerWithdrawPreview.grossAmount || 0) - Number(summary.availableAmount || 0)) > 0.01
+          || Math.abs(Number(currentPartnerWithdrawPreview.grossAmount || 0) - withdrawAvailableAmount) > 0.01
         )
       ) {
         resetPartnerWithdrawPreview();
@@ -3022,7 +3159,11 @@
         partnerWithdrawBtn.textContent = t("partner_page.request_withdraw", "Request withdrawal");
       }
       syncPartnerWithdrawButtonStyle(Boolean(hasActiveWiseAccount && hasMinimumBalance));
-      setPartnerWithdrawFeedback("");
+      if (pendingRequest) {
+        setPartnerWithdrawFeedback(t("partner_page.withdraw_locked_note", "Há uma solicitação de saque em análise. O saldo sacável fica reservado até a conclusão."));
+      } else {
+        setPartnerWithdrawFeedback("");
+      }
       updatePartnerServerBoostModalState();
     }
 
@@ -3080,9 +3221,13 @@
         closePartnerWithdrawModal({ preservePreview: true });
         resetPartnerWithdrawPreview();
         if (currentPartnerPayoutSummary && typeof currentPartnerPayoutSummary === "object") {
+          const deductedAmount = Number(data.request.requested_amount || 0);
           currentPartnerPayoutSummary = {
             ...currentPartnerPayoutSummary,
-            availableAmount: Math.max(0, Number(currentPartnerPayoutSummary.availableAmount || 0) - Number(data.request.requested_amount || 0)),
+            availableAmount: Math.max(0, Number(currentPartnerPayoutSummary.availableAmount || 0) - deductedAmount),
+            withdrawAvailableAmount: Math.max(0, Number(currentPartnerPayoutSummary.withdrawAvailableAmount || currentPartnerPayoutSummary.availableAmount || 0) - deductedAmount),
+            earnedAvailableAmount: Math.max(0, Number(currentPartnerPayoutSummary.earnedAvailableAmount || currentPartnerPayoutSummary.availableAmount || 0) - deductedAmount),
+            boostAvailableAmount: Math.max(0, Number(currentPartnerPayoutSummary.boostAvailableAmount || 0) - deductedAmount),
             withdrawRequest: data.request,
           };
           renderPartnerPayoutSummary(currentPartnerPayoutSummary);
@@ -3486,7 +3631,7 @@
     partnerServerBoostInfoCancel?.addEventListener("click", closePartnerServerBoostInfoModal);
     partnerServerBoostInfoConfirm?.addEventListener("click", () => {
       if (!pendingServerBoostTargetId) return;
-      const availableAmount = Number(currentPartnerPayoutSummary?.availableAmount || 0);
+      const availableAmount = Number(currentPartnerPayoutSummary?.boostAvailableAmount || 0);
       if (availableAmount > 0) {
         toggleServerFeedHighlight(pendingServerBoostTargetId, true);
       } else {
@@ -3662,6 +3807,12 @@
     wisePixKeyValue?.addEventListener("input", () => {
       setWiseFeedback("");
       renderWiseRequirementFields();
+    });
+
+    partnerTopupCountry?.addEventListener("change", async () => {
+      selectedPartnerTopupCountryCode = String(partnerTopupCountry.value || "").trim().toUpperCase();
+      await refreshPartnerTopupCurrencyState();
+      applyStaticTranslations();
     });
 
     partnerEditForm?.addEventListener("submit", saveServerSettings);

@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 import { getHighlightPricingForServer, safeInt } from "../_shared/highlight_wallet.ts";
 import { getPartnerPayoutSummary } from "../_shared/partner_payout.ts";
-import { ensurePartnerWallet, isMissingPartnerWalletTablesError } from "../_shared/partner_wallet.ts";
+import { consumePartnerBoostBalance, isMissingPartnerWalletTablesError } from "../_shared/partner_wallet.ts";
 
 type Payload = {
   serverId?: string;
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     }
 
     const summary = await getPartnerPayoutSummary(supabase, ownerId);
-    const combinedAvailableCents = Math.max(0, Math.round(Number(summary?.availableAmount || 0) * 100));
+    const combinedAvailableCents = Math.max(0, Math.round(Number(summary?.boostAvailableAmount || 0) * 100));
     if (combinedAvailableCents <= 0) {
       await supabase
         .from("servers")
@@ -161,20 +161,14 @@ Deno.serve(async (req) => {
     const additionalCharge = Math.max(0, targetCents - currentCharged);
     const chargeNow = Math.min(combinedAvailableCents, additionalCharge);
 
-    const walletBefore = await ensurePartnerWallet(supabase, ownerId, nowIso);
-    const nextWalletAvailableCents = Number(walletBefore.available_cents || 0) - chargeNow;
-    const nextTotalConsumedCents = safeInt(walletBefore.total_consumed_cents) + chargeNow;
-
+    let nextTopupAvailableCents = 0;
+    let consumedTopupCents = 0;
+    let consumedEarnedCents = 0;
     if (chargeNow > 0) {
-      const { error: walletErr } = await supabase
-        .from("partner_wallets")
-        .update({
-          available_cents: nextWalletAvailableCents,
-          total_consumed_cents: nextTotalConsumedCents,
-          last_consumed_at: nowIso,
-        })
-        .eq("user_id", ownerId);
-      if (walletErr) throw walletErr;
+      const consumption = await consumePartnerBoostBalance(supabase, ownerId, chargeNow, nowIso);
+      nextTopupAvailableCents = safeInt(consumption.nextTopupAvailableCents, 0);
+      consumedTopupCents = safeInt(consumption.consumedTopupCents, 0);
+      consumedEarnedCents = safeInt(consumption.consumedEarnedCents, 0);
     }
 
     const nextMetricPayload = {
@@ -207,12 +201,14 @@ Deno.serve(async (req) => {
       .from("partner_wallet_events")
       .update({
         amount_delta_cents: -chargeNow,
-        balance_after_cents: nextWalletAvailableCents,
+        balance_after_cents: nextTopupAvailableCents,
         metadata: {
           reason: "server_feed_impression",
           stat_date: statDate,
           page_path: pagePath,
           impressions_count: nextImpressions,
+          consumed_topup_cents: consumedTopupCents,
+          consumed_earned_cents: consumedEarnedCents,
           cpm_cents: pricing.cpmCents,
           cpm_usd: pricing.cpmUsd,
           ads_7d_count: pricing.ads7dCount,

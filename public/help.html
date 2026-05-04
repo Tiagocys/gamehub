@@ -268,16 +268,6 @@
           goToSignIn();
           return;
         }
-        const { data: profile, error: profileErr } = await client
-          .from("users")
-          .select("phone_verified")
-          .eq("id", currentUser.id)
-          .single();
-        if (profileErr || !profile?.phone_verified) {
-          setFeedback(t("help.phone_required", "Verify your phone number before sending a message to support."), true);
-          window.location.replace("profile.html?phone_required=1");
-          return;
-        }
         const { data: pendingRequest, error: pendingErr } = await client
           .from("support_requests")
           .select("id,status")
