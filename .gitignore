@@ -3,3 +3,4 @@ node_modules
 .wrangler
 cloudflared.deb
 fk.txt
+adsterra.txt
