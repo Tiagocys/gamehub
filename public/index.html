@@ -12,19 +12,71 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2685595309963345"
-     crossorigin="anonymous"></script>
+  <meta name="description" content="Community marketplace powered by gamers. Discover game listings, featured offers and trusted sellers on Gimerr." />
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Gimerr" />
+  <meta property="og:title" content="Gimerr - Marketplace gamer" />
+  <meta property="og:description" content="Community marketplace powered by gamers. Discover game listings, featured offers and trusted sellers on Gimerr." />
+  <meta property="og:url" content="https://gimerr.com/" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gimerr - Marketplace gamer" />
+  <meta name="twitter:description" content="Community marketplace powered by gamers. Discover game listings, featured offers and trusted sellers on Gimerr." />
   <meta name="twitter:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta name="twitter:image:alt" content="Gimerr" />
   <link rel="icon" type="image/png" href="img/favicon.png" />
+  <link rel="canonical" href="https://gimerr.com/" />
   <title>Gimerr - Marketplace gamer</title>
   <link rel="stylesheet" href="css/global.css" />
   <style id="index-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .home-recovery-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 16px;
+      margin-bottom: 22px;
+      border-radius: 16px;
+      border: 1px solid rgba(245, 158, 11, 0.32);
+      background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(255, 247, 214, 0.98));
+    }
+
+    .home-recovery-banner.is-visible {
+      display: flex;
+    }
+
+    .home-recovery-banner-copy {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .home-recovery-banner-copy strong {
+      color: #92400e;
+      font-size: 15px;
+    }
+
+    .home-recovery-banner-copy p {
+      margin: 0;
+      color: #78350f;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      .home-recovery-banner {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .home-recovery-banner.is-visible {
+        display: grid;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="page-loader" class="page-loader">
@@ -66,6 +118,13 @@
 
         <section class="home-feed">
         <section class="section home-feed-sections">
+          <section id="home-recovery-banner" class="home-recovery-banner" style="display:none;">
+            <div class="home-recovery-banner-copy">
+              <strong id="home-recovery-banner-title">Complete a alteração da sua senha</strong>
+              <p id="home-recovery-banner-copy">Você entrou com um link de recuperação. Antes de sair desta página, defina uma nova senha para não precisar solicitar outro email.</p>
+            </div>
+            <a id="home-recovery-banner-cta" class="btn btn-primary" href="settings.html?recovery=1">Alterar senha agora</a>
+          </section>
           <section id="home-featured-games-section" class="home-game-section home-game-section-featured" style="display:none;">
             <div class="home-game-section-head">
               <div>
@@ -127,6 +186,10 @@
     const homeFeaturedGamesRow = document.getElementById("home-featured-games-row");
     const homeGameSections = document.getElementById("home-game-sections");
     const homeGameSectionsEmpty = document.getElementById("home-game-sections-empty");
+    const homeRecoveryBanner = document.getElementById("home-recovery-banner");
+    const homeRecoveryBannerTitle = document.getElementById("home-recovery-banner-title");
+    const homeRecoveryBannerCopy = document.getElementById("home-recovery-banner-copy");
+    const homeRecoveryBannerCta = document.getElementById("home-recovery-banner-cta");
 
     const homeSidebarKicker = document.querySelector(".home-sidebar-kicker");
     const homeSidebarTitle = document.querySelector(".home-sidebar-titlebar h2");
@@ -168,6 +231,7 @@
     let homeSectionFeedScrollBound = false;
     let sidebarCollapsed = window.innerWidth < 960;
     let sidebarAutoManaged = true;
+    let recoveryLandingActive = false;
     if (avatarImg) {
       avatarImg.referrerPolicy = "no-referrer";
       avatarImg.addEventListener("error", () => {
@@ -185,6 +249,55 @@
     if (sidebarGamesEmpty) sidebarGamesEmpty.textContent = t("home.no_games", "No games with active listings right now.");
     if (homeRecommendedGamesTitle) homeRecommendedGamesTitle.textContent = t("home.recommended_games", "Recommended games");
     if (homeGameSectionsEmpty) homeGameSectionsEmpty.textContent = t("home.no_feed", "No active listings to build the feed.");
+    if (homeRecoveryBannerTitle) homeRecoveryBannerTitle.textContent = t("setings.recovery_alert_title", "Finish changing your password");
+    if (homeRecoveryBannerCopy) homeRecoveryBannerCopy.textContent = t("setings.recovery_alert_copy", "You signed in using a recovery link. Before leaving this page, set a new password so you do not need to request another recovery email.");
+    if (homeRecoveryBannerCta) homeRecoveryBannerCta.textContent = t("setings.recovery_alert_cta", "Change password now");
+
+    function parseAuthParams(source) {
+      const raw = String(source || "").replace(/^#/, "").replace(/^\?/, "");
+      return new URLSearchParams(raw);
+    }
+
+    function hasRecoveryPayload() {
+      const search = parseAuthParams(window.location.search);
+      const hash = parseAuthParams(window.location.hash);
+      const type = search.get("type") || hash.get("type") || search.get("mode") || hash.get("mode") || "";
+      const tokenHash = search.get("token_hash") || hash.get("token_hash") || "";
+      return type === "recovery" || (type === "email" && !!tokenHash);
+    }
+
+    function maybeCleanRecoveryUrl() {
+      if (!hasRecoveryPayload()) return;
+      const cleanPath = `${window.location.pathname}`;
+      window.history.replaceState({}, "", cleanPath);
+    }
+
+    function consumePendingDiscordProfileRedirect() {
+      try {
+        const nextPath = String(sessionStorage.getItem("gimerr-post-discord-link") || "").trim();
+        if (!nextPath || !currentUser) return false;
+        sessionStorage.removeItem("gimerr-post-discord-link");
+        if (window.location.pathname.endsWith("/profile.html")) return false;
+        window.location.replace(nextPath.startsWith("/") ? nextPath : `/${nextPath}`);
+        return true;
+      } catch (_err) {
+        return false;
+      }
+    }
+
+    function updateRecoveryBanner() {
+      if (!homeRecoveryBanner) return;
+      const shouldShow = !!currentUser && (
+        recoveryLandingActive
+        || hasRecoveryPayload()
+      );
+      homeRecoveryBanner.classList.toggle("is-visible", shouldShow);
+      homeRecoveryBanner.style.display = shouldShow ? "" : "none";
+      if (shouldShow) {
+        if (homeRecoveryBannerCta) homeRecoveryBannerCta.href = "settings.html?recovery=1";
+        maybeCleanRecoveryUrl();
+      }
+    }
 
     function getSidebarToggleIconName() {
       const isMobile = window.matchMedia("(max-width: 900px)").matches;
@@ -209,9 +322,14 @@
             storageKey: "gimerr-auth-token",
           },
         });
-        supabase.auth.onAuthStateChange((_event, session) => {
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY" || hasRecoveryPayload()) {
+            recoveryLandingActive = true;
+          }
           currentUser = session?.user || null;
+          if (consumePendingDiscordProfileRedirect()) return;
           updateAuthUI();
+          updateRecoveryBanner();
         });
       }
       return supabase;
@@ -270,7 +388,7 @@
           .from("users")
           .select("avatar_url")
           .eq("id", currentUser.id)
-          .single();
+          .maybeSingle();
         let avatar = data?.avatar_url;
         if (!avatar) {
           const { data: authData } = await supabase.auth.getUser();
@@ -314,7 +432,12 @@
         ensureClient();
         const { data } = await supabase.auth.getSession();
         currentUser = data.session?.user || null;
+        if (consumePendingDiscordProfileRedirect()) return;
         updateAuthUI();
+        if (currentUser && hasRecoveryPayload()) {
+          recoveryLandingActive = true;
+        }
+        updateRecoveryBanner();
       } catch (err) {
         console.error(err);
         showSuggestionMessage("Error loading session.");
@@ -973,21 +1096,18 @@
     }
 
     async function fetchSearchablePlayers() {
-      const sellerIds = Array.from(new Set(
-        activeListingsCatalog
-          .map((listing) => String(listing?.user_id || "").trim())
-          .filter(Boolean),
-      ));
-      if (sellerIds.length === 0) {
-        searchablePlayers = [];
-        return;
-      }
       const { data, error } = await supabase
         .from("users")
-        .select("id,username,first_name,last_name,email,avatar_url")
-        .in("id", sellerIds);
+        .select("id,username,first_name,last_name,email,avatar_url,discord_id")
+        .eq("status", "active")
+        .not("discord_id", "is", null);
       if (error) throw error;
-      searchablePlayers = (data || []).map((user) => {
+      searchablePlayers = (data || [])
+        .filter((user) => {
+          const discordId = String(user?.discord_id || "").trim();
+          return /^[0-9]{17,20}$/.test(discordId);
+        })
+        .map((user) => {
         const displayName = formatSellerName(user);
         const username = String(user?.username || "").trim();
         return {
@@ -1546,8 +1666,8 @@
           const aIncludes = aUsername.includes(normalizedTerm) ? 1 : 0;
           const bIncludes = bUsername.includes(normalizedTerm) ? 1 : 0;
           if (bIncludes !== aIncludes) return bIncludes - aIncludes;
-          return String(a.username || a.name || "").localeCompare(
-            String(b.username || b.name || ""),
+          return String(a.name || a.username || "").localeCompare(
+            String(b.name || b.username || ""),
             i18n.locale === "en" ? "en-US" : "pt-BR",
             { sensitivity: "base" },
           );
@@ -1582,16 +1702,21 @@
         })
         .join("");
       const playerItems = playerMatches
-        .map((player) => `<div class="suggestion-item suggestion-item-rich" data-kind="player" data-user-id="${player.id}" data-user-name="${escapeHtml(player.username || player.name)}">
+        .map((player) => {
+          const usernameLine = player.username
+            ? `<small>@${escapeHtml(player.username)}</small>`
+            : "";
+          return `<div class="suggestion-item suggestion-item-rich" data-kind="player" data-user-id="${player.id}" data-user-name="${escapeHtml(player.name || player.username)}">
           <span class="suggestion-thumb suggestion-thumb-avatar">
             <img src="${encodeURI(player.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(player.name)}" loading="lazy" referrerpolicy="no-referrer" />
           </span>
           <span class="suggestion-copy">
-            <strong>${escapeHtml(player.username || player.name)}</strong>
-            <small>${escapeHtml(player.name)}</small>
+            <strong>${escapeHtml(player.name || player.username)}</strong>
+            ${usernameLine}
           </span>
           <span class="badge">Player</span>
-        </div>`)
+        </div>`;
+        })
         .join("");
       const footer = `
         <div class="suggestion-footer">

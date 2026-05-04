@@ -12,7 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -146,6 +145,14 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .partner-share-link-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.75;
+      vertical-align: text-bottom;
+      margin-left: 6px;
     }
 
     .partner-feedback {
@@ -3252,8 +3259,8 @@
             <span class="pill">${escapeHtml(t("partner_page.listings_count", "Listings"))}: ${server.listing_count}</span>
             ${feedBoostBadge}
           </div>
-          ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}</a>` : ""}
-          ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}</a>` : ""}
+          ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
+          ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
           ${descHtml}
           <p class="helper">${escapeHtml(t("partner_page.created_at", "Created on"))} ${formatDateTime(server.created_at)}</p>
           <div class="partner-server-actions">

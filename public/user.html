@@ -12,9 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2685595309963345"
-     crossorigin="anonymous"></script>
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -83,6 +80,28 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+    }
+
+    .verified-account-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .verified-account-badge img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
     }
 
     .reputation-score-pill {
@@ -284,6 +303,14 @@
       gap: 8px;
     }
 
+    .user-contact-phone {
+      margin: 0;
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 700;
+      word-break: break-word;
+    }
+
     .user-contact-discord {
       margin: 0;
       font-size: 13px;
@@ -302,11 +329,31 @@
       word-break: break-word;
     }
 
+    .discord-inline a {
+      color: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .discord-inline a:hover {
+      text-decoration: underline;
+    }
+
     .discord-inline-icon {
       width: 16px;
       height: 16px;
       object-fit: contain;
       display: block;
+    }
+
+    .share-link-icon {
+      width: 12px;
+      height: 12px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
     }
 
     .report-trigger {
@@ -674,6 +721,7 @@
           <h1 id="public-name" class="user-public-name">Loading profile...</h1>
           <p id="public-username" class="user-public-username" style="display:none;"></p>
           <div id="public-reputation" class="user-public-reputation" style="display:none;"></div>
+          <div id="public-verified-badge" class="verified-account-badge" style="display:none;"></div>
           <p id="public-discord" class="helper discord-inline" style="display:none;"></p>
           <div class="inline-actions">
             <button id="recommend-btn" class="recommend-btn" type="button" style="display:none;">
@@ -696,6 +744,7 @@
             <div id="report-user-feedback" class="report-feedback"></div>
           </div>
           <div id="contact-panel" class="user-contact-panel" style="display:none;">
+            <p id="contact-phone" class="user-contact-phone" style="display:none;"></p>
             <div class="inline-actions">
               <a id="contact-telegram" class="btn btn-telegram" href="#" target="_blank" rel="noopener" style="display:none;">
                 Chat on Telegram
@@ -813,6 +862,7 @@
     const publicName = document.getElementById("public-name");
     const publicUsername = document.getElementById("public-username");
     const publicReputation = document.getElementById("public-reputation");
+    const publicVerifiedBadge = document.getElementById("public-verified-badge");
     const publicDiscord = document.getElementById("public-discord");
     const publicAbout = document.getElementById("public-about");
     const publicGames = document.getElementById("public-games");
@@ -833,6 +883,7 @@
     const reportUserBtnLabel = document.getElementById("report-user-btn-label");
     const shareUserBtn = document.getElementById("share-user-btn");
     const contactPanel = document.getElementById("contact-panel");
+    const contactPhone = document.getElementById("contact-phone");
     const contactTelegram = document.getElementById("contact-telegram");
     const contactWhatsapp = document.getElementById("contact-whatsapp");
     const recommendCount = document.getElementById("recommend-count");
@@ -1139,7 +1190,7 @@
           .from("users")
           .select("avatar_url")
           .eq("id", currentUser.id)
-          .single();
+          .maybeSingle();
         let avatar = data?.avatar_url;
         if (!avatar) {
           const { data: authData } = await supabase.auth.getUser();
@@ -1273,7 +1324,7 @@
     async function fetchPublicProfile() {
       const { data, error } = await supabase
         .from("users")
-        .select("id,status,username,first_name,last_name,discord_username,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_telegram_button")
+        .select("id,status,username,first_name,last_name,discord_username,discord_id,about_me,avatar_url,phone,phone_verified,show_whatsapp_button,show_telegram_button")
         .eq("id", targetUserId)
         .single();
       if (error) throw error;
@@ -1284,11 +1335,15 @@
       if (!currentUser?.id) return null;
       const { data, error } = await supabase
         .from("users")
-        .select("id,phone_verified,is_admin")
+        .select("id,phone_verified,is_admin,discord_id")
         .eq("id", currentUser.id)
         .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data || null;
+    }
+
+    function hasConnectedDiscord(profile) {
+      return /^[0-9]{17,20}$/.test(String(profile?.discord_id || "").trim());
     }
 
     async function fetchReputationStats(userIds) {
@@ -1685,12 +1740,12 @@
           currentUserProfile = null;
         }
       }
-      const canRecommend = !!currentUserProfile?.phone_verified;
+      const canRecommend = hasConnectedDiscord(currentUserProfile);
       recommendBtn.style.display = "inline-flex";
       recommendBtn.disabled = !canRecommend;
       if (!canRecommend) {
-        recommendBtn.title = t("user.phone_required_title", "Only users with a verified phone number can recommend.");
-        recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.phone_required_recommend", "Verify your phone to recommend"))}`;
+        recommendBtn.title = t("user.discord_required_title", "Only users with a connected Discord account can recommend.");
+        recommendBtn.innerHTML = `<img src="img/rec.png" alt="" class="recommend-icon" /> ${escapeHtml(t("user.discord_required_recommend", "Connect your Discord to recommend"))}`;
         return;
       }
       recommendBtn.title = "";
@@ -1714,22 +1769,30 @@
     function renderProfile(profile) {
       const firstName = (profile?.first_name || "").trim();
       const lastName = (profile?.last_name || "").trim();
+      const displayName = `${firstName} ${lastName}`.trim();
       const username = String(profile?.username || "").trim();
-      const displayName = `${firstName} ${lastName}`.trim() || t("user.community_user", "Community user");
       const discord = String(profile?.discord_username || "").trim();
+      const discordId = String(profile?.discord_id || "").trim();
       const profileStatus = String(profile?.status || "active");
       shareUrl = `${window.location.origin}/user?id=${encodeURIComponent(targetUserId || "")}`;
-      publicName.textContent = displayName;
+      if (publicName) {
+        if (displayName) {
+          publicName.textContent = displayName;
+          publicName.style.display = "";
+        } else {
+          publicName.textContent = "";
+          publicName.style.display = "none";
+        }
+      }
       if (publicUsername) {
         if (username) {
-          publicUsername.textContent = username;
+          publicUsername.textContent = `@${username}`;
           publicUsername.style.display = "block";
         } else {
           publicUsername.textContent = "";
           publicUsername.style.display = "none";
         }
       }
-
       if (publicReputation) {
         const score = Number(currentPublicReputation?.reputation_score);
         if (profile?.phone_verified && Number.isFinite(score)) {
@@ -1742,6 +1805,15 @@
           publicReputation.style.display = "none";
         }
       }
+      if (publicVerifiedBadge) {
+        if (profile?.phone_verified) {
+          publicVerifiedBadge.innerHTML = `<img src="img/verified.svg" alt="" /> <span>${escapeHtml(t("common.verified_account", "Verified account"))}</span>`;
+          publicVerifiedBadge.style.display = "inline-flex";
+        } else {
+          publicVerifiedBadge.innerHTML = "";
+          publicVerifiedBadge.style.display = "none";
+        }
+      }
 
       if (reportUserBtn) {
         const ownProfile = !!currentUser && currentUser.id === targetUserId;
@@ -1750,17 +1822,17 @@
           reportUserBtn.style.display = "none";
         } else {
           const isAdminViewer = !!currentUserProfile?.is_admin;
-          const canSubmitReport = isAdminViewer || !!currentUserProfile?.phone_verified;
+          const canSubmitReport = isAdminViewer || hasConnectedDiscord(currentUserProfile);
           reportUserBtn.style.display = "inline-flex";
           reportUserBtn.disabled = !canSubmitReport;
-          reportUserBtn.title = canSubmitReport ? "" : t("user.phone_required_title_report", "Only users with a verified phone number can report profiles.");
+          reportUserBtn.title = canSubmitReport ? "" : t("user.discord_required_title_report", "Only users with a connected Discord account can report profiles.");
           reportUserBtn.setAttribute("aria-label", canSubmitReport
             ? (isAdminViewer ? t("user.punish_profile_aria", "Punish profile") : t("user.report_profile_aria", "Report profile"))
-            : t("user.phone_required_report_aria", "Verify your phone to report"));
+            : t("user.discord_required_report_aria", "Connect your Discord to report"));
           if (reportUserBtnLabel) {
             reportUserBtnLabel.textContent = canSubmitReport
               ? (isAdminViewer ? t("user.punish_cta", "Punish") : t("user.report_cta", "Report"))
-              : t("user.phone_required_report_cta", "Verify your phone to report");
+              : t("user.discord_required_report_cta", "Connect your Discord to report");
           }
           if (reportUserSubmit) {
             reportUserSubmit.textContent = isAdminViewer
@@ -1796,10 +1868,24 @@
         icon.src = "img/discord.svg";
         icon.alt = "";
         icon.className = "discord-inline-icon";
-        const value = document.createElement("span");
-        value.textContent = discord;
         publicDiscord.appendChild(icon);
-        publicDiscord.appendChild(value);
+        if (/^[0-9]{17,20}$/.test(discordId)) {
+          const link = document.createElement("a");
+          link.href = `https://discord.com/users/${discordId}`;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = discord;
+          const shareIcon = document.createElement("img");
+          shareIcon.src = "img/share.svg";
+          shareIcon.alt = "";
+          shareIcon.className = "share-link-icon";
+          link.appendChild(shareIcon);
+          publicDiscord.appendChild(link);
+        } else {
+          const value = document.createElement("span");
+          value.textContent = discord;
+          publicDiscord.appendChild(value);
+        }
         publicDiscord.style.display = "inline-flex";
       } else {
         publicDiscord.style.display = "none";
@@ -1816,19 +1902,25 @@
       if (!contactPanel || !contactTelegram || !contactWhatsapp) return;
       const discord = String(profile?.discord_username || "").trim();
       const phoneDigits = String(profile?.phone || "").replace(/\D/g, "");
-      const hasTelegram = !!profile?.phone_verified && phoneDigits.length > 0 && profile?.show_telegram_button !== false;
-      const hasWhatsapp = !!profile?.phone_verified && phoneDigits.length > 0 && !!profile?.show_whatsapp_button;
+      const hasTelegram = phoneDigits.length > 0 && !!profile?.show_telegram_button;
+      const hasWhatsapp = phoneDigits.length > 0 && !!profile?.show_whatsapp_button;
       const hasDiscord = !!discord;
-      const hasAny = hasDiscord || hasTelegram || hasWhatsapp;
+      const hasPhone = phoneDigits.length > 0;
+      const hasAny = hasDiscord || hasPhone;
 
       if (!hasAny) {
         contactPanel.style.display = "none";
+        if (contactPhone) contactPhone.style.display = "none";
         contactTelegram.style.display = "none";
         contactWhatsapp.style.display = "none";
         return;
       }
 
       contactPanel.style.display = "grid";
+      if (contactPhone) {
+        contactPhone.textContent = String(profile?.phone || "").trim();
+        contactPhone.style.display = hasPhone && !hasTelegram && !hasWhatsapp ? "block" : "none";
+      }
 
       if (hasTelegram) {
         contactTelegram.href = `https://t.me/+${phoneDigits}`;
@@ -1935,8 +2027,8 @@
       if (!currentUserProfile) {
         currentUserProfile = await fetchCurrentUserProfile();
       }
-      if (!currentUserProfile?.phone_verified) {
-        feedback.textContent = t("user.phone_verified_required_recommend", "Only users with a verified phone number can recommend other users.");
+      if (!hasConnectedDiscord(currentUserProfile)) {
+        feedback.textContent = t("user.discord_required_recommend_error", "Only users with a connected Discord account can recommend other users.");
         return;
       }
       recommendBtn.disabled = true;
@@ -2097,8 +2189,8 @@
       if (!targetUserId) return;
       if (currentUser.id === targetUserId) return;
       if (String(currentPublicProfile?.status || "active") !== "active") return;
-      if (!currentUserProfile?.is_admin && !currentUserProfile?.phone_verified) {
-        feedback.textContent = t("user.phone_verified_required_report", "Only users with a verified phone number can submit reports.");
+      if (!currentUserProfile?.is_admin && !hasConnectedDiscord(currentUserProfile)) {
+        feedback.textContent = t("user.discord_required_report_error", "Only users with a connected Discord account can submit reports.");
         return;
       }
       if (!reportUserForm) return;
@@ -2189,9 +2281,9 @@
           currentUserProfile = await fetchCurrentUserProfile();
         }
         const isAdminReporter = !!currentUserProfile?.is_admin;
-        if (!isAdminReporter && !currentUserProfile?.phone_verified) {
+        if (!isAdminReporter && !hasConnectedDiscord(currentUserProfile)) {
           if (reportUserFeedback) {
-            reportUserFeedback.textContent = t("user.phone_verified_required_report", "Only users with a verified phone number can submit reports.");
+            reportUserFeedback.textContent = t("user.discord_required_report_error", "Only users with a connected Discord account can submit reports.");
           }
           return;
         }

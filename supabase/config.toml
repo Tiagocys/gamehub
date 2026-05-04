@@ -421,3 +421,9 @@ entrypoint = "./functions/admin_listing_moderate/index.ts"
 [functions.r2_sign_upload]
 enabled = true
 verify_jwt = false
+entrypoint = "./functions/r2_sign_upload/index.ts"
+
+[functions.profile_update]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/profile_update/index.ts"

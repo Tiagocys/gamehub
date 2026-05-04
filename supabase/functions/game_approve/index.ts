@@ -435,25 +435,7 @@ Deno.serve(async (req) => {
           approvedServerId,
         );
 
-        if (insertError) {
-          const isDuplicateListing = insertError.code === "23505"
-            && String(insertError.message || "").includes("listings_user_server_unique");
-          if (isDuplicateListing) {
-            const { error: rejectListingErr } = await supabase
-              .from("listing_requests")
-              .update({
-                status: "rejected",
-                server_id: approvedServerId,
-                review_note: "Este usuário já possui um anúncio para este game.",
-                reviewed_by_admin_id: authData.user.id,
-                reviewed_at: new Date().toISOString(),
-              })
-              .eq("id", listingRequest.id);
-            if (rejectListingErr) throw rejectListingErr;
-            continue;
-          }
-          throw insertError;
-        }
+        if (insertError) throw insertError;
 
         const { error: approveListingErr } = await supabase
           .from("listing_requests")

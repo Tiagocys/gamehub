@@ -135,14 +135,7 @@ Deno.serve(async (req) => {
         break;
       }
 
-      if (insertError) {
-        const isDuplicateListing = insertError.code === "23505"
-          && String(insertError.message || "").includes("listings_user_server_unique");
-        if (isDuplicateListing) {
-          return errorResponse("Este usuário já possui um anúncio para este game.", 409);
-        }
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       const { error: updateErr } = await supabase
         .from("listing_requests")

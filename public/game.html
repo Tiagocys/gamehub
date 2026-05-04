@@ -12,9 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2685595309963345"
-     crossorigin="anonymous"></script>
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -76,6 +73,9 @@
     }
 
     .game-site-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       width: fit-content;
       color: var(--accent-2);
       font-size: 13px;
@@ -111,10 +111,22 @@
       flex: 0 0 auto;
     }
 
+    .game-link-share-icon {
+      width: 14px;
+      height: 14px;
+      opacity: 0.75;
+      display: block;
+      flex: 0 0 auto;
+    }
+
     .game-site-link.is-unavailable {
       color: var(--muted);
       pointer-events: none;
       text-decoration: none;
+    }
+
+    .game-site-link.is-unavailable .game-link-share-icon {
+      display: none;
     }
 
     .game-description {
@@ -471,10 +483,14 @@
             <div class="game-hero-head">
               <div class="game-title-block">
                 <h1 id="game-title">Loading...</h1>
-                <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;"></a>
+                <a id="game-site-link" class="game-site-link" href="#" target="_blank" rel="noopener" style="display:none;">
+                  <span id="game-site-link-text"></span>
+                  <img class="game-link-share-icon" src="img/share.svg" alt="" aria-hidden="true" />
+                </a>
                 <a id="game-discord-link" class="game-discord-link" href="#" target="_blank" rel="noopener" style="display:none;">
                   <img src="img/discord.svg" alt="" />
                   <span id="game-discord-link-text">Discord Oficial</span>
+                  <img class="game-link-share-icon" src="img/share.svg" alt="" aria-hidden="true" />
                 </a>
               </div>
               <div id="game-actions" class="game-actions"></div>
@@ -560,6 +576,7 @@
     const descriptionEl = document.getElementById("game-description");
     const logoEl = document.getElementById("game-logo");
     const siteLinkEl = document.getElementById("game-site-link");
+    const siteLinkTextEl = document.getElementById("game-site-link-text");
     const discordLinkEl = document.getElementById("game-discord-link");
     const discordLinkTextEl = document.getElementById("game-discord-link-text");
     const actionsEl = document.getElementById("game-actions");
@@ -1028,12 +1045,12 @@
       if (siteLinkEl) {
         if (game.website) {
           siteLinkEl.href = game.website;
-          siteLinkEl.textContent = game.website;
+          if (siteLinkTextEl) siteLinkTextEl.textContent = game.website;
           siteLinkEl.style.display = "inline-flex";
           siteLinkEl.classList.remove("is-unavailable");
         } else {
           siteLinkEl.removeAttribute("href");
-          siteLinkEl.textContent = t("game.site_unavailable", "Official site unavailable");
+          if (siteLinkTextEl) siteLinkTextEl.textContent = t("game.site_unavailable", "Official site unavailable");
           siteLinkEl.style.display = "inline-flex";
           siteLinkEl.classList.add("is-unavailable");
         }

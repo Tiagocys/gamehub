@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="img/favicon.png" />
+  <title>Gimerr - Settings</title>
+  <link rel="stylesheet" href="css/global.css" />
+  <style id="settings-guard-style">html{visibility:hidden;}</style>
+  <style>
+    .settings-shell {
+      min-height: calc(100vh - 180px);
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      background:
+        radial-gradient(circle at top left, rgba(14,165,233,0.12), transparent 30%),
+        linear-gradient(180deg, #f8fbff, #eef4fb);
+    }
+
+    .settings-card {
+      width: min(560px, 100%);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .settings-card img {
+      width: 160px;
+      height: auto;
+      display: block;
+    }
+
+    .settings-alert {
+      display: none;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(245, 158, 11, 0.34);
+      background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(255, 247, 214, 0.98));
+    }
+
+    .settings-alert.is-visible {
+      display: grid;
+    }
+
+    .settings-alert strong {
+      color: #92400e;
+      font-size: 17px;
+    }
+
+    .settings-alert p {
+      margin: 0;
+      color: #78350f;
+      line-height: 1.6;
+    }
+
+    .settings-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .settings-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .settings-field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .settings-field input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .settings-helper,
+    .settings-feedback {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      min-height: 18px;
+    }
+
+    .settings-feedback.is-error {
+      color: #b42318;
+    }
+
+    .danger-zone {
+      border: 1px solid rgba(239, 68, 68, 0.24);
+      border-radius: 14px;
+      background: rgba(254, 242, 242, 0.72);
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="page-loader" class="page-loader">
+    <img src="img/logo.png" alt="Loading" />
+  </div>
+  <div class="page">
+    <site-navbar search-enabled="games"></site-navbar>
+    <main class="settings-shell">
+      <section class="settings-card">
+        <img src="img/logo.png" alt="Gimerr" />
+        <div>
+          <h1 id="settings-page-title">Configurações</h1>
+          <p id="settings-page-helper" class="settings-helper">Gerencie a segurança da sua conta.</p>
+        </div>
+        <div id="settings-recovery-alert" class="settings-alert">
+          <strong id="settings-alert-title">Complete a alteração da sua senha</strong>
+          <p id="settings-alert-copy">Você entrou com um link de recuperação. Antes de sair desta página, defina uma nova senha para não precisar solicitar outro email.</p>
+        </div>
+        <form id="settings-password-form" class="settings-form">
+          <div class="settings-field">
+            <label id="settings-password-label" for="settings-password-input">Nova senha</label>
+            <input id="settings-password-input" type="password" autocomplete="new-password" required />
+          </div>
+          <div class="settings-field">
+            <label id="settings-password-confirm-label" for="settings-password-confirm-input">Confirmar nova senha</label>
+            <input id="settings-password-confirm-input" type="password" autocomplete="new-password" required />
+          </div>
+          <div id="settings-password-rules" class="settings-helper">Use pelo menos 10 caracteres, com maiúscula, minúscula, número e símbolo.</div>
+          <button id="settings-password-submit" class="btn btn-primary" type="submit">
+            <span id="settings-password-submit-label">Atualizar senha</span>
+          </button>
+        </form>
+        <p id="settings-password-feedback" class="settings-feedback"></p>
+        <div class="danger-zone">
+          <strong id="settings-danger-zone-title">Delete profile</strong>
+          <p id="settings-danger-zone-helper" class="settings-helper">This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.</p>
+          <button id="settings-delete-profile-btn" class="btn btn-danger" type="button">Delete profile</button>
+        </div>
+      </section>
+    </main>
+    <site-footer></site-footer>
+  </div>
+
+  <script src="env.js"></script>
+  <script src="i18n/pt-BR.js"></script>
+  <script src="i18n/es.js"></script>
+  <script src="i18n/en.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    const env = window.__ENV || {};
+    const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
+    const t = (key, fallback = "") => i18n.t(key, fallback);
+    const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+
+    const pageLoader = document.getElementById("page-loader");
+    const pageTitleEl = document.getElementById("settings-page-title");
+    const pageHelperEl = document.getElementById("settings-page-helper");
+    const alertEl = document.getElementById("settings-recovery-alert");
+    const alertTitleEl = document.getElementById("settings-alert-title");
+    const alertCopyEl = document.getElementById("settings-alert-copy");
+    const formEl = document.getElementById("settings-password-form");
+    const passwordLabelEl = document.getElementById("settings-password-label");
+    const passwordConfirmLabelEl = document.getElementById("settings-password-confirm-label");
+    const passwordInput = document.getElementById("settings-password-input");
+    const passwordConfirmInput = document.getElementById("settings-password-confirm-input");
+    const passwordRulesEl = document.getElementById("settings-password-rules");
+    const submitBtn = document.getElementById("settings-password-submit");
+    const submitLabelEl = document.getElementById("settings-password-submit-label");
+    const feedbackEl = document.getElementById("settings-password-feedback");
+    const dangerZoneTitleEl = document.getElementById("settings-danger-zone-title");
+    const dangerZoneHelperEl = document.getElementById("settings-danger-zone-helper");
+    const deleteProfileBtn = document.getElementById("settings-delete-profile-btn");
+
+    let supabase;
+    let currentUser = null;
+    let currentProfile = null;
+
+    function revealPage() {
+      document.documentElement.style.visibility = "visible";
+      const guard = document.getElementById("settings-guard-style");
+      if (guard) guard.remove();
+      if (pageLoader) {
+        pageLoader.classList.add("hidden");
+        pageLoader.remove();
+      }
+    }
+
+    function getClient() {
+      if (supabase) return supabase;
+      if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
+        throw new Error(t("signin.env_error", "Supabase is not configured."));
+      }
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          storageKey: "gimerr-auth-token",
+        },
+      });
+      return supabase;
+    }
+
+    function validateStrongPassword(value) {
+      const password = String(value || "");
+      return password.length >= 10
+        && /[a-z]/.test(password)
+        && /[A-Z]/.test(password)
+        && /\d/.test(password)
+        && /[^A-Za-z0-9]/.test(password);
+    }
+
+    function setBusy(isBusy) {
+      if (submitBtn) submitBtn.disabled = !!isBusy;
+      if (submitLabelEl) {
+        submitLabelEl.textContent = isBusy
+          ? t("signin.updating_password", "Updating password...")
+          : t("signin.reset_submit", "Update password");
+      }
+    }
+
+    function setFeedback(message, isError = false) {
+      if (!feedbackEl) return;
+      feedbackEl.textContent = message || "";
+      feedbackEl.classList.toggle("is-error", !!isError);
+    }
+
+    function mapAuthError(err) {
+      const message = String(err?.message || "").toLowerCase();
+      const status = Number(err?.status || err?.code || 0);
+      if (status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("security purposes")) {
+        return t("signin.recover_rate_limit", "You recently requested a recovery email. Wait a few minutes before trying again.");
+      }
+      if (message.includes("same password")) {
+        return t("signin.password_same_error", "Choose a different password from the current one.");
+      }
+      if (message.includes("password should")) {
+        return t("signin.password_rules_error", "Your password does not meet the required security rules.");
+      }
+      if (message.includes("not authenticated") || message.includes("auth session missing")) {
+        return t("setings.invalid_recovery_link", "This recovery link is invalid or has expired. Request a new recovery email.");
+      }
+      return err?.message || t("signin.auth_error", "Authentication error.");
+    }
+
+    async function ensureSession() {
+      const client = getClient();
+      const params = new URLSearchParams(window.location.search);
+      const recoveryFlag = params.get("recovery") === "1" || sessionStorage.getItem("gimerr-password-recovery") === "1";
+      const { data } = await client.auth.getSession();
+      if (!data?.session?.user) {
+        window.location.replace(`sign-in.html?next=${encodeURIComponent("/settings.html")}`);
+        return false;
+      }
+      currentUser = data.session.user;
+      const { data: profileData, error: profileError } = await client
+        .from("users")
+        .select("id,avatar_url")
+        .eq("id", currentUser.id)
+        .maybeSingle();
+      if (profileError && profileError.code !== "PGRST116") throw profileError;
+      currentProfile = profileData || null;
+      if (recoveryFlag) {
+        alertEl?.classList.add("is-visible");
+      }
+      return true;
+    }
+
+    async function requestAvatarDeletion(avatarUrl) {
+      const raw = String(avatarUrl || "").trim();
+      if (!raw) return { ok: true };
+      const client = getClient();
+      const { data } = await client.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
+      }
+      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+          apikey: SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          mode: "delete",
+          key: raw,
+          userToken: token,
+          assetType: "avatar",
+        }),
+      });
+      if (!response.ok) {
+        let message = t("profile.avatar_delete_error", "Failed to delete the previous avatar.");
+        try {
+          const payload = await response.json();
+          message = payload?.error || message;
+        } catch (_err) {
+          const text = await response.text();
+          if (text) message = text;
+        }
+        throw new Error(message);
+      }
+      return response.json();
+    }
+
+    async function deleteOwnListingsBeforeProfileDelete(accessToken) {
+      const client = getClient();
+      const { data: listings, error: listingsError } = await client
+        .from("listings")
+        .select("id")
+        .eq("user_id", currentUser.id);
+      if (listingsError) throw listingsError;
+      const ids = (listings || []).map((item) => item?.id).filter(Boolean);
+      if (ids.length === 0) return;
+      const failures = [];
+      for (const listingId of ids) {
+        const { data, error } = await client.functions.invoke("listing_delete", {
+          body: { listingId },
+          headers: accessToken
+            ? {
+                Authorization: `Bearer ${accessToken}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok) failures.push(listingId);
+      }
+      if (failures.length > 0) {
+        throw new Error(t("profile.delete_listings_error", "Could not delete linked listings."));
+      }
+    }
+
+    document.title = t("setings.title_default", "Gimerr - Settings");
+    document.documentElement.lang = String(i18n.locale || "").startsWith("pt")
+      ? "pt-BR"
+      : String(i18n.locale || "") === "es"
+        ? "es"
+        : "en";
+    if (pageTitleEl) pageTitleEl.textContent = t("setings.page_title", "Settings");
+    if (pageHelperEl) pageHelperEl.textContent = t("setings.page_helper", "Manage your account security.");
+    if (alertTitleEl) alertTitleEl.textContent = t("setings.recovery_alert_title", "Finish changing your password");
+    if (alertCopyEl) alertCopyEl.textContent = t("setings.recovery_alert_copy", "You signed in using a recovery link. Before leaving this page, set a new password so you do not need to request another recovery email.");
+    if (passwordLabelEl) passwordLabelEl.textContent = t("signin.new_password_label", "New password");
+    if (passwordConfirmLabelEl) passwordConfirmLabelEl.textContent = t("signin.confirm_new_password_label", "Confirm new password");
+    if (passwordRulesEl) passwordRulesEl.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
+    if (submitLabelEl) submitLabelEl.textContent = t("signin.reset_submit", "Update password");
+    if (dangerZoneTitleEl) dangerZoneTitleEl.textContent = t("profile.delete_profile", "Delete profile");
+    if (dangerZoneHelperEl) dangerZoneHelperEl.textContent = t("settings.delete_profile_helper", "This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.");
+    if (deleteProfileBtn) deleteProfileBtn.textContent = t("profile.delete_profile", "Delete profile");
+
+    formEl?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setFeedback("");
+      const password = String(passwordInput?.value || "");
+      const confirmPassword = String(passwordConfirmInput?.value || "");
+      if (!validateStrongPassword(password)) {
+        setFeedback(t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol."), true);
+        return;
+      }
+      if (password !== confirmPassword) {
+        setFeedback(t("signin.password_mismatch", "The password confirmation does not match."), true);
+        return;
+      }
+      try {
+        setBusy(true);
+        const client = getClient();
+        const { error } = await client.auth.updateUser({ password });
+        if (error) throw error;
+        sessionStorage.removeItem("gimerr-password-recovery");
+        const params = new URLSearchParams(window.location.search);
+        params.delete("recovery");
+        window.history.replaceState({}, "", `${window.location.origin}/settings.html${params.toString() ? `?${params}` : ""}`);
+        alertEl?.classList.remove("is-visible");
+        setFeedback(t("signin.reset_success", "Password updated successfully. Redirecting..."), false);
+        setTimeout(() => {
+          window.location.replace("profile.html");
+        }, 900);
+      } catch (err) {
+        setFeedback(mapAuthError(err), true);
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    deleteProfileBtn?.addEventListener("click", async () => {
+      try {
+        setFeedback("", false);
+        if (!currentUser) {
+          window.location.replace("index.html");
+          return;
+        }
+        const firstConfirm = window.confirm(t("profile.delete_confirm_one", "Do you want to delete your profile? All your listings will be removed."));
+        if (!firstConfirm) return;
+        const secondConfirm = window.confirm(t("profile.delete_confirm_two", "Confirm profile deletion now?"));
+        if (!secondConfirm) return;
+
+        deleteProfileBtn.disabled = true;
+        deleteProfileBtn.textContent = t("profile.deleting", "Deleting...");
+
+        const client = getClient();
+        const { data: sessionData } = await client.auth.getSession();
+        const token = sessionData.session?.access_token || "";
+        if (!token) {
+          throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
+        }
+
+        await deleteOwnListingsBeforeProfileDelete(token);
+        if (currentProfile?.avatar_url) {
+          try {
+            await requestAvatarDeletion(currentProfile.avatar_url);
+          } catch (avatarDeleteErr) {
+            console.warn("Could not delete avatar during profile removal.", avatarDeleteErr);
+          }
+        }
+
+        const { error: updateError } = await client
+          .from("users")
+          .update({ status: "deleted" })
+          .eq("id", currentUser.id);
+        if (updateError) throw updateError;
+
+        await client.auth.signOut();
+        window.location.replace("index.html");
+      } catch (err) {
+        console.error(err);
+        setFeedback(err?.message || t("profile.delete_error", "Error deleting profile."), true);
+        deleteProfileBtn.disabled = false;
+        deleteProfileBtn.textContent = t("profile.delete_profile", "Delete profile");
+      }
+    });
+
+    (async () => {
+      try {
+        revealPage();
+        await ensureSession();
+      } catch (err) {
+        console.error(err);
+        revealPage();
+        setFeedback(mapAuthError(err), true);
+      }
+    })();
+  </script>
+</body>
+</html>

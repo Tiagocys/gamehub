@@ -12,7 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -95,6 +94,76 @@
       font-size: clamp(22px, 3vw, 32px);
     }
 
+    .sign-in-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .sign-in-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sign-in-field label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .sign-in-field input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .sign-in-helper {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .sign-in-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px 14px;
+      align-items: center;
+    }
+
+    .sign-in-link-btn {
+      border: 0;
+      background: transparent;
+      color: var(--brand);
+      font: inherit;
+      font-weight: 700;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .sign-in-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .sign-in-divider::before,
+    .sign-in-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
     .sign-in-action p {
       margin: 0;
       color: var(--muted);
@@ -108,10 +177,94 @@
       font-size: 15px;
     }
 
+    .btn-provider-logo {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
+    }
+
     .sign-in-feedback {
       min-height: 18px;
       font-size: 13px;
       color: var(--muted);
+    }
+
+    .auth-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(12, 21, 51, 0.64);
+    }
+
+    .auth-modal.open {
+      display: flex;
+    }
+
+    .auth-modal-card {
+      width: min(480px, 100%);
+      max-height: min(88vh, 760px);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    .auth-modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .auth-modal-head h3 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .auth-modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .auth-modal-body {
+      display: grid;
+      gap: 14px;
+      padding: 16px 18px 18px;
+      overflow-y: auto;
+    }
+
+    .auth-modal-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .auth-modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .auth-modal-feedback {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 13px;
     }
 
     @media (max-width: 900px) {
@@ -139,10 +292,33 @@
         </div>
         <div class="sign-in-action">
           <h1 id="sign-in-title">Sign in to Gimerr</h1>
-          <h2 id="sign-in-action-title">Continue with Google</h2>
-          <button id="sign-in-google-btn" class="btn btn-primary" type="button">
-            <img src="img/google.svg" alt="" class="btn-google-logo" />
+          <h2 id="sign-in-action-title">Use your email and password</h2>
+          <p id="sign-in-action-copy">Enter your account details to continue.</p>
+          <form id="sign-in-form" class="sign-in-form">
+            <div class="sign-in-field">
+              <label id="sign-in-email-label" for="sign-in-email">Email</label>
+              <input id="sign-in-email" type="email" autocomplete="email" inputmode="email" required />
+            </div>
+            <div class="sign-in-field">
+              <label id="sign-in-password-label" for="sign-in-password">Password</label>
+              <input id="sign-in-password" type="password" autocomplete="current-password" required />
+            </div>
+            <button id="sign-in-submit-btn" class="btn btn-primary" type="submit">
+              <span id="sign-in-submit-label">Sign in</span>
+            </button>
+          </form>
+          <div class="sign-in-links">
+            <button id="open-signup-modal-btn" class="sign-in-link-btn" type="button">Create account</button>
+            <button id="open-forgot-modal-btn" class="sign-in-link-btn" type="button">Forgot password?</button>
+          </div>
+          <div class="sign-in-divider" id="sign-in-divider">or</div>
+          <button id="sign-in-google-btn" class="btn btn-ghost" type="button">
+            <img src="img/google.svg" alt="" class="btn-provider-logo" />
             <span id="sign-in-google-label">Sign in with Google</span>
+          </button>
+          <button id="sign-in-discord-btn" class="btn btn-ghost" type="button">
+            <img src="img/discord.svg" alt="" class="btn-provider-logo" />
+            <span id="sign-in-discord-label">Sign in with Discord</span>
           </button>
           <p id="sign-in-feedback" class="sign-in-feedback"></p>
         </div>
@@ -150,6 +326,94 @@
     </main>
 
     <site-footer></site-footer>
+  </div>
+
+  <div id="signup-modal" class="auth-modal" aria-hidden="true">
+    <div class="auth-modal-card">
+      <div class="auth-modal-head">
+        <h3 id="signup-modal-title">Create account</h3>
+        <button id="signup-modal-close" class="auth-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="auth-modal-body">
+        <p id="signup-modal-helper" class="sign-in-helper">Use a valid email address. We will send a confirmation link before your first sign in.</p>
+        <form id="signup-form" class="auth-modal-form">
+          <div class="sign-in-field">
+            <label id="signup-email-label" for="signup-email">Email</label>
+            <input id="signup-email" type="email" autocomplete="email" inputmode="email" required />
+          </div>
+          <div class="sign-in-field">
+            <label id="signup-password-label" for="signup-password">Password</label>
+            <input id="signup-password" type="password" autocomplete="new-password" required />
+          </div>
+          <div class="sign-in-field">
+            <label id="signup-password-confirm-label" for="signup-password-confirm">Confirm password</label>
+            <input id="signup-password-confirm" type="password" autocomplete="new-password" required />
+          </div>
+          <div id="signup-password-helper" class="sign-in-helper">Use at least 10 characters, with uppercase, lowercase, number and symbol.</div>
+          <div class="auth-modal-actions">
+            <button id="signup-submit-btn" class="btn btn-primary" type="submit">
+              <span id="signup-submit-label">Create account</span>
+            </button>
+            <button id="signup-cancel-btn" class="btn btn-ghost" type="button">Cancel</button>
+          </div>
+        </form>
+        <p id="signup-feedback" class="auth-modal-feedback"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="forgot-modal" class="auth-modal" aria-hidden="true">
+    <div class="auth-modal-card">
+      <div class="auth-modal-head">
+        <h3 id="forgot-modal-title">Recover password</h3>
+        <button id="forgot-modal-close" class="auth-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="auth-modal-body">
+        <p id="forgot-modal-helper" class="sign-in-helper">Enter your email to receive a password reset link.</p>
+        <form id="forgot-form" class="auth-modal-form">
+          <div class="sign-in-field">
+            <label id="forgot-email-label" for="forgot-email">Email</label>
+            <input id="forgot-email" type="email" autocomplete="email" inputmode="email" required />
+          </div>
+          <div class="auth-modal-actions">
+            <button id="forgot-submit-btn" class="btn btn-primary" type="submit">
+              <span id="forgot-submit-label">Send reset link</span>
+            </button>
+            <button id="forgot-cancel-btn" class="btn btn-ghost" type="button">Cancel</button>
+          </div>
+        </form>
+        <p id="forgot-feedback" class="auth-modal-feedback"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="reset-modal" class="auth-modal" aria-hidden="true">
+    <div class="auth-modal-card">
+      <div class="auth-modal-head">
+        <h3 id="reset-modal-title">Set a new password</h3>
+        <button id="reset-modal-close" class="auth-modal-close" type="button" aria-label="Close">×</button>
+      </div>
+      <div class="auth-modal-body">
+        <p id="reset-modal-helper" class="sign-in-helper">Create a new password to finish recovering your account.</p>
+        <form id="reset-form" class="auth-modal-form">
+          <div class="sign-in-field">
+            <label id="reset-password-label" for="reset-password">New password</label>
+            <input id="reset-password" type="password" autocomplete="new-password" required />
+          </div>
+          <div class="sign-in-field">
+            <label id="reset-password-confirm-label" for="reset-password-confirm">Confirm new password</label>
+            <input id="reset-password-confirm" type="password" autocomplete="new-password" required />
+          </div>
+          <div id="reset-password-helper" class="sign-in-helper">Use at least 10 characters, with uppercase, lowercase, number and symbol.</div>
+          <div class="auth-modal-actions">
+            <button id="reset-submit-btn" class="btn btn-primary" type="submit">
+              <span id="reset-submit-label">Update password</span>
+            </button>
+          </div>
+        </form>
+        <p id="reset-feedback" class="auth-modal-feedback"></p>
+      </div>
+    </div>
   </div>
 
   <script src="env.js"></script>
@@ -163,6 +427,10 @@
 
     const i18n = window.__I18N__ || { t: (_key, fallback = "") => fallback };
     const t = (key, fallback = "") => i18n.t(key, fallback);
+    const formatMessage = (key, fallback, params = {}) => Object.entries(params).reduce(
+      (message, [paramKey, value]) => message.replaceAll(`{${paramKey}}`, String(value ?? "")),
+      t(key, fallback),
+    );
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
@@ -170,10 +438,48 @@
     const titleEl = document.getElementById("sign-in-title");
     const taglineEl = document.getElementById("sign-in-tagline");
     const actionTitleEl = document.getElementById("sign-in-action-title");
-    const buttonEl = document.getElementById("sign-in-google-btn");
-    const buttonLabelEl = document.getElementById("sign-in-google-label");
+    const actionCopyEl = document.getElementById("sign-in-action-copy");
+    const signInForm = document.getElementById("sign-in-form");
+    const signInEmail = document.getElementById("sign-in-email");
+    const signInPassword = document.getElementById("sign-in-password");
+    const signInSubmitBtn = document.getElementById("sign-in-submit-btn");
+    const signInSubmitLabel = document.getElementById("sign-in-submit-label");
+    const googleButtonEl = document.getElementById("sign-in-google-btn");
+    const googleButtonLabelEl = document.getElementById("sign-in-google-label");
+    const discordButtonEl = document.getElementById("sign-in-discord-btn");
+    const discordButtonLabelEl = document.getElementById("sign-in-discord-label");
+    const openSignupModalBtn = document.getElementById("open-signup-modal-btn");
+    const openForgotModalBtn = document.getElementById("open-forgot-modal-btn");
+    const signupModal = document.getElementById("signup-modal");
+    const signupModalClose = document.getElementById("signup-modal-close");
+    const signupCancelBtn = document.getElementById("signup-cancel-btn");
+    const signupForm = document.getElementById("signup-form");
+    const signupEmail = document.getElementById("signup-email");
+    const signupPassword = document.getElementById("signup-password");
+    const signupPasswordConfirm = document.getElementById("signup-password-confirm");
+    const signupSubmitBtn = document.getElementById("signup-submit-btn");
+    const signupSubmitLabel = document.getElementById("signup-submit-label");
+    const signupFeedback = document.getElementById("signup-feedback");
+    const forgotModal = document.getElementById("forgot-modal");
+    const forgotModalClose = document.getElementById("forgot-modal-close");
+    const forgotCancelBtn = document.getElementById("forgot-cancel-btn");
+    const forgotForm = document.getElementById("forgot-form");
+    const forgotEmail = document.getElementById("forgot-email");
+    const forgotSubmitBtn = document.getElementById("forgot-submit-btn");
+    const forgotSubmitLabel = document.getElementById("forgot-submit-label");
+    const forgotFeedback = document.getElementById("forgot-feedback");
+    const resetModal = document.getElementById("reset-modal");
+    const resetModalClose = document.getElementById("reset-modal-close");
+    const resetForm = document.getElementById("reset-form");
+    const resetPassword = document.getElementById("reset-password");
+    const resetPasswordConfirm = document.getElementById("reset-password-confirm");
+    const resetSubmitBtn = document.getElementById("reset-submit-btn");
+    const resetSubmitLabel = document.getElementById("reset-submit-label");
+    const resetFeedback = document.getElementById("reset-feedback");
     const feedbackEl = document.getElementById("sign-in-feedback");
     const pageLoader = document.getElementById("page-loader");
+    let client;
+    let recoveryMode = false;
 
     function revealPage() {
       document.documentElement.style.visibility = "visible";
@@ -187,15 +493,64 @@
 
     if (titleEl) titleEl.textContent = t("signin.title", "Sign in to Gimerr");
     if (taglineEl) taglineEl.textContent = t("common.brand_tagline", "Community marketplace powered by gamers.");
-    if (actionTitleEl) actionTitleEl.textContent = t("signin.action_title", "Continue with Google");
-    if (buttonLabelEl) buttonLabelEl.textContent = t("nav.login_google", "Sign in with Google");
-    revealPage();
+    if (actionTitleEl) actionTitleEl.textContent = t("signin.action_title", "Use your email and password");
+    if (actionCopyEl) actionCopyEl.textContent = t("signin.action_copy", "Enter your account details to continue.");
+    if (signInSubmitLabel) signInSubmitLabel.textContent = t("nav.login", "Sign in");
+    if (googleButtonLabelEl) googleButtonLabelEl.textContent = t("nav.login_google", "Sign in with Google");
+    if (discordButtonLabelEl) discordButtonLabelEl.textContent = t("nav.login_discord", "Sign in with Discord");
+    if (openSignupModalBtn) openSignupModalBtn.textContent = t("signin.open_signup", "Create account");
+    if (openForgotModalBtn) openForgotModalBtn.textContent = t("signin.open_forgot", "Forgot password?");
+    const dividerEl = document.getElementById("sign-in-divider");
+    if (dividerEl) dividerEl.textContent = t("signin.or", "or");
+    const signInEmailLabel = document.getElementById("sign-in-email-label");
+    const signInPasswordLabel = document.getElementById("sign-in-password-label");
+    if (signInEmailLabel) signInEmailLabel.textContent = t("signin.email_label", "Email");
+    if (signInPasswordLabel) signInPasswordLabel.textContent = t("signin.password_label", "Password");
+    const signupModalTitle = document.getElementById("signup-modal-title");
+    const signupModalHelper = document.getElementById("signup-modal-helper");
+    const signupEmailLabel = document.getElementById("signup-email-label");
+    const signupPasswordLabel = document.getElementById("signup-password-label");
+    const signupPasswordConfirmLabel = document.getElementById("signup-password-confirm-label");
+    const signupPasswordHelper = document.getElementById("signup-password-helper");
+    if (signupModalTitle) signupModalTitle.textContent = t("signin.signup_title", "Create account");
+    if (signupModalHelper) signupModalHelper.textContent = t("signin.signup_helper", "Use a valid email address. We will send a confirmation link before your first sign in.");
+    if (signupEmailLabel) signupEmailLabel.textContent = t("signin.email_label", "Email");
+    if (signupPasswordLabel) signupPasswordLabel.textContent = t("signin.password_label", "Password");
+    if (signupPasswordConfirmLabel) signupPasswordConfirmLabel.textContent = t("signin.confirm_password_label", "Confirm password");
+    if (signupPasswordHelper) signupPasswordHelper.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
+    if (signupSubmitLabel) signupSubmitLabel.textContent = t("signin.signup_submit", "Create account");
+    if (signupCancelBtn) signupCancelBtn.textContent = t("signin.cancel", "Cancel");
+    const forgotModalTitle = document.getElementById("forgot-modal-title");
+    const forgotModalHelper = document.getElementById("forgot-modal-helper");
+    const forgotEmailLabel = document.getElementById("forgot-email-label");
+    if (forgotModalTitle) forgotModalTitle.textContent = t("signin.forgot_title", "Recover password");
+    if (forgotModalHelper) forgotModalHelper.textContent = t("signin.forgot_helper", "Enter your email to receive a password reset link.");
+    if (forgotEmailLabel) forgotEmailLabel.textContent = t("signin.email_label", "Email");
+    if (forgotSubmitLabel) forgotSubmitLabel.textContent = t("signin.forgot_submit", "Send reset link");
+    if (forgotCancelBtn) forgotCancelBtn.textContent = t("signin.cancel", "Cancel");
+    const resetModalTitle = document.getElementById("reset-modal-title");
+    const resetModalHelper = document.getElementById("reset-modal-helper");
+    const resetPasswordLabel = document.getElementById("reset-password-label");
+    const resetPasswordConfirmLabel = document.getElementById("reset-password-confirm-label");
+    const resetPasswordHelper = document.getElementById("reset-password-helper");
+    if (resetModalTitle) resetModalTitle.textContent = t("signin.reset_title", "Set a new password");
+    if (resetModalHelper) resetModalHelper.textContent = t("signin.reset_helper", "Create a new password to finish recovering your account.");
+    if (resetPasswordLabel) resetPasswordLabel.textContent = t("signin.new_password_label", "New password");
+    if (resetPasswordConfirmLabel) resetPasswordConfirmLabel.textContent = t("signin.confirm_new_password_label", "Confirm new password");
+    if (resetPasswordHelper) resetPasswordHelper.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
+    if (resetSubmitLabel) resetSubmitLabel.textContent = t("signin.reset_submit", "Update password");
+    if (signupModalClose) signupModalClose.setAttribute("aria-label", t("common.close", "Close"));
+    if (forgotModalClose) forgotModalClose.setAttribute("aria-label", t("common.close", "Close"));
+    if (resetModalClose) resetModalClose.setAttribute("aria-label", t("common.close", "Close"));
+
+    const PROFILE_USERNAME_REGEX = /^[a-z0-9]{3,20}$/;
 
     function getClient() {
+      if (client) return client;
       if (!SUPABASE_URL || SUPABASE_URL.startsWith("YOUR_") || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.startsWith("YOUR_")) {
         throw new Error(t("signin.env_error", "Supabase is not configured."));
       }
-      return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
@@ -203,6 +558,332 @@
           storageKey: "gimerr-auth-token",
         },
       });
+      return client;
+    }
+
+    function normalizeEmail(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(value));
+    }
+
+    function normalizeProfileUsername(value) {
+      if (!value) return "";
+      return String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
+        .slice(0, 20);
+    }
+
+    function normalizeDiscordUsername(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/^@+/, "")
+        .replace(/#\d{1,4}$/, "")
+        .replace(/[^a-z0-9._]/g, "")
+        .replace(/\.{2,}/g, ".")
+        .slice(0, 32);
+    }
+
+    function isDiscordAuthUser(user) {
+      const appMetaProvider = String(user?.app_metadata?.provider || "").trim().toLowerCase();
+      if (appMetaProvider === "discord") return true;
+      const identities = Array.isArray(user?.identities) ? user.identities : [];
+      return identities.some((item) => String(item?.provider || "").trim().toLowerCase() === "discord");
+    }
+
+    function extractDiscordHandle(user) {
+      const meta = user?.user_metadata || {};
+      const discordMeta = getIdentityData(user, "discord");
+      const candidates = [
+        discordMeta.username,
+        discordMeta.user_name,
+        discordMeta.preferred_username,
+        discordMeta.name,
+        meta.username,
+        meta.user_name,
+        meta.preferred_username,
+        meta.name,
+      ];
+      for (const candidate of candidates) {
+        const normalized = normalizeDiscordUsername(candidate || "");
+        if (normalized) return normalized;
+      }
+      return "";
+    }
+
+    function buildInternalUsernameFromDiscordHandle(handle) {
+      const normalized = normalizeProfileUsername(String(handle || "").replace(/[._]/g, ""));
+      return validateProfileUsername(normalized) ? normalized : "";
+    }
+
+    function extractDiscordId(user) {
+      const discordMeta = getIdentityData(user, "discord");
+      const candidates = [
+        discordMeta.provider_id,
+        discordMeta.sub,
+        discordMeta.id,
+        user?.user_metadata?.provider_id,
+        user?.user_metadata?.sub,
+        user?.user_metadata?.id,
+      ];
+      for (const candidate of candidates) {
+        const text = String(candidate || "").trim();
+        if (/^[0-9]{17,20}$/.test(text)) return text;
+      }
+      return "";
+    }
+
+    function isLikelyProviderId(value) {
+      return /^[0-9]{8,}$/.test(String(value || "").trim());
+    }
+
+    function pickFirstUsefulValue(values) {
+      for (const value of values || []) {
+        const text = String(value || "").trim();
+        if (!text || isLikelyProviderId(text)) continue;
+        return text;
+      }
+      return "";
+    }
+
+    function pickFirstPresentValue(values) {
+      for (const value of values || []) {
+        const text = String(value || "").trim();
+        if (text) return text;
+      }
+      return "";
+    }
+
+    function shouldReplaceStoredValue(currentValue, incomingValue, fallbacks = []) {
+      const current = String(currentValue || "").trim();
+      const incoming = String(incomingValue || "").trim();
+      if (!incoming) return current || null;
+      if (!current) return incoming;
+      const currentKey = current.toLowerCase();
+      const fallbackKeys = new Set(
+        (Array.isArray(fallbacks) ? fallbacks : [])
+          .map((value) => String(value || "").trim().toLowerCase())
+          .filter(Boolean),
+      );
+      if (isLikelyProviderId(current) || fallbackKeys.has(currentKey)) return incoming;
+      return current;
+    }
+
+    function validateProfileUsername(value) {
+      return PROFILE_USERNAME_REGEX.test(String(value || ""));
+    }
+
+    function buildUsernameSeed(firstName, lastName, email) {
+      const fromName = normalizeProfileUsername(`${firstName}${lastName}`);
+      if (validateProfileUsername(fromName)) return fromName;
+      const fromFirst = normalizeProfileUsername(firstName);
+      if (validateProfileUsername(fromFirst)) return fromFirst;
+      const emailLocal = normalizeProfileUsername(String(email || "").split("@")[0] || "");
+      if (validateProfileUsername(emailLocal)) return emailLocal;
+      return `player${Math.floor(Math.random() * 900000 + 100000)}`;
+    }
+
+    function getIdentityData(user, provider) {
+      const identities = Array.isArray(user?.identities) ? user.identities : [];
+      const identity = identities.find((item) => String(item?.provider || "").toLowerCase() === String(provider || "").toLowerCase());
+      return identity?.identity_data || {};
+    }
+
+    function parseNamesFromSources(sources) {
+      for (const source of sources) {
+        const given = pickFirstUsefulValue([source?.first_name, source?.given_name]);
+        if (given) {
+          return { firstName: given || null, lastName: null };
+        }
+        const full = pickFirstUsefulValue([
+          source?.display_name,
+          source?.global_name,
+          source?.full_name,
+          source?.name,
+        ]);
+        if (!full) continue;
+        const parts = full.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) return { firstName: parts[0], lastName: null };
+        return { firstName: parts[0], lastName: null };
+      }
+      return { firstName: null, lastName: null };
+    }
+
+    function extractAuthProfileData(user) {
+      const meta = user?.user_metadata || {};
+      const discordMeta = getIdentityData(user, "discord");
+      const isDiscordAuth = isDiscordAuthUser(user);
+      const names = isDiscordAuth
+        ? { firstName: null, lastName: null }
+        : parseNamesFromSources([
+            {
+              first_name: meta.first_name,
+              given_name: meta.given_name,
+              last_name: meta.last_name,
+              family_name: meta.family_name,
+              full_name: meta.full_name,
+              name: meta.name,
+            },
+          ]);
+      const discordUsername = isDiscordAuth ? extractDiscordHandle(user) : "";
+      const discordBackedUsername = buildInternalUsernameFromDiscordHandle(discordUsername);
+      const usernameSeed = discordBackedUsername || buildUsernameSeed(
+        names.firstName || "",
+        names.lastName || "",
+        user?.email || meta.email || discordMeta.email || ""
+      );
+      const avatarUrl = String(
+        meta.avatar_url
+        || meta.picture
+        || discordMeta.avatar_url
+        || discordMeta.picture
+        || ""
+      ).trim() || null;
+      return {
+        email: normalizeEmail(user?.email || meta.email || discordMeta.email || ""),
+        firstName: names.firstName,
+        lastName: names.lastName,
+        avatarUrl,
+        usernameSeed,
+        discordUsername: discordUsername || null,
+        discordId: isDiscordAuth ? (extractDiscordId(user) || null) : null,
+        isDiscordAuth,
+      };
+    }
+
+    async function resolveAvailableSignupUsername(firstName, lastName, email) {
+      const supabase = getClient();
+      const base = buildUsernameSeed(firstName, lastName, email);
+      const candidates = [
+        base,
+        `${base}${Math.floor(Math.random() * 900 + 100)}`,
+        `${base}${Math.floor(Math.random() * 9000 + 1000)}`,
+        `${base}${crypto.randomUUID().replace(/-/g, "").slice(0, 6)}`,
+      ].map((candidate) => normalizeProfileUsername(candidate))
+        .filter((candidate, index, arr) => validateProfileUsername(candidate) && arr.indexOf(candidate) === index);
+
+      for (const candidate of candidates) {
+        const { data, error } = await supabase
+          .from("users")
+          .select("id")
+          .eq("username", candidate)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data?.id) return candidate;
+      }
+
+      throw new Error("username_generation_failed");
+    }
+
+    function parseLocationParams(source) {
+      const raw = String(source || "").replace(/^#/, "").replace(/^\?/, "");
+      return new URLSearchParams(raw);
+    }
+
+    function hasRecoveryParams() {
+      const search = parseLocationParams(window.location.search);
+      const hash = parseLocationParams(window.location.hash);
+      return search.get("type") === "recovery"
+        || hash.get("type") === "recovery"
+        || search.get("mode") === "recovery";
+    }
+
+    function openModal(modal) {
+      if (!modal) return;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeModal(modal) {
+      if (!modal) return;
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function setBusy(button, labelEl, busy, idleText, busyText) {
+      if (button) button.disabled = !!busy;
+      if (labelEl) labelEl.textContent = busy ? busyText : idleText;
+    }
+
+    function resetOAuthUi() {
+      if (googleButtonEl) googleButtonEl.disabled = false;
+      if (discordButtonEl) discordButtonEl.disabled = false;
+      if (feedbackEl && feedbackEl.textContent === t("signin.wait", "Please wait...")) {
+        feedbackEl.textContent = "";
+      }
+    }
+
+    function mapAuthError(err, flow = "generic") {
+      const message = String(err?.message || "").toLowerCase();
+      const status = Number(err?.status || err?.code || 0);
+      const code = String(err?.code || "").toLowerCase();
+
+      if (status === 429 || message.includes("rate limit") || message.includes("too many requests") || message.includes("security purposes")) {
+        if (flow === "signup") return t("signin.signup_rate_limit", "Too many signup attempts. Wait a moment before trying again.");
+        if (flow === "recover") return t("signin.recover_rate_limit", "You recently requested a recovery email. Wait a few minutes before trying again.");
+        return t("signin.login_rate_limit", "Too many login attempts. Wait a moment before trying again.");
+      }
+      if (message.includes("invalid login credentials")) {
+        return t("signin.invalid_credentials", "Invalid email or password.");
+      }
+      if (message.includes("email not confirmed") || code === "email_not_confirmed") {
+        return t("signin.email_not_confirmed", "Confirm your email before signing in.");
+      }
+      if (message.includes("user already registered") || message.includes("already been registered")) {
+        return t("signin.user_exists", "An account with this email already exists.");
+      }
+      if (message.includes("password should")) {
+        return t("signin.password_rules_error", "Your password does not meet the required security rules.");
+      }
+      if (message.includes("same password")) {
+        return t("signin.password_same_error", "Choose a different password from the current one.");
+      }
+      return err?.message || t("signin.auth_error", "Authentication error.");
+    }
+
+    function validateStrongPassword(value) {
+      const password = String(value || "");
+      return password.length >= 10
+        && /[a-z]/.test(password)
+        && /[A-Z]/.test(password)
+        && /\d/.test(password)
+        && /[^A-Za-z0-9]/.test(password);
+    }
+
+    function clearModalFeedbacks() {
+      if (signupFeedback) signupFeedback.textContent = "";
+      if (forgotFeedback) forgotFeedback.textContent = "";
+      if (resetFeedback) resetFeedback.textContent = "";
+    }
+
+    function handleRecoveryState() {
+      recoveryMode = true;
+      clearModalFeedbacks();
+      closeModal(signupModal);
+      closeModal(forgotModal);
+      openModal(resetModal);
+      if (resetFeedback) resetFeedback.textContent = t("signin.reset_ready", "You can now create a new password.");
+      if (resetPassword) resetPassword.focus();
+    }
+
+    revealPage();
+
+    window.addEventListener("pageshow", () => {
+      resetOAuthUi();
+    });
+    window.addEventListener("focus", () => {
+      resetOAuthUi();
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) resetOAuthUi();
+    });
+
+    if (hasRecoveryParams()) {
+      window.location.replace(`reset-password.html${window.location.search || ""}${window.location.hash || ""}`);
     }
 
     function getNextPath() {
@@ -223,9 +904,24 @@
 
     async function bootstrap() {
       try {
-        const client = getClient();
-        const { data } = await client.auth.getSession();
+        const supabase = getClient();
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY") {
+            handleRecoveryState();
+            return;
+          }
+          if (event === "SIGNED_IN" && !recoveryMode) {
+            if (session?.user) {
+              ensureUserProfile(session.user).catch((err) => console.warn("Could not ensure user profile.", err));
+            }
+            window.location.replace(getNextPath());
+          }
+        });
+        const { data } = await supabase.auth.getSession();
         if (data?.session?.user) {
+          ensureUserProfile(data.session.user).catch((err) => console.warn("Could not ensure user profile.", err));
+        }
+        if (data?.session?.user && !recoveryMode) {
           window.location.replace(getNextPath());
         }
       } catch (err) {
@@ -233,24 +929,289 @@
       }
     }
 
-    async function handleGoogleSignIn() {
+    async function ensureUserProfile(user) {
+      const supabase = getClient();
+      const authProfile = extractAuthProfileData(user);
+      if (!user?.id || !authProfile.email) return;
+
+      const existing = await supabase
+        .from("users")
+        .select("username,first_name,last_name,avatar_url,discord_username,discord_id,whatsapp_same_phone,show_whatsapp_button,show_telegram_button")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (existing.error && existing.error.code !== "PGRST116") throw existing.error;
+
+      const existingUsername = validateProfileUsername(existing.data?.username)
+        && !isLikelyProviderId(existing.data?.username)
+        ? existing.data.username
+        : "";
+      const baseUsername = validateProfileUsername(authProfile.usernameSeed)
+        ? authProfile.usernameSeed
+        : buildUsernameSeed(authProfile.firstName || "", authProfile.lastName || "", authProfile.email);
+      const existingLooksLikeDiscordHandle = authProfile.isDiscordAuth
+        && normalizeDiscordUsername(existing.data?.first_name || "") === String(authProfile.discordUsername || "");
+      const sanitizedExistingFirstName = existingLooksLikeDiscordHandle || isLikelyProviderId(existing.data?.first_name)
+        ? ""
+        : String(existing.data?.first_name || "");
+      const sanitizedExistingLastName = isLikelyProviderId(existing.data?.last_name)
+        ? ""
+        : String(existing.data?.last_name || "");
+      const resolvedFirstName = pickFirstUsefulValue([sanitizedExistingFirstName, authProfile.firstName]) || null;
+      const resolvedLastName = pickFirstUsefulValue([sanitizedExistingLastName, authProfile.lastName]) || null;
+      const resolvedDiscordUsername = authProfile.isDiscordAuth
+        ? (normalizeDiscordUsername(
+            shouldReplaceStoredValue(
+              existing.data?.discord_username,
+              authProfile.discordUsername,
+              [pickFirstPresentValue([existing.data?.discord_username])],
+            ) || "",
+          ) || null)
+        : null;
+      const resolvedDiscordId = authProfile.isDiscordAuth && /^[0-9]{17,20}$/.test(String(authProfile.discordId || "").trim())
+        ? String(authProfile.discordId).trim()
+        : null;
+      const usernameCandidates = Array.from(new Set([
+        existingUsername,
+        baseUsername,
+        normalizeProfileUsername(`${baseUsername}${Math.floor(Math.random() * 900 + 100)}`),
+        normalizeProfileUsername(`${baseUsername}${Math.floor(Math.random() * 9000 + 1000)}`),
+      ].filter((candidate) => validateProfileUsername(candidate))));
+      if (!usernameCandidates.length) return;
+
+      let lastError = null;
+      for (const username of usernameCandidates) {
+        const payload = {
+          id: user.id,
+          email: authProfile.email,
+          username,
+          first_name: resolvedFirstName,
+          last_name: resolvedLastName,
+          avatar_url: existing.data?.avatar_url || authProfile.avatarUrl,
+          discord_username: resolvedDiscordUsername,
+          discord_id: resolvedDiscordId,
+          whatsapp_same_phone: existing.data?.whatsapp_same_phone ?? false,
+          show_whatsapp_button: existing.data?.show_whatsapp_button ?? false,
+          show_telegram_button: existing.data?.show_telegram_button ?? false,
+        };
+
+        const { error } = await supabase.from("users").upsert(payload, { onConflict: "id" });
+        if (!error) return;
+        if (error.code === "23505") {
+          lastError = error;
+          continue;
+        }
+        throw error;
+      }
+      if (lastError) throw lastError;
+    }
+
+    async function handlePasswordSignIn(event) {
+      event.preventDefault();
+      sessionStorage.removeItem("gimerr-password-recovery");
+      if (feedbackEl) feedbackEl.textContent = "";
+      const email = normalizeEmail(signInEmail?.value);
+      const password = String(signInPassword?.value || "");
+      if (!isValidEmail(email)) {
+        if (feedbackEl) feedbackEl.textContent = t("signin.invalid_email", "Enter a valid email address.");
+        return;
+      }
+      if (!password) {
+        if (feedbackEl) feedbackEl.textContent = t("signin.password_required", "Enter your password.");
+        return;
+      }
       try {
+        setBusy(signInSubmitBtn, signInSubmitLabel, true, t("nav.login", "Sign in"), t("signin.signing_in", "Signing in..."));
+        if (googleButtonEl) googleButtonEl.disabled = true;
+        if (discordButtonEl) discordButtonEl.disabled = true;
+        const supabase = getClient();
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        window.location.replace(getNextPath());
+      } catch (err) {
+        if (feedbackEl) feedbackEl.textContent = mapAuthError(err, "login");
+      } finally {
+        setBusy(signInSubmitBtn, signInSubmitLabel, false, t("nav.login", "Sign in"), t("signin.signing_in", "Signing in..."));
+        if (googleButtonEl) googleButtonEl.disabled = false;
+        if (discordButtonEl) discordButtonEl.disabled = false;
+      }
+    }
+
+    async function handleOAuthSignIn(provider, buttonEl) {
+      try {
+        sessionStorage.removeItem("gimerr-password-recovery");
+        if (googleButtonEl) googleButtonEl.disabled = true;
+        if (discordButtonEl) discordButtonEl.disabled = true;
         if (buttonEl) buttonEl.disabled = true;
         if (feedbackEl) feedbackEl.textContent = t("signin.wait", "Please wait...");
-        const client = getClient();
+        const supabase = getClient();
         const redirectTo = `${window.location.origin}${getNextPath()}`;
-        const { error } = await client.auth.signInWithOAuth({
-          provider: "google",
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
           options: { redirectTo },
         });
         if (error) throw error;
       } catch (err) {
-        if (feedbackEl) feedbackEl.textContent = err?.message || t("signin.auth_error", "Authentication error.");
-        if (buttonEl) buttonEl.disabled = false;
+        if (feedbackEl) feedbackEl.textContent = mapAuthError(err, "login");
+        resetOAuthUi();
       }
     }
 
-    buttonEl?.addEventListener("click", handleGoogleSignIn);
+    async function handleGoogleSignIn() {
+      return handleOAuthSignIn("google", googleButtonEl);
+    }
+
+    async function handleDiscordSignIn() {
+      return handleOAuthSignIn("discord", discordButtonEl);
+    }
+
+    async function handleSignup(event) {
+      event.preventDefault();
+      sessionStorage.removeItem("gimerr-password-recovery");
+      if (signupFeedback) signupFeedback.textContent = "";
+      const email = normalizeEmail(signupEmail?.value);
+      const password = String(signupPassword?.value || "");
+      const confirmPassword = String(signupPasswordConfirm?.value || "");
+      if (!isValidEmail(email)) {
+        if (signupFeedback) signupFeedback.textContent = t("signin.invalid_email", "Enter a valid email address.");
+        return;
+      }
+      if (!validateStrongPassword(password)) {
+        if (signupFeedback) signupFeedback.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        if (signupFeedback) signupFeedback.textContent = t("signin.password_mismatch", "The password confirmation does not match.");
+        return;
+      }
+      try {
+        setBusy(signupSubmitBtn, signupSubmitLabel, true, t("signin.signup_submit", "Create account"), t("signin.creating_account", "Creating account..."));
+        const supabase = getClient();
+        const username = await resolveAvailableSignupUsername("", "", email);
+        const redirectTo = `${window.location.origin}/sign-in.html?next=${encodeURIComponent(getNextPath())}`;
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectTo,
+            data: {
+              username,
+            },
+          },
+        });
+        if (error) throw error;
+        if (data?.user) {
+          await ensureUserProfile({
+            ...data.user,
+            email,
+            user_metadata: {
+              ...(data.user.user_metadata || {}),
+              username,
+            },
+          }).catch(() => {});
+        }
+        if (signupFeedback) {
+          signupFeedback.textContent = data?.session
+            ? t("signin.signup_success_instant", "Account created. Redirecting...")
+            : formatMessage("signin.signup_success", "We sent a confirmation email to {email}. Check your inbox to finish creating the account.", { email });
+        }
+        if (data?.session?.user) {
+          window.location.replace(getNextPath());
+          return;
+        }
+      } catch (err) {
+        if (signupFeedback) signupFeedback.textContent = mapAuthError(err, "signup");
+      } finally {
+        setBusy(signupSubmitBtn, signupSubmitLabel, false, t("signin.signup_submit", "Create account"), t("signin.creating_account", "Creating account..."));
+      }
+    }
+
+    async function handleForgotPassword(event) {
+      event.preventDefault();
+      if (forgotFeedback) forgotFeedback.textContent = "";
+      const email = normalizeEmail(forgotEmail?.value);
+      if (!isValidEmail(email)) {
+        if (forgotFeedback) forgotFeedback.textContent = t("signin.invalid_email", "Enter a valid email address.");
+        return;
+      }
+      try {
+        setBusy(forgotSubmitBtn, forgotSubmitLabel, true, t("signin.forgot_submit", "Send reset link"), t("signin.sending_reset", "Sending..."));
+        const supabase = getClient();
+        const redirectTo = `${window.location.origin}/reset-password.html?mode=recovery`;
+        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+        if (error) throw error;
+        if (forgotFeedback) forgotFeedback.textContent = t("signin.forgot_success", "If this email exists, we sent a recovery link.");
+      } catch (err) {
+        if (forgotFeedback) forgotFeedback.textContent = mapAuthError(err, "recover");
+      } finally {
+        setBusy(forgotSubmitBtn, forgotSubmitLabel, false, t("signin.forgot_submit", "Send reset link"), t("signin.sending_reset", "Sending..."));
+      }
+    }
+
+    async function handleResetPassword(event) {
+      event.preventDefault();
+      if (resetFeedback) resetFeedback.textContent = "";
+      const password = String(resetPassword?.value || "");
+      const confirmPassword = String(resetPasswordConfirm?.value || "");
+      if (!validateStrongPassword(password)) {
+        if (resetFeedback) resetFeedback.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
+        return;
+      }
+      if (password !== confirmPassword) {
+        if (resetFeedback) resetFeedback.textContent = t("signin.password_mismatch", "The password confirmation does not match.");
+        return;
+      }
+      try {
+        setBusy(resetSubmitBtn, resetSubmitLabel, true, t("signin.reset_submit", "Update password"), t("signin.updating_password", "Updating password..."));
+        const supabase = getClient();
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        if (resetFeedback) resetFeedback.textContent = t("signin.reset_success", "Password updated successfully. Redirecting...");
+        recoveryMode = false;
+        window.history.replaceState({}, "", `${window.location.origin}/sign-in.html?next=${encodeURIComponent(getNextPath())}`);
+        setTimeout(() => {
+          window.location.replace(getNextPath());
+        }, 900);
+      } catch (err) {
+        if (resetFeedback) resetFeedback.textContent = mapAuthError(err, "recover");
+      } finally {
+        setBusy(resetSubmitBtn, resetSubmitLabel, false, t("signin.reset_submit", "Update password"), t("signin.updating_password", "Updating password..."));
+      }
+    }
+
+    function wireModal(modal, closeBtn, cancelBtn = null) {
+      closeBtn?.addEventListener("click", () => closeModal(modal));
+      cancelBtn?.addEventListener("click", () => closeModal(modal));
+      modal?.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal(modal);
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      closeModal(signupModal);
+      closeModal(forgotModal);
+      if (!recoveryMode) closeModal(resetModal);
+    });
+
+    signInForm?.addEventListener("submit", handlePasswordSignIn);
+    googleButtonEl?.addEventListener("click", handleGoogleSignIn);
+    discordButtonEl?.addEventListener("click", handleDiscordSignIn);
+    openSignupModalBtn?.addEventListener("click", () => {
+      clearModalFeedbacks();
+      openModal(signupModal);
+      signupEmail?.focus();
+    });
+    openForgotModalBtn?.addEventListener("click", () => {
+      clearModalFeedbacks();
+      openModal(forgotModal);
+      forgotEmail?.focus();
+    });
+    signupForm?.addEventListener("submit", handleSignup);
+    forgotForm?.addEventListener("submit", handleForgotPassword);
+    resetForm?.addEventListener("submit", handleResetPassword);
+    wireModal(signupModal, signupModalClose, signupCancelBtn);
+    wireModal(forgotModal, forgotModalClose, forgotCancelBtn);
+    wireModal(resetModal, resetModalClose);
     bootstrap();
   </script>
 </body>

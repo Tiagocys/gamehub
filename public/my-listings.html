@@ -12,7 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -378,6 +377,7 @@
 
       <section class="hero-card my-listings-grid-card" id="my-listings-grid-card">
         <h3 id="wallet-listings-title" style="margin:0;">Manage listings</h3>
+        <p id="my-listings-no-active-feedback" class="helper" style="display:none;"></p>
         <div id="my-listings-grid" class="listing-grid"></div>
         <p id="my-listings-empty" class="helper">You have not published any listings yet.</p>
       </section>
@@ -542,6 +542,7 @@
 
     const myListingsMain = document.getElementById("my-listings-main");
     const feedbackEl = document.getElementById("my-listings-feedback");
+    const walletCard = document.getElementById("my-listings-wallet-card");
     const walletSummaryTitle = document.getElementById("wallet-summary-title");
     const walletSummaryGrid = document.getElementById("wallet-summary-grid");
     const walletBalanceLabel = document.getElementById("wallet-balance-label");
@@ -552,6 +553,7 @@
     const openWithdrawModalBtn = document.getElementById("open-withdraw-modal-btn");
     const walletWithdrawNote = document.getElementById("wallet-withdraw-note");
     const walletListingsTitle = document.getElementById("wallet-listings-title");
+    const noActiveListingsFeedback = document.getElementById("my-listings-no-active-feedback");
     const listingsGrid = document.getElementById("my-listings-grid");
     const listingsEmpty = document.getElementById("my-listings-empty");
 
@@ -959,7 +961,22 @@
       return expiresMs >= Date.now();
     }
 
+    function hasAnyActiveListings(list = myListings) {
+      return Array.isArray(list) && list.some((item) => String(item?.status || "").toLowerCase() === "active");
+    }
+
+    function updateWalletVisibilityState(list = myListings) {
+      const hasActiveListings = hasAnyActiveListings(list);
+      if (walletCard) {
+        walletCard.style.display = hasActiveListings ? "" : "none";
+      }
+      if (noActiveListingsFeedback) {
+        noActiveListingsFeedback.style.display = hasActiveListings ? "none" : "block";
+      }
+    }
+
     function updateWalletSummaryUI() {
+      updateWalletVisibilityState();
       if (walletSummaryGrid) {
         walletSummaryGrid.hidden = !getWalletDisplayCurrency();
       }
@@ -1041,6 +1058,12 @@
       if (openTopupModalBtn) openTopupModalBtn.textContent = t("ad_wallet.open_topup", "Add balance");
       if (openWithdrawModalBtn) openWithdrawModalBtn.textContent = t("ad_wallet.open_withdraw", "Request withdrawal");
       if (walletListingsTitle) walletListingsTitle.textContent = t("ad_wallet.manage_title", "Manage listings");
+      if (noActiveListingsFeedback) {
+        noActiveListingsFeedback.innerHTML = t(
+          "my_listings.no_active_feedback_html",
+          'Você ainda não tem nenhum anúncio ativo, <a class="link-ghost" href="listing-create.html">clique aqui para criar o seu primeiro anúncio</a>.',
+        );
+      }
       if (listingsEmpty) listingsEmpty.textContent = t("my_listings.empty", "You have not published any listings yet.");
       if (listingHighlightInfoTitle) listingHighlightInfoTitle.textContent = t("my_listings.highlight_info_title", "Boost listing");
       if (listingHighlightInfoHelper) listingHighlightInfoHelper.textContent = t("my_listings.highlight_info_helper", "Your highlighted listings will appear in a privileged position both on the game page and in Gimerr's home feed.");
@@ -1239,10 +1262,11 @@
     }
 
     function renderListings(list) {
+      updateWalletVisibilityState(list);
       listingsGrid.innerHTML = "";
       if (!list || list.length === 0) {
-        myListingsMain?.classList.add("empty-state");
-        listingsEmpty.style.display = "block";
+        myListingsMain?.classList.remove("empty-state");
+        listingsEmpty.style.display = "none";
         return;
       }
       myListingsMain?.classList.remove("empty-state");

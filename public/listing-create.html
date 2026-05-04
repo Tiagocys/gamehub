@@ -12,7 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://gamehub-d35.pages.dev/img/meta.png" />
   <meta property="og:image:alt" content="Gimerr" />
@@ -37,7 +36,7 @@
     }
 
     .listing-create-main .form-card {
-      width: min(100%, 540px);
+      width: min(100%, 760px);
       min-width: 0;
     }
 
@@ -152,7 +151,7 @@
       <div class="form-card">
         <div>
           <h2 id="form-title">New listing</h2>
-          <p id="form-title-helper" class="helper">You can create only 1 listing per game.</p>
+          <p id="form-title-helper" class="helper">Create a new listing and choose the correct game.</p>
         </div>
         <form id="listing-form" class="form-vertical">
           <div class="field">
@@ -334,7 +333,7 @@
       const loaderImage = pageLoader?.querySelector("img");
       if (loaderImage) loaderImage.alt = t("listing_create.loading", "Loading");
       if (formTitle) formTitle.textContent = editListingId ? t("listing_create.edit_title", "Edit listing") : t("listing_create.page_title", "New listing");
-      if (formTitleHelper) formTitleHelper.textContent = t("listing_create.page_helper", "You can create only 1 listing per game.");
+      if (formTitleHelper) formTitleHelper.textContent = t("listing_create.page_helper", "Create a new listing and choose the correct game.");
       if (listingTitleLabel) listingTitleLabel.textContent = t("listing_create.title_label", "Listing title *");
       if (listingTitleInput) listingTitleInput.placeholder = t("listing_create.title_placeholder", "Ex: 1kk gold + rare items");
       if (listingGameLabel) listingGameLabel.textContent = t("listing_create.game_label", "Game name *");
@@ -626,7 +625,7 @@
       try {
         const { data, error } = await supabase
           .from("users")
-          .select("id, phone_verified")
+          .select("id, first_name, discord_username, discord_id")
           .eq("id", userId)
           .single();
         if (error) throw error;
@@ -637,30 +636,13 @@
       }
     }
 
-    async function findListingForGame(userId, gameId, excludeListingId = null) {
-      let query = supabase
-        .from("listings")
-        .select("id,title")
-        .eq("user_id", userId)
-        .eq("server_id", gameId)
-        .limit(1);
-      if (excludeListingId) {
-        query = query.neq("id", excludeListingId);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data?.[0] || null;
-    }
-
-    function duplicateListingMessage() {
-      return formatMessage(
-        "listing_create.duplicate_listing",
-        'You already have a listing for this game. <a class="feedback-link" href="my-listings.html">Click here</a> to edit or remove the existing listing.',
-      );
-    }
-
     function duplicateListingRequestMessage() {
       return t("listing_create.duplicate_request", "You already have a pending request for this game/site. Wait for the review before submitting again.");
+    }
+
+    function isListingProfileComplete(profile) {
+      const discordId = String(profile?.discord_id || "").trim();
+      return /^[0-9]{17,20}$/.test(discordId);
     }
 
     function ensureHttpsPrefix(raw) {
@@ -1271,15 +1253,6 @@
           return;
         }
 
-        if (gameId) {
-          const duplicateListing = await findListingForGame(currentUser.id, gameId, editingListing?.id || null);
-          if (duplicateListing) {
-            feedback.innerHTML = duplicateListingMessage();
-            setSubmitLoading(false);
-            return;
-          }
-        }
-
         const uploadedImageUrls = files.length > 0 ? await uploadListingImages(files) : [];
         const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls].slice(0, MAX_IMAGES);
         const removedImageUrls = isEditing
@@ -1392,15 +1365,7 @@
           });
           saveError = error;
         }
-        if (saveError) {
-          const isUniqueViolation = saveError.code === "23505" && String(saveError.message || "").includes("listings_user_server_unique");
-          if (isUniqueViolation) {
-            feedback.innerHTML = duplicateListingMessage();
-            setSubmitLoading(false);
-            return;
-          }
-          throw saveError;
-        }
+        if (saveError) throw saveError;
 
         feedback.textContent = isEditing
           ? t("listing_create.updated_success", "Listing updated successfully!")
@@ -1498,8 +1463,8 @@
         }
         await ensureValidSession();
         const profile = await fetchUserProfile(currentUser.id);
-        if (!profile?.phone_verified) {
-          window.location.replace("profile.html?phone_required=1");
+        if (!isListingProfileComplete(profile)) {
+          window.location.replace("profile.html?contact_required=1");
           return;
         }
         await fetchGames();

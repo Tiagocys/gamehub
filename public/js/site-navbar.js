@@ -16,6 +16,53 @@
     return clean || "user";
   }
 
+  function normalizeProfileUsername(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .slice(0, 20);
+  }
+
+  function validateProfileUsername(value) {
+    return /^[a-z0-9]{3,20}$/.test(String(value || ""));
+  }
+
+  function isLikelyProviderId(value) {
+    return /^[0-9]{8,}$/.test(String(value || "").trim());
+  }
+
+  function pickFirstUsefulValue(values) {
+    for (const value of values || []) {
+      const text = String(value || "").trim();
+      if (!text || isLikelyProviderId(text)) continue;
+      return text;
+    }
+    return "";
+  }
+
+  function pickFirstPresentValue(values) {
+    for (const value of values || []) {
+      const text = String(value || "").trim();
+      if (text) return text;
+    }
+    return "";
+  }
+
+  function shouldReplaceStoredValue(currentValue, incomingValue, fallbacks = []) {
+    const current = String(currentValue || "").trim();
+    const incoming = String(incomingValue || "").trim();
+    if (!incoming) return current || null;
+    if (!current) return incoming;
+    const currentKey = current.toLowerCase();
+    const fallbackKeys = new Set(
+      (Array.isArray(fallbacks) ? fallbacks : [])
+        .map((value) => String(value || "").trim().toLowerCase())
+        .filter(Boolean),
+    );
+    if (isLikelyProviderId(current) || fallbackKeys.has(currentKey)) return incoming;
+    return current;
+  }
+
   function escapeHtml(value) {
     return String(value || "")
       .replace(/&/g, "&amp;")
@@ -48,6 +95,11 @@
     if (username) return username;
     const email = String(user?.email || "").trim();
     return email ? email.split("@")[0] : "Player";
+  }
+
+  function hasSearchableListingProfile(user) {
+    const discordId = String(user?.discord_id || "").trim();
+    return /^[0-9]{17,20}$/.test(discordId);
   }
 
   function isHomePage() {
@@ -175,23 +227,122 @@
   }
 
   function parseUserName(user) {
-    const meta = user?.user_metadata || {};
-    const given = meta.given_name || meta.first_name || "";
-    const family = meta.family_name || meta.last_name || "";
-    if (given || family) {
-      return { first_name: given || null, last_name: family || null };
+    if (isDiscordAuthUser(user)) {
+      return { first_name: null, last_name: null };
     }
-    const full = String(meta.full_name || meta.name || "").trim();
+    const meta = user?.user_metadata || {};
+    const given = pickFirstUsefulValue([
+      meta.given_name,
+      meta.first_name,
+    ]);
+    if (given) {
+      return { first_name: given || null, last_name: null };
+    }
+    const full = pickFirstUsefulValue([
+      meta.full_name,
+      meta.name,
+    ]);
     if (!full) return { first_name: null, last_name: null };
     const parts = full.split(/\s+/);
     if (parts.length === 1) return { first_name: parts[0], last_name: null };
-    return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
+    return { first_name: parts[0], last_name: null };
+  }
+
+  function getIdentityData(user, provider) {
+    const identities = Array.isArray(user?.identities) ? user.identities : [];
+    const identity = identities.find((item) => String(item?.provider || "").toLowerCase() === String(provider || "").toLowerCase());
+    return identity?.identity_data || {};
+  }
+
+  function isDiscordAuthUser(user) {
+    const appMetaProvider = String(user?.app_metadata?.provider || "").trim().toLowerCase();
+    if (appMetaProvider === "discord") return true;
+    const identities = Array.isArray(user?.identities) ? user.identities : [];
+    return identities.some((item) => String(item?.provider || "").trim().toLowerCase() === "discord");
+  }
+
+  function normalizeDiscordUsername(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/^@+/, "")
+      .replace(/#\d{1,4}$/, "")
+      .replace(/[^a-z0-9._]/g, "")
+      .replace(/\.{2,}/g, ".")
+      .slice(0, 32);
+  }
+
+  function extractDiscordHandle(user) {
+    const discordMeta = getIdentityData(user, "discord");
+    const meta = user?.user_metadata || {};
+    const candidates = [
+      discordMeta.username,
+      discordMeta.user_name,
+      discordMeta.preferred_username,
+      discordMeta.name,
+      meta.username,
+      meta.user_name,
+      meta.preferred_username,
+      meta.name,
+    ];
+    for (const candidate of candidates) {
+      const normalized = normalizeDiscordUsername(candidate || "");
+      if (normalized) return normalized;
+    }
+    return "";
+  }
+
+  function buildInternalUsernameFromDiscordHandle(handle) {
+    const normalized = normalizeProfileUsername(String(handle || "").replace(/[._]/g, ""));
+    return validateProfileUsername(normalized) ? normalized : "";
+  }
+
+  function extractDiscordId(user) {
+    const discordMeta = getIdentityData(user, "discord");
+    const meta = user?.user_metadata || {};
+    const candidates = [
+      discordMeta.provider_id,
+      discordMeta.sub,
+      discordMeta.id,
+      meta.provider_id,
+      meta.sub,
+      meta.id,
+    ];
+    for (const candidate of candidates) {
+      const text = String(candidate || "").trim();
+      if (/^[0-9]{17,20}$/.test(text)) return text;
+    }
+    return "";
   }
 
   function baseUsernameFromUser(user) {
-    const fromName = String(user?.user_metadata?.full_name || "").trim().split(/\s+/)[0];
-    if (fromName) return normalizeUsername(fromName);
-    return normalizeUsername(String(user?.email || "").split("@")[0]);
+    if (isDiscordAuthUser(user)) {
+      const fromDiscordHandle = buildInternalUsernameFromDiscordHandle(extractDiscordHandle(user));
+      if (fromDiscordHandle) return fromDiscordHandle;
+    }
+    const discordMeta = getIdentityData(user, "discord");
+    const displayName = pickFirstUsefulValue([
+      discordMeta.display_name,
+      discordMeta.global_name,
+      user?.user_metadata?.full_name,
+      user?.user_metadata?.name,
+    ]);
+    if (displayName) {
+      const fromDisplay = normalizeProfileUsername(displayName.split(/\s+/)[0]);
+      if (validateProfileUsername(fromDisplay)) return fromDisplay;
+    }
+    const discordId = pickFirstPresentValue([
+      discordMeta.provider_id,
+      discordMeta.sub,
+      discordMeta.id,
+    ]);
+    if (discordId) {
+      const fromDiscordId = normalizeProfileUsername(discordId);
+      if (validateProfileUsername(fromDiscordId)) return fromDiscordId;
+    }
+    const fromEmail = normalizeProfileUsername(String(user?.email || "").split("@")[0]);
+    if (validateProfileUsername(fromEmail)) return fromEmail;
+    return normalizeProfileUsername(`user${Math.floor(Math.random() * 900000 + 100000)}`);
   }
 
   function detectUserLocale() {
@@ -210,7 +361,7 @@
 
     const existing = await client
       .from("users")
-      .select("username")
+      .select("username,first_name,last_name,avatar_url,discord_username,discord_id")
       .eq("id", user.id)
       .maybeSingle();
     if (existing.error && existing.error.code !== "PGRST116") {
@@ -218,13 +369,40 @@
     }
 
     const names = parseUserName(user);
+    const discordMeta = getIdentityData(user, "discord");
     const baseUsername = baseUsernameFromUser(user);
+    const incomingDiscordUsername = isDiscordAuthUser(user) ? (extractDiscordHandle(user) || null) : null;
+    const existingLooksLikeDiscordHandle = isDiscordAuthUser(user)
+      && normalizeDiscordUsername(existing.data?.first_name || "") === String(incomingDiscordUsername || "");
+    const sanitizedExistingFirstName = existingLooksLikeDiscordHandle || isLikelyProviderId(existing.data?.first_name)
+      ? ""
+      : String(existing.data?.first_name || "");
+    const sanitizedExistingLastName = isLikelyProviderId(existing.data?.last_name)
+      ? ""
+      : String(existing.data?.last_name || "");
+    const resolvedFirstName = pickFirstUsefulValue([sanitizedExistingFirstName, names.first_name]) || null;
+    const resolvedLastName = pickFirstUsefulValue([sanitizedExistingLastName, names.last_name]) || null;
+    const resolvedDiscordUsername = isDiscordAuthUser(user)
+      ? (normalizeDiscordUsername(
+          shouldReplaceStoredValue(
+            existing.data?.discord_username,
+            incomingDiscordUsername,
+            [pickFirstPresentValue([existing.data?.discord_username])],
+          ) || "",
+        ) || null)
+      : null;
+    const incomingDiscordId = isDiscordAuthUser(user) ? extractDiscordId(user) : "";
+    const resolvedDiscordId = isDiscordAuthUser(user) && /^[0-9]{17,20}$/.test(String(incomingDiscordId || "").trim())
+      ? String(incomingDiscordId).trim()
+      : null;
     const candidates = Array.from(new Set([
-      existing.data?.username || "",
+      validateProfileUsername(existing.data?.username) && !isLikelyProviderId(existing.data?.username)
+        ? existing.data.username
+        : "",
       baseUsername,
-      `${baseUsername}-${Math.floor(Math.random() * 9000 + 1000)}`,
-      `${baseUsername}-${crypto.randomUUID().slice(0, 6)}`,
-    ].filter(Boolean)));
+      normalizeProfileUsername(`${baseUsername}${Math.floor(Math.random() * 900 + 100)}`),
+      normalizeProfileUsername(`${baseUsername}${Math.floor(Math.random() * 9000 + 1000)}`),
+    ].filter((candidate) => validateProfileUsername(candidate))));
 
     let lastError = null;
     for (const username of candidates) {
@@ -232,9 +410,11 @@
         id: user.id,
         username,
         email: user.email,
-        avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
-        first_name: names.first_name,
-        last_name: names.last_name,
+        avatar_url: existing.data?.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || discordMeta.avatar_url || discordMeta.picture || null,
+        first_name: resolvedFirstName,
+        last_name: resolvedLastName,
+        discord_username: resolvedDiscordUsername,
+        discord_id: resolvedDiscordId,
         locale: detectUserLocale(),
       };
       const { error } = await client.from("users").upsert(payload, { onConflict: "id" });
@@ -421,9 +601,10 @@
             select: "id,name,official_site,banner_url",
             status: "eq.active",
           }),
-          fetchSupabaseRows("listings", {
-            select: "user_id",
+          fetchSupabaseRows("users", {
+            select: "id,username,first_name,last_name,email,avatar_url,discord_id,status",
             status: "eq.active",
+            discord_id: "not.is.null",
           }),
         ]);
 
@@ -434,19 +615,9 @@
           cover_url: await resolveSearchImageUrl(server.banner_url || ""),
         })));
 
-        const userIds = Array.from(new Set((listingsData || []).map((item) => item.user_id).filter(Boolean)));
-        if (userIds.length === 0) {
-          state.players = [];
-          return;
-        }
-
-        const usersData = await fetchSupabaseRows("users", {
-          select: "id,username,first_name,last_name,email,avatar_url,status",
-          id: `in.(${userIds.join(",")})`,
-          status: "eq.active",
-        });
-
-        state.players = (usersData || []).map(buildSearchablePlayer);
+        state.players = (listingsData || [])
+          .filter(hasSearchableListingProfile)
+          .map(buildSearchablePlayer);
       };
 
       const renderSuggestions = (term) => {
@@ -467,7 +638,7 @@
             const aStarts = aUsername.startsWith(normalizedTerm) ? 1 : 0;
             const bStarts = bUsername.startsWith(normalizedTerm) ? 1 : 0;
             if (bStarts !== aStarts) return bStarts - aStarts;
-            return String(a.username || a.name || "").localeCompare(String(b.username || b.name || ""), "pt-BR", { sensitivity: "base" });
+            return String(a.name || a.username || "").localeCompare(String(b.name || b.username || ""), "pt-BR", { sensitivity: "base" });
           })
           .slice(0, 6);
 
@@ -498,18 +669,23 @@
           </div>`;
         }).join("");
 
-        const playerItems = playerMatches.map((player) => `
-          <div class="suggestion-item suggestion-item-rich" data-kind="player" data-user-id="${player.id}" data-user-name="${escapeHtml(player.username || player.name)}">
+        const playerItems = playerMatches.map((player) => {
+          const usernameLine = player.username
+            ? `<small>@${escapeHtml(player.username)}</small>`
+            : "";
+          return `
+          <div class="suggestion-item suggestion-item-rich" data-kind="player" data-user-id="${player.id}" data-user-name="${escapeHtml(player.name || player.username)}">
             <span class="suggestion-thumb suggestion-thumb-avatar">
               <img src="${encodeURI(player.avatar_url || "img/avatar.svg")}" alt="${escapeHtml(player.name)}" loading="lazy" referrerpolicy="no-referrer" />
             </span>
             <span class="suggestion-copy">
-              <strong>${escapeHtml(player.username || player.name)}</strong>
-              <small>${escapeHtml(player.name)}</small>
+              <strong>${escapeHtml(player.name || player.username)}</strong>
+              ${usernameLine}
             </span>
             <span class="badge">Player</span>
           </div>
-        `).join("");
+        `;
+        }).join("");
 
         searchSuggestions.innerHTML = `${gameItems}${playerItems}`;
         searchSuggestions.style.display = "block";
@@ -632,6 +808,7 @@
                 <button id="menu-create-listing" class="menu-item create-listing-menu" type="button">${t("nav.create_listing", "Criar anúncio")}</button>
                 <a id="my-listings-link" class="menu-item" href="my-listings.html">${t("nav.my_listings", "Meus anúncios")}</a>
                 <a id="profile-link" class="menu-item" href="profile.html">${t("nav.my_profile", "Meu perfil")}</a>
+                <a id="settings-link" class="menu-item" href="settings.html">${t("nav.settings", "Configurações")}</a>
                 <a id="menu-partner-link" class="menu-item" href="partner.html" data-partner-link style="display:none;">${t("nav.partner_area", "Área de parceiros")}</a>
                 <a id="help-link" class="menu-item" href="help.html">${t("nav.help", "Ajuda")}</a>
                 <button id="logout-btn" class="menu-item" type="button">${t("nav.logout", "Sair")}</button>

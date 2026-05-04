@@ -73,7 +73,7 @@ function normalizeImageUrl(raw, siteUrl) {
 async function fetchUserProfile({ supabaseUrl, supabaseAnonKey, userId }) {
   const endpoint =
     `${stripTrailingSlash(supabaseUrl)}/rest/v1/users?id=eq.${encodeURIComponent(userId)}` +
-    "&select=id,first_name,last_name,username,about_me,avatar_url,status&limit=1";
+    "&select=id,first_name,last_name,about_me,avatar_url,status&limit=1";
 
   let response = await fetch(endpoint, {
     headers: {
@@ -104,14 +104,7 @@ function buildDisplayName(profile) {
   const lastName = String(profile?.last_name || "").trim();
   const fullName = `${firstName} ${lastName}`.trim();
   if (fullName) return fullName;
-  const username = String(profile?.username || "").trim();
-  if (username) return username;
   return "Perfil da comunidade";
-}
-
-function buildUsername(profile) {
-  const username = String(profile?.username || "").trim();
-  return username ? `@${username}` : "";
 }
 
 function renderMetaPage({ title, description, imageUrl, ogUrl, appUrl, siteName = "Gimerr" }) {
@@ -194,15 +187,10 @@ export async function onRequestGet(context) {
     }
 
     const displayName = truncateText(buildDisplayName(profile), 80);
-    const username = truncateText(buildUsername(profile), 40);
-    const title = username
-      ? `${displayName} (${username}) | Gimerr`
-      : `${displayName} | Gimerr`;
+    const title = `${displayName} | Gimerr`;
     const description = truncateText(
       profile.about_me ||
-        (username
-          ? `Confira o perfil público de ${displayName} ${username} no marketplace da comunidade Gimerr.`
-          : `Confira o perfil público de ${displayName} no marketplace da comunidade Gimerr.`),
+        `Confira o perfil público de ${displayName} no marketplace da comunidade Gimerr.`,
       200,
     );
     const imageUrl = normalizeImageUrl(profile.avatar_url || DEFAULT_META_PATH, siteUrl);

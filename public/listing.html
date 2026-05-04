@@ -12,9 +12,6 @@
   </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="google-adsense-account" content="ca-pub-2685595309963345" />
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2685595309963345"
-     crossorigin="anonymous"></script>
   <meta name="description" content="Gaming community marketplace. Discover listings, items and offers on Gimerr." />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Gimerr" />
@@ -122,11 +119,41 @@
       word-break: break-word;
     }
 
+    .seller-discord a {
+      color: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .seller-discord a:hover {
+      text-decoration: underline;
+    }
+
+    .seller-phone {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+      word-break: break-word;
+    }
+
     .seller-discord-icon {
       width: 14px;
       height: 14px;
       object-fit: contain;
       display: block;
+    }
+
+    .seller-share-link-icon {
+      width: 12px;
+      height: 12px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
     }
 
     .seller-recommendations {
@@ -154,6 +181,28 @@
       font-size: 13px;
       font-weight: 800;
       white-space: nowrap;
+    }
+
+    .seller-verified-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .seller-verified-badge img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+      display: block;
+      flex: 0 0 auto;
     }
 
     .seller-recommendations img {
@@ -444,10 +493,12 @@
           <h1 id="listing-title">Loading...</h1>
           <div class="seller-meta-row">
             <a id="seller-profile-link" class="seller-profile-link" href="#" style="display:none;"></a>
+            <span id="seller-verified-badge" class="seller-verified-badge" style="display:none;"></span>
             <span id="seller-rating" class="seller-rating" style="display:none;"></span>
             <button id="seller-recommendations" class="seller-recommendations" type="button" style="display:none;" aria-expanded="false"></button>
           </div>
           <span id="seller-discord" class="seller-discord" style="display:none;"></span>
+          <span id="seller-phone" class="seller-phone" style="display:none;"></span>
           <div id="listing-contact-actions" class="inline-actions listing-contact-actions" style="display:none;">
             <a id="telegram-chat" class="btn btn-telegram btn-contact-cta" href="#" target="_blank" rel="noopener" style="display:none;">
               Conversar no Telegram
@@ -559,8 +610,10 @@
     const profileLink = document.getElementById("profile-link");
     const titleEl = document.getElementById("listing-title");
     const sellerProfileLink = document.getElementById("seller-profile-link");
+    const sellerVerifiedBadge = document.getElementById("seller-verified-badge");
     const sellerRating = document.getElementById("seller-rating");
     const sellerDiscord = document.getElementById("seller-discord");
+    const sellerPhone = document.getElementById("seller-phone");
     const sellerRecommendations = document.getElementById("seller-recommendations");
     const shareBtn = document.getElementById("listing-share-btn");
     const descriptionEl = document.getElementById("listing-description");
@@ -1224,7 +1277,7 @@
           .from("users")
           .select("avatar_url")
           .eq("id", currentUser.id)
-          .single();
+          .maybeSingle();
         let avatar = data?.avatar_url;
         if (!avatar) {
           const { data: authData } = await supabase.auth.getUser();
@@ -1577,6 +1630,7 @@
       const fullName = `${firstName} ${lastName}`.trim() || t("listing.seller_default", "Seller");
       const displayFirstName = firstName || t("listing.seller_default_lower", "seller");
       const discordUsername = String(listing.user_discord_username || "").trim();
+      const discordId = String(listing.user_discord_id || "").trim();
 
       document.title = `${listing.title} | Gimerr`;
       if (listingServerLink && listingServerName && listingServerLogo) {
@@ -1637,14 +1691,34 @@
           icon.src = "img/discord.svg";
           icon.alt = "";
           icon.className = "seller-discord-icon";
-          const name = document.createElement("span");
-          name.textContent = discordUsername;
           sellerDiscord.appendChild(icon);
-          sellerDiscord.appendChild(name);
+          if (/^[0-9]{17,20}$/.test(discordId)) {
+            const link = document.createElement("a");
+            link.href = `https://discord.com/users/${discordId}`;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = discordUsername;
+            const shareIcon = document.createElement("img");
+            shareIcon.src = "img/share.svg";
+            shareIcon.alt = "";
+            shareIcon.className = "seller-share-link-icon";
+            link.appendChild(shareIcon);
+            sellerDiscord.appendChild(link);
+          } else {
+            const name = document.createElement("span");
+            name.textContent = discordUsername;
+            sellerDiscord.appendChild(name);
+          }
           sellerDiscord.style.display = "inline-flex";
         } else {
           sellerDiscord.style.display = "none";
         }
+      }
+      if (sellerPhone) {
+        const rawPhone = String(listing.user_phone || "").trim();
+        const onlyPhoneVisible = !!rawPhone && listing.user_show_telegram === false && !listing.user_show_whatsapp;
+        sellerPhone.textContent = rawPhone;
+        sellerPhone.style.display = onlyPhoneVisible ? "inline-flex" : "none";
       }
 
       if (sellerRecommendations) {
@@ -1655,6 +1729,15 @@
         sellerRecommendations.innerHTML = `<img src="img/rec.png" alt="" /> ${escapeHtml(label)}`;
         sellerRecommendations.style.display = listing.user_profile_id ? "inline-flex" : "none";
         sellerRecommendations.setAttribute("aria-expanded", "false");
+      }
+      if (sellerVerifiedBadge) {
+        if (listing.user_is_verified) {
+          sellerVerifiedBadge.innerHTML = `<img src="img/verified.svg" alt="" /> <span>${escapeHtml(t("common.verified_account", "Verified account"))}</span>`;
+          sellerVerifiedBadge.style.display = "inline-flex";
+        } else {
+          sellerVerifiedBadge.innerHTML = "";
+          sellerVerifiedBadge.style.display = "none";
+        }
       }
       if (sellerRating) {
         const score = Number(listing.user_reputation_score);
@@ -1865,7 +1948,7 @@
         ensureClient();
         const { data, error } = await supabase
           .from("listings")
-          .select("id,title,description,images,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username)")
+          .select("id,title,description,images,status,server_id,created_at,user_id,users(id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username,discord_id)")
           .eq("id", listingId)
           .single();
         if (error) {
@@ -1882,11 +1965,12 @@
           : "";
         const phone = data?.users?.phone || null;
         const userShowWhatsapp = !!data?.users?.show_whatsapp_button;
-        const userShowTelegram = data?.users?.show_telegram_button !== false;
+        const userShowTelegram = !!data?.users?.show_telegram_button;
         const userFirstName = data?.users?.first_name || "seller";
         const userLastName = data?.users?.last_name || "";
         const userAvatarUrl = resolvedAvatarUrl || "";
         const userDiscordUsername = data?.users?.discord_username || "";
+        const userDiscordId = data?.users?.discord_id || "";
         const userProfileId = data?.users?.id || data?.user_id || null;
         const [userRecommendationsCount, reputationMap] = await Promise.all([
           fetchRecommendationsCount(userProfileId),
@@ -1906,6 +1990,7 @@
             user_last_name: userLastName,
             user_avatar_url: userAvatarUrl,
             user_discord_username: userDiscordUsername,
+            user_discord_id: userDiscordId,
             user_profile_id: userProfileId,
             user_recommendations_count: userRecommendationsCount,
             user_reputation_score: userReputation?.reputation_score ?? null,
@@ -1936,23 +2021,25 @@
         let userLastName = "";
         let userAvatarUrl = "";
         let userDiscordUsername = "";
+        let userDiscordId = "";
         let userProfileId = data?.user_id || null;
         if (data?.user_id) {
           const { data: userData } = await supabase
             .from("users")
-            .select("id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username")
+            .select("id,phone,show_whatsapp_button,show_telegram_button,first_name,last_name,avatar_url,discord_username,discord_id")
             .eq("id", data.user_id)
             .single();
           userProfileId = userData?.id || userProfileId;
           userPhone = userData?.phone || null;
           userShowWhatsapp = !!userData?.show_whatsapp_button;
-          userShowTelegram = userData?.show_telegram_button !== false;
+          userShowTelegram = !!userData?.show_telegram_button;
           userFirstName = userData?.first_name || "seller";
           userLastName = userData?.last_name || "";
           userAvatarUrl = userData?.avatar_url
             ? await resolveImageUrl(userData.avatar_url)
             : "";
           userDiscordUsername = userData?.discord_username || "";
+          userDiscordId = userData?.discord_id || "";
         }
         const [userRecommendationsCount, reputationMap] = await Promise.all([
           fetchRecommendationsCount(userProfileId),
@@ -1972,6 +2059,7 @@
             user_last_name: userLastName,
             user_avatar_url: userAvatarUrl,
             user_discord_username: userDiscordUsername || "",
+            user_discord_id: userDiscordId || "",
             user_profile_id: userProfileId,
             user_recommendations_count: userRecommendationsCount,
             user_reputation_score: userReputation?.reputation_score ?? null,
