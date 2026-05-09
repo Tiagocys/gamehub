@@ -427,3 +427,53 @@ entrypoint = "./functions/r2_sign_upload/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/profile_update/index.ts"
+
+[functions.listing_page_view]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/listing_page_view/index.ts"
+
+[functions.partner_server_analytics]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/partner_server_analytics/index.ts"
+
+[functions.discord_guilds_overview]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_guilds_overview/index.ts"
+
+[functions.discord_server_register]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_server_register/index.ts"
+
+[functions.discord_guild_channels]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_guild_channels/index.ts"
+
+[functions.discord_server_channel_config]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_server_channel_config/index.ts"
+
+[functions.discord_listing_announce]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_listing_announce/index.ts"
+
+[functions.account_delete]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/account_delete/index.ts"
+
+[functions.discord_server_invite_sync]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_server_invite_sync/index.ts"
+
+[functions.discord_server_app_remove]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/discord_server_app_remove/index.ts"

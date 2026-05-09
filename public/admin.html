@@ -274,6 +274,19 @@ body {
       <div id="reports-empty" class="muted" style="display:none;">Nenhuma denúncia pendente.</div>
       <div id="reports-list" class="list"></div>
     </section>
+
+    <section class="card">
+      <h1>Exportar relatório mensal</h1>
+      <p>Gere um relatório por mês com servidores, anúncios ativos, seguidores, visualizações totais e visualizações do mês. O navegador abrirá uma versão pronta para salvar em PDF.</p>
+      <div class="row">
+        <div>
+          <label for="server-report-month">Mês de referência</label>
+          <input id="server-report-month" type="month" />
+        </div>
+      </div>
+      <button id="export-server-report-btn" type="button">Exportar PDF do mês</button>
+      <div class="muted" id="export-server-report-feedback">Selecione um mês para exportar o relatório.</div>
+    </section>
     </main>
   </div>
 
@@ -378,6 +391,9 @@ body {
     const reportsPrevBtn = document.getElementById("reports-prev");
     const reportsNextBtn = document.getElementById("reports-next");
     const reportsCounter = document.getElementById("reports-counter");
+    const serverReportMonthInput = document.getElementById("server-report-month");
+    const exportServerReportBtn = document.getElementById("export-server-report-btn");
+    const exportServerReportFeedback = document.getElementById("export-server-report-feedback");
 
     const SESSION_STORAGE_KEY = "gimerr-auth-session";
     let supabase;
@@ -398,6 +414,9 @@ body {
     const SERVER_SUBMIT_DEFAULT_TEXT = serverSubmitBtn?.textContent || "Salvar servidor";
     let ownerLookupTimer = null;
     const OWNER_ADMIN_CONFLICT_MESSAGE = "Administradores não podem ser cadastrados como responsáveis pelos jogos.";
+    if (serverReportMonthInput && !serverReportMonthInput.value) {
+      serverReportMonthInput.value = new Date().toISOString().slice(0, 7);
+    }
 
     function getProjectRef() {
       try {
@@ -1087,6 +1106,7 @@ body {
             supportStatus.textContent = "Restrito aos admins.";
             withdrawsStatus.textContent = "Restrito aos admins.";
             reportsStatus.textContent = "Restrito aos admins.";
+            if (exportServerReportFeedback) exportServerReportFeedback.textContent = "Restrito aos admins.";
             redirectToIndex();
             return;
           }
@@ -1111,6 +1131,7 @@ body {
           if (reportsNav) reportsNav.style.display = "none";
           reportsEmpty.style.display = "block";
           reportsEmpty.textContent = "Faça login para ver denúncias.";
+          if (exportServerReportFeedback) exportServerReportFeedback.textContent = "Faça login para exportar relatórios.";
           redirectToIndex();
           return;
         }
@@ -1122,6 +1143,7 @@ body {
         supportStatus.textContent = "Erro ao checar sessão.";
         withdrawsStatus.textContent = "Erro ao checar sessão.";
         reportsStatus.textContent = "Erro ao checar sessão.";
+        if (exportServerReportFeedback) exportServerReportFeedback.textContent = "Erro ao preparar exportação.";
         if (!currentUser || !profile?.is_admin) {
           redirectToIndex();
           return;
@@ -1830,6 +1852,268 @@ body {
         .replace(/'/g, "&#39;");
     }
 
+    function formatCount(value) {
+      return new Intl.NumberFormat("pt-BR").format(Math.max(0, Math.floor(Number(value || 0))));
+    }
+
+    function setExportServerReportState(processing, message = "") {
+      if (exportServerReportBtn) {
+        exportServerReportBtn.disabled = !!processing;
+        exportServerReportBtn.textContent = processing ? "Gerando relatório..." : "Exportar PDF do mês";
+      }
+      if (exportServerReportFeedback && message) {
+        exportServerReportFeedback.textContent = message;
+      }
+    }
+
+    async function fetchAllRows(queryFactory, pageSize = 1000) {
+      const rows = [];
+      let from = 0;
+      while (true) {
+        const to = from + pageSize - 1;
+        const { data, error } = await queryFactory(from, to);
+        if (error) throw error;
+        const batch = Array.isArray(data) ? data : [];
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+        from += pageSize;
+      }
+      return rows;
+    }
+
+    function getReportMonthBounds(monthValue) {
+      const normalized = String(monthValue || "").trim();
+      if (!/^\d{4}-\d{2}$/.test(normalized)) {
+        throw new Error("Selecione um mês válido para exportar.");
+      }
+      const [year, month] = normalized.split("-").map(Number);
+      const start = new Date(Date.UTC(year, month - 1, 1));
+      const end = new Date(Date.UTC(year, month, 1));
+      const endInclusive = new Date(end.getTime() - 1);
+      const label = new Intl.DateTimeFormat("pt-BR", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(start);
+      return {
+        startIsoDate: start.toISOString().slice(0, 10),
+        endIsoDateExclusive: end.toISOString().slice(0, 10),
+        endInclusiveLabel: new Intl.DateTimeFormat("pt-BR", {
+          dateStyle: "medium",
+          timeZone: "UTC",
+        }).format(endInclusive),
+        label,
+      };
+    }
+
+    async function buildServerMonthlyReport(monthValue) {
+      const { startIsoDate, endIsoDateExclusive, endInclusiveLabel, label } = getReportMonthBounds(monthValue);
+      let serverRows = [];
+      let serverQuery = await supabase
+        .from("servers")
+        .select("id,name,status,created_at,official_site,owner_email")
+        .neq("status", "deleted")
+        .order("name", { ascending: true });
+      if (isMissingOwnerEmailColumnError(serverQuery.error)) {
+        serverQuery = await supabase
+          .from("servers")
+          .select("id,name,status,created_at,official_site")
+          .neq("status", "deleted")
+          .order("name", { ascending: true });
+      }
+      if (serverQuery.error) throw serverQuery.error;
+      serverRows = Array.isArray(serverQuery.data) ? serverQuery.data : [];
+
+      const serverIds = serverRows.map((row) => String(row.id || "").trim()).filter(Boolean);
+      const listingRows = serverIds.length
+        ? await fetchAllRows((from, to) => supabase
+            .from("listings")
+            .select("server_id,status")
+            .in("server_id", serverIds)
+            .range(from, to))
+        : [];
+      const followRows = serverIds.length
+        ? await fetchAllRows((from, to) => supabase
+            .from("server_follows")
+            .select("server_id")
+            .in("server_id", serverIds)
+            .range(from, to))
+        : [];
+      const totalViewRows = serverIds.length
+        ? await fetchAllRows((from, to) => supabase
+            .from("listing_view_daily_metrics")
+            .select("server_id,views_count")
+            .in("server_id", serverIds)
+            .range(from, to))
+        : [];
+      const monthlyViewRows = serverIds.length
+        ? await fetchAllRows((from, to) => supabase
+            .from("listing_view_daily_metrics")
+            .select("server_id,views_count,stat_date")
+            .in("server_id", serverIds)
+            .gte("stat_date", startIsoDate)
+            .lt("stat_date", endIsoDateExclusive)
+            .range(from, to))
+        : [];
+
+      const activeListingsByServer = new Map();
+      listingRows.forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key || String(row?.status || "") !== "active") return;
+        activeListingsByServer.set(key, Number(activeListingsByServer.get(key) || 0) + 1);
+      });
+
+      const followersByServer = new Map();
+      followRows.forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        followersByServer.set(key, Number(followersByServer.get(key) || 0) + 1);
+      });
+
+      const totalViewsByServer = new Map();
+      totalViewRows.forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        totalViewsByServer.set(key, Number(totalViewsByServer.get(key) || 0) + Number(row?.views_count || 0));
+      });
+
+      const monthlyViewsByServer = new Map();
+      monthlyViewRows.forEach((row) => {
+        const key = String(row?.server_id || "").trim();
+        if (!key) return;
+        monthlyViewsByServer.set(key, Number(monthlyViewsByServer.get(key) || 0) + Number(row?.views_count || 0));
+      });
+
+      const rows = serverRows.map((server) => {
+        const serverId = String(server.id || "").trim();
+        return {
+          id: serverId,
+          name: String(server.name || "Servidor"),
+          status: String(server.status || "active"),
+          officialSite: String(server.official_site || ""),
+          ownerEmail: String(server.owner_email || ""),
+          activeListings: Number(activeListingsByServer.get(serverId) || 0),
+          followers: Number(followersByServer.get(serverId) || 0),
+          totalViews: Number(totalViewsByServer.get(serverId) || 0),
+          monthlyViews: Number(monthlyViewsByServer.get(serverId) || 0),
+          createdAt: formatDateTime(server.created_at),
+        };
+      }).sort((a, b) => (
+        (b.monthlyViews - a.monthlyViews)
+        || (b.totalViews - a.totalViews)
+        || a.name.localeCompare(b.name, "pt-BR")
+      ));
+
+      const totals = rows.reduce((acc, row) => {
+        acc.activeListings += row.activeListings;
+        acc.followers += row.followers;
+        acc.totalViews += row.totalViews;
+        acc.monthlyViews += row.monthlyViews;
+        return acc;
+      }, { activeListings: 0, followers: 0, totalViews: 0, monthlyViews: 0 });
+
+      return {
+        label,
+        startIsoDate,
+        endInclusiveLabel,
+        rows,
+        totals,
+      };
+    }
+
+    function openServerMonthlyReportPrint(report) {
+      const rowsHtml = report.rows.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHtml(row.name)}</td>
+          <td>${escapeHtml(row.status)}</td>
+          <td>${escapeHtml(row.ownerEmail || "-")}</td>
+          <td>${formatCount(row.activeListings)}</td>
+          <td>${formatCount(row.followers)}</td>
+          <td>${formatCount(row.totalViews)}</td>
+          <td>${formatCount(row.monthlyViews)}</td>
+          <td>${escapeHtml(row.createdAt)}</td>
+        </tr>
+      `).join("");
+      const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Relatório de servidores - ${escapeHtml(report.label)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #0f2557; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    p { margin: 4px 0 12px; color: #4b5b78; }
+    .summary { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 18px 0 22px; }
+    .summary div { border: 1px solid #d9e1f2; border-radius: 10px; padding: 12px; background: #f8fbff; }
+    .summary strong { display:block; font-size: 18px; margin-top: 4px; color: #0f2557; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border: 1px solid #d9e1f2; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #eef4ff; }
+    @media print { body { margin: 12px; } }
+  </style>
+</head>
+<body>
+  <h1>Relatório mensal de servidores</h1>
+  <p>Mês de referência: <strong>${escapeHtml(report.label)}</strong></p>
+  <p>Período: ${escapeHtml(report.startIsoDate)} até ${escapeHtml(report.endInclusiveLabel)}</p>
+  <div class="summary">
+    <div><small>Servidores</small><strong>${formatCount(report.rows.length)}</strong></div>
+    <div><small>Anúncios ativos</small><strong>${formatCount(report.totals.activeListings)}</strong></div>
+    <div><small>Seguidores</small><strong>${formatCount(report.totals.followers)}</strong></div>
+    <div><small>Visualizações do mês</small><strong>${formatCount(report.totals.monthlyViews)}</strong></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Servidor</th>
+        <th>Status</th>
+        <th>Owner</th>
+        <th>Anúncios ativos</th>
+        <th>Seguidores</th>
+        <th>Visualizações totais</th>
+        <th>Visualizações do mês</th>
+        <th>Criado em</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+</body>
+</html>`;
+      const reportWindow = window.open("about:blank", "_blank", "width=1200,height=900");
+      if (!reportWindow) {
+        throw new Error("O navegador bloqueou a abertura do relatório. Libere pop-ups para continuar.");
+      }
+      reportWindow.document.open();
+      reportWindow.document.write(html);
+      reportWindow.document.close();
+      window.setTimeout(() => {
+        try {
+          reportWindow.focus();
+          reportWindow.print();
+        } catch (err) {
+          console.error(err);
+        }
+      }, 250);
+    }
+
+    async function exportMonthlyServerReport() {
+      if (!profile?.is_admin) {
+        setExportServerReportState(false, "Apenas admins podem exportar relatórios.");
+        return;
+      }
+      try {
+        setExportServerReportState(true, "Gerando relatório mensal...");
+        const report = await buildServerMonthlyReport(serverReportMonthInput?.value || "");
+        openServerMonthlyReportPrint(report);
+        setExportServerReportState(false, `Relatório de ${report.label} pronto para salvar em PDF.`);
+      } catch (err) {
+        console.error(err);
+        setExportServerReportState(false, err?.message || "Erro ao gerar relatório mensal.");
+      }
+    }
+
     function hasRequestLogo(req) {
       return !!String(req?.displayCoverUrl || req?.cover_url || "").trim();
     }
@@ -2255,6 +2539,8 @@ body {
       reportCursor += 1;
       renderReports(reportCache);
     });
+
+    exportServerReportBtn?.addEventListener("click", exportMonthlyServerReport);
 
     serversList?.addEventListener("click", (event) => {
       const btn = event.target.closest('button[data-action="edit-server"]');

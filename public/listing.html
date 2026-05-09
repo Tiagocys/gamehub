@@ -474,6 +474,69 @@
       border-top: 1px solid var(--border);
       background: rgba(12, 21, 51, 0.02);
     }
+
+    .listing-ad-native-section {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .listing-ad-inline-card,
+    .listing-ad-banner-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .listing-ad-inline-card {
+      padding: 14px;
+    }
+
+    .listing-ad-banner-card {
+      padding: 14px;
+      width: min(328px, 100%);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .listing-ad-slot {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 250px;
+    }
+
+    .listing-ad-slot--fixed-300 {
+      width: 300px;
+      max-width: 100%;
+      margin: 0 auto;
+      flex: 0 0 auto;
+    }
+
+    .listing-ad-slot--native {
+      min-height: 140px;
+    }
+
+    .listing-ad-slot iframe {
+      border: 0;
+      max-width: 100%;
+    }
+
+    .listing-ad-slot script {
+      max-width: 100%;
+    }
+
+    .listing-ad-label {
+      margin: 10px 0 0;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
@@ -515,6 +578,14 @@
         <div class="listing-gallery">
           <div id="listing-main" class="listing-gallery-main"></div>
           <div id="listing-thumbs" class="listing-thumb-grid"></div>
+          <aside class="listing-ad-banner-card" aria-label="Sponsored">
+            <div
+              id="listing-ad-banner-slot"
+              class="listing-ad-slot listing-ad-slot--fixed-300"
+              data-adsterra-slot="listing-banner-300"
+            ></div>
+            <p class="listing-ad-label">Sponsored</p>
+          </aside>
           <section id="report-listing-card" class="hero-card listing-report-card">
             <button id="report-listing-btn" class="btn btn-ghost report-trigger" type="button">
               <img src="img/flag.png" alt="" class="report-icon" />
@@ -541,6 +612,17 @@
         </div>
       </div>
     </main>
+
+    <section class="section listing-ad-native-section" aria-label="Sponsored">
+      <div class="listing-ad-inline-card">
+        <div
+          id="listing-ad-native-slot"
+          class="listing-ad-slot listing-ad-slot--native"
+          data-adsterra-slot="listing-native"
+        ></div>
+        <p class="listing-ad-label">Sponsored</p>
+      </div>
+    </section>
 
   </div>
   <div id="recommenders-modal" class="recommenders-modal" aria-hidden="true">
@@ -593,12 +675,26 @@
       (message, [paramKey, value]) => message.replaceAll(`{${paramKey}}`, String(value ?? "")),
       t(key, fallback),
     );
+    const formatCount = (value) => new Intl.NumberFormat(i18n.locale === "en" ? "en-US" : "pt-BR").format(
+      Math.max(0, Math.floor(Number(value || 0))),
+    );
 
     const env = window.__ENV || {};
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
     const R2_BUCKET = env.R2_BUCKET || "";
+    const LISTING_VIEWER_KEY_STORAGE = "gimerr-listing-viewer-key";
+    const LISTING_VIEW_STORAGE_PREFIX = "gimerr-listing-view:";
+    const LISTING_VIEW_WINDOW_MS = 30 * 60 * 1000;
+    const ADSTERRA_NATIVE_SCRIPT_SRC = "https://pl29337949.profitablecpmratenetwork.com/06d2964931c802b379f2af03856770b7/invoke.js";
+    const ADSTERRA_NATIVE_CONTAINER_ID = "container-06d2964931c802b379f2af03856770b7";
+    const ADSTERRA_300_BANNER = {
+      key: "98235fa33009b04bb88a7445822c8780",
+      width: 300,
+      height: 250,
+      src: "https://www.highperformanceformat.com/98235fa33009b04bb88a7445822c8780/invoke.js",
+    };
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -618,6 +714,8 @@
     const shareBtn = document.getElementById("listing-share-btn");
     const descriptionEl = document.getElementById("listing-description");
     const metaEl = document.getElementById("listing-meta");
+    const listingAdNativeSlot = document.getElementById("listing-ad-native-slot");
+    const listingAdBannerSlot = document.getElementById("listing-ad-banner-slot");
     const listingServerLink = document.getElementById("listing-server-link");
     const listingServerLogo = document.getElementById("listing-server-logo");
     const listingServerName = document.getElementById("listing-server-name");
@@ -704,6 +802,7 @@
     let reportSuccessTimer = null;
     let shareUrl = "";
     let shareCardDataUrl = "";
+    const pendingListingViewIds = new Set();
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     document.title = t("listing.title_default", "Gimerr - Listing");
@@ -742,6 +841,9 @@
     if (shareCopyBtn) shareCopyBtn.textContent = t("listing.copy", "Copy");
     if (shareCopyQrBtn) shareCopyQrBtn.textContent = t("listing.copy_qr", "Copy QR");
     if (shareNativeBtn) shareNativeBtn.textContent = t("listing.share_native", "Share");
+    document.querySelectorAll(".listing-ad-label").forEach((node) => {
+      node.textContent = t("listing.sponsored_card", "Sponsored");
+    });
 
     async function waitForImageElement(imageEl, timeoutMs = 1400) {
       if (!(imageEl instanceof HTMLImageElement)) return;
@@ -1063,6 +1165,15 @@
       setShareFeedback("");
     }
 
+    function renderListingMeta(listing) {
+      if (!metaEl) return;
+      const pills = [];
+      const totalViews = Math.max(0, Math.floor(Number(listing?.total_views || 0)));
+      pills.push(`<span class="pill">${escapeHtml(t("listing.views_count", "Views"))}: ${escapeHtml(formatCount(totalViews))}</span>`);
+      metaEl.innerHTML = pills.join("");
+      metaEl.style.display = pills.length ? "flex" : "none";
+    }
+
     function setRecommendersLoading(show) {
       if (recommendersLoadingEl) {
         recommendersLoadingEl.style.display = show ? "block" : "none";
@@ -1323,6 +1434,123 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+    }
+
+    function hydrateAdsterraNative(container) {
+      if (!container || container.dataset.adsterraMounted === "1") return;
+      container.dataset.adsterraMounted = "1";
+      container.innerHTML = "";
+      const nativeWrapper = document.createElement("div");
+      nativeWrapper.id = ADSTERRA_NATIVE_CONTAINER_ID;
+      container.appendChild(nativeWrapper);
+
+      const script = document.createElement("script");
+      script.async = true;
+      script.dataset.cfasync = "false";
+      script.src = ADSTERRA_NATIVE_SCRIPT_SRC;
+      container.appendChild(script);
+    }
+
+    function hydrateAdsterraBanner(container, config) {
+      if (!container || !config || container.dataset.adsterraMounted === "1") return;
+      container.dataset.adsterraMounted = "1";
+      container.innerHTML = "";
+      const configScript = document.createElement("script");
+      configScript.text = `atOptions = ${JSON.stringify({
+        key: config.key,
+        format: "iframe",
+        height: config.height,
+        width: config.width,
+        params: {},
+      })};`;
+      container.appendChild(configScript);
+
+      const script = document.createElement("script");
+      script.src = config.src;
+      container.appendChild(script);
+    }
+
+    function getOrCreateListingViewerKey() {
+      try {
+        const existing = localStorage.getItem(LISTING_VIEWER_KEY_STORAGE);
+        if (existing) return existing;
+        const nextValue = typeof crypto?.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(LISTING_VIEWER_KEY_STORAGE, nextValue);
+        return nextValue;
+      } catch (_err) {
+        return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      }
+    }
+
+    function getLastListingViewAt(listingId) {
+      try {
+        return Number(localStorage.getItem(`${LISTING_VIEW_STORAGE_PREFIX}${listingId}`) || 0);
+      } catch (_err) {
+        return 0;
+      }
+    }
+
+    function setLastListingViewAt(listingId, timestamp) {
+      try {
+        localStorage.setItem(`${LISTING_VIEW_STORAGE_PREFIX}${listingId}`, String(timestamp));
+      } catch (_err) {
+        // ignore
+      }
+    }
+
+    async function trackListingPageView(listingId) {
+      const normalizedListingId = String(listingId || "").trim();
+      if (!normalizedListingId || pendingListingViewIds.has(normalizedListingId)) return;
+      const now = Date.now();
+      pendingListingViewIds.add(normalizedListingId);
+      try {
+        ensureClient();
+        const viewerKey = getOrCreateListingViewerKey();
+        const { data, error } = await supabase.functions.invoke("listing_page_view", {
+          body: {
+            listingId: normalizedListingId,
+            viewerKey,
+            pagePath: `${window.location.pathname}${window.location.search || ""}`,
+          },
+        });
+        if (!error) {
+          setLastListingViewAt(normalizedListingId, now);
+          if (currentListing && String(currentListing.id || "") === normalizedListingId && Number.isFinite(Number(data?.totalViews))) {
+            currentListing.total_views = Number(data.totalViews || 0);
+            renderListingMeta(currentListing);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        pendingListingViewIds.delete(normalizedListingId);
+      }
+    }
+
+    function queueListingPageView(listingId) {
+      return new Promise((resolve) => {
+        const run = () => {
+          window.setTimeout(async () => {
+            try {
+              await trackListingPageView(listingId);
+            } finally {
+              resolve();
+            }
+          }, 450);
+        };
+        if (document.visibilityState === "visible") {
+          run();
+          return;
+        }
+        const handleVisible = () => {
+          if (document.visibilityState !== "visible") return;
+          document.removeEventListener("visibilitychange", handleVisible);
+          run();
+        };
+        document.addEventListener("visibilitychange", handleVisible);
+      });
     }
 
     function parseStoragePath(urlString) {
@@ -1659,11 +1887,7 @@
       });
       titleEl.textContent = listing.title;
       descriptionEl.textContent = listing.description || t("listing.no_description", "No description provided.");
-
-      if (metaEl) {
-        metaEl.innerHTML = "";
-        metaEl.style.display = "none";
-      }
+      renderListingMeta(listing);
 
       if (sellerProfileLink) {
         if (listing.user_profile_id) {
@@ -1864,7 +2088,7 @@
           const [{ data: userRow, error: userError }, { count: recommendationsCount, error: recommendationsError }, { count: profileReportsCount, error: profileReportsError }, { data: userListings, error: listingsError }] = await Promise.all([
             supabase
               .from("users")
-              .select("id,phone_verified")
+              .select("id,discord_id")
               .eq("id", userId)
               .maybeSingle(),
             supabase
@@ -1904,7 +2128,7 @@
 
           const recommendations = Number(recommendationsCount || 0);
           const reports = Number(profileReportsCount || 0) + listingReportsCount;
-          const isVerified = !!userRow?.phone_verified;
+          const isVerified = /^[0-9]{17,20}$/.test(String(userRow?.discord_id || "").trim());
           const score = !isVerified
             ? null
             : recommendations + reports === 0
@@ -2094,7 +2318,10 @@
           return;
         }
         renderListing(result.listing);
+        hydrateAdsterraBanner(listingAdBannerSlot, ADSTERRA_300_BANNER);
+        hydrateAdsterraNative(listingAdNativeSlot);
         await waitForInitialVisualAssets();
+        await queueListingPageView(result.listing.id);
         markCriticalAssetsReady();
       } catch (err) {
         console.error(err);

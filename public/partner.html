@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Partner area</title>
   <link rel="stylesheet" href="css/global.css" />
-  <style id="partner-guard-style">html{visibility:hidden;}</style>
+  <style id="partner-guard-style">body > .page{visibility:hidden;}</style>
   <script>
     (() => {
       try {
@@ -38,6 +38,35 @@
     .partner-grid {
       display: grid;
       gap: 16px;
+    }
+
+    .partner-page-loader {
+      gap: 16px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    .partner-page-loader-media {
+      width: min(320px, calc(100vw - 64px));
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(118, 168, 255, 0.28);
+      box-shadow: 0 18px 42px rgba(15, 37, 87, 0.12);
+      background: rgba(118, 168, 255, 0.08);
+    }
+
+    .partner-page-loader-media img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .partner-page-loader-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
     .partner-sections {
@@ -184,6 +213,26 @@
       font-size: 13px;
     }
 
+    .partner-discord-auth-notice {
+      display: none;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(15, 37, 87, 0.12);
+      border-radius: 12px;
+      background: rgba(12, 21, 51, 0.035);
+    }
+
+    .partner-discord-auth-notice.is-visible {
+      display: grid;
+    }
+
+    .partner-discord-auth-notice p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     .partner-wise-grid {
       display: grid;
       gap: 22px;
@@ -264,6 +313,19 @@
       margin: 0;
     }
 
+    .partner-permissions-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .partner-permissions-list li {
+      line-height: 1.45;
+    }
+
     .partner-server-actions {
       display: flex;
       gap: 8px;
@@ -316,6 +378,110 @@
     .partner-edit-head h3 {
       margin: 0;
       font-size: 20px;
+    }
+
+    .partner-edit-title-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .partner-edit-title-icon {
+      width: 150px;
+      height: 150px;
+      flex: 0 0 auto;
+      object-fit: contain;
+    }
+
+    .partner-welcome-media {
+      margin: 0;
+    }
+
+    .partner-welcome-image {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(118, 168, 255, 0.28);
+      box-shadow: 0 12px 28px rgba(15, 37, 87, 0.12);
+      background: rgba(118, 168, 255, 0.08);
+    }
+
+    #partner-welcome-modal .partner-edit-card {
+      width: min(640px, 100%);
+      max-height: min(92vh, 760px);
+    }
+
+    #partner-welcome-modal .partner-withdraw-modal-body {
+      overflow-y: auto;
+    }
+
+    #partner-welcome-modal .inline-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      margin: 0 -18px -18px;
+      padding: 12px 18px 0;
+      background: linear-gradient(to top, var(--panel) 72%, rgba(255, 255, 255, 0));
+    }
+
+    #partner-welcome-modal .partner-welcome-media {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    #partner-welcome-modal .partner-welcome-image {
+      max-height: 260px;
+      object-fit: cover;
+    }
+
+    #partner-discord-reauth-modal .partner-edit-card {
+      width: min(560px, 100%);
+    }
+
+    #partner-discord-reauth-modal .partner-withdraw-modal-body {
+      overflow-y: auto;
+    }
+
+    #partner-discord-reauth-modal .partner-welcome-media {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    #partner-discord-reauth-modal .partner-welcome-image {
+      max-height: 240px;
+      object-fit: cover;
+    }
+
+    #partner-discord-channel-modal .partner-edit-card {
+      width: min(620px, 100%);
+      max-height: min(92vh, 760px);
+    }
+
+    #partner-discord-channel-modal .partner-withdraw-modal-body {
+      overflow-y: auto;
+    }
+
+    #partner-discord-channel-modal .inline-actions {
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      margin: 0 -18px -18px;
+      padding: 12px 18px 0;
+      background: linear-gradient(to top, var(--panel) 72%, rgba(255, 255, 255, 0));
+    }
+
+    #partner-discord-bot-invite-link.is-disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .partner-welcome-cta {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 4px 0 0;
     }
 
     .partner-edit-close {
@@ -476,6 +642,11 @@
       font-size: 16px;
     }
 
+    .partner-discord-register-list .partner-server-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+
     @media (min-width: 1180px) {
       .partner-server-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -505,8 +676,11 @@
   </style>
 </head>
 <body>
-  <div id="page-loader" class="page-loader">
-    <img src="img/logo.png" alt="Loading" />
+  <div id="page-loader" class="page-loader partner-page-loader">
+    <div class="partner-page-loader-media">
+      <img src="img/bot.gif" alt="Sincronizando sua conta do Discord" />
+    </div>
+    <p id="partner-page-loader-copy" class="partner-page-loader-copy">Sincronizando sua conta do Discord...</p>
   </div>
   <div class="page">
     <site-navbar search-enabled="games"></site-navbar>
@@ -591,6 +765,12 @@
                 </div>
                 <p id="partner-withdraw-note" class="partner-feedback"></p>
                 <p id="connect-feedback" class="partner-feedback"></p>
+                <div id="partner-discord-auth-notice" class="partner-discord-auth-notice" style="display:none;">
+                  <p id="partner-discord-auth-notice-text">Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.</p>
+                  <div class="inline-actions">
+                    <button id="partner-discord-auth-action" class="btn btn-primary" type="button">Reautenticar com Discord</button>
+                  </div>
+                </div>
               </div>
 
               <div class="partner-account-details">
@@ -667,6 +847,16 @@
         </div>
 
         <div class="partner-account-panel servers-panel">
+          <section id="partner-discord-register-panel" class="hero-card" style="display:none;">
+            <div class="partner-server-head">
+              <h3 id="partner-discord-register-title">Servidores do seu Discord para cadastrar</h3>
+              <span id="partner-discord-register-count" class="pill">0 servidores</span>
+            </div>
+            <p id="partner-discord-register-helper" class="partner-wise-note">Cadastre aqui os servidores do seu Discord em que você é owner ou admin e que ainda não estão no Gimerr.</p>
+            <div id="partner-discord-register-list" class="partner-server-list partner-discord-register-list"></div>
+            <p id="partner-discord-register-empty" class="helper" style="display:none;">Você não tem outros servidores do Discord disponíveis para cadastro no momento.</p>
+          </section>
+
           <section class="hero-card">
             <div class="partner-server-head">
               <h3 id="partner-servers-title">Linked servers</h3>
@@ -678,6 +868,8 @@
         </div>
       </div>
     </main>
+
+    <site-footer></site-footer>
 
     <div id="partner-edit-modal" class="partner-edit-modal" aria-hidden="true">
       <div class="partner-edit-card">
@@ -812,6 +1004,65 @@
       </div>
     </div>
 
+    <div id="partner-discord-channel-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <div class="partner-edit-title-row">
+            <img id="partner-discord-channel-title-icon" class="partner-edit-title-icon" src="img/sync-discord.svg" alt="" aria-hidden="true" />
+            <h3 id="partner-discord-channel-title">Conectar App do Gimerr</h3>
+          </div>
+          <button id="partner-discord-channel-close" class="partner-edit-close" type="button" aria-label="Close">×</button>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <p id="partner-discord-channel-helper" class="partner-wise-note">Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.</p>
+          <p id="partner-discord-channel-policy-note" class="partner-wise-note">Ao continuar, você concorda com os <a class="link-ghost" href="terms.html" target="_blank" rel="noopener">termos de uso</a> e com a <a class="link-ghost" href="privacy-policy.html" target="_blank" rel="noopener">política de privacidade</a>.</p>
+          <a id="partner-discord-bot-invite-link" class="btn btn-ghost" href="#" target="_blank" rel="noopener" style="display:none;">Adicionar App ao servidor</a>
+          <p id="partner-discord-channel-feedback" class="partner-feedback"></p>
+          <div class="inline-actions">
+            <button id="partner-discord-channel-cancel" class="btn btn-ghost" type="button">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="partner-welcome-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3 id="partner-welcome-title">Programa de monetização</h3>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <figure class="partner-welcome-media">
+            <img class="partner-welcome-image" src="img/welcome.gif" alt="Programa de monetização do Gimerr" />
+          </figure>
+          <p id="partner-welcome-helper" class="partner-wise-note">Seja bem vindo, parceiro! O programa de monetização do Gimerr está na fase inicial e você já está participando!</p>
+          <p id="partner-welcome-note" class="partner-wise-note">Na área de parceiros você pode acompanhar os números de seguidores, anúncios ativos, destaques e visualizações de todos os seus servidores.</p>
+          <p id="partner-welcome-cta-label" class="partner-welcome-cta">Entenda como funciona!</p>
+          <div class="inline-actions">
+            <a id="partner-welcome-policy-link" class="btn btn-primary" href="partner-policy.html#partner-policy-monetization">Clique aqui para saber mais.</a>
+            <button id="partner-welcome-confirm" class="btn btn-ghost" type="button">Entendi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="partner-discord-reauth-modal" class="partner-edit-modal" aria-hidden="true">
+      <div class="partner-edit-card">
+        <div class="partner-edit-head">
+          <h3 id="partner-discord-reauth-title">Conexão com Discord</h3>
+        </div>
+        <div class="partner-withdraw-modal-body">
+          <figure class="partner-welcome-media">
+            <img id="partner-discord-reauth-image" class="partner-welcome-image" src="img/auth-discord.gif" alt="Reautenticação com Discord" />
+          </figure>
+          <p id="partner-discord-reauth-helper" class="partner-wise-note">O Gimerr precisa ter acesso ao seu Discord para liberar funcionalidades como o cadastro de servidores e a configuração do bot do Gimerr na área de parceiros.</p>
+          <div class="inline-actions">
+            <button id="partner-discord-reauth-back" class="btn btn-ghost" type="button">Voltar</button>
+            <button id="partner-discord-reauth-confirm" class="btn btn-primary" type="button">Reautenticar com Discord</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="env.js"></script>
@@ -820,6 +1071,7 @@
   <script src="i18n/en.js"></script>
   <script src="js/i18n.js"></script>
   <script src="js/site-navbar.js"></script>
+  <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
 
@@ -828,6 +1080,10 @@
     const env = window.__ENV || {};
     const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
     const t = (key, fallback = "") => i18n.t(key, fallback);
+    const formatMessage = (key, fallback, params = {}) => Object.entries(params).reduce(
+      (message, [paramKey, value]) => message.replaceAll(`{${paramKey}}`, String(value ?? "")),
+      t(key, fallback),
+    );
     const SUPABASE_URL = env.SUPABASE_URL || "YOUR_SUPABASE_URL";
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
@@ -848,9 +1104,18 @@
     const partnerWithdrawBtn = document.getElementById("partner-withdraw-btn");
     const partnerWithdrawNote = document.getElementById("partner-withdraw-note");
     const connectFeedback = document.getElementById("connect-feedback");
+    const partnerDiscordAuthNotice = document.getElementById("partner-discord-auth-notice");
+    const partnerDiscordAuthNoticeText = document.getElementById("partner-discord-auth-notice-text");
+    const partnerDiscordAuthAction = document.getElementById("partner-discord-auth-action");
     const partnerServersCount = document.getElementById("partner-servers-count");
     const partnerServerList = document.getElementById("partner-server-list");
     const partnerServersEmpty = document.getElementById("partner-servers-empty");
+    const partnerDiscordRegisterPanel = document.getElementById("partner-discord-register-panel");
+    const partnerDiscordRegisterTitle = document.getElementById("partner-discord-register-title");
+    const partnerDiscordRegisterCount = document.getElementById("partner-discord-register-count");
+    const partnerDiscordRegisterHelper = document.getElementById("partner-discord-register-helper");
+    const partnerDiscordRegisterList = document.getElementById("partner-discord-register-list");
+    const partnerDiscordRegisterEmpty = document.getElementById("partner-discord-register-empty");
     const partnerAvailableAmount = document.getElementById("partner-available-amount");
     const partnerBoostAvailableAmount = document.getElementById("partner-boost-available-amount");
     const partnerTopupAvailableAmount = document.getElementById("partner-topup-available-amount");
@@ -915,6 +1180,30 @@
     const partnerTopupPolicyNote = document.getElementById("partner-topup-policy-note");
     const partnerTopupFeedback = document.getElementById("partner-topup-feedback");
     const partnerTopupConfirm = document.getElementById("partner-topup-confirm");
+    const partnerDiscordChannelModal = document.getElementById("partner-discord-channel-modal");
+    const partnerDiscordChannelTitle = document.getElementById("partner-discord-channel-title");
+    const partnerDiscordChannelClose = document.getElementById("partner-discord-channel-close");
+    const partnerDiscordChannelHelper = document.getElementById("partner-discord-channel-helper");
+    const partnerDiscordChannelSelectLabel = document.getElementById("partner-discord-channel-select-label");
+    const partnerDiscordChannelSelect = document.getElementById("partner-discord-channel-select");
+    const partnerDiscordBotInviteLink = document.getElementById("partner-discord-bot-invite-link");
+    const partnerDiscordChannelFeedback = document.getElementById("partner-discord-channel-feedback");
+    const partnerDiscordChannelSave = document.getElementById("partner-discord-channel-save");
+    const partnerDiscordChannelCancel = document.getElementById("partner-discord-channel-cancel");
+    const partnerWelcomeModal = document.getElementById("partner-welcome-modal");
+    const partnerWelcomeConfirm = document.getElementById("partner-welcome-confirm");
+    const partnerWelcomePolicyLink = document.getElementById("partner-welcome-policy-link");
+    const partnerDiscordReauthModal = document.getElementById("partner-discord-reauth-modal");
+    const partnerDiscordReauthTitle = document.getElementById("partner-discord-reauth-title");
+    const partnerDiscordReauthImage = document.getElementById("partner-discord-reauth-image");
+    const partnerDiscordReauthHelper = document.getElementById("partner-discord-reauth-helper");
+    const partnerDiscordReauthNote = document.getElementById("partner-discord-reauth-note");
+    const partnerDiscordReauthBack = document.getElementById("partner-discord-reauth-back");
+    const partnerDiscordReauthConfirm = document.getElementById("partner-discord-reauth-confirm");
+    const AUTH_PROVIDER_HINT_KEY = "gimerr-auth-provider-hint";
+    const DISCORD_ONBOARDING_PENDING_KEY = "gimerr-discord-onboarding-pending";
+    const PARTNER_BOT_SETUP_STORAGE_KEY = "gimerr-partner-bot-setup-server-id";
+    let partnerDiscordAccessMode = "reauth";
 
     const pageLoader = document.getElementById("page-loader");
     let loaderDone = false;
@@ -938,6 +1227,7 @@
         if (node) node.setAttribute(attr, t(key, fallback));
       };
       setText("partner-page-title", "partner_page.title", "Painel de parceiro");
+      setText("partner-page-loader-copy", "partner_page.loader_copy", "Sincronizando sua conta do Discord...");
       setText("partner-account-label", "partner_page.account_label", "Conta");
       setText("partner-account-registered-label", "partner_page.account_registered_label", "Conta cadastrada");
       setText("partner-withdraw-balance-label", "partner_page.withdraw_balance_label", "Saldo sacável");
@@ -981,8 +1271,17 @@
       setText("wise-requirements-empty", "partner_page.loading_bank_fields", "Loading bank fields...");
       setText("wise-save-btn", "partner_page.save_bank_data", "Save bank details");
       setText("wise-payout-note", "partner_page.payout_pending_note", "Withdrawals remain pending until approval and are not paid automatically.");
-      setText("partner-servers-title", "partner_page.servers_title", "Servidores vinculados");
-      setText("partner-servers-empty", "partner_page.servers_empty", "No servers linked to your user at the moment.");
+      setText("partner-discord-register-title", "partner_page.discord_register_title", "Servidores do seu Discord para cadastrar");
+      setText("partner-discord-register-helper", "partner_page.discord_register_helper", "Cadastre aqui os servidores do seu Discord em que você é owner ou admin e que ainda não estão no Gimerr.");
+      setText("partner-discord-register-empty", "partner_page.discord_register_empty", "Você não tem outros servidores do Discord disponíveis para cadastro no momento.");
+      setText("partner-servers-title", "partner_page.servers_title", "Seus servidores");
+      setText("partner-servers-empty", "partner_page.servers_empty", "Você ainda não tem servidores disponíveis no momento.");
+      setText("partner-welcome-title", "partner_page.welcome_title", "Programa de monetização");
+      setText("partner-welcome-helper", "partner_page.welcome_helper", "Seja bem vindo, parceiro! O programa de monetização do Gimerr está na fase inicial e você já está participando!");
+      setText("partner-welcome-note", "partner_page.welcome_note", "Na área de parceiros você pode acompanhar os números de seguidores, anúncios ativos, destaques e visualizações de todos os seus servidores.");
+      setText("partner-welcome-cta-label", "partner_page.welcome_cta_label", "Entenda como funciona!");
+      setText("partner-welcome-policy-link", "partner_page.welcome_policy_link", "Clique aqui para saber mais.");
+      setText("partner-welcome-confirm", "partner_page.welcome_confirm", "Entendi");
       setText("partner-edit-title", "partner_page.edit_server_title", "Editar servidor");
       setText("partner-edit-name-label", "partner_page.edit_name_label", "Nome do servidor");
       setText("partner-edit-site-label", "partner_page.edit_site_label", "Site oficial");
@@ -1037,6 +1336,19 @@
       setText("partner-topup-confirm", "partner_page.topup_confirm", "Adicionar saldo e pagar");
       setText("partner-topup-cancel", "partner_page.cancel", "Cancelar");
       setAttr("partner-topup-close", "aria-label", "common.close", "Close");
+      setText("partner-discord-channel-title", "partner_page.discord_channel_title", "Conectar App do Gimerr");
+      setText("partner-discord-channel-helper", "partner_page.discord_channel_helper", "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.");
+      setHtml("partner-discord-channel-policy-note", "partner_page.discord_channel_policy_html", "Ao continuar, você concorda com os <a class=\"link-ghost\" href=\"terms.html\" target=\"_blank\" rel=\"noopener\">termos de uso</a> e com a <a class=\"link-ghost\" href=\"privacy-policy.html\" target=\"_blank\" rel=\"noopener\">política de privacidade</a>.");
+      setText("partner-discord-bot-invite-link", "partner_page.discord_channel_invite", "Adicionar App ao servidor");
+      setText("partner-discord-channel-cancel", "partner_page.cancel", "Cancelar");
+      setAttr("partner-discord-channel-close", "aria-label", "common.close", "Close");
+      setText("partner-discord-auth-notice-text", "partner_page.discord_reauth_notice", "Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.");
+      setText("partner-discord-auth-action", "partner_page.discord_reauth_button", "Reautenticar com Discord");
+      setText("partner-discord-reauth-title", "partner_page.discord_reauth_modal_title", "Conexão com Discord");
+      setAttr("partner-discord-reauth-image", "alt", "partner_page.discord_reauth_modal_title", "Conexão com Discord");
+      setText("partner-discord-reauth-helper", "partner_page.discord_access_modal_helper", "O Gimerr precisa ter acesso ao seu Discord para liberar funcionalidades como o cadastro de servidores e a configuração do App do Gimerr na área de parceiros.");
+      setText("partner-discord-reauth-back", "common.back", "Voltar");
+      setText("partner-discord-reauth-confirm", "partner_page.discord_reauth_button", "Reautenticar com Discord");
     }
 
     function hideLoader() {
@@ -1064,9 +1376,11 @@
 
     let supabase;
     let currentUser = null;
+    let currentSession = null;
     let currentProfile = null;
     let avatarLoaded = false;
     let currentServers = [];
+    let currentDiscordRegisterableGuilds = [];
     let currentEditBannerUrl = "";
     let editLogoPreviewObjectUrl = null;
     let currentWiseAccount = null;
@@ -1080,9 +1394,20 @@
     let partnerPayoutRefreshTimer = null;
     let currentPartnerWithdrawPreview = null;
     let pendingServerBoostTargetId = "";
+    let currentDiscordMatchedServers = [];
     let partnerTopupCheckoutCurrency = "usd";
     let partnerTopupRateToBRL = 1;
     let selectedPartnerTopupCountryCode = "";
+    let currentDiscordChannelServerId = "";
+    let currentDiscordChannelSetupMode = false;
+    let currentDiscordChannelBotPresent = false;
+    let currentDiscordChannelPollingTimer = null;
+    let currentDiscordChannelLoading = false;
+    let currentDiscordChannelInvitePending = false;
+    let currentDiscordChannelInviteStartedAt = 0;
+    let currentDiscordChannelPermissionsReady = true;
+    const PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS = 5000;
+    const PARTNER_DISCORD_CHANNEL_POLL_MAX_WAIT_MS = 120000;
     const USD_BRL_RATE = (() => {
       const parsed = Number(env.USD_BRL_RATE || 5.5);
       return Number.isFinite(parsed) && parsed > 0 ? parsed : 5.5;
@@ -1130,10 +1455,13 @@
       { code: "GR", currency: "eur" },
       { code: "OTHER", currency: "usd" },
     ];
+    const PARTNER_WELCOME_STORAGE_PREFIX = "gimerr-partner-welcome:";
+    const DISCORD_OAUTH_CONTEXT_KEY = "gimerr-discord-oauth-context";
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
 
     function revealPage() {
-      document.documentElement.style.visibility = "visible";
+      const page = document.querySelector("body > .page");
+      if (page) page.style.visibility = "visible";
       const guard = document.getElementById("partner-guard-style");
       if (guard) guard.remove();
     }
@@ -1959,8 +2287,10 @@
         });
         supabase.auth.onAuthStateChange((_event, session) => {
           persistLocalSession(session);
+          currentSession = attachStoredDiscordContext(session || null);
           currentUser = session?.user || null;
           updateAuthUI();
+          updatePartnerDiscordAuthNotice();
         });
       }
       return supabase;
@@ -1968,13 +2298,43 @@
 
     function persistLocalSession(session) {
       if (session) {
+        try {
+          const currentProvider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+          if (session?.user?.id && currentProvider) {
+            localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+              provider: currentProvider,
+              user_id: String(session.user.id),
+              saved_at: Date.now(),
+            }));
+          }
+          if (currentProvider && currentProvider !== "discord") {
+            localStorage.removeItem(DISCORD_OAUTH_CONTEXT_KEY);
+          }
+        } catch (_err) {
+          // Ignore local storage persistence failures.
+        }
         localStorage.setItem(
           SESSION_STORAGE_KEY,
           JSON.stringify({
             access_token: session.access_token,
             refresh_token: session.refresh_token,
+            provider_token: session.provider_token || null,
           }),
         );
+        try {
+          const currentProvider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+          const providerToken = String(session.provider_token || "").trim();
+          if (currentProvider === "discord" && providerToken && session.user?.id) {
+            localStorage.setItem(DISCORD_OAUTH_CONTEXT_KEY, JSON.stringify({
+              user_id: String(session.user.id),
+              provider_token: providerToken,
+              provider: "discord",
+              saved_at: Date.now(),
+            }));
+          }
+        } catch (_err) {
+          // Ignore local storage persistence failures.
+        }
       } else {
         localStorage.removeItem(SESSION_STORAGE_KEY);
       }
@@ -1999,11 +2359,257 @@
           localStorage.removeItem(SESSION_STORAGE_KEY);
           return null;
         }
+        currentSession = attachStoredDiscordContext(data.session || null);
         return data.session;
       } catch (_err) {
         localStorage.removeItem(SESSION_STORAGE_KEY);
         return null;
       }
+    }
+
+    function readStoredDiscordContext() {
+      try {
+        const raw = localStorage.getItem(DISCORD_OAUTH_CONTEXT_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed?.user_id || !parsed?.provider_token) return null;
+        if (parsed?.provider && String(parsed.provider).trim().toLowerCase() !== "discord") return null;
+        return parsed;
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function isSessionDiscordAuth(session) {
+      return String(session?.user?.app_metadata?.provider || "").trim().toLowerCase() === "discord";
+    }
+
+    function getCurrentAuthProvider() {
+      try {
+        const raw = localStorage.getItem(AUTH_PROVIDER_HINT_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const hintedUserId = String(parsed?.user_id || "").trim();
+          const currentUserId = String(currentUser?.id || currentSession?.user?.id || "").trim();
+          const hintedProvider = String(parsed?.provider || "").trim().toLowerCase();
+          if (hintedUserId && currentUserId && hintedUserId === currentUserId && hintedProvider) {
+            return hintedProvider;
+          }
+        }
+      } catch (_err) {
+        // Ignore invalid auth provider hint payloads.
+      }
+      return String(
+        currentSession?.user?.app_metadata?.provider
+          || currentUser?.app_metadata?.provider
+          || "",
+      ).trim().toLowerCase();
+    }
+
+    function isCurrentSessionDiscordAuth() {
+      return getCurrentAuthProvider() === "discord";
+    }
+
+    function attachStoredDiscordContext(session) {
+      if (!session?.user?.id) return session || null;
+      return session;
+    }
+
+    function getCurrentDiscordProviderToken() {
+      if (!isCurrentSessionDiscordAuth()) return "";
+      return String(currentSession?.provider_token || "").trim();
+    }
+
+    function clearStoredDiscordContext() {
+      try {
+        localStorage.removeItem(DISCORD_OAUTH_CONTEXT_KEY);
+      } catch (_err) {
+        // Ignore localStorage cleanup failures.
+      }
+      if (currentSession && typeof currentSession === "object") {
+        currentSession = {
+          ...currentSession,
+          discord_provider_token: "",
+        };
+      }
+    }
+
+    function isDiscordReauthErrorMessage(message) {
+      const text = String(message || "").trim().toLowerCase();
+      return text.includes("entre novamente com o discord")
+        || text.includes("validar suas permissões no discord")
+        || text.includes("sign in again with discord")
+        || text.includes("validate your permissions on discord")
+        || text.includes("discord permissions");
+    }
+
+    function hasLinkedDiscordAccount() {
+      if (/^[0-9]{17,20}$/.test(String(currentProfile?.discord_id || "").trim())) return true;
+      const identities = Array.isArray(currentUser?.identities) ? currentUser.identities : [];
+      if (identities.some((identity) => String(identity?.provider || "").trim().toLowerCase() === "discord")) return true;
+      const providers = Array.isArray(currentUser?.app_metadata?.providers) ? currentUser.app_metadata.providers : [];
+      return providers.some((provider) => String(provider || "").trim().toLowerCase() === "discord");
+    }
+
+    function applyPartnerDiscordAccessModalCopy(mode) {
+      partnerDiscordAccessMode = mode === "connect" ? "connect" : "reauth";
+      const isConnectMode = partnerDiscordAccessMode === "connect";
+      if (partnerDiscordReauthTitle) {
+        partnerDiscordReauthTitle.textContent = isConnectMode
+          ? t("partner_page.discord_connect_modal_title", "Conectar Discord")
+          : t("partner_page.discord_reauth_modal_title", "Conexão com Discord");
+      }
+      if (partnerDiscordReauthImage) {
+        partnerDiscordReauthImage.alt = isConnectMode
+          ? t("partner_page.discord_connect_modal_title", "Conectar Discord")
+          : t("partner_page.discord_reauth_modal_title", "Conexão com Discord");
+      }
+      if (partnerDiscordReauthHelper) {
+        partnerDiscordReauthHelper.textContent = t(
+          "partner_page.discord_access_modal_helper",
+          "O Gimerr precisa ter acesso ao seu Discord para liberar funcionalidades como o cadastro de servidores e a configuração do bot do Gimerr na área de parceiros.",
+        );
+      }
+      if (partnerDiscordReauthNote) {
+        partnerDiscordReauthNote.style.display = "none";
+      }
+      if (partnerDiscordReauthConfirm) {
+        partnerDiscordReauthConfirm.textContent = isConnectMode
+          ? t("partner_page.discord_connect_button", "Conectar Discord")
+          : t("partner_page.discord_reauth_button", "Reautenticar com Discord");
+      }
+    }
+
+    function leavePartnerDiscordAccessModal() {
+      try {
+        const referrer = String(document.referrer || "").trim();
+        if (referrer) {
+          const parsed = new URL(referrer, window.location.origin);
+          if (parsed.origin === window.location.origin && !/\/partner(?:\.html)?(?:[?#]|$)/.test(parsed.pathname + (parsed.search || ""))) {
+            window.location.href = `${parsed.pathname}${parsed.search || ""}${parsed.hash || ""}`;
+            return;
+          }
+        }
+      } catch (_err) {
+        // Fallback below.
+      }
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+      window.location.href = "index.html";
+    }
+
+    function updatePartnerDiscordAuthNotice() {
+      if (!partnerDiscordAuthNotice || !partnerDiscordAuthNoticeText || !partnerDiscordAuthAction) return;
+      if (!currentUser) {
+        partnerDiscordAuthNotice.classList.remove("is-visible");
+        partnerDiscordAuthNotice.style.display = "none";
+        if (partnerDiscordReauthModal) {
+          partnerDiscordReauthModal.classList.remove("open");
+          partnerDiscordReauthModal.setAttribute("aria-hidden", "true");
+        }
+        return;
+      }
+      const hasLinkedDiscord = hasLinkedDiscordAccount();
+      const isDiscordSession = isCurrentSessionDiscordAuth();
+      const hasProviderToken = Boolean(getCurrentDiscordProviderToken());
+      if (!hasLinkedDiscord) {
+        partnerDiscordAuthNotice.classList.remove("is-visible");
+        partnerDiscordAuthNotice.style.display = "none";
+        openPartnerDiscordReauthModal("connect");
+        return;
+      }
+      if (!isDiscordSession || !hasProviderToken) {
+        partnerDiscordAuthNotice.classList.remove("is-visible");
+        partnerDiscordAuthNotice.style.display = "none";
+        openPartnerDiscordReauthModal("reauth");
+        return;
+      }
+      partnerDiscordAuthNotice.classList.remove("is-visible");
+      partnerDiscordAuthNotice.style.display = "none";
+      if (partnerDiscordReauthModal) {
+        partnerDiscordReauthModal.classList.remove("open");
+        partnerDiscordReauthModal.setAttribute("aria-hidden", "true");
+      }
+    }
+
+    function openPartnerDiscordReauthModal(mode = "reauth") {
+      if (!partnerDiscordReauthModal) return;
+      applyPartnerDiscordAccessModalCopy(mode);
+      partnerDiscordReauthModal.classList.add("open");
+      partnerDiscordReauthModal.setAttribute("aria-hidden", "false");
+    }
+
+    async function startPartnerDiscordConnectFlow() {
+      ensureClient();
+      if (!currentUser) return;
+      try {
+        localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+          provider: "discord",
+          user_id: String(currentUser?.id || "").trim(),
+          saved_at: Date.now(),
+        }));
+      } catch (_err) {
+        // Ignore localStorage persistence failures.
+      }
+      sessionStorage.setItem(DISCORD_ONBOARDING_PENDING_KEY, "1");
+      sessionStorage.setItem("gimerr-post-discord-link", "/partner.html");
+      const { error } = await supabase.auth.linkIdentity({
+        provider: "discord",
+        options: {
+          redirectTo: `${window.location.origin}/partner.html?discord_link=1`,
+          scopes: "identify email guilds",
+        },
+      });
+      if (error) throw error;
+    }
+
+    async function startPartnerDiscordAuthFlow() {
+      ensureClient();
+      try {
+        localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+          provider: "discord",
+          user_id: String(currentUser?.id || "").trim(),
+          saved_at: Date.now(),
+        }));
+      } catch (_err) {
+        // Ignore localStorage persistence failures.
+      }
+      sessionStorage.setItem("gimerr-post-discord-link", "/partner.html");
+      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: {
+          redirectTo,
+          scopes: "identify email guilds",
+        },
+      });
+      if (error) throw error;
+    }
+
+    async function ensureDiscordPartnerContext() {
+      ensureClient();
+      let { data } = await supabase.auth.getSession();
+      let session = attachStoredDiscordContext(data?.session || currentSession || null);
+      currentSession = session || null;
+      if (!currentUser || !hasLinkedDiscordAccount()) {
+        updatePartnerDiscordAuthNotice();
+        return currentSession;
+      }
+      if (!isCurrentSessionDiscordAuth()) {
+        updatePartnerDiscordAuthNotice();
+        return currentSession;
+      }
+      if (getCurrentDiscordProviderToken()) {
+        updatePartnerDiscordAuthNotice();
+        return currentSession;
+      }
+      const refreshed = await supabase.auth.refreshSession();
+      session = attachStoredDiscordContext(refreshed?.data?.session || session || null);
+      currentSession = session || null;
+      updatePartnerDiscordAuthNotice();
+      return currentSession;
     }
 
     function updateAuthUI() {
@@ -2169,6 +2775,10 @@
       } catch (_err) {
         return `${Number(value || 0).toFixed(2)} ${code}`.trim();
       }
+    }
+
+    function formatCount(value) {
+      return new Intl.NumberFormat(i18n.locale === "en" ? "en-US" : "pt-BR").format(Math.max(0, Math.floor(Number(value || 0))));
     }
 
     function getCurrencySymbol(currencyCode) {
@@ -2369,6 +2979,75 @@
       if (partnerTopupConfirm) {
         partnerTopupConfirm.disabled = false;
         partnerTopupConfirm.textContent = t("partner_page.topup_confirm", "Add balance and pay");
+      }
+    }
+
+    function getPartnerWelcomeStorageKey() {
+      const userId = String(currentUser?.id || "").trim();
+      return userId ? `${PARTNER_WELCOME_STORAGE_PREFIX}${userId}` : PARTNER_WELCOME_STORAGE_PREFIX;
+    }
+
+    function openPartnerWelcomeModal() {
+      if (!partnerWelcomeModal) return;
+      partnerWelcomeModal.classList.add("open");
+      partnerWelcomeModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closePartnerWelcomeModal() {
+      if (!partnerWelcomeModal) return;
+      partnerWelcomeModal.classList.remove("open");
+      partnerWelcomeModal.setAttribute("aria-hidden", "true");
+    }
+
+    function markPartnerWelcomeSeen() {
+      try {
+        localStorage.setItem(getPartnerWelcomeStorageKey(), "1");
+      } catch (_err) {
+        // ignore
+      }
+      closePartnerWelcomeModal();
+    }
+
+    function getPendingPartnerBotSetupServerId() {
+      try {
+        return String(sessionStorage.getItem(PARTNER_BOT_SETUP_STORAGE_KEY) || "").trim();
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    function setPendingPartnerBotSetupServerId(serverId) {
+      const normalizedServerId = String(serverId || "").trim();
+      if (!normalizedServerId) return;
+      try {
+        sessionStorage.setItem(PARTNER_BOT_SETUP_STORAGE_KEY, normalizedServerId);
+      } catch (_err) {
+        // Ignore storage failures.
+      }
+    }
+
+    function clearPendingPartnerBotSetupServerId() {
+      try {
+        sessionStorage.removeItem(PARTNER_BOT_SETUP_STORAGE_KEY);
+      } catch (_err) {
+        // Ignore storage failures.
+      }
+    }
+
+    function maybeOpenPartnerWelcomeModal() {
+      if (
+        getPendingPartnerBotSetupServerId()
+        || partnerDiscordReauthModal?.classList.contains("open")
+        || partnerDiscordChannelModal?.classList.contains("open")
+      ) {
+        return;
+      }
+      try {
+        if (!localStorage.getItem(getPartnerWelcomeStorageKey())) {
+          openPartnerWelcomeModal();
+        }
+      } catch (_err) {
+        openPartnerWelcomeModal();
       }
     }
 
@@ -2798,21 +3477,78 @@
       }
     }
 
-    async function resolveFunctionErrorMessage(error, data, fallbackMessage) {
-      if (data?.error) return String(data.error);
-      if (!error) return fallbackMessage;
+    async function resolveFunctionErrorDetails(error, data, fallbackMessage) {
+      const details = {
+        message: data?.error ? String(data.error) : "",
+        retryAfterMs: Number(data?.retryAfterMs || data?.retry_after_ms || 0) || 0,
+        status: Number(error?.context?.status || error?.status || 0) || 0,
+      };
+      if (details.message && details.retryAfterMs > 0) {
+        return details;
+      }
+      if (!error) {
+        details.message = details.message || fallbackMessage;
+        return details;
+      }
       try {
         const context = error.context;
         if (context) {
+          details.status = Number(context.status || details.status || 0) || 0;
           const json = await context.clone().json().catch(() => null);
-          if (json?.error) return String(json.error);
-          const text = await context.clone().text().catch(() => "");
-          if (text) return String(text);
+          if (json?.error && !details.message) details.message = String(json.error);
+          if (json?.message && !details.message) details.message = String(json.message);
+          if (!details.retryAfterMs) {
+            const jsonRetryMs = Number(json?.retryAfterMs || json?.retry_after_ms || 0);
+            const jsonRetrySeconds = Number(json?.retry_after || 0);
+            if (Number.isFinite(jsonRetryMs) && jsonRetryMs > 0) {
+              details.retryAfterMs = Math.round(jsonRetryMs);
+            } else if (Number.isFinite(jsonRetrySeconds) && jsonRetrySeconds > 0) {
+              details.retryAfterMs = Math.round(jsonRetrySeconds * 1000);
+            }
+          }
+          if (!details.message) {
+            const text = await context.clone().text().catch(() => "");
+            if (text) details.message = String(text);
+          }
         }
       } catch (_err) {
         // ignore parse errors
       }
-      return error?.message || fallbackMessage;
+      details.message = details.message || error?.message || fallbackMessage;
+      return details;
+    }
+
+    function extractDiscordRateLimitInfo(rawMessage, fallbackRetryAfterMs = 0) {
+      const raw = String(rawMessage || "").trim();
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw);
+        const retryAfterSeconds = Number(parsed?.retry_after || 0);
+        const retryAfterMs = Math.max(
+          Math.round(retryAfterSeconds * 1000),
+          Math.round(Number(fallbackRetryAfterMs || 0)),
+        );
+        if (Number.isFinite(retryAfterMs) && retryAfterMs > 0) {
+          return {
+            retryAfterMs,
+            message: String(parsed?.message || "").trim(),
+          };
+        }
+      } catch (_err) {
+        // ignore parse failure
+      }
+      if (/rate limit/i.test(raw) && fallbackRetryAfterMs > 0) {
+        return {
+          retryAfterMs: Math.round(Number(fallbackRetryAfterMs)),
+          message: raw,
+        };
+      }
+      return null;
+    }
+
+    async function resolveFunctionErrorMessage(error, data, fallbackMessage) {
+      const details = await resolveFunctionErrorDetails(error, data, fallbackMessage);
+      return details.message || fallbackMessage;
     }
 
     async function requestServerLogoSignedUpload(file) {
@@ -2967,7 +3703,7 @@
     }
 
     async function fetchPartnerProfile() {
-      const fields = "id,email,first_name,last_name,phone,phone_verified,country_code,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
+      const fields = "id,email,first_name,last_name,phone,phone_verified,country_code,discord_id,discord_username,is_partner,stripe_connect_account_id,stripe_connect_charges_enabled,stripe_connect_payouts_enabled,stripe_connect_details_submitted,stripe_connect_onboarded_at";
       let { data, error } = await supabase
         .from("users")
         .select(fields)
@@ -2977,7 +3713,7 @@
       if (error && error.code === "42703") {
         const fallback = await supabase
           .from("users")
-          .select("id,email,first_name,last_name,phone,phone_verified,country_code")
+          .select("id,email,first_name,last_name,phone,phone_verified,country_code,discord_id,discord_username")
           .eq("id", currentUser.id)
           .single();
         data = fallback.data
@@ -3009,6 +3745,7 @@
       if (wiseAccountHolderName) {
         wiseAccountHolderName.value = getDerivedWiseAccountHolderName();
       }
+      updatePartnerDiscordAuthNotice();
     }
 
     async function fetchPartnerPayoutSummary() {
@@ -3111,6 +3848,49 @@
           throw err;
         }
         return null;
+      }
+    }
+
+    async function fetchPartnerServerAnalytics(serverIds) {
+      const normalizedServerIds = Array.from(new Set(
+        (Array.isArray(serverIds) ? serverIds : []).map((value) => String(value || "").trim()).filter(Boolean),
+      ));
+      if (!normalizedServerIds.length) {
+        return new Map();
+      }
+      try {
+        const token = await getValidAccessToken();
+        const { data, error } = await supabase.functions.invoke("partner_server_analytics", {
+          body: {
+            userToken: token || null,
+            serverIds: normalizedServerIds,
+          },
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+                apikey: SUPABASE_ANON_KEY,
+              }
+            : {},
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(error, data, t("partner_page.server_analytics_error", "Could not load partner analytics."));
+          throw new Error(message);
+        }
+        const analyticsMap = new Map();
+        (Array.isArray(data?.servers) ? data.servers : []).forEach((row) => {
+          const serverId = String(row?.serverId || "").trim();
+          if (!serverId) return;
+          analyticsMap.set(serverId, {
+            followersCount: Number(row?.followersCount || 0),
+            totalViews: Number(row?.totalViews || 0),
+            monthlyViews: Number(row?.monthlyViews || 0),
+            isEligible: Boolean(row?.isEligible),
+          });
+        });
+        return analyticsMap;
+      } catch (err) {
+        console.warn("[partner] failed to load server analytics", err);
+        return new Map();
       }
     }
 
@@ -3327,7 +4107,766 @@
         feed_highlight_status: String(server.feed_highlight_status || "none"),
       })));
 
+      const analyticsByServerId = await fetchPartnerServerAnalytics(serverIds);
+      decorated.forEach((server) => {
+        const analytics = analyticsByServerId.get(String(server.id || "").trim());
+        server.followers_count = Number(analytics?.followersCount || 0);
+        server.total_listing_views = Number(analytics?.totalViews || 0);
+        server.monthly_listing_views = Number(analytics?.monthlyViews || 0);
+        server.monetization_eligible = Boolean(analytics?.isEligible);
+      });
+
       return decorated;
+    }
+
+    function hasDiscordGuildOverviewSession() {
+      return Boolean(
+        isCurrentSessionDiscordAuth()
+        && getCurrentDiscordProviderToken()
+        && hasLinkedDiscordAccount()
+      );
+    }
+
+    async function fetchPartnerDiscordRegisterableGuilds() {
+      if (!hasDiscordGuildOverviewSession()) {
+        currentDiscordRegisterableGuilds = [];
+        currentDiscordMatchedServers = [];
+        return [];
+      }
+      const accessToken = String(currentSession?.access_token || "").trim();
+      const providerToken = getCurrentDiscordProviderToken();
+      if (!accessToken || !providerToken) {
+        currentDiscordRegisterableGuilds = [];
+        currentDiscordMatchedServers = [];
+        return [];
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke("discord_guilds_overview", {
+          body: {
+            userToken: accessToken,
+            providerToken,
+          },
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(
+            error,
+            data,
+            t("partner_page.discord_channel_requires_login", "Entre novamente com o Discord para listar os canais deste servidor."),
+          );
+          throw new Error(message);
+        }
+        currentDiscordMatchedServers = Array.isArray(data?.matchedServers) ? data.matchedServers : [];
+        const guilds = Array.isArray(data?.manageableUnregisteredGuilds) ? data.manageableUnregisteredGuilds : [];
+        currentDiscordRegisterableGuilds = guilds;
+        return guilds;
+      } catch (err) {
+        const message = String(err?.message || "");
+        if (isDiscordReauthErrorMessage(message)) {
+          clearStoredDiscordContext();
+          currentDiscordRegisterableGuilds = [];
+          currentDiscordMatchedServers = [];
+          openPartnerDiscordReauthModal();
+          return [];
+        }
+        throw err;
+      }
+    }
+
+    async function syncPartnerServersFromDiscordOverview() {
+      if (!isCurrentSessionDiscordAuth() || !Array.isArray(currentDiscordMatchedServers) || !currentDiscordMatchedServers.length) {
+        return;
+      }
+      const token = String(currentSession?.access_token || "").trim();
+      if (!token) return;
+
+      for (const item of currentDiscordMatchedServers) {
+        const serverId = String(item?.serverId || "").trim();
+        if (!serverId) continue;
+        const guildName = String(item?.guildName || "").trim();
+        const guildIconUrl = String(item?.guildIconUrl || "").trim();
+        const serverName = String(item?.serverName || "").trim();
+        const serverBannerUrl = String(item?.serverBannerUrl || "").trim();
+        const payload = { serverId };
+        let hasChanges = false;
+
+        if (guildName && guildName !== serverName) {
+          payload.name = guildName;
+          hasChanges = true;
+        }
+        if (guildIconUrl && guildIconUrl !== serverBannerUrl) {
+          payload.bannerUrl = guildIconUrl;
+          hasChanges = true;
+        }
+
+        if (!hasChanges) continue;
+
+        try {
+          const { error } = await supabase.functions.invoke("server_update_settings", {
+            body: payload,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (error) throw error;
+        } catch (err) {
+          console.warn("Não foi possível sincronizar dados do servidor a partir do Discord:", err);
+        }
+      }
+    }
+
+    async function syncPartnerServerDiscordInvites(servers) {
+      if (!isCurrentSessionDiscordAuth()) return false;
+      const providerToken = getCurrentDiscordProviderToken();
+      const token = String(currentSession?.access_token || "").trim();
+      if (!providerToken || !token) return false;
+      const rows = Array.isArray(servers) ? servers : [];
+      let changed = false;
+
+      for (const server of rows) {
+        const serverId = String(server?.id || "").trim();
+        const guildId = String(server?.discord_guild_id || "").trim();
+        const channelId = String(server?.discord_announcement_channel_id || "").trim();
+        if (!serverId || !guildId || !channelId) continue;
+        try {
+          const { data, error } = await supabase.functions.invoke("discord_server_invite_sync", {
+            body: {
+              userToken: token,
+              providerToken,
+              serverId,
+            },
+          });
+          if (error || !data?.ok) {
+            throw error || new Error(data?.error || "Invite sync failed.");
+          }
+          if (!data?.skipped && String(data?.inviteUrl || "").trim()) {
+            changed = true;
+          }
+        } catch (err) {
+          console.warn("Não foi possível atualizar o convite do servidor no Discord:", err);
+        }
+      }
+
+      return changed;
+    }
+
+    function renderPartnerDiscordRegisterableGuilds(guilds) {
+      currentDiscordRegisterableGuilds = Array.isArray(guilds) ? guilds : [];
+      if (!partnerDiscordRegisterPanel || !partnerDiscordRegisterList || !partnerDiscordRegisterEmpty || !partnerDiscordRegisterCount) return;
+      partnerDiscordRegisterList.innerHTML = "";
+      const total = currentDiscordRegisterableGuilds.length;
+      partnerDiscordRegisterCount.textContent = `${total} ${total === 1 ? t("partner_page.server_one", "servidor") : t("partner_page.server_many", "servidores")}`;
+      partnerDiscordRegisterPanel.style.display = "none";
+      partnerDiscordRegisterEmpty.style.display = total ? "none" : "block";
+    }
+
+    async function registerDiscordGuildFromPartner(guildId, button) {
+      const normalizedGuildId = String(guildId || "").trim();
+      const providerToken = getCurrentDiscordProviderToken();
+      if (!normalizedGuildId || !currentSession?.access_token || !providerToken) return;
+      const originalText = button?.textContent || t("nav.discord_onboarding_register", "Cadastrar servidor");
+      if (button) {
+        button.disabled = true;
+        button.textContent = t("nav.discord_onboarding_registering", "Cadastrando...");
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke("discord_server_register", {
+          body: {
+            userToken: String(currentSession.access_token || "").trim(),
+            providerToken,
+            guildId: normalizedGuildId,
+          },
+        });
+        if (error) throw error;
+        const registeredServerId = String(data?.server?.id || "").trim();
+        if (registeredServerId) {
+          setPendingPartnerBotSetupServerId(registeredServerId);
+        }
+        const [servers, guilds] = await Promise.all([
+          fetchOwnedServers(),
+          fetchPartnerDiscordRegisterableGuilds(),
+        ]);
+        renderServers(servers);
+        renderPartnerDiscordRegisterableGuilds(guilds);
+        connectFeedback.textContent = t("partner_page.discord_register_success", "Servidor cadastrado com sucesso a partir do seu Discord.");
+        connectFeedback.style.color = "var(--muted)";
+        if (registeredServerId) {
+          await openPartnerDiscordChannelModal(registeredServerId, { setupMode: true });
+        }
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || t("partner_page.discord_register_error", "Não foi possível cadastrar esse servidor do Discord agora.");
+        connectFeedback.style.color = "#c62828";
+        if (button) {
+          button.disabled = false;
+          button.textContent = originalText;
+        }
+      }
+    }
+
+    function stopPartnerDiscordChannelPolling() {
+      if (currentDiscordChannelPollingTimer) {
+        clearTimeout(currentDiscordChannelPollingTimer);
+        currentDiscordChannelPollingTimer = null;
+      }
+    }
+
+    function schedulePartnerDiscordChannelPolling(delay = PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS) {
+      stopPartnerDiscordChannelPolling();
+      const shouldSkip = !currentDiscordChannelSetupMode
+        || !currentDiscordChannelServerId
+        || !currentDiscordChannelInvitePending
+        || currentDiscordChannelBotPresent;
+      if (shouldSkip) return;
+      currentDiscordChannelPollingTimer = window.setTimeout(() => {
+        loadPartnerDiscordChannelState({ silent: true });
+      }, delay);
+    }
+
+    function setPartnerDiscordInviteLinkState(state = "idle") {
+      if (!partnerDiscordBotInviteLink) return;
+      if (state === "pending") {
+        currentDiscordChannelInvitePending = true;
+        currentDiscordChannelInviteStartedAt = Date.now();
+      } else if (state === "idle") {
+        currentDiscordChannelInvitePending = false;
+        currentDiscordChannelInviteStartedAt = 0;
+      }
+      if (state === "loading") {
+        partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_loading_button", "Carregando...");
+        partnerDiscordBotInviteLink.setAttribute("aria-disabled", "true");
+        partnerDiscordBotInviteLink.classList.add("is-disabled");
+        return;
+      }
+      if (state === "pending") {
+        partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_inviting", "Adicionando...");
+        partnerDiscordBotInviteLink.setAttribute("aria-disabled", "true");
+        partnerDiscordBotInviteLink.classList.add("is-disabled");
+        return;
+      }
+      if (state === "syncing") {
+        partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_syncing", "Sincronizando...");
+        partnerDiscordBotInviteLink.setAttribute("aria-disabled", "true");
+        partnerDiscordBotInviteLink.classList.add("is-disabled");
+        return;
+      }
+      partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_invite", "Adicionar App ao servidor");
+      partnerDiscordBotInviteLink.removeAttribute("aria-disabled");
+      partnerDiscordBotInviteLink.classList.remove("is-disabled");
+    }
+
+    function buildPartnerDiscordAppInviteUrl(guildId = "") {
+      const normalizedGuildId = String(guildId || "").trim();
+      const params = new URLSearchParams({
+        client_id: "1500574981959061654",
+        permissions: "0",
+        integration_type: "0",
+        scope: "applications.commands bot",
+      });
+      if (/^[0-9]{17,20}$/.test(normalizedGuildId)) {
+        params.set("guild_id", normalizedGuildId);
+        params.set("disable_guild_select", "true");
+      }
+      return `https://discord.com/oauth2/authorize?${params.toString()}`;
+    }
+
+    function buildPartnerDiscordChannelRequestPayload() {
+      const userToken = String(currentSession?.access_token || "").trim();
+      const providerToken = String(getCurrentDiscordProviderToken() || "").trim();
+      const serverId = String(currentDiscordChannelServerId || "").trim();
+      const missing = [];
+      if (!userToken) missing.push("userToken");
+      if (!providerToken) missing.push("providerToken");
+      if (!serverId) missing.push("serverId");
+      return {
+        ok: missing.length === 0,
+        missing,
+        body: {
+          userToken,
+          providerToken,
+          serverId,
+        },
+      };
+    }
+
+    function applyPartnerDiscordChannelModalState(server, options = {}) {
+      const setupMode = Boolean(options.setupMode);
+      const botPresent = Boolean(options.botPresent);
+      const serverName = String(server?.name || "").trim() || t("partner_page.untitled_server", "Servidor sem nome");
+      const guildId = String(server?.discord_guild_id || "").trim();
+      currentDiscordChannelSetupMode = setupMode;
+      currentDiscordChannelBotPresent = botPresent;
+      currentDiscordChannelPermissionsReady = true;
+
+      if (partnerDiscordChannelTitle) {
+        partnerDiscordChannelTitle.textContent = formatMessage(
+          setupMode && !botPresent
+            ? "partner_page.discord_channel_setup_title_with_name"
+            : "partner_page.discord_channel_title_with_name",
+          setupMode && !botPresent
+            ? "Conectar App: {server}"
+            : "Canal do App: {server}",
+          { server: serverName },
+        );
+      }
+      if (partnerDiscordChannelHelper) {
+        partnerDiscordChannelHelper.textContent = setupMode
+          ? t(
+              botPresent
+                ? "partner_page.discord_channel_setup_helper_ready"
+                : "partner_page.discord_channel_setup_helper_install",
+              botPresent
+                ? "App conectado com sucesso. O cadastro deste servidor foi concluído."
+                : "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.",
+            )
+          : t(
+              "partner_page.discord_channel_helper",
+              "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.",
+            );
+      }
+      if (partnerDiscordChannelClose) {
+        partnerDiscordChannelClose.style.display = setupMode ? "none" : "";
+      }
+      if (partnerDiscordChannelCancel) {
+        partnerDiscordChannelCancel.style.display = "";
+      }
+      if (partnerDiscordChannelSave) partnerDiscordChannelSave.style.display = "none";
+      if (partnerDiscordChannelSelect) {
+        const field = partnerDiscordChannelSelect.closest(".field");
+        if (field) field.style.display = "none";
+      }
+      if (partnerDiscordBotInviteLink) {
+        partnerDiscordBotInviteLink.href = buildPartnerDiscordAppInviteUrl(guildId);
+        partnerDiscordBotInviteLink.style.display = setupMode && !botPresent ? "" : "none";
+        if (setupMode && isPartnerDiscordInvitePendingActive() && !botPresent) {
+          setPartnerDiscordInviteLinkState("syncing");
+        } else {
+          setPartnerDiscordInviteLinkState("idle");
+        }
+      }
+    }
+
+    function isPartnerDiscordInvitePendingActive() {
+      if (!currentDiscordChannelInvitePending) return false;
+      if (!currentDiscordChannelInviteStartedAt) return true;
+      return (Date.now() - currentDiscordChannelInviteStartedAt) < PARTNER_DISCORD_CHANNEL_POLL_MAX_WAIT_MS;
+    }
+
+    function closePartnerDiscordChannelModal() {
+      stopPartnerDiscordChannelPolling();
+      currentDiscordChannelServerId = "";
+      currentDiscordChannelSetupMode = false;
+      currentDiscordChannelBotPresent = false;
+      currentDiscordChannelPermissionsReady = true;
+      currentDiscordChannelLoading = false;
+      currentDiscordChannelInvitePending = false;
+      currentDiscordChannelInviteStartedAt = 0;
+      if (partnerDiscordChannelModal) {
+        partnerDiscordChannelModal.classList.remove("open");
+        partnerDiscordChannelModal.setAttribute("aria-hidden", "true");
+      }
+      if (partnerDiscordChannelFeedback) {
+        partnerDiscordChannelFeedback.textContent = "";
+      }
+      if (partnerDiscordBotInviteLink) {
+        partnerDiscordBotInviteLink.style.display = "none";
+        partnerDiscordBotInviteLink.setAttribute("href", "#");
+        setPartnerDiscordInviteLinkState("idle");
+      }
+      if (partnerDiscordChannelSelect) {
+        partnerDiscordChannelSelect.innerHTML = "";
+        partnerDiscordChannelSelect.disabled = false;
+      }
+      if (partnerDiscordChannelSave) {
+        partnerDiscordChannelSave.disabled = false;
+        partnerDiscordChannelSave.style.display = "";
+      }
+      if (partnerDiscordChannelClose) {
+        partnerDiscordChannelClose.style.display = "";
+      }
+      if (partnerDiscordChannelCancel) {
+        partnerDiscordChannelCancel.style.display = "";
+      }
+      if (partnerDiscordChannelSelect) {
+        const field = partnerDiscordChannelSelect.closest(".field");
+        if (field) field.style.display = "";
+      }
+    }
+
+    async function loadPartnerDiscordChannelState(options = {}) {
+      if (currentDiscordChannelLoading) {
+        if (currentDiscordChannelSetupMode && !currentDiscordChannelBotPresent) {
+          schedulePartnerDiscordChannelPolling(PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS);
+        }
+        return;
+      }
+      const silent = Boolean(options.silent);
+      const server = currentServers.find((item) => String(item.id) === String(currentDiscordChannelServerId));
+      if (!server) {
+        clearPendingPartnerBotSetupServerId();
+        closePartnerDiscordChannelModal();
+        return;
+      }
+
+      currentDiscordChannelLoading = true;
+      try {
+        if (currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent && partnerDiscordBotInviteLink?.style.display !== "none") {
+          setPartnerDiscordInviteLinkState("syncing");
+        }
+        await ensureDiscordPartnerContext();
+
+        const requestPayload = buildPartnerDiscordChannelRequestPayload();
+        if (!requestPayload.ok) {
+          console.warn("Configuração do App do Discord com payload incompleto.", {
+            missing: requestPayload.missing,
+            provider: getCurrentAuthProvider(),
+            hasLinkedDiscord: hasLinkedDiscordAccount(),
+            isDiscordSession: isCurrentSessionDiscordAuth(),
+            hasAccessToken: Boolean(String(currentSession?.access_token || "").trim()),
+            hasProviderToken: Boolean(String(getCurrentDiscordProviderToken() || "").trim()),
+            serverId: String(currentDiscordChannelServerId || "").trim(),
+          });
+        }
+        if (!requestPayload.body.userToken || !requestPayload.body.providerToken) {
+          if (partnerDiscordChannelFeedback) {
+            partnerDiscordChannelFeedback.textContent = "";
+          }
+          closePartnerDiscordChannelModal();
+          openPartnerDiscordReauthModal();
+          return;
+        }
+        if (!requestPayload.body.serverId) {
+          clearPendingPartnerBotSetupServerId();
+          closePartnerDiscordChannelModal();
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke("discord_guild_channels", {
+          body: requestPayload.body,
+        });
+        if (error || !data?.ok) {
+          const details = await resolveFunctionErrorDetails(
+            error,
+            data,
+            t("partner_page.discord_channel_load_error", "Não foi possível carregar os canais do Discord agora."),
+          );
+          const rateLimitInfo = extractDiscordRateLimitInfo(details.message, details.retryAfterMs);
+          if (details.status === 429 || rateLimitInfo) {
+            const retryAfterMs = Math.max(
+              Number(details.retryAfterMs || 0),
+              Number(rateLimitInfo?.retryAfterMs || 0),
+              10000,
+            );
+            if (partnerDiscordChannelFeedback) {
+              partnerDiscordChannelFeedback.textContent = formatMessage(
+                "partner_page.discord_channel_rate_limited",
+                "O Discord está limitando temporariamente esta verificação. Vamos tentar de novo em {seconds}s.",
+                { seconds: Math.max(1, Math.ceil(retryAfterMs / 1000)) },
+              );
+              partnerDiscordChannelFeedback.style.color = "var(--muted)";
+            }
+            schedulePartnerDiscordChannelPolling(retryAfterMs + 1500);
+            return;
+          }
+          throw new Error(details.message);
+        }
+
+        const botPresent = Boolean(data?.botPresent);
+        const permissionsReady = data?.permissionsReady !== false;
+        const permissionState = data?.permissionState || {};
+        currentServers = currentServers.map((item) => (
+          String(item.id) === String(currentDiscordChannelServerId)
+            ? {
+                ...item,
+                status: botPresent ? "active" : "pending",
+                discord_app_installed: botPresent,
+                discord_app_can_create_invite: Boolean(permissionState.createInvite),
+                discord_app_can_view_channels: Boolean(permissionState.viewChannels),
+                discord_app_can_send_messages: Boolean(permissionState.sendMessages),
+                discord_app_can_embed_links: Boolean(permissionState.embedLinks),
+                discord_app_permissions_synced_at: new Date().toISOString(),
+                discord_announcement_channel_id: String(data?.currentChannelId || "").trim() || null,
+                discord_announcement_channel_name: String(data?.currentChannelName || "").trim() || null,
+                discord_invite: Boolean(permissionState.createInvite) ? item.discord_invite : null,
+              }
+            : item
+        ));
+        applyPartnerDiscordChannelModalState(server, {
+          setupMode: currentDiscordChannelSetupMode,
+          botPresent,
+        });
+
+        if (!botPresent) {
+          if (partnerDiscordChannelFeedback) {
+            partnerDiscordChannelFeedback.textContent = "";
+          }
+          if (partnerDiscordBotInviteLink && data?.inviteUrl) {
+            partnerDiscordBotInviteLink.href = String(data.inviteUrl);
+            partnerDiscordBotInviteLink.style.display = "";
+            if (isPartnerDiscordInvitePendingActive()) {
+              setPartnerDiscordInviteLinkState("syncing");
+            } else {
+              setPartnerDiscordInviteLinkState("idle");
+            }
+          }
+          if (partnerDiscordChannelSave) {
+            partnerDiscordChannelSave.disabled = true;
+          }
+          if (isPartnerDiscordInvitePendingActive()) {
+            schedulePartnerDiscordChannelPolling(PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS);
+          } else {
+            currentDiscordChannelInvitePending = false;
+            currentDiscordChannelInviteStartedAt = 0;
+          }
+          return;
+        }
+
+        stopPartnerDiscordChannelPolling();
+        currentDiscordChannelInvitePending = false;
+        if (partnerDiscordBotInviteLink) {
+          partnerDiscordBotInviteLink.style.display = "";
+          partnerDiscordBotInviteLink.setAttribute("href", "#");
+          setPartnerDiscordInviteLinkState("loading");
+        }
+        if (partnerDiscordChannelFeedback) {
+          partnerDiscordChannelFeedback.textContent = t(
+            "partner_page.discord_app_install_success",
+            "App conectado com sucesso. Este servidor já está pronto para a próxima etapa de integração com o Discord.",
+          );
+          partnerDiscordChannelFeedback.style.color = "var(--muted)";
+        }
+        clearPendingPartnerBotSetupServerId();
+        connectFeedback.textContent = t(
+          "partner_page.discord_app_install_success",
+          "App conectado com sucesso. Este servidor já está pronto para a próxima etapa de integração com o Discord.",
+        );
+        connectFeedback.style.color = "var(--muted)";
+        renderServers(currentServers);
+        window.setTimeout(() => {
+          closePartnerDiscordChannelModal();
+        }, 800);
+      } catch (err) {
+        const message = String(err?.message || "");
+        const rateLimitInfo = extractDiscordRateLimitInfo(message);
+        if (rateLimitInfo) {
+          if (partnerDiscordChannelFeedback) {
+            partnerDiscordChannelFeedback.textContent = formatMessage(
+              "partner_page.discord_channel_rate_limited",
+              "O Discord está limitando temporariamente esta verificação. Vamos tentar de novo em {seconds}s.",
+              { seconds: Math.max(1, Math.ceil(rateLimitInfo.retryAfterMs / 1000)) },
+            );
+            partnerDiscordChannelFeedback.style.color = "var(--muted)";
+          }
+          if (currentDiscordChannelInvitePending) {
+            schedulePartnerDiscordChannelPolling(Math.max(rateLimitInfo.retryAfterMs + 1500, 10000));
+          }
+          return;
+        }
+        console.error(err);
+        if (isDiscordReauthErrorMessage(message)) {
+          clearStoredDiscordContext();
+          if (partnerDiscordChannelFeedback) {
+            partnerDiscordChannelFeedback.textContent = "";
+          }
+          closePartnerDiscordChannelModal();
+          openPartnerDiscordReauthModal();
+          return;
+        }
+        stopPartnerDiscordChannelPolling();
+        if (partnerDiscordChannelFeedback) {
+          partnerDiscordChannelFeedback.textContent = message || t("partner_page.discord_channel_load_error", "Não foi possível carregar os canais do Discord agora.");
+          partnerDiscordChannelFeedback.style.color = "#c62828";
+        }
+      } finally {
+        currentDiscordChannelLoading = false;
+      }
+    }
+
+    async function openPartnerDiscordChannelModal(serverId, options = {}) {
+      const server = currentServers.find((item) => String(item.id) === String(serverId));
+      if (!server) return;
+      const inferredSetupMode = options.setupMode != null
+        ? Boolean(options.setupMode)
+        : !String(server?.discord_announcement_channel_id || "").trim();
+      currentDiscordChannelServerId = String(serverId || "");
+      currentDiscordChannelSetupMode = inferredSetupMode;
+      currentDiscordChannelBotPresent = false;
+      currentDiscordChannelInvitePending = false;
+      stopPartnerDiscordChannelPolling();
+      applyPartnerDiscordChannelModalState(server, {
+        setupMode: inferredSetupMode,
+        botPresent: false,
+      });
+      if (partnerDiscordChannelFeedback) {
+        partnerDiscordChannelFeedback.textContent = "";
+      }
+      if (partnerDiscordBotInviteLink) {
+        partnerDiscordBotInviteLink.style.display = inferredSetupMode ? "" : "none";
+        partnerDiscordBotInviteLink.setAttribute("href", buildPartnerDiscordAppInviteUrl(String(server?.discord_guild_id || "").trim()) || "#");
+        setPartnerDiscordInviteLinkState("loading");
+      }
+      if (partnerDiscordChannelSelect) {
+        partnerDiscordChannelSelect.disabled = true;
+        partnerDiscordChannelSelect.innerHTML = `<option value="">${escapeHtml(t("partner_page.loading_channels", "Carregando canais..."))}</option>`;
+      }
+      if (partnerDiscordChannelSave) {
+        partnerDiscordChannelSave.disabled = true;
+      }
+      if (partnerDiscordChannelModal) {
+        partnerDiscordChannelModal.classList.add("open");
+        partnerDiscordChannelModal.setAttribute("aria-hidden", "false");
+      }
+      await loadPartnerDiscordChannelState();
+    }
+
+    async function savePartnerDiscordChannelConfig() {
+      await ensureDiscordPartnerContext();
+      const providerToken = getCurrentDiscordProviderToken();
+      if (!currentDiscordChannelServerId || !currentSession?.access_token || !providerToken) return;
+      const selectedChannelId = String(partnerDiscordChannelSelect?.value || "").trim();
+      if (currentDiscordChannelSetupMode && !selectedChannelId) {
+        if (partnerDiscordChannelFeedback) {
+          partnerDiscordChannelFeedback.textContent = t(
+            "partner_page.discord_channel_select_required",
+            "Escolha um canal de texto para concluir a conexão do App.",
+          );
+          partnerDiscordChannelFeedback.style.color = "#c62828";
+        }
+        return;
+      }
+      if (partnerDiscordChannelSave) {
+        partnerDiscordChannelSave.disabled = true;
+        partnerDiscordChannelSave.textContent = t("common.saving", "Saving...");
+      }
+      if (partnerDiscordChannelFeedback) {
+        partnerDiscordChannelFeedback.textContent = "";
+      }
+      try {
+        const { data, error } = await supabase.functions.invoke("discord_server_channel_config", {
+          body: {
+            userToken: String(currentSession.access_token || "").trim(),
+            providerToken,
+            serverId: currentDiscordChannelServerId,
+            channelId: selectedChannelId || null,
+          },
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(
+            error,
+            data,
+            t("partner_page.discord_channel_save_error", "Não foi possível salvar o canal do App agora."),
+          );
+          throw new Error(message);
+        }
+        currentServers = currentServers.map((server) => (
+          String(server.id) === String(currentDiscordChannelServerId)
+            ? {
+                ...server,
+                discord_announcement_channel_id: data?.channelId || null,
+                discord_announcement_channel_name: data?.channelName || null,
+                discord_invite: data?.inviteUrl || null,
+                discord_app_installed: true,
+                discord_app_can_create_invite: Boolean(data?.permissionState?.createInvite),
+                discord_app_can_view_channels: Boolean(data?.permissionState?.viewChannels),
+                discord_app_can_send_messages: Boolean(data?.permissionState?.sendMessages),
+                discord_app_can_embed_links: Boolean(data?.permissionState?.embedLinks),
+                discord_app_permissions_synced_at: new Date().toISOString(),
+                status: selectedChannelId ? "active" : "pending",
+              }
+            : server
+        ));
+        clearPendingPartnerBotSetupServerId();
+        renderServers(currentServers);
+        connectFeedback.textContent = selectedChannelId
+          ? t("partner_page.discord_channel_save_success", "Canal do App salvo com sucesso.")
+          : t("partner_page.discord_channel_clear_success", "Canal do App removido com sucesso.");
+        connectFeedback.style.color = "var(--muted)";
+        closePartnerDiscordChannelModal();
+      } catch (err) {
+        console.error(err);
+        if (partnerDiscordChannelFeedback) {
+          partnerDiscordChannelFeedback.textContent = err?.message || t("partner_page.discord_channel_save_error", "Não foi possível salvar o canal do App agora.");
+          partnerDiscordChannelFeedback.style.color = "#c62828";
+        }
+      } finally {
+        if (partnerDiscordChannelSave && partnerDiscordChannelModal?.classList.contains("open")) {
+          partnerDiscordChannelSave.disabled = false;
+          partnerDiscordChannelSave.textContent = t("partner_page.discord_channel_save", "Salvar canal");
+        }
+      }
+    }
+
+    async function removePartnerDiscordApp(serverId, button, options = {}) {
+      const server = currentServers.find((item) => String(item?.id || "") === String(serverId || ""));
+      if (!server) return;
+      const shouldConfirm = options.confirm !== false;
+      if (shouldConfirm) {
+        const confirmed = window.confirm(
+          formatMessage(
+            "partner_page.discord_app_remove_confirm",
+            "Remover o App do Gimerr de {server}? Você poderá adicioná-lo novamente depois.",
+            { server: String(server?.name || t("partner_page.untitled_server", "Servidor sem nome")).trim() || t("partner_page.untitled_server", "Servidor sem nome") },
+          ),
+        );
+        if (!confirmed) return;
+      }
+
+      try {
+        await ensureDiscordPartnerContext();
+        const providerToken = getCurrentDiscordProviderToken();
+        if (!currentSession?.access_token || !providerToken) {
+          openPartnerDiscordReauthModal();
+          return;
+        }
+        const originalLabel = button?.textContent || "";
+        if (button) {
+          button.disabled = true;
+          button.textContent = t("common.saving", "Saving...");
+        }
+        const { data, error } = await supabase.functions.invoke("discord_server_app_remove", {
+          body: {
+            userToken: String(currentSession.access_token || "").trim(),
+            providerToken,
+            serverId,
+          },
+        });
+        if (error || !data?.ok) {
+          const message = await resolveFunctionErrorMessage(
+            error,
+            data,
+            t("partner_page.discord_app_remove_error", "Não foi possível remover este servidor do Gimerr agora."),
+          );
+          throw new Error(message);
+        }
+
+        const [servers, registerableGuilds] = await Promise.all([
+          fetchOwnedServers(),
+          fetchPartnerDiscordRegisterableGuilds(),
+        ]);
+        renderServers(servers);
+        renderPartnerDiscordRegisterableGuilds(registerableGuilds);
+        connectFeedback.textContent = data?.warning
+          ? String(data.warning)
+          : String(options.successMessage || t("partner_page.discord_app_remove_success", "Servidor removido do Gimerr com sucesso."));
+        connectFeedback.style.color = "var(--muted)";
+        if (String(currentDiscordChannelServerId || "") === String(serverId)) {
+          closePartnerDiscordChannelModal();
+        }
+        if (button && button.isConnected) {
+          button.disabled = false;
+          button.textContent = t("partner_page.discord_app_remove_button", "Remover servidor do Gimerr");
+        } else if (button) {
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || t("partner_page.discord_app_remove_error", "Não foi possível remover este servidor do Gimerr agora.");
+        connectFeedback.style.color = "#c62828";
+        if (button) {
+          button.disabled = false;
+          button.textContent = t("partner_page.discord_app_remove_button", "Remover servidor do Gimerr");
+        }
+      }
     }
 
     function canManageServerFeedHighlight(server) {
@@ -3342,7 +4881,8 @@
         partnerAddBalanceBtn.hidden = !hasOwnedServers;
       }
       partnerServerList.innerHTML = "";
-      const total = currentServers.length;
+      const registerableGuilds = Array.isArray(currentDiscordRegisterableGuilds) ? currentDiscordRegisterableGuilds : [];
+      const total = currentServers.length + registerableGuilds.length;
       partnerServersCount.textContent = `${total} ${total === 1 ? t("partner_page.server_one", "server") : t("partner_page.server_many", "servers")}`;
       const activeHighlightsTotal = (currentServers || []).reduce((sum, server) => {
         return sum + Number(server?.highlight_active_count || 0);
@@ -3361,16 +4901,78 @@
         return;
       }
       partnerServersEmpty.style.display = "none";
+      registerableGuilds.forEach((guild) => {
+        const safeName = escapeHtml(guild.guildName || t("partner_page.untitled_server", "Servidor sem nome"));
+        const logo = resolveMediaUrl(guild.guildIconUrl || "") || "img/logo.png";
+        const card = document.createElement("article");
+        card.className = "partner-server-card";
+        card.innerHTML = `
+          <div class="partner-server-head">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img class="partner-server-logo" src="${escapeHtml(logo)}" alt="Logo de ${safeName}" loading="lazy" />
+              <strong>${safeName}</strong>
+            </div>
+            <span class="pill">${escapeHtml(t("nav.discord_onboarding_available", "Disponível para cadastrar"))}</span>
+          </div>
+          <p class="helper">${escapeHtml(t("partner_page.discord_register_card_helper", "Use este atalho para criar no Gimerr um servidor do Discord que você administra."))}</p>
+          <div class="partner-server-actions">
+            <button
+              class="btn btn-primary partner-discord-register-btn"
+              type="button"
+              data-guild-id="${escapeHtml(guild.guildId || "")}"
+            >${escapeHtml(t("nav.discord_onboarding_register", "Cadastrar servidor"))}</button>
+          </div>
+        `;
+        const cardLogo = card.querySelector(".partner-server-logo");
+        if (cardLogo) {
+          cardLogo.addEventListener("error", () => {
+            if (cardLogo.dataset.fallbackApplied === "1") return;
+            cardLogo.dataset.fallbackApplied = "1";
+            cardLogo.src = "img/logo.png";
+          });
+        }
+        partnerServerList.appendChild(card);
+      });
       currentServers.forEach((server) => {
         const safeName = escapeHtml(server.name || t("partner_page.untitled_server", "Untitled server"));
-        const safeStatus = escapeHtml(server.status || "active");
+        const rawStatus = String(server.status || "active").trim().toLowerCase();
+        const localizedStatus = rawStatus === "pending"
+          ? t("partner_page.server_status_pending", "Pendente")
+          : rawStatus === "active"
+            ? t("partner_page.server_status_active", "Ativo")
+            : rawStatus === "deleted"
+              ? t("partner_page.server_status_deleted", "Excluído")
+              : String(server.status || "active");
+        const safeStatus = escapeHtml(localizedStatus);
         const gameUrl = `game?id=${encodeURIComponent(String(server.id || ""))}`;
         const safeSite = server.official_site ? String(server.official_site) : "";
         const safeDiscord = server.discord_invite ? String(server.discord_invite) : "";
         const safeDescription = String(server.description || "").trim();
-        const logo = resolveMediaUrl(server.banner_url || "");
+        const matchedDiscordServer = currentDiscordMatchedServers.find((item) =>
+          String(item?.serverId || "").trim() === String(server.id || "").trim()
+          || String(item?.guildId || "").trim() === String(server.discord_guild_id || "").trim()
+        );
+        const logo = resolveMediaUrl(server.banner_url || matchedDiscordServer?.guildIconUrl || "") || "img/logo.png";
         const isFeedBoosted = String(server.feed_highlight_status || "none") === "active";
         const canToggleFeedHighlight = canManageServerFeedHighlight(server);
+        const followersCount = Math.max(0, Math.floor(Number(server.followers_count || 0)));
+        const totalListingViews = Math.max(0, Math.floor(Number(server.total_listing_views || 0)));
+        const monetizationEligible = Boolean(server.monetization_eligible);
+        const appInstalled = Boolean(server.discord_app_installed);
+        const hasDiscordGuildLink = /^[0-9]{17,20}$/.test(String(server.discord_guild_id || "").trim());
+        const isPendingServer = String(server.status || "").trim().toLowerCase() === "pending";
+        const hasConnectedDiscordApp = hasDiscordGuildLink && Boolean(
+          isPendingServer
+          || appInstalled
+          || String(server.discord_announcement_channel_id || "").trim()
+          || safeDiscord
+        );
+        const appStatusHelper = appInstalled
+          ? t("partner_page.discord_app_installed_status", "App do Gimerr conectado a este servidor.")
+          : t("partner_page.discord_app_not_installed_status", "O App do Gimerr ainda não foi instalado neste servidor.");
+        const eligibilityPill = monetizationEligible
+          ? `<span class="pill">${escapeHtml(t("partner_page.eligible_badge", "Elegível para monetização"))}</span>`
+          : "";
         const feedBoostBadge = isFeedBoosted
           ? `<span class="pill">${escapeHtml(t("partner_page.server_boost_badge", "Impulsionado no feed"))}</span>`
           : "";
@@ -3390,28 +4992,43 @@
         const descHtml = safeDescription
           ? `<p class="partner-server-desc">${escapeHtml(safeDescription)}</p>`
           : "";
+        const botChannelButton = hasDiscordGuildLink && !appInstalled
+          ? `<button class="btn btn-ghost partner-configure-discord-channel-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(
+            isPendingServer
+              ? t("partner_page.discord_channel_resume_button", "Retomar conexão")
+              : t("partner_page.discord_channel_button", "Conectar App do Gimerr")
+          )}</button>`
+          : "";
+        const removeDiscordAppButton = hasConnectedDiscordApp
+          ? `<button class="btn btn-ghost partner-remove-discord-app-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.discord_app_remove_button", "Remover servidor do Gimerr"))}</button>`
+          : "";
         const card = document.createElement("article");
         card.className = "partner-server-card";
         card.innerHTML = `
           <div class="partner-server-head">
             <div style="display:flex;align-items:center;gap:10px;">
-              ${logo ? `<img class="partner-server-logo" src="${escapeHtml(logo)}" alt="Logo de ${safeName}" loading="lazy" data-logo-src="${escapeHtml(logo)}" />` : ""}
+              <img class="partner-server-logo" src="${escapeHtml(logo)}" alt="Logo de ${safeName}" loading="lazy" data-logo-src="${escapeHtml(logo)}" />
               <strong>${safeName}</strong>
             </div>
             <span class="pill">${safeStatus}</span>
           </div>
           <div class="partner-server-meta">
             <span class="pill">${escapeHtml(t("partner_page.listings_count", "Listings"))}: ${server.listing_count}</span>
+            <span class="pill">${escapeHtml(t("partner_page.followers_count", "Followers"))}: ${escapeHtml(formatCount(followersCount))}</span>
+            <span class="pill">${escapeHtml(t("partner_page.total_views_count", "Total views"))}: ${escapeHtml(formatCount(totalListingViews))}</span>
+            ${eligibilityPill}
             ${feedBoostBadge}
           </div>
           ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
           ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
           ${descHtml}
+          <p class="helper">${escapeHtml(appStatusHelper)}</p>
           <p class="helper">${escapeHtml(t("partner_page.created_at", "Created on"))} ${formatDateTime(server.created_at)}</p>
           <div class="partner-server-actions">
             <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">${escapeHtml(t("partner_page.view_listings", "View listings"))}</a>
             ${feedBoostButton}
-            <button class="btn btn-ghost partner-edit-server-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.edit", "Edit"))}</button>
+            ${botChannelButton}
+            ${removeDiscordAppButton}
           </div>
         `;
         const cardLogo = card.querySelector(".partner-server-logo");
@@ -3503,6 +5120,7 @@
       try {
         ensureClient();
         const { data } = await supabase.auth.getSession();
+        currentSession = attachStoredDiscordContext(data.session || null);
         currentUser = data.session?.user || null;
         updateAuthUI();
         if (!currentUser) {
@@ -3510,15 +5128,29 @@
           return;
         }
 
-        const [profile, servers, payoutSummary, wiseAccount] = await Promise.all([
-          fetchPartnerProfile(),
+        const profile = await fetchPartnerProfile();
+        currentProfile = profile;
+        await ensureDiscordPartnerContext();
+
+        const shouldLoadDiscordGuildOverview = isCurrentSessionDiscordAuth();
+        const registerableGuilds = shouldLoadDiscordGuildOverview
+          ? await fetchPartnerDiscordRegisterableGuilds().catch((err) => {
+              console.warn("Não foi possível carregar servidores do Discord para cadastro:", err);
+              return [];
+            })
+          : [];
+        await syncPartnerServersFromDiscordOverview();
+        let [servers, payoutSummary, wiseAccount] = await Promise.all([
           fetchOwnedServers(),
           fetchPartnerPayoutSummary(),
           fetchWiseAccount(),
         ]);
-        currentProfile = profile;
+        const inviteSyncChanged = await syncPartnerServerDiscordInvites(servers);
+        if (inviteSyncChanged) {
+          servers = await fetchOwnedServers();
+        }
         await refreshPartnerTopupCurrencyState();
-        const hasPartnerAccess = Boolean(profile?.is_partner || profile?.is_admin || (servers || []).length > 0);
+        const hasPartnerAccess = Boolean(currentUser);
         if (!hasPartnerAccess) {
           window.location.replace("index.html");
           return;
@@ -3526,6 +5158,7 @@
         renderPartnerProfile(profile);
         renderWiseAccount(wiseAccount?.unsupported ? null : wiseAccount);
         renderServers(servers);
+        renderPartnerDiscordRegisterableGuilds(registerableGuilds);
         renderPartnerPayoutSummary(payoutSummary);
         const topupResult = new URLSearchParams(window.location.search).get("partner_topup");
         if (topupResult === "success") {
@@ -3542,9 +5175,17 @@
         if (wiseAccount?.unsupported) {
           setWiseFeedback(t("partner_page.missing_payout_accounts_table", "The payout accounts table does not exist yet. Apply the latest migrations."), true);
         }
-
         markContentReady();
         revealPage();
+        const pendingBotSetupServerId = getPendingPartnerBotSetupServerId();
+        const pendingServerExists = pendingBotSetupServerId
+          && currentServers.some((server) => String(server?.id || "").trim() === pendingBotSetupServerId);
+        if (pendingServerExists) {
+          await openPartnerDiscordChannelModal(pendingBotSetupServerId, { setupMode: true });
+        } else {
+          clearPendingPartnerBotSetupServerId();
+          maybeOpenPartnerWelcomeModal();
+        }
       } catch (err) {
         console.error(err);
         connectFeedback.textContent = err?.message || t("partner_page.load_area_error", "Failed to load partner area.");
@@ -3590,6 +5231,27 @@
     });
 
     partnerServerList?.addEventListener("click", (event) => {
+      const channelButton = event.target?.closest?.(".partner-configure-discord-channel-btn");
+      if (channelButton) {
+        const serverId = channelButton.getAttribute("data-server-id");
+        if (!serverId) return;
+        openPartnerDiscordChannelModal(serverId);
+        return;
+      }
+      const removeDiscordAppButton = event.target?.closest?.(".partner-remove-discord-app-btn");
+      if (removeDiscordAppButton) {
+        const serverId = removeDiscordAppButton.getAttribute("data-server-id");
+        if (!serverId) return;
+        removePartnerDiscordApp(serverId, removeDiscordAppButton);
+        return;
+      }
+      const registerButton = event.target?.closest?.(".partner-discord-register-btn");
+      if (registerButton) {
+        const guildId = registerButton.getAttribute("data-guild-id");
+        if (!guildId) return;
+        registerDiscordGuildFromPartner(guildId, registerButton);
+        return;
+      }
       const boostButton = event.target?.closest?.(".partner-toggle-server-boost-btn");
       if (boostButton) {
         const serverId = boostButton.getAttribute("data-server-id");
@@ -3647,13 +5309,90 @@
     partnerTopupClose?.addEventListener("click", closePartnerTopupModal);
     partnerTopupCancel?.addEventListener("click", closePartnerTopupModal);
     partnerTopupConfirm?.addEventListener("click", startPartnerTopupCheckout);
+    partnerDiscordChannelClose?.addEventListener("click", closePartnerDiscordChannelModal);
+    partnerDiscordChannelCancel?.addEventListener("click", closePartnerDiscordChannelModal);
+    partnerDiscordBotInviteLink?.addEventListener("click", (event) => {
+      if (partnerDiscordBotInviteLink?.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+        return;
+      }
+      setPartnerDiscordInviteLinkState("pending");
+      if (partnerDiscordChannelFeedback) {
+        partnerDiscordChannelFeedback.textContent = "";
+      }
+      schedulePartnerDiscordChannelPolling(PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS);
+    });
+    partnerDiscordChannelSave?.addEventListener("click", savePartnerDiscordChannelConfig);
+    partnerDiscordChannelModal?.addEventListener("click", (event) => {
+      if (event.target === partnerDiscordChannelModal) {
+        if (currentDiscordChannelSetupMode) {
+          event.preventDefault();
+          return;
+        }
+        closePartnerDiscordChannelModal();
+      }
+    });
     partnerTopupModal?.addEventListener("click", (event) => {
       if (event.target === partnerTopupModal) {
         closePartnerTopupModal();
       }
     });
+    partnerWelcomeConfirm?.addEventListener("click", markPartnerWelcomeSeen);
+    partnerDiscordAuthAction?.addEventListener("click", async () => {
+      try {
+        if (hasLinkedDiscordAccount()) {
+          await startPartnerDiscordAuthFlow();
+        } else {
+          await startPartnerDiscordConnectFlow();
+        }
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || t("partner_page.discord_reauth_notice", "Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.");
+        connectFeedback.style.color = "#c62828";
+      }
+    });
+    partnerWelcomeModal?.addEventListener("click", (event) => {
+      if (event.target === partnerWelcomeModal) {
+        event.preventDefault();
+      }
+    });
+    partnerDiscordReauthConfirm?.addEventListener("click", async () => {
+      try {
+        if (partnerDiscordReauthConfirm) {
+          partnerDiscordReauthConfirm.disabled = true;
+          partnerDiscordReauthConfirm.textContent = t("signin.wait", "Please wait...");
+        }
+        if (partnerDiscordAccessMode === "connect") {
+          await startPartnerDiscordConnectFlow();
+        } else {
+          await startPartnerDiscordAuthFlow();
+        }
+      } catch (err) {
+        console.error(err);
+        connectFeedback.textContent = err?.message || t("partner_page.discord_reauth_notice", "Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.");
+        connectFeedback.style.color = "#c62828";
+        if (partnerDiscordReauthConfirm) {
+          partnerDiscordReauthConfirm.disabled = false;
+          applyPartnerDiscordAccessModalCopy(partnerDiscordAccessMode);
+        }
+      }
+    });
+    partnerDiscordReauthBack?.addEventListener("click", leavePartnerDiscordAccessModal);
+    partnerDiscordReauthModal?.addEventListener("click", (event) => {
+      if (event.target === partnerDiscordReauthModal) {
+        event.preventDefault();
+      }
+    });
 
     document.addEventListener("keydown", (event) => {
+      if (partnerDiscordReauthModal?.classList.contains("open")) {
+        event.preventDefault();
+        return;
+      }
+      if (event.key === "Escape" && partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode) {
+        event.preventDefault();
+        return;
+      }
       if (event.key === "Escape" && partnerEditModal?.classList.contains("open")) {
         closeEditModal();
         return;
@@ -3668,6 +5407,33 @@
       }
       if (event.key === "Escape" && partnerTopupModal?.classList.contains("open")) {
         closePartnerTopupModal();
+        return;
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+        if (currentDiscordChannelInvitePending) {
+          setPartnerDiscordInviteLinkState("syncing");
+        }
+        loadPartnerDiscordChannelState({ silent: true });
+      }
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState !== "visible") return;
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+        if (currentDiscordChannelInvitePending) {
+          setPartnerDiscordInviteLinkState("syncing");
+        }
+        loadPartnerDiscordChannelState({ silent: true });
+      }
+    });
+    window.addEventListener("pageshow", () => {
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+        if (currentDiscordChannelInvitePending) {
+          setPartnerDiscordInviteLinkState("syncing");
+        }
+        loadPartnerDiscordChannelState({ silent: true });
       }
     });
 

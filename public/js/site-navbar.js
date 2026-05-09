@@ -3,10 +3,146 @@
   const t = (key, fallback = "") => i18n.t(key, fallback);
   let authClientPromise = null;
   let profileSyncBootstrapped = false;
+  let discordOnboardingBootstrapped = false;
+  let discordOnboardingModalRefs = null;
+  const DISCORD_OAUTH_CONTEXT_KEY = "gimerr-discord-oauth-context";
+  const AUTH_PROVIDER_HINT_KEY = "gimerr-auth-provider-hint";
+  const AUTH_STORAGE_KEY = "gimerr-auth-token";
+  const LEGACY_AUTH_STORAGE_KEY = "gimerr-auth-session";
+  const PARTNER_BOT_SETUP_STORAGE_KEY = "gimerr-partner-bot-setup-server-id";
   let partnerAccessCache = {
     userId: null,
     canAccess: false,
   };
+  const DISCORD_ONBOARDING_PENDING_KEY = "gimerr-discord-onboarding-pending";
+  const DISCORD_ONBOARDING_SEEN_PREFIX = "gimerr-discord-onboarding-seen:v1:";
+
+  function isDeletedAccountProfileError(error) {
+    const code = String(error?.code || "").trim();
+    const message = String(error?.message || "").trim().toLowerCase();
+    const details = String(error?.details || "").trim().toLowerCase();
+    return code === "23503"
+      || message.includes("users_id_fkey")
+      || details.includes("users_id_fkey")
+      || (message.includes("foreign key") && message.includes("users"));
+  }
+
+  async function clearLocalAuthState(client = null) {
+    try {
+      if (client?.auth?.signOut) {
+        await client.auth.signOut({ scope: "local" });
+      }
+    } catch (_err) {
+      // Ignore local sign-out failures and clear storage manually below.
+    }
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+      localStorage.removeItem(AUTH_PROVIDER_HINT_KEY);
+      localStorage.removeItem(DISCORD_OAUTH_CONTEXT_KEY);
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+    try {
+      sessionStorage.removeItem(DISCORD_ONBOARDING_PENDING_KEY);
+      sessionStorage.removeItem("gimerr-password-recovery");
+      sessionStorage.removeItem("gimerr-post-discord-link");
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+    authClientPromise = null;
+    profileSyncBootstrapped = false;
+    discordOnboardingBootstrapped = false;
+    partnerAccessCache = { userId: null, canAccess: false };
+  }
+
+  async function handleDeletedAccountSession(client, error) {
+    console.warn("Sessão local removida após detectar conta excluída.", error);
+    await clearLocalAuthState(client);
+    const path = String(window.location.pathname || "").toLowerCase();
+    if (path.endsWith("/sign-in.html") || path === "/sign-in.html") return;
+    window.location.replace("index.html");
+  }
+
+  function isInvalidRemoteSessionError(error) {
+    const status = Number(error?.status ?? error?.statusCode ?? 0);
+    const code = String(error?.code || "").trim().toLowerCase();
+    const message = String(error?.message || "").trim().toLowerCase();
+    if ([400, 401, 403].includes(status)) return true;
+    if (["session_not_found", "user_not_found", "invalid_jwt"].includes(code)) return true;
+    return message.includes("user not found")
+      || message.includes("session not found")
+      || message.includes("jwt")
+      || message.includes("invalid claim")
+      || message.includes("forbidden")
+      || message.includes("unauthorized");
+  }
+
+  async function validateRemoteSession(client, session) {
+    const token = String(session?.access_token || "").trim();
+    if (!token) return session || null;
+    try {
+      const { data, error } = await client.auth.getUser(token);
+      if (error) {
+        if (isInvalidRemoteSessionError(error)) {
+          await handleDeletedAccountSession(client, error);
+          return null;
+        }
+        console.warn("Falha ao validar sessão remota do usuário:", error);
+        return session || null;
+      }
+      if (!data?.user?.id) {
+        await handleDeletedAccountSession(client, { message: "User not found in remote auth session." });
+        return null;
+      }
+      return session || null;
+    } catch (error) {
+      if (isInvalidRemoteSessionError(error)) {
+        await handleDeletedAccountSession(client, error);
+        return null;
+      }
+      console.warn("Falha ao validar sessão remota do usuário:", error);
+      return session || null;
+    }
+  }
+
+  function persistDiscordOAuthContext(session) {
+    try {
+      if (!session?.user?.id) {
+        localStorage.removeItem(DISCORD_OAUTH_CONTEXT_KEY);
+        return;
+      }
+      const currentProvider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+      if (currentProvider && currentProvider !== "discord") {
+        localStorage.removeItem(DISCORD_OAUTH_CONTEXT_KEY);
+        return;
+      }
+      const providerToken = String(session?.provider_token || "").trim();
+      if (!providerToken) return;
+      localStorage.setItem(DISCORD_OAUTH_CONTEXT_KEY, JSON.stringify({
+        user_id: String(session.user.id),
+        provider_token: providerToken,
+        saved_at: Date.now(),
+      }));
+    } catch (_err) {
+      // Ignore localStorage persistence failures.
+    }
+  }
+
+  function persistAuthProviderHint(session) {
+    try {
+      if (!session?.user?.id) return;
+      const provider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+      if (!provider) return;
+      localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+        provider,
+        user_id: String(session.user.id),
+        saved_at: Date.now(),
+      }));
+    } catch (_err) {
+      // Ignore localStorage persistence failures.
+    }
+  }
 
   function normalizeUsername(value) {
     const clean = String(value || "")
@@ -261,6 +397,22 @@
     return identities.some((item) => String(item?.provider || "").trim().toLowerCase() === "discord");
   }
 
+  function isDiscordAuthSession(session) {
+    const provider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+    if (provider === "discord") return true;
+    const providerHint = String(session?.user?.user_metadata?.provider || "").trim().toLowerCase();
+    return providerHint === "discord";
+  }
+
+  function hasLinkedDiscordIdentity(user) {
+    const identities = Array.isArray(user?.identities) ? user.identities : [];
+    if (identities.some((item) => String(item?.provider || "").trim().toLowerCase() === "discord")) {
+      return true;
+    }
+    const providers = Array.isArray(user?.app_metadata?.providers) ? user.app_metadata.providers : [];
+    return providers.some((item) => String(item || "").trim().toLowerCase() === "discord");
+  }
+
   function normalizeDiscordUsername(value) {
     return String(value || "")
       .trim()
@@ -423,6 +575,10 @@
         lastError = error;
         continue;
       }
+      if (isDeletedAccountProfileError(error)) {
+        await handleDeletedAccountSession(client, error);
+        return;
+      }
       throw error;
     }
     if (lastError) throw lastError;
@@ -432,19 +588,36 @@
     if (profileSyncBootstrapped) return;
     profileSyncBootstrapped = true;
 
-    client.auth.onAuthStateChange((_event, session) => {
-      if (!session?.user) return;
-      ensurePublicUserProfile(client, session.user).catch((err) => {
+    client.auth.onAuthStateChange(async (_event, session) => {
+      persistAuthProviderHint(session);
+      persistDiscordOAuthContext(session);
+      if (!session?.user) {
+        discordOnboardingBootstrapped = false;
+        clearPendingDiscordOnboarding();
+        return;
+      }
+      const validatedSession = await validateRemoteSession(client, session);
+      if (!validatedSession?.user) return;
+      ensurePublicUserProfile(client, validatedSession.user).catch((err) => {
         console.error("Falha ao sincronizar perfil público:", err);
+      });
+      maybeOpenDiscordOnboarding(client, validatedSession).catch((err) => {
+        console.error("Falha ao abrir onboarding do Discord:", err);
       });
       partnerAccessCache = { userId: null, canAccess: false };
       updatePartnerLinksVisibility(document).catch(() => {});
     });
 
     const { data } = await client.auth.getSession();
-    if (data?.session?.user) {
-      ensurePublicUserProfile(client, data.session.user).catch((err) => {
+    const validatedSession = await validateRemoteSession(client, data?.session || null);
+    persistAuthProviderHint(validatedSession || null);
+    persistDiscordOAuthContext(validatedSession || null);
+    if (validatedSession?.user) {
+      ensurePublicUserProfile(client, validatedSession.user).catch((err) => {
         console.error("Falha ao sincronizar perfil público:", err);
+      });
+      maybeOpenDiscordOnboarding(client, validatedSession).catch((err) => {
+        console.error("Falha ao abrir onboarding do Discord:", err);
       });
       partnerAccessCache = { userId: null, canAccess: false };
       updatePartnerLinksVisibility(document).catch(() => {});
@@ -477,6 +650,15 @@
 
   async function startGoogleLogin() {
     const client = await getAuthClient();
+    try {
+      localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+        provider: "google",
+        user_id: "",
+        saved_at: Date.now(),
+      }));
+    } catch (_err) {
+      // Ignore localStorage persistence failures.
+    }
     const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
@@ -536,27 +718,7 @@
     if (partnerAccessCache.userId === userId) {
       return partnerAccessCache.canAccess;
     }
-
-    let serverCount = 0;
-    let serverQuery = await client
-      .from("servers")
-      .select("id", { count: "exact", head: true })
-      .or(`owner_id.eq.${userId},admin_beneficiary_id.eq.${userId}`)
-      .neq("status", "deleted");
-
-    if (serverQuery.error && String(serverQuery.error.message || "").includes("admin_beneficiary_id")) {
-      serverQuery = await client
-        .from("servers")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", userId)
-        .neq("status", "deleted");
-    }
-
-    if (!serverQuery.error) {
-      serverCount = Number(serverQuery.count || 0);
-    }
-
-    const canAccess = serverCount > 0;
+    const canAccess = true;
     partnerAccessCache = { userId, canAccess };
     return canAccess;
   }
@@ -574,7 +736,555 @@
   window.__RESOLVE_PARTNER_AREA_ACCESS__ = resolvePartnerAreaAccess;
   window.__UPDATE_PARTNER_LINKS__ = updatePartnerLinksVisibility;
 
+  function hasPendingDiscordOnboarding() {
+    try {
+      return sessionStorage.getItem(DISCORD_ONBOARDING_PENDING_KEY) === "1";
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function clearPendingDiscordOnboarding() {
+    try {
+      sessionStorage.removeItem(DISCORD_ONBOARDING_PENDING_KEY);
+    } catch (_err) {
+      // ignore
+    }
+  }
+
+  function getDiscordOnboardingSeenKey(userId) {
+    const normalizedUserId = String(userId || "").trim();
+    return `${DISCORD_ONBOARDING_SEEN_PREFIX}${normalizedUserId || "anonymous"}`;
+  }
+
+  function hasSeenDiscordOnboarding(userId) {
+    try {
+      return localStorage.getItem(getDiscordOnboardingSeenKey(userId)) === "1";
+    } catch (_err) {
+      return false;
+    }
+  }
+
+  function markDiscordOnboardingSeen(userId) {
+    try {
+      localStorage.setItem(getDiscordOnboardingSeenKey(userId), "1");
+    } catch (_err) {
+      // ignore
+    }
+    clearPendingDiscordOnboarding();
+  }
+
+  function ensureDiscordOnboardingStyles() {
+    if (document.getElementById("discord-onboarding-style")) return;
+    const style = document.createElement("style");
+    style.id = "discord-onboarding-style";
+    style.textContent = `
+      .discord-onboarding-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 12500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(12, 21, 51, 0.68);
+      }
+      .discord-onboarding-modal.open {
+        display: flex;
+      }
+      .discord-onboarding-card {
+        width: min(920px, 100%);
+        max-height: min(90vh, 860px);
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        overflow: hidden;
+      }
+      .discord-onboarding-head {
+        padding: 18px 20px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .discord-onboarding-head h3 {
+        margin: 0;
+        font-size: 24px;
+      }
+      .discord-onboarding-head p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .discord-onboarding-close {
+        width: 38px;
+        height: 38px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--ink);
+        font-size: 18px;
+        cursor: pointer;
+      }
+      .discord-onboarding-body {
+        overflow-y: auto;
+        padding: 18px 20px;
+        display: grid;
+        gap: 18px;
+      }
+      .discord-onboarding-section {
+        display: grid;
+        gap: 10px;
+      }
+      .discord-onboarding-section h4 {
+        margin: 0;
+        font-size: 17px;
+      }
+      .discord-onboarding-section p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .discord-onboarding-list {
+        display: grid;
+        gap: 10px;
+      }
+      .discord-onboarding-item {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        background: rgba(12, 21, 51, 0.03);
+      }
+      .discord-onboarding-thumb {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        object-fit: cover;
+        background: #fff;
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .discord-onboarding-copy {
+        min-width: 0;
+        flex: 1;
+        display: grid;
+        gap: 4px;
+      }
+      .discord-onboarding-copy strong {
+        color: var(--ink);
+      }
+      .discord-onboarding-copy small {
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .discord-onboarding-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .discord-onboarding-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+        padding: 16px 20px 18px;
+        border-top: 1px solid var(--border);
+      }
+      .discord-onboarding-empty {
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+        padding: 14px;
+        color: var(--muted);
+        background: rgba(12, 21, 51, 0.02);
+        font-size: 14px;
+      }
+      @media (max-width: 720px) {
+        .discord-onboarding-item {
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .discord-onboarding-item .btn,
+        .discord-onboarding-item .link-ghost {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureDiscordOnboardingModal() {
+    if (discordOnboardingModalRefs) return discordOnboardingModalRefs;
+    ensureDiscordOnboardingStyles();
+    let modal = document.getElementById("discord-onboarding-modal");
+    if (!modal) {
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `
+        <div id="discord-onboarding-modal" class="discord-onboarding-modal" aria-hidden="true">
+          <div class="discord-onboarding-card">
+            <div class="discord-onboarding-head">
+              <div>
+                <h3>${escapeHtml(t("nav.discord_onboarding_title", "Seu discord no Gimerr"))}</h3>
+              </div>
+              <button type="button" class="discord-onboarding-close" id="discord-onboarding-close" aria-label="${escapeHtml(t("common.close", "Fechar"))}">×</button>
+            </div>
+            <div id="discord-onboarding-body" class="discord-onboarding-body"></div>
+            <div class="discord-onboarding-actions">
+              <button type="button" id="discord-onboarding-done" class="btn btn-primary">${escapeHtml(t("nav.discord_onboarding_done", "Entendi"))}</button>
+            </div>
+          </div>
+        </div>
+      `;
+      modal = wrapper.firstElementChild;
+      document.body.appendChild(modal);
+    }
+    discordOnboardingModalRefs = {
+      modal,
+      body: modal.querySelector("#discord-onboarding-body"),
+      close: modal.querySelector("#discord-onboarding-close"),
+      done: modal.querySelector("#discord-onboarding-done"),
+    };
+    return discordOnboardingModalRefs;
+  }
+
+  function closeDiscordOnboardingModal() {
+    const refs = ensureDiscordOnboardingModal();
+    refs.modal.classList.remove("open");
+    refs.modal.setAttribute("aria-hidden", "true");
+  }
+
+  function openDiscordOnboardingModal() {
+    const refs = ensureDiscordOnboardingModal();
+    refs.modal.classList.add("open");
+    refs.modal.setAttribute("aria-hidden", "false");
+  }
+
+  function buildDiscordGuildImageUrl(item) {
+    const serverBannerUrl = String(item?.serverBannerUrl || "").trim();
+    if (serverBannerUrl) return serverBannerUrl;
+    const guildIconUrl = String(item?.guildIconUrl || "").trim();
+    return guildIconUrl || "img/logo.png";
+  }
+
+  function renderDiscordOnboardingContent(data) {
+    const refs = ensureDiscordOnboardingModal();
+    const matchedServers = Array.isArray(data?.matchedServers) ? data.matchedServers : [];
+    const manageableUnregisteredGuilds = Array.isArray(data?.manageableUnregisteredGuilds) ? data.manageableUnregisteredGuilds : [];
+
+    const matchedMarkup = matchedServers.length
+      ? matchedServers.map((item) => `
+          <div class="discord-onboarding-item">
+            <img class="discord-onboarding-thumb" src="${encodeURI(buildDiscordGuildImageUrl(item))}" alt="${escapeHtml(item.serverName || item.guildName || "Servidor")}" loading="lazy" />
+            <div class="discord-onboarding-copy">
+              <strong>${escapeHtml(item.serverName || item.guildName || "Servidor")}</strong>
+              <div class="discord-onboarding-meta">
+                <span class="pill">${escapeHtml(t("nav.discord_onboarding_registered", "Já está no Gimerr"))}</span>
+                ${item.canManage ? `<span class="pill">${escapeHtml(t("nav.discord_onboarding_manageable", "Você administra este servidor"))}</span>` : ""}
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-action="discord-onboarding-follow"
+              data-server-id="${escapeHtml(item.serverId)}"
+              ${item.isFollowing ? "disabled" : ""}
+            >${escapeHtml(item.isFollowing ? t("home.following", "Following") : t("home.follow_game", "Follow game"))}</button>
+          </div>
+        `).join("")
+      : `<div class="discord-onboarding-empty">${escapeHtml(t("nav.discord_onboarding_no_registered", "Ainda não encontramos servidores do seu Discord vinculados ao Gimerr."))}</div>`;
+
+    const manageableMarkup = manageableUnregisteredGuilds.length
+      ? manageableUnregisteredGuilds.map((item) => `
+          <div class="discord-onboarding-item">
+            <img class="discord-onboarding-thumb" src="${encodeURI(buildDiscordGuildImageUrl(item))}" alt="${escapeHtml(item.guildName || "Servidor")}" loading="lazy" />
+            <div class="discord-onboarding-copy">
+              <strong>${escapeHtml(item.guildName || "Servidor")}</strong>
+              <div class="discord-onboarding-meta">
+                <span class="pill">${escapeHtml(t("nav.discord_onboarding_available", "Disponível para cadastrar"))}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-action="discord-onboarding-register"
+              data-guild-id="${escapeHtml(item.guildId)}"
+            >${escapeHtml(t("nav.discord_onboarding_register", "Cadastrar servidor"))}</button>
+          </div>
+        `).join("")
+      : `<div class="discord-onboarding-empty">${escapeHtml(t("nav.discord_onboarding_no_manageable", "Você não tem outros servidores do Discord prontos para cadastro no momento."))}</div>`;
+
+    refs.body.innerHTML = `
+      <section class="discord-onboarding-section">
+        <h4>${escapeHtml(t("nav.discord_onboarding_manage_title", "Seus servidores"))}</h4>
+        <p>${escapeHtml(t("nav.discord_onboarding_manage_copy", "Estes são os servidores do seu Discord que você é dono ou tem permissão de administrador."))}</p>
+        <div class="discord-onboarding-list">${manageableMarkup}</div>
+      </section>
+      <section class="discord-onboarding-section">
+        <h4>${escapeHtml(t("nav.discord_onboarding_registered_title", "Servidores do seu Discord que já estão no Gimerr"))}</h4>
+        <p>${escapeHtml(t("nav.discord_onboarding_registered_copy", "Selecione os servidores que você já quer seguir no Gimerr."))}</p>
+        <div class="discord-onboarding-list">${matchedMarkup}</div>
+      </section>
+    `;
+  }
+
+  async function followServerFromOnboarding(serverId) {
+    const normalizedServerId = String(serverId || "").trim();
+    if (!normalizedServerId) return;
+    const client = await getAuthClient();
+    const { data } = await client.auth.getSession();
+    const user = data?.session?.user || null;
+    if (!user?.id) throw new Error(t("nav.auth_required", "Você precisa entrar para continuar."));
+    const { error } = await client
+      .from("server_follows")
+      .insert({ user_id: user.id, server_id: normalizedServerId });
+    if (error && error.code !== "23505") throw error;
+  }
+
+  async function registerServerFromDiscordGuild(client, session, guildId) {
+    const normalizedGuildId = String(guildId || "").trim();
+    if (!normalizedGuildId) throw new Error("Guild inválida.");
+    const providerToken = String(session?.provider_token || "").trim();
+    const accessToken = String(session?.access_token || "").trim();
+    const { data, error } = await client.functions.invoke("discord_server_register", {
+      body: {
+        userToken: accessToken,
+        providerToken,
+        guildId: normalizedGuildId,
+      },
+    });
+    if (error) throw error;
+    return data || {};
+  }
+
+  function setPendingPartnerBotSetupServerId(serverId) {
+    const normalizedServerId = String(serverId || "").trim();
+    if (!normalizedServerId) return;
+    try {
+      sessionStorage.setItem(PARTNER_BOT_SETUP_STORAGE_KEY, normalizedServerId);
+    } catch (_err) {
+      // Ignore storage failures.
+    }
+  }
+
+  async function fetchDiscordGuildsOverview(client, session) {
+    const providerToken = String(session?.provider_token || "").trim();
+    if (!providerToken) {
+      throw new Error("Discord provider token missing.");
+    }
+    const accessToken = String(session?.access_token || "").trim();
+    const { data, error } = await client.functions.invoke("discord_guilds_overview", {
+      body: {
+        userToken: accessToken,
+        providerToken,
+      },
+    });
+    if (error) throw error;
+    return data || {};
+  }
+
+  async function maybeOpenDiscordOnboarding(client, session) {
+    if (discordOnboardingBootstrapped) return;
+    const user = session?.user || null;
+    if (!user?.id) {
+      clearPendingDiscordOnboarding();
+      return;
+    }
+    const shouldOpenFromPendingState = hasPendingDiscordOnboarding();
+    const shouldOpenFromDiscordSession = isDiscordAuthSession(session);
+    if ((!shouldOpenFromPendingState && !shouldOpenFromDiscordSession) || hasSeenDiscordOnboarding(user.id) || !isDiscordAuthUser(user)) {
+      return;
+    }
+    discordOnboardingBootstrapped = true;
+    try {
+      const overview = await fetchDiscordGuildsOverview(client, session);
+      const matchedServers = Array.isArray(overview?.matchedServers) ? overview.matchedServers : [];
+      const manageableUnregisteredGuilds = Array.isArray(overview?.manageableUnregisteredGuilds) ? overview.manageableUnregisteredGuilds : [];
+      if (!matchedServers.length && !manageableUnregisteredGuilds.length) {
+        markDiscordOnboardingSeen(user.id);
+        return;
+      }
+      const refs = ensureDiscordOnboardingModal();
+      renderDiscordOnboardingContent(overview);
+      refs.done.onclick = () => {
+        markDiscordOnboardingSeen(user.id);
+        closeDiscordOnboardingModal();
+      };
+      refs.close.onclick = () => {
+        markDiscordOnboardingSeen(user.id);
+        closeDiscordOnboardingModal();
+      };
+      refs.body.onclick = async (event) => {
+        const button = event.target?.closest?.('[data-action="discord-onboarding-follow"][data-server-id]');
+        if (button) {
+          const serverId = button.getAttribute("data-server-id");
+          if (!serverId) return;
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.textContent = t("home.following", "Following");
+          try {
+            await followServerFromOnboarding(serverId);
+          } catch (err) {
+            console.error(err);
+            button.disabled = false;
+            button.textContent = originalText || t("home.follow_game", "Follow game");
+          }
+          return;
+        }
+        const registerBtn = event.target?.closest?.('[data-action="discord-onboarding-register"][data-guild-id]');
+        if (registerBtn) {
+          const guildId = registerBtn.getAttribute("data-guild-id");
+          if (!guildId) return;
+          const originalText = registerBtn.textContent;
+          registerBtn.disabled = true;
+          registerBtn.textContent = t("nav.discord_onboarding_registering", "Cadastrando...");
+          try {
+            const result = await registerServerFromDiscordGuild(client, session, guildId);
+            const serverId = String(result?.server?.id || "").trim();
+            if (serverId) {
+              setPendingPartnerBotSetupServerId(serverId);
+            }
+            markDiscordOnboardingSeen(user.id);
+            window.location.href = "partner.html";
+          } catch (err) {
+            console.error(err);
+            registerBtn.disabled = false;
+            registerBtn.textContent = originalText || t("nav.discord_onboarding_register", "Cadastrar servidor");
+          }
+        }
+      };
+      openDiscordOnboardingModal();
+    } catch (err) {
+      console.error("Falha ao carregar onboarding do Discord:", err);
+      clearPendingDiscordOnboarding();
+    }
+  }
+
   class SiteNavbar extends HTMLElement {
+    async initializeAuthUi() {
+      const authBtn = this.querySelector("#auth-btn");
+      const userMenu = this.querySelector("#user-menu");
+      const avatarBtn = this.querySelector("#avatar-btn");
+      const avatarImg = this.querySelector("#avatar-img");
+      const userDropdown = this.querySelector(".user-dropdown");
+      const logoutBtn = this.querySelector("#logout-btn");
+      const createListingBtn = this.querySelector("#create-listing-btn");
+      const menuCreateListing = this.querySelector("#menu-create-listing");
+      const profileLink = this.querySelector("#profile-link");
+      let isUserMenuOpen = false;
+
+      const setUserMenuOpen = (isOpen) => {
+        isUserMenuOpen = !!isOpen;
+        userMenu?.classList.toggle("open", isUserMenuOpen);
+        if (avatarBtn) {
+          avatarBtn.setAttribute("aria-expanded", isUserMenuOpen ? "true" : "false");
+        }
+        if (userDropdown) {
+          userDropdown.style.display = isUserMenuOpen ? "grid" : "none";
+        }
+      };
+
+      const applyUserState = async (session) => {
+        const user = session?.user || null;
+        if (authBtn) authBtn.disabled = false;
+
+        if (!user) {
+          if (authBtn) authBtn.style.display = "";
+          if (userMenu) {
+            userMenu.style.display = "none";
+          }
+          setUserMenuOpen(false);
+          if (createListingBtn) createListingBtn.style.display = "none";
+          if (menuCreateListing) menuCreateListing.style.display = "none";
+          if (profileLink) profileLink.href = "profile.html";
+          if (avatarImg) avatarImg.src = "img/avatar.svg";
+          return;
+        }
+
+        if (authBtn) authBtn.style.display = "none";
+        if (userMenu) userMenu.style.display = "inline-flex";
+        if (createListingBtn) createListingBtn.style.display = "inline-flex";
+        if (menuCreateListing) menuCreateListing.style.display = "";
+        if (profileLink) profileLink.href = `user?id=${encodeURIComponent(user.id)}`;
+
+        let avatarUrl = "";
+        try {
+          const client = await getAuthClient();
+          const { data, error } = await client
+            .from("users")
+            .select("avatar_url")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (!error) avatarUrl = String(data?.avatar_url || "").trim();
+        } catch (_err) {
+          // Ignore avatar lookup failures.
+        }
+        if (!avatarUrl) {
+          avatarUrl = String(
+            user?.user_metadata?.avatar_url
+              || user?.user_metadata?.picture
+              || user?.user_metadata?.avatar
+              || "",
+          ).trim();
+        }
+        if (avatarImg) {
+          avatarImg.src = avatarUrl || "img/avatar.svg";
+        }
+      };
+
+      try {
+        const client = await getAuthClient();
+        client.auth.onAuthStateChange((_event, session) => {
+          applyUserState(session).catch((err) => console.error("Falha ao atualizar navbar:", err));
+        });
+        const { data } = await client.auth.getSession();
+        await applyUserState(data?.session || null);
+      } catch (err) {
+        console.error("Falha ao inicializar auth do navbar:", err);
+      }
+
+      avatarBtn?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setUserMenuOpen(!isUserMenuOpen);
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!userMenu) return;
+        if (!userMenu.contains(event.target)) {
+          setUserMenuOpen(false);
+        }
+      });
+
+      logoutBtn?.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try {
+          const client = await getAuthClient();
+          await client.auth.signOut();
+        } catch (err) {
+          console.error("Falha ao encerrar sessão:", err);
+        }
+        window.location.href = "index.html";
+      });
+
+      const goToCreateListing = () => {
+        window.location.href = "listing-create.html";
+      };
+      createListingBtn?.addEventListener("click", goToCreateListing);
+      menuCreateListing?.addEventListener("click", (event) => {
+        event.preventDefault();
+        setUserMenuOpen(false);
+        goToCreateListing();
+      });
+    }
+
     async initializeGlobalSearch() {
       if (this.dataset.searchBootstrapped === "1") return;
       this.dataset.searchBootstrapped = "1";
@@ -646,7 +1356,6 @@
           searchSuggestions.innerHTML = `
             <div class="suggestion-empty">
               ${t("home.search_not_found_prefix", "Não encontramos games ou players para")} "${escapeHtml(term)}".
-              <a class="link-ghost" href="game-submit.html" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
             </div>
           `;
           searchSuggestions.style.display = "block";
@@ -654,7 +1363,6 @@
         }
 
         const gameItems = gameMatches.map((game) => {
-          const websiteLabel = String(game.website || "").replace(/^https?:\/\//i, "").replace(/\/$/, "") || "Sem site oficial";
           return `<div class="suggestion-item suggestion-item-rich" data-kind="game" data-game-id="${game.id}" data-game-name="${escapeHtml(game.name)}">
             <span class="suggestion-thumb suggestion-thumb-game">
               ${game.cover_url
@@ -663,7 +1371,6 @@
             </span>
             <span class="suggestion-copy">
               <strong>${escapeHtml(game.name)}</strong>
-              <small>${escapeHtml(websiteLabel)}</small>
             </span>
             <span class="badge">Game</span>
           </div>`;
@@ -692,13 +1399,6 @@
       };
 
       const handleSuggestionClick = (event) => {
-        const submitLink = event.target.closest('a[data-action="game-submit"]');
-        if (submitLink) {
-          event.preventDefault();
-          window.location.href = "game-submit.html";
-          return;
-        }
-
         const item = event.target.closest(".suggestion-item");
         if (!item) return;
         const kind = item.getAttribute("data-kind");
@@ -742,7 +1442,6 @@
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
             ${t("home.search_not_found_simple", "Não encontramos")} "${escapeHtml(term)}".
-            <a href="game-submit.html" class="link-ghost" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
           </div>
         `;
         searchSuggestions.style.display = "block";
@@ -830,6 +1529,9 @@
 
       this.initializeGlobalSearch().catch((err) => {
         console.error("Falha ao inicializar busca global do navbar:", err);
+      });
+      this.initializeAuthUi().catch((err) => {
+        console.error("Falha ao inicializar auth do navbar:", err);
       });
       window.__UPDATE_PARTNER_LINKS__?.(this);
     }

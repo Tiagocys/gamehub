@@ -389,6 +389,52 @@
       overflow: hidden;
     }
 
+    .feed-card.feed-card-ad {
+      grid-column: span 2;
+      padding: 8px;
+      gap: 8px;
+    }
+
+    .game-feed-ad-shell {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 auto;
+    }
+
+    .game-feed-ad-slot {
+      width: 100%;
+      min-height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .game-feed-ad-frame {
+      width: 300px;
+      height: 250px;
+      transform-origin: top left;
+    }
+
+    .game-feed-ad-frame iframe {
+      border: 0;
+      display: block;
+    }
+
+    .feed-card-ad .feed-title {
+      text-align: center;
+      min-height: 0;
+    }
+
+    @media (max-width: 520px) {
+      .feed-card.feed-card-ad {
+        grid-column: 1 / -1;
+      }
+    }
+
     .feed-sentinel {
       margin-top: 12px;
       text-align: center;
@@ -563,6 +609,15 @@
     const SUPABASE_ANON_KEY = env.SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
     const R2_PUBLIC_URL = env.R2_PUBLIC_URL || "";
     const R2_BUCKET = env.R2_BUCKET || "";
+    const FIRST_GAME_AD_INDEX = 0;
+    const GAME_AD_INSERT_EVERY = 6;
+    const ADSTERRA_FEED_CARD_BANNER = {
+      key: "98235fa33009b04bb88a7445822c8780",
+      width: 300,
+      height: 250,
+      src: "https://www.highperformanceformat.com/98235fa33009b04bb88a7445822c8780/invoke.js",
+      breakpoint: "wide",
+    };
 
     const authBtn = document.getElementById("auth-btn");
     const userMenu = document.getElementById("user-menu");
@@ -595,6 +650,61 @@
       listingSearchInput.placeholder = safeName
         ? formatMessage("game.search_placeholder_named", "What are you looking for in {game}?", { game: safeName })
         : t("game.search_placeholder", "What are you looking for in this game?");
+    }
+
+    function getGameFeedAdConfig() {
+      return ADSTERRA_FEED_CARD_BANNER;
+    }
+
+    function hydrateAdsterraBanner(container, config) {
+      if (!container || !config || container.dataset.adsterraMounted === "1") return;
+      container.dataset.adsterraMounted = "1";
+      container.dataset.adsterraBreakpoint = config.breakpoint;
+      container.innerHTML = "";
+      const configScript = document.createElement("script");
+      configScript.text = `atOptions = ${JSON.stringify({
+        key: config.key,
+        format: "iframe",
+        height: config.height,
+        width: config.width,
+        params: {},
+      })};`;
+      container.appendChild(configScript);
+
+      const script = document.createElement("script");
+      script.src = config.src;
+      const frame = document.createElement("div");
+      frame.className = "game-feed-ad-frame";
+      frame.appendChild(configScript);
+      frame.appendChild(script);
+      container.appendChild(frame);
+    }
+
+    function hydrateGameFeedAds(root = listingFeed) {
+      if (!root) return;
+      const config = getGameFeedAdConfig();
+      root.querySelectorAll(".game-feed-ad-slot[data-adsterra-slot='game-feed-banner']").forEach((slot) => {
+        hydrateAdsterraBanner(slot, config);
+      });
+      resizeGameFeedAds(root);
+    }
+
+    function resizeGameFeedAds(root = listingFeed) {
+      if (!root) return;
+      root.querySelectorAll(".game-feed-ad-slot[data-adsterra-slot='game-feed-banner']").forEach((slot) => {
+        const frame = slot.querySelector(".game-feed-ad-frame");
+        if (!frame) return;
+        const widthScale = slot.clientWidth > 0 ? slot.clientWidth / ADSTERRA_FEED_CARD_BANNER.width : 1;
+        const heightScale = slot.clientHeight > 0 ? slot.clientHeight / ADSTERRA_FEED_CARD_BANNER.height : 1;
+        const scale = Math.min(1, widthScale, heightScale);
+        frame.style.transform = `scale(${scale})`;
+        slot.style.minHeight = `${Math.max(150, Math.round(ADSTERRA_FEED_CARD_BANNER.height * scale))}px`;
+      });
+    }
+
+    function refreshGameFeedAdsForViewport() {
+      if (!listingFeed) return;
+      resizeGameFeedAds(listingFeed);
     }
 
     const pageLoader = document.getElementById("page-loader");
@@ -1315,6 +1425,26 @@
       return card;
     }
 
+    function shouldInsertGameAdAfterIndex(index, total) {
+      if (index < 0 || total <= 0) return false;
+      if (index === FIRST_GAME_AD_INDEX) return true;
+      if (index < FIRST_GAME_AD_INDEX) return false;
+      if ((index - FIRST_GAME_AD_INDEX) % GAME_AD_INSERT_EVERY !== 0) return false;
+      return index < total - 1;
+    }
+
+    function createGameFeedAdCard() {
+      const card = document.createElement("div");
+      card.className = "feed-card feed-card-ad";
+      card.innerHTML = `
+        <div class="game-feed-ad-shell" aria-label="Sponsored">
+          <div class="game-feed-ad-slot" data-adsterra-slot="game-feed-banner"></div>
+        </div>
+        <p class="feed-title">${escapeHtml(t("game.sponsored_card", "Sponsored"))}</p>
+      `;
+      return card;
+    }
+
     function queueGameHighlightImpression(listingId) {
       const normalizedId = String(listingId || "").trim();
       if (!normalizedId) return;
@@ -1423,10 +1553,15 @@
         const batch = orderedListings.slice(visibleCount, visibleCount + feedPageSize);
         await Promise.all(batch.map((item) => ensureCardImageResolved(item)));
         const fragment = document.createDocumentFragment();
-        batch.forEach((item) => {
+        batch.forEach((item, index) => {
+          const absoluteIndex = visibleCount + index;
           fragment.appendChild(createListingCard(item));
+          if (shouldInsertGameAdAfterIndex(absoluteIndex, orderedListings.length)) {
+            fragment.appendChild(createGameFeedAdCard());
+          }
         });
         listingFeed.appendChild(fragment);
+        hydrateGameFeedAds(listingFeed);
         observeGameHighlightImpressions();
         visibleCount += batch.length;
         updateFeedState();
@@ -1449,11 +1584,15 @@
       try {
         await Promise.all(initialBatch.map((item) => ensureCardImageResolved(item)));
         const fragment = document.createDocumentFragment();
-        initialBatch.forEach((item) => {
+        initialBatch.forEach((item, index) => {
           fragment.appendChild(createListingCard(item));
+          if (shouldInsertGameAdAfterIndex(index, orderedListings.length)) {
+            fragment.appendChild(createGameFeedAdCard());
+          }
         });
         listingFeed.innerHTML = "";
         listingFeed.appendChild(fragment);
+        hydrateGameFeedAds(listingFeed);
         observeGameHighlightImpressions();
         visibleCount = initialBatch.length;
         updateFeedState();
@@ -1609,6 +1748,7 @@
       refreshFeed();
     });
     window.addEventListener("resize", () => {
+      refreshGameFeedAdsForViewport();
       const nextSize = computeFeedPageSize();
       if (nextSize === feedPageSize) return;
       feedPageSize = nextSize;

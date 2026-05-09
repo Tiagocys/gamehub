@@ -21,7 +21,7 @@
   <link rel="icon" type="image/png" href="img/favicon.png" />
   <title>Gimerr - Create listing</title>
   <link rel="stylesheet" href="css/global.css" />
-  <style id="listing-guard-style">html{visibility:hidden;}</style>
+  <style id="listing-guard-style">body > .page{visibility:hidden;}</style>
   <style>
     .feedback-link {
       color: var(--accent-2);
@@ -76,44 +76,6 @@
       text-decoration: underline;
     }
 
-    .listing-create-modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      background: rgba(12, 21, 51, 0.52);
-      z-index: 60;
-    }
-
-    .listing-create-modal.open {
-      display: flex;
-    }
-
-    .listing-create-modal-card {
-      width: min(100%, 480px);
-      border-radius: 22px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      padding: 22px;
-      display: grid;
-      gap: 14px;
-    }
-
-    .listing-create-modal-head {
-      display: grid;
-      gap: 6px;
-    }
-
-    .listing-create-modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
     @media (max-width: 700px) {
       .field-head {
         align-items: flex-start;
@@ -125,6 +87,83 @@
         max-width: none;
         text-align: left;
       }
+    }
+
+    .listing-discord-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(8, 15, 32, 0.62);
+      backdrop-filter: blur(12px);
+    }
+
+    .listing-discord-modal.open {
+      display: flex;
+    }
+
+    .listing-discord-card {
+      width: min(100%, 560px);
+      max-height: min(88vh, 760px);
+      overflow: hidden;
+      display: grid;
+      gap: 0;
+      border-radius: 28px;
+      border: 1px solid rgba(118, 168, 255, 0.22);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 34px 84px rgba(8, 15, 32, 0.24);
+    }
+
+    .listing-discord-head {
+      padding: 22px 24px 0;
+    }
+
+    .listing-discord-head h3 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2vw, 1.7rem);
+      color: var(--ink);
+    }
+
+    .listing-discord-body {
+      display: grid;
+      gap: 16px;
+      padding: 18px 24px 24px;
+      overflow-y: auto;
+    }
+
+    .listing-discord-media {
+      margin: 0;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid rgba(118, 168, 255, 0.2);
+      background: rgba(118, 168, 255, 0.08);
+      box-shadow: 0 16px 34px rgba(15, 37, 87, 0.1);
+    }
+
+    .listing-discord-image {
+      display: block;
+      width: 100%;
+      max-height: min(240px, 34vh);
+      object-fit: cover;
+    }
+
+    .listing-discord-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .listing-discord-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      bottom: 0;
+      padding-top: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.96) 22%, rgba(255,255,255,1) 100%);
     }
   </style>
   <script>
@@ -158,7 +197,7 @@
             <div class="field-head">
               <label id="listing-game-label" for="listing-game">Game name *</label>
             </div>
-            <span id="game-helper" class="helper">Select an existing game from the list or submit a new one.</span>
+            <span id="game-helper" class="helper">Select an existing server from the list. If it is not on Gimerr yet, register it first in the partner area.</span>
             <div class="suggestions">
               <input id="listing-game" class="input" placeholder="Type to search for a game" autocomplete="off" required />
               <div id="game-suggestions" class="suggestions-panel" style="display:none;"></div>
@@ -193,29 +232,24 @@
         </form>
       </div>
     </main>
+  </div>
 
-    <div id="custom-game-modal" class="listing-create-modal" aria-hidden="true">
-      <div class="listing-create-modal-card">
-        <div class="listing-create-modal-head">
-          <h3 id="custom-game-modal-title">New game</h3>
-          <p id="custom-game-modal-helper" class="helper">Enter the basic information to submit your listing for review.</p>
-        </div>
-        <div class="field">
-          <label id="custom-game-name-label" for="custom-game-name">Game name *</label>
-          <input id="custom-game-name" class="input" placeholder="Ex: Miracle 7.4" autocomplete="off" />
-        </div>
-        <div class="field">
-          <label id="custom-game-site-label" for="custom-game-site">Official website *</label>
-          <input id="custom-game-site" class="input" type="url" placeholder="https://nomedogame.com" inputmode="url" autocomplete="off" />
-        </div>
-        <div id="custom-game-feedback" class="helper"></div>
-        <div class="listing-create-modal-actions">
-          <button type="button" class="btn btn-ghost" id="close-custom-game-modal-btn">Cancel</button>
-          <button type="button" class="btn btn-primary" id="save-custom-game-btn">Use this game</button>
+  <div id="listing-discord-access-modal" class="listing-discord-modal" aria-hidden="true">
+    <div class="listing-discord-card">
+      <div class="listing-discord-head">
+        <h3 id="listing-discord-access-title">Conexão com Discord</h3>
+      </div>
+      <div class="listing-discord-body">
+        <figure class="listing-discord-media">
+          <img id="listing-discord-access-image" class="listing-discord-image" src="img/auth-discord.gif" alt="Conexão com Discord" />
+        </figure>
+        <p id="listing-discord-access-helper" class="listing-discord-copy">O Gimerr precisa ter acesso ao seu Discord para liberar a criação de anúncios apenas nos servidores dos quais você faz parte.</p>
+        <div class="listing-discord-actions">
+          <button id="listing-discord-access-back" class="btn btn-ghost" type="button">Voltar</button>
+          <button id="listing-discord-access-confirm" class="btn btn-primary" type="button">Reautenticar com Discord</button>
         </div>
       </div>
     </div>
-
   </div>
 
   <script src="env.js"></script>
@@ -262,16 +296,6 @@
     const gameInput = document.getElementById("listing-game");
     const gameHelper = document.getElementById("game-helper");
     const suggestionsPanel = document.getElementById("game-suggestions");
-    const customGameModal = document.getElementById("custom-game-modal");
-    const customGameModalTitle = document.getElementById("custom-game-modal-title");
-    const customGameModalHelper = document.getElementById("custom-game-modal-helper");
-    const customGameNameLabel = document.getElementById("custom-game-name-label");
-    const customGameSiteLabel = document.getElementById("custom-game-site-label");
-    const customGameNameInput = document.getElementById("custom-game-name");
-    const customGameSiteInput = document.getElementById("custom-game-site");
-    const customGameFeedback = document.getElementById("custom-game-feedback");
-    const closeCustomGameModalBtn = document.getElementById("close-custom-game-modal-btn");
-    const saveCustomGameBtn = document.getElementById("save-custom-game-btn");
     const descInput = document.getElementById("listing-description");
     const descCounter = document.getElementById("desc-counter");
     const imagesInput = document.getElementById("listing-images");
@@ -307,21 +331,29 @@
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     const MAX_IMAGE_DIMENSION = 1600;
     const WEBP_QUALITY = 0.8;
-    const DEFAULT_GAME_HELPER_TEXT = t("listing_create.game_helper", "Select an existing game from the list or submit a new one.");
-    const CUSTOM_GAME_TRIGGER_TEXT = t("listing_create.custom_trigger", "Didn't find your game in the list? Click here.");
+    const DEFAULT_GAME_HELPER_TEXT = t("listing_create.game_helper", "Select an existing server from the list. If it is not on Gimerr yet, register it first in the partner area.");
+    const DISCORD_OAUTH_CONTEXT_KEY = "gimerr-discord-oauth-context";
+    const AUTH_PROVIDER_HINT_KEY = "gimerr-auth-provider-hint";
     const urlParams = new URLSearchParams(window.location.search);
     const editListingId = urlParams.get("edit");
 
     let supabase;
     let currentUser = null;
     let games = [];
+    let allowedServerIds = new Set();
     let editingListing = null;
     let originalImageUrls = [];
     let existingImageUrls = [];
     let selectedImages = [];
-    let customGameRequested = false;
-    let customGamePayload = null;
     let avatarLoaded = false;
+    let discordAccessMode = "reauth";
+
+    const listingDiscordAccessModal = document.getElementById("listing-discord-access-modal");
+    const listingDiscordAccessTitle = document.getElementById("listing-discord-access-title");
+    const listingDiscordAccessImage = document.getElementById("listing-discord-access-image");
+    const listingDiscordAccessHelper = document.getElementById("listing-discord-access-helper");
+    const listingDiscordAccessBack = document.getElementById("listing-discord-access-back");
+    const listingDiscordAccessConfirm = document.getElementById("listing-discord-access-confirm");
     if (avatarImg) avatarImg.referrerPolicy = "no-referrer";
     if (submitBtn && !submitBtn.dataset.defaultText) {
       submitBtn.dataset.defaultText = submitBtn.textContent || t("listing_create.submit", "Publish listing");
@@ -343,18 +375,13 @@
       if (listingImagesHelper) listingImagesHelper.textContent = t("listing_create.images_helper", "You can upload up to 8 images.");
       if (listingDescriptionLabel) listingDescriptionLabel.textContent = t("listing_create.description_label", "Description (optional)");
       if (descInput) descInput.placeholder = t("listing_create.description_placeholder", "Describe your listing (up to 10000 characters).");
-      if (customGameModalTitle) customGameModalTitle.textContent = t("listing_create.modal_title", "New game");
-      if (customGameModalHelper) customGameModalHelper.textContent = t("listing_create.modal_helper", "Enter the basic information to submit your listing for review.");
-      if (customGameNameLabel) customGameNameLabel.textContent = t("listing_create.modal_name_label", "Game name *");
-      if (customGameNameInput) customGameNameInput.placeholder = t("listing_create.modal_name_placeholder", "Ex: Miracle 7.4");
-      if (customGameSiteLabel) customGameSiteLabel.textContent = t("listing_create.modal_site_label", "Official website *");
-      if (customGameSiteInput) customGameSiteInput.placeholder = t("listing_create.modal_site_placeholder", "https://nomedogame.com");
-      if (closeCustomGameModalBtn) closeCustomGameModalBtn.textContent = t("listing_create.cancel", "Cancel");
-      if (saveCustomGameBtn) saveCustomGameBtn.textContent = t("listing_create.modal_submit", "Use this game");
       if (submitBtn) {
         const defaultText = editListingId ? t("listing_create.edit_submit", "Save changes") : t("listing_create.submit", "Publish listing");
         submitBtn.dataset.defaultText = defaultText;
         submitBtn.textContent = defaultText;
+      }
+      if (listingDiscordAccessBack) {
+        listingDiscordAccessBack.textContent = t("common.back", "Back");
       }
     }
 
@@ -371,46 +398,6 @@
       submitBtn.textContent = text;
     }
 
-    function setCustomGameMode(enabled) {
-      customGameRequested = !!enabled;
-      if (!enabled) {
-        customGamePayload = null;
-        if (customGameFeedback) customGameFeedback.textContent = "";
-        if (customGameNameInput) customGameNameInput.value = "";
-        if (customGameSiteInput) customGameSiteInput.value = "";
-      }
-      if (!enabled && suggestionsPanel) {
-        suggestionsPanel.style.display = "none";
-        suggestionsPanel.innerHTML = "";
-      }
-      updateCustomPartnerPolicyField();
-    }
-
-    function updateCustomPartnerPolicyField() {
-    }
-
-    function openCustomGameModal() {
-      if (!customGameModal) return;
-      if (customGameNameInput) {
-        customGameNameInput.value = (customGamePayload?.name || gameInput?.value || "").trim();
-      }
-      if (customGameSiteInput) {
-        customGameSiteInput.value = customGamePayload?.website || "";
-      }
-      updateCustomPartnerPolicyField();
-      if (customGameFeedback) customGameFeedback.textContent = "";
-      customGameModal.classList.add("open");
-      customGameModal.setAttribute("aria-hidden", "false");
-      window.setTimeout(() => customGameNameInput?.focus(), 0);
-    }
-
-    function closeCustomGameModal() {
-      if (!customGameModal) return;
-      customGameModal.classList.remove("open");
-      customGameModal.setAttribute("aria-hidden", "true");
-      if (customGameFeedback) customGameFeedback.textContent = "";
-    }
-
     function fillGameFromSelection(game, fallbackName = "") {
       if (!gameInput) return;
       gameInput.value = game?.name || fallbackName || "";
@@ -418,9 +405,15 @@
     }
 
     function revealPage() {
-      document.documentElement.style.visibility = "visible";
       const guard = document.getElementById("listing-guard-style");
       if (guard) guard.remove();
+    }
+
+    function dismissPageLoader() {
+      if (loaderDone || !pageLoader) return;
+      loaderDone = true;
+      pageLoader.classList.add("hidden");
+      pageLoader.remove();
     }
 
     function ensureClient() {
@@ -645,6 +638,166 @@
       return /^[0-9]{17,20}$/.test(discordId);
     }
 
+    function hasLinkedDiscordIdentity(user) {
+      const identities = Array.isArray(user?.identities) ? user.identities : [];
+      if (identities.some((item) => String(item?.provider || "").trim().toLowerCase() === "discord")) {
+        return true;
+      }
+      const providers = Array.isArray(user?.app_metadata?.providers) ? user.app_metadata.providers : [];
+      return providers.some((item) => String(item || "").trim().toLowerCase() === "discord");
+    }
+
+    function isDiscordAuthSession(session) {
+      const provider = String(session?.user?.app_metadata?.provider || "").trim().toLowerCase();
+      if (provider === "discord") return true;
+      const providerHint = String(session?.user?.user_metadata?.provider || "").trim().toLowerCase();
+      return providerHint === "discord";
+    }
+
+    function getStoredDiscordProviderToken(userId) {
+      try {
+        const raw = localStorage.getItem(DISCORD_OAUTH_CONTEXT_KEY);
+        if (!raw) return "";
+        const parsed = JSON.parse(raw);
+        if (String(parsed?.user_id || "").trim() !== String(userId || "").trim()) return "";
+        return String(parsed?.provider_token || "").trim();
+      } catch (_err) {
+        return "";
+      }
+    }
+
+    function getDiscordProviderToken(session) {
+      const sessionToken = String(session?.provider_token || "").trim();
+      if (isDiscordAuthSession(session) && sessionToken) return sessionToken;
+      if (hasLinkedDiscordIdentity(session?.user)) {
+        return getStoredDiscordProviderToken(session?.user?.id);
+      }
+      return "";
+    }
+
+    function applyListingDiscordAccessModalCopy(mode = "reauth") {
+      discordAccessMode = mode === "connect" ? "connect" : "reauth";
+      const isConnectMode = discordAccessMode === "connect";
+      if (listingDiscordAccessConfirm) {
+        listingDiscordAccessConfirm.disabled = false;
+      }
+      if (listingDiscordAccessTitle) {
+        listingDiscordAccessTitle.textContent = isConnectMode
+          ? t("listing_create.discord_connect_title", "Conectar Discord")
+          : t("listing_create.discord_reauth_title", "Conexão com Discord");
+      }
+      if (listingDiscordAccessImage) {
+        listingDiscordAccessImage.alt = isConnectMode
+          ? t("listing_create.discord_connect_title", "Conectar Discord")
+          : t("listing_create.discord_reauth_title", "Conexão com Discord");
+      }
+      if (listingDiscordAccessHelper) {
+        listingDiscordAccessHelper.textContent = t(
+          "listing_create.discord_access_helper",
+          "O Gimerr precisa ter acesso ao seu Discord para liberar a criação de anúncios apenas nos servidores dos quais você faz parte.",
+        );
+      }
+      if (listingDiscordAccessConfirm) {
+        listingDiscordAccessConfirm.textContent = isConnectMode
+          ? t("listing_create.discord_connect_button", "Conectar Discord")
+          : t("listing_create.discord_reauth_button", "Reautenticar com Discord");
+      }
+    }
+
+    function openListingDiscordAccessModal(mode = "reauth") {
+      if (!listingDiscordAccessModal) return;
+      applyListingDiscordAccessModalCopy(mode);
+      listingDiscordAccessModal.classList.add("open");
+      listingDiscordAccessModal.setAttribute("aria-hidden", "false");
+      dismissPageLoader();
+    }
+
+    function closeListingDiscordAccessModal() {
+      if (!listingDiscordAccessModal) return;
+      listingDiscordAccessModal.classList.remove("open");
+      listingDiscordAccessModal.setAttribute("aria-hidden", "true");
+    }
+
+    function leaveListingCreateDiscordAccess() {
+      try {
+        const referrer = String(document.referrer || "").trim();
+        if (referrer) {
+          const parsed = new URL(referrer, window.location.origin);
+          if (parsed.origin === window.location.origin && !/\/listing-create(?:\.html)?(?:[?#]|$)/.test(parsed.pathname + (parsed.search || ""))) {
+            window.location.href = `${parsed.pathname}${parsed.search || ""}${parsed.hash || ""}`;
+            return;
+          }
+        }
+      } catch (_err) {
+        // Fallback below.
+      }
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+      window.location.href = "index.html";
+    }
+
+    async function startListingDiscordConnectFlow() {
+      ensureClient();
+      if (!currentUser) return;
+      try {
+        localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+          provider: "discord",
+          user_id: String(currentUser?.id || "").trim(),
+          saved_at: Date.now(),
+        }));
+      } catch (_err) {
+        // Ignore localStorage persistence failures.
+      }
+      sessionStorage.setItem("gimerr-post-discord-link", "/listing-create.html");
+      const { error } = await supabase.auth.linkIdentity({
+        provider: "discord",
+        options: {
+          redirectTo: `${window.location.origin}/listing-create.html?discord_link=1`,
+          scopes: "identify email guilds",
+        },
+      });
+      if (error) throw error;
+    }
+
+    async function startListingDiscordAuthFlow() {
+      ensureClient();
+      try {
+        localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+          provider: "discord",
+          user_id: String(currentUser?.id || "").trim(),
+          saved_at: Date.now(),
+        }));
+      } catch (_err) {
+        // Ignore localStorage persistence failures.
+      }
+      const redirectTo = `${window.location.origin}${window.location.pathname}${window.location.search || ""}`;
+      sessionStorage.setItem("gimerr-post-discord-link", "/listing-create.html");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "discord",
+        options: {
+          redirectTo,
+          scopes: "identify email guilds",
+        },
+      });
+      if (error) throw error;
+    }
+
+    function ensureListingDiscordContext(session) {
+      const hasLinkedDiscord = hasLinkedDiscordIdentity(currentUser);
+      if (!hasLinkedDiscord) {
+        openListingDiscordAccessModal("connect");
+        return false;
+      }
+      if (!isDiscordAuthSession(session) || !String(session?.provider_token || "").trim()) {
+        openListingDiscordAccessModal("reauth");
+        return false;
+      }
+      closeListingDiscordAccessModal();
+      return true;
+    }
+
     function ensureHttpsPrefix(raw) {
       const trimmed = (raw || "").trim();
       if (!trimmed) return "";
@@ -746,6 +899,11 @@
       return games.find((game) => String(game.name || "").trim().toLowerCase() === normalized) || null;
     }
 
+    function isAllowedServerId(serverId) {
+      const normalized = String(serverId || "").trim();
+      return Boolean(normalized) && allowedServerIds.has(normalized);
+    }
+
     async function resolveGameNameById(gameId) {
       const localMatch = games.find((g) => String(g.id) === String(gameId));
       if (localMatch?.name) return localMatch.name;
@@ -780,8 +938,16 @@
       const gameName = await resolveGameNameById(data.server_id);
       gameInput.value = gameName;
       gameInput.dataset.gameId = data.server_id || "";
-      gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
-      setCustomGameMode(false);
+      if (isAllowedServerId(data.server_id)) {
+        gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
+      } else {
+        const unavailableMessage = t(
+          "listing_create.edit_server_membership_required",
+          "This listing is linked to a server that is no longer available in your Discord account. Choose another server you belong to before saving.",
+        );
+        gameHelper.textContent = unavailableMessage;
+        feedback.textContent = unavailableMessage;
+      }
 
       existingImageUrls = Array.isArray(data.images) ? data.images.slice(0, MAX_IMAGES) : [];
       originalImageUrls = existingImageUrls.slice();
@@ -811,130 +977,92 @@
     async function fetchGames() {
       try {
         ensureClient();
+        const { data: sessionData } = await supabase.auth.getSession();
+        const session = sessionData?.session || null;
+        const providerToken = getDiscordProviderToken(session);
+        if (!session?.access_token || !providerToken) {
+          games = [];
+          allowedServerIds = new Set();
+          throw new Error(t("listing_create.discord_session_required", "Sign in again with Discord to list only the servers you belong to."));
+        }
+        const { data: overviewData, error: overviewError } = await supabase.functions.invoke("discord_guilds_overview", {
+          body: {
+            userToken: String(session.access_token || "").trim(),
+            providerToken,
+          },
+        });
+        if (overviewError || !overviewData?.ok) {
+          throw new Error(
+            overviewData?.error
+              || overviewError?.message
+              || t("listing_create.discord_servers_load_error", "Could not load your Discord servers right now."),
+          );
+        }
+        const matchedServerIds = Array.isArray(overviewData?.matchedServers)
+          ? overviewData.matchedServers
+            .map((item) => String(item?.serverId || "").trim())
+            .filter(Boolean)
+          : [];
+        if (!matchedServerIds.length) {
+          games = [];
+          allowedServerIds = new Set();
+          if (gameHelper) {
+            gameHelper.textContent = t(
+              "listing_create.discord_no_servers",
+              "We still couldn't find any active Discord server you belong to on Gimerr for this listing.",
+            );
+          }
+          return;
+        }
         const { data, error } = await supabase
           .from("servers")
-          .select("id,name,official_site,website_domain,banner_url,status")
+          .select("id,name,official_site,website_domain,banner_url,status,discord_guild_id")
+          .in("id", matchedServerIds)
           .eq("status", "active")
           .order("name", { ascending: true });
         if (error) throw error;
+        allowedServerIds = new Set((data || []).map((game) => String(game?.id || "").trim()).filter(Boolean));
         games = await Promise.all((data || []).map(async (game) => ({
           ...game,
           banner_url: game?.banner_url ? await resolveServerLogoUrl(game.banner_url) : "",
         })));
+        if (!games.length && gameHelper) {
+          gameHelper.textContent = t(
+            "listing_create.discord_no_servers",
+            "We still couldn't find any active Discord server you belong to on Gimerr for this listing.",
+          );
+        }
       } catch (err) {
         console.error(err);
         feedback.textContent = err?.message || t("listing_create.load_games_error", "Error loading games.");
-      }
-    }
-
-    async function findExistingServerByDomain(websiteDomain) {
-      const normalizedDomain = String(websiteDomain || "").trim().toLowerCase();
-      if (!normalizedDomain) return null;
-
-      const localMatch = games.find((game) =>
-        String(game.website_domain || "").trim().toLowerCase() === normalizedDomain
-        && String(game.status || "") !== "deleted"
-      );
-      if (localMatch) return localMatch;
-
-      const { data, error } = await supabase
-        .from("servers")
-        .select("id,name,official_site,website_domain,status")
-        .neq("status", "deleted")
-        .eq("website_domain", normalizedDomain)
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data || null;
-    }
-
-    async function saveCustomGameSelection() {
-      const customName = customGameNameInput?.value?.trim() || "";
-      const rawWebsite = customGameSiteInput?.value?.trim() || "";
-      if (!customName || !rawWebsite) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_fill_required", "Fill in the game name and official website.");
-        return;
-      }
-
-      const normalizedWebsite = normalizeWebsite(rawWebsite);
-      const websiteDomain = extractDomainKey(rawWebsite);
-      if (!normalizedWebsite || !websiteDomain) {
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_invalid_url", "Enter a valid URL, for example: https://yourgame.com");
-        return;
-      }
-
-      if (customGameSiteInput) {
-        customGameSiteInput.value = normalizedWebsite;
-      }
-
-      try {
-        const existingServer = await findExistingServerByDomain(websiteDomain);
-        if (existingServer?.id) {
-          fillGameFromSelection(existingServer);
-          setCustomGameMode(false);
-          if (gameHelper) gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
-          feedback.textContent = formatMessage("listing_create.website_existing_game_selected", "A game is already registered for this official website: {name}. We selected it for you.", {
-            name: existingServer.name || t("listing_create.game_found", "game found"),
-          });
-          closeCustomGameModal();
-          return;
+        if (gameHelper) {
+          gameHelper.textContent = t(
+            "listing_create.discord_session_required",
+            "Sign in again with Discord to list only the servers you belong to.",
+          );
         }
-
-        customGameRequested = true;
-        customGamePayload = {
-          name: customName,
-          website: normalizedWebsite,
-          websiteDomain,
-          is_owner: false,
-        };
-        if (gameInput) {
-          gameInput.value = customName;
-          gameInput.dataset.gameId = "";
-        }
-        if (gameHelper) gameHelper.textContent = t("listing_create.custom_game_ready", "New game ready for review.");
-        if (suggestionsPanel) {
-          suggestionsPanel.style.display = "none";
-          suggestionsPanel.innerHTML = "";
-        }
-        feedback.textContent = t("listing_create.review_notice", "Your listing will be sent for review before it is published.");
-        closeCustomGameModal();
-      } catch (err) {
-        console.error(err);
-        if (customGameFeedback) customGameFeedback.textContent = t("listing_create.modal_validation_error", "Could not validate this website right now. You can still try to submit.");
       }
     }
 
     function renderSuggestions(term) {
       if (!suggestionsPanel) return;
-      if (customGameRequested) {
-        suggestionsPanel.style.display = "none";
-        suggestionsPanel.innerHTML = "";
-        return;
-      }
       if (!term || term.length < 2) {
-        setCustomGameMode(false);
         suggestionsPanel.style.display = "none";
         suggestionsPanel.innerHTML = "";
         return;
       }
       const normalizedTerm = term.toLowerCase();
       const matches = games.filter((g) => g.name.toLowerCase().includes(normalizedTerm));
-      const footer = `
-        <div class="suggestion-footer">
-          <button type="button" class="link-ghost" data-custom-game-trigger="true">${CUSTOM_GAME_TRIGGER_TEXT}</button>
-        </div>
-      `;
       if (matches.length === 0) {
         suggestionsPanel.innerHTML = `
           <div class="suggestion-empty">
-            <button type="button" class="link-ghost" data-custom-game-trigger="true">${CUSTOM_GAME_TRIGGER_TEXT}</button>
+            ${t("listing_create.server_not_found_prefix", "We couldn't find this server on Gimerr yet.")}
+            <a class="link-ghost" href="partner.html">${t("listing_create.server_not_found_cta", "Open the partner area")}</a>
+            ${t("listing_create.server_not_found_suffix", "to register it with your Discord account.")}
           </div>
         `;
         suggestionsPanel.style.display = "block";
         return;
-      }
-      if (!customGameRequested) {
-        setCustomGameMode(false);
       }
       const items = matches
         .map((g) => {
@@ -949,7 +1077,7 @@
           </div>`;
         })
         .join("");
-      suggestionsPanel.innerHTML = `${items}${footer}`;
+      suggestionsPanel.innerHTML = items;
       suggestionsPanel.style.display = "block";
     }
 
@@ -960,17 +1088,9 @@
         const gameName = item.getAttribute("data-game-name") || "";
         const selectedGame = games.find((game) => String(game.id) === String(gameId));
         fillGameFromSelection(selectedGame, gameName);
-        setCustomGameMode(false);
         suggestionsPanel.style.display = "none";
         gameHelper.textContent = t("listing_create.game_selected", "Selected game.");
         return;
-      }
-      const customTrigger = event.target.closest("[data-custom-game-trigger='true']");
-      if (!customTrigger) return;
-      openCustomGameModal();
-      if (suggestionsPanel) {
-        suggestionsPanel.style.display = "none";
-        suggestionsPanel.innerHTML = "";
       }
     }
 
@@ -978,27 +1098,6 @@
       if (!descCounter || !descInput) return;
       const count = descInput.value.length;
       descCounter.textContent = `${count}/${MAX_DESC}`;
-    }
-
-    async function findWebsiteRecord(website, domainKey) {
-      const { data: inServers, error: srvErr } = await supabase
-        .from("servers")
-        .select("id,official_site,website_domain,status")
-        .eq("website_domain", domainKey)
-        .limit(1);
-      if (srvErr) throw srvErr;
-
-      const { data: inRequests, error: reqErr } = await supabase
-        .from("game_requests")
-        .select("id,status,website,website_domain,user_id,cover_url")
-        .eq("website_domain", domainKey)
-        .limit(1);
-      if (reqErr) throw reqErr;
-
-      return {
-        inServers: Boolean((inServers || []).some((row) => String(row?.status || "") !== "deleted")),
-        request: inRequests?.[0] || null,
-      };
     }
 
     async function deleteServerLogo(logoRef) {
@@ -1159,55 +1258,10 @@
       return uploads;
     }
 
-    async function createListingReviewRequest(payload) {
-      const { error } = await supabase.from("listing_requests").insert(payload);
-      if (error) throw error;
-    }
-
-    async function createOrReuseGameRequest(payload) {
-      const websiteRecord = await findWebsiteRecord(payload.website, payload.websiteDomain);
-      if (websiteRecord.inServers) {
-        return { status: "server_exists", request: websiteRecord.request || null };
-      }
-      await ensureValidSession();
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        throw new Error(t("listing_create.session_expired", "Session expired. Sign in again."));
-      }
-
-      const { data: requestData, error } = await supabase.functions.invoke("game_request_upsert", {
-        body: {
-          name: payload.name,
-          website: payload.website,
-          is_owner: Boolean(payload.is_owner),
-          cover_url: payload.cover_url || null,
-          userToken: token,
-        },
-        headers: {
-          Authorization: `Bearer ${token}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-      });
-      if (error || !requestData?.ok) {
-        throw new Error(requestData?.error || error?.message || "Error saving game request.");
-      }
-      const oldCoverUrl = String(requestData?.previousCoverUrl || "").trim() || null;
-      if (oldCoverUrl && payload.cover_url && oldCoverUrl !== payload.cover_url) {
-        try {
-          await deleteServerLogo(oldCoverUrl);
-        } catch (cleanupErr) {
-          console.warn("Could not delete previous game request logo.", cleanupErr);
-        }
-      }
-      return { status: "created_or_updated", request: websiteRecord.request || null };
-    }
-
     async function handleSubmit(event) {
       event.preventDefault();
       feedback.textContent = "";
       setSubmitLoading(true);
-      let customGameRequestSaved = false;
 
       try {
         ensureClient();
@@ -1242,7 +1296,6 @@
           if (exactGame?.id) {
             gameId = exactGame.id;
             gameInput.dataset.gameId = exactGame.id;
-            setCustomGameMode(false);
           }
         }
 
@@ -1253,94 +1306,24 @@
           return;
         }
 
+        if (!gameId) {
+          feedback.innerHTML = `${escapeHtml(t("listing_create.server_not_found_prefix", "We couldn't find this server on Gimerr yet."))} <a class="link-ghost" href="partner.html">${escapeHtml(t("listing_create.server_not_found_cta", "Open the partner area"))}</a> ${escapeHtml(t("listing_create.server_not_found_suffix", "to register it with your Discord account."))}`;
+          return;
+        }
+
+        if (!isAllowedServerId(gameId)) {
+          feedback.textContent = t(
+            "listing_create.discord_membership_required",
+            "You can only publish listings in Discord servers you currently belong to.",
+          );
+          return;
+        }
+
         const uploadedImageUrls = files.length > 0 ? await uploadListingImages(files) : [];
         const finalImageUrls = [...existingImageUrls, ...uploadedImageUrls].slice(0, MAX_IMAGES);
         const removedImageUrls = isEditing
           ? originalImageUrls.filter((url) => !finalImageUrls.includes(url))
           : [];
-
-        if (!gameId) {
-          if (!customGameRequested || !customGamePayload?.website || !customGamePayload?.websiteDomain) {
-            feedback.textContent = formatMessage("listing_create.select_game_or_trigger", 'Select an existing game from the list or click "{trigger}"', { trigger: CUSTOM_GAME_TRIGGER_TEXT });
-            if (uploadedImageUrls.length > 0) {
-              try {
-                await requestImageDeletion(uploadedImageUrls);
-              } catch (_cleanupErr) {
-                // ignore cleanup failure here
-              }
-            }
-            return;
-          }
-          const normalizedWebsite = customGamePayload.website;
-          const websiteDomain = customGamePayload.websiteDomain;
-          const manualGameName = customGamePayload.name || gameName;
-
-          const existingServer = await findExistingServerByDomain(websiteDomain);
-          if (existingServer?.id) {
-            if (uploadedImageUrls.length > 0) {
-              try {
-                await requestImageDeletion(uploadedImageUrls);
-              } catch (_cleanupErr) {
-                // ignore cleanup failure here
-              }
-            }
-            fillGameFromSelection(existingServer);
-            setCustomGameMode(false);
-            feedback.textContent = formatMessage("listing_create.website_existing_game_review", "A game is already registered for this official website: {name}. We selected it for you. Review the details and submit again.", {
-              name: existingServer.name || t("listing_create.game_found", "game found"),
-            });
-            return;
-          }
-
-          await createOrReuseGameRequest({
-            name: manualGameName,
-            website: normalizedWebsite,
-            websiteDomain,
-            is_owner: customGamePayload.is_owner || false,
-            cover_url: null,
-          });
-          customGameRequestSaved = true;
-
-          try {
-            await createListingReviewRequest({
-              user_id: currentUser.id,
-              user_email: currentUser.email || null,
-              title,
-              description,
-              images: finalImageUrls,
-              game_name: manualGameName,
-              website: normalizedWebsite,
-              website_domain: websiteDomain,
-              status: "pending",
-            });
-          } catch (requestErr) {
-            const isDuplicateRequest = requestErr?.code === "23505"
-              && String(requestErr?.message || "").includes("listing_requests_user_domain_pending_idx");
-            if (uploadedImageUrls.length > 0) {
-              try {
-                await requestImageDeletion(uploadedImageUrls);
-              } catch (_cleanupErr) {
-                // ignore cleanup failure here
-              }
-            }
-            if (isDuplicateRequest) {
-              feedback.textContent = duplicateListingRequestMessage();
-              return;
-            }
-            throw requestErr;
-          }
-
-          feedback.textContent = t("listing_create.sent_for_review", "Your listing was sent for review. We will review the game before publishing.");
-          form.reset();
-          gameInput.dataset.gameId = "";
-          setCustomGameMode(false);
-          existingImageUrls = [];
-          originalImageUrls = [];
-          selectedImages = [];
-          renderImagePreviews();
-          updateDescCounter();
-          return;
-        }
 
         const payload = {
           server_id: gameId,
@@ -1351,6 +1334,7 @@
         };
 
         let saveError = null;
+        let insertedListingId = "";
         if (isEditing) {
           const { error } = await supabase
             .from("listings")
@@ -1359,13 +1343,39 @@
             .eq("user_id", currentUser.id);
           saveError = error;
         } else {
-          const { error } = await supabase.from("listings").insert({
-            ...payload,
-            user_id: currentUser.id,
-          });
+          const { data: insertedRow, error } = await supabase
+            .from("listings")
+            .insert({
+              ...payload,
+              user_id: currentUser.id,
+            })
+            .select("id")
+            .single();
           saveError = error;
+          insertedListingId = String(insertedRow?.id || "").trim();
         }
         if (saveError) throw saveError;
+
+        if (!isEditing && insertedListingId) {
+          try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            const announceToken = sessionData?.session?.access_token || "";
+            if (announceToken) {
+              await supabase.functions.invoke("discord_listing_announce", {
+                body: {
+                  userToken: announceToken,
+                  listingId: insertedListingId,
+                },
+                headers: {
+                  Authorization: `Bearer ${announceToken}`,
+                  apikey: SUPABASE_ANON_KEY,
+                },
+              });
+            }
+          } catch (announceErr) {
+            console.warn("Could not announce the listing on Discord.", announceErr);
+          }
+        }
 
         feedback.textContent = isEditing
           ? t("listing_create.updated_success", "Listing updated successfully!")
@@ -1391,9 +1401,6 @@
     gameInput?.addEventListener("input", (event) => {
       gameInput.dataset.gameId = "";
       gameHelper.textContent = DEFAULT_GAME_HELPER_TEXT;
-      if (customGameRequested) {
-        setCustomGameMode(false);
-      }
       renderSuggestions(event.target.value.trim());
     });
     imagesInput?.addEventListener("change", (event) => {
@@ -1401,18 +1408,6 @@
       imagesInput.value = "";
     });
     suggestionsPanel?.addEventListener("click", handleSuggestionClick);
-    saveCustomGameBtn?.addEventListener("click", saveCustomGameSelection);
-    closeCustomGameModalBtn?.addEventListener("click", () => {
-      closeCustomGameModal();
-      if (!customGameRequested) {
-        if (gameHelper) gameHelper.textContent = DEFAULT_GAME_HELPER_TEXT;
-      }
-    });
-    customGameModal?.addEventListener("click", (event) => {
-      if (event.target === customGameModal) {
-        closeCustomGameModal();
-      }
-    });
     descInput?.addEventListener("input", updateDescCounter);
     authBtn?.addEventListener("click", handleAuthClick);
     avatarBtn?.addEventListener("click", (event) => {
@@ -1434,6 +1429,25 @@
         window.location.href = "index.html";
       } catch (err) {
         console.error(err);
+      }
+    });
+    listingDiscordAccessBack?.addEventListener("click", leaveListingCreateDiscordAccess);
+    listingDiscordAccessConfirm?.addEventListener("click", async () => {
+      try {
+        if (listingDiscordAccessConfirm) {
+          listingDiscordAccessConfirm.disabled = true;
+        }
+        if (discordAccessMode === "connect") {
+          await startListingDiscordConnectFlow();
+          return;
+        }
+        await startListingDiscordAuthFlow();
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = err?.message || t("listing_create.discord_auth_error", "Could not start Discord authentication right now.");
+        if (listingDiscordAccessConfirm) {
+          listingDiscordAccessConfirm.disabled = false;
+        }
       }
     });
     function goToCreateListing() {
@@ -1465,6 +1479,11 @@
         const profile = await fetchUserProfile(currentUser.id);
         if (!isListingProfileComplete(profile)) {
           window.location.replace("profile.html?contact_required=1");
+          return;
+        }
+        const { data: sessionData } = await supabase.auth.getSession();
+        const currentSession = sessionData?.session || null;
+        if (!ensureListingDiscordContext(currentSession)) {
           return;
         }
         await fetchGames();

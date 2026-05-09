@@ -324,6 +324,8 @@
     const discordConnectedValue = document.getElementById("discord-connected-value");
     const discordConnectBtn = document.getElementById("discord-connect-btn");
     const discordConnectBtnText = document.getElementById("discord-connect-btn-text");
+    const AUTH_PROVIDER_HINT_KEY = "gimerr-auth-provider-hint";
+    const DISCORD_ONBOARDING_PENDING_KEY = "gimerr-discord-onboarding-pending";
     const aboutMeInput = document.getElementById("about-me");
     const avatarUploadInput = document.getElementById("avatar-upload");
     const profileAvatarPreview = document.getElementById("profile-avatar-preview");
@@ -625,11 +627,11 @@
         discordHelp.style.display = isLinked ? "none" : "block";
       }
       if (discordConnectBtn) {
-        discordConnectBtn.disabled = false;
+        discordConnectBtn.disabled = isLinked;
       }
       if (discordConnectBtnText) {
         discordConnectBtnText.textContent = isLinked
-          ? t("profile.discord_change_button", "Change Discord account")
+          ? t("profile.discord_connected_button", "Discord connected")
           : t("profile.discord_connect_button", "Connect Discord");
       }
     }
@@ -652,6 +654,27 @@
           feedback.textContent = t("profile.session_expired", "Session expired. Please sign in again.");
           return;
         }
+        const linkedDiscord = getCurrentDiscordLink();
+        if (linkedDiscord.id) {
+          if (feedback) {
+            feedback.textContent = t(
+              "profile.discord_change_blocked",
+              "Your Discord account is already connected and cannot be changed here.",
+            );
+          }
+          await refreshDiscordConnectState();
+          return;
+        }
+        try {
+          localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+            provider: "discord",
+            user_id: String(currentUser.id || "").trim(),
+            saved_at: Date.now(),
+          }));
+        } catch (_err) {
+          // Ignore localStorage persistence failures.
+        }
+        sessionStorage.setItem(DISCORD_ONBOARDING_PENDING_KEY, "1");
         sessionStorage.setItem("gimerr-post-discord-link", "/profile.html");
         if (discordConnectBtn) discordConnectBtn.disabled = true;
         if (discordConnectBtnText) discordConnectBtnText.textContent = t("profile.discord_connecting", "Connecting...");
@@ -659,7 +682,7 @@
           provider: "discord",
           options: {
             redirectTo: `${window.location.origin}/profile.html?discord_link=1`,
-            scopes: "identify email",
+            scopes: "identify email guilds",
           },
         });
         if (error) throw error;

@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+import { announceListingToDiscord } from "../_shared/discord_bot.ts";
 
 type Payload = {
   requestId?: string;
@@ -149,6 +150,14 @@ Deno.serve(async (req) => {
         })
         .eq("id", requestRow.id);
       if (updateErr) throw updateErr;
+
+      try {
+        if (insertedListingId) {
+          await announceListingToDiscord({ supabase, listingId: insertedListingId });
+        }
+      } catch (announceErr) {
+        console.error("Discord bot listing announce failed:", announceErr);
+      }
 
       return new Response(JSON.stringify({
         ok: true,

@@ -1358,7 +1358,7 @@
           const [{ data: userRow, error: userError }, { count: recommendationsCount, error: recommendationsError }, { count: profileReportsCount, error: profileReportsError }, { data: userListings, error: listingsError }] = await Promise.all([
             supabase
               .from("users")
-              .select("id,phone_verified")
+              .select("id,discord_id")
               .eq("id", userId)
               .maybeSingle(),
             supabase
@@ -1398,7 +1398,7 @@
 
           const recommendations = Number(recommendationsCount || 0);
           const reports = Number(profileReportsCount || 0) + listingReportsCount;
-          const isVerified = !!userRow?.phone_verified;
+          const isVerified = /^[0-9]{17,20}$/.test(String(userRow?.discord_id || "").trim());
           const score = !isVerified
             ? null
             : recommendations + reports === 0
@@ -1795,7 +1795,7 @@
       }
       if (publicReputation) {
         const score = Number(currentPublicReputation?.reputation_score);
-        if (profile?.phone_verified && Number.isFinite(score)) {
+        if (Number.isFinite(score)) {
           publicReputation.innerHTML = `
             <span class="reputation-score-pill">${escapeHtml(formatMessage("common.reputation_out_of_ten", "Reputation {score}/10", { score: score.toFixed(1) }))}</span>
           `;

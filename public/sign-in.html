@@ -544,6 +544,7 @@
     if (resetModalClose) resetModalClose.setAttribute("aria-label", t("common.close", "Close"));
 
     const PROFILE_USERNAME_REGEX = /^[a-z0-9]{3,20}$/;
+    const AUTH_PROVIDER_HINT_KEY = "gimerr-auth-provider-hint";
 
     function getClient() {
       if (client) return client;
@@ -559,6 +560,18 @@
         },
       });
       return client;
+    }
+
+    function persistAuthProviderHint(provider, userId = "") {
+      try {
+        localStorage.setItem(AUTH_PROVIDER_HINT_KEY, JSON.stringify({
+          provider: String(provider || "").trim().toLowerCase(),
+          user_id: String(userId || "").trim(),
+          saved_at: Date.now(),
+        }));
+      } catch (_err) {
+        // Ignore localStorage persistence failures.
+      }
     }
 
     function normalizeEmail(value) {
@@ -911,6 +924,9 @@
             return;
           }
           if (event === "SIGNED_IN" && !recoveryMode) {
+            if (session?.user?.id) {
+              persistAuthProviderHint(session?.user?.app_metadata?.provider || "password", session.user.id);
+            }
             if (session?.user) {
               ensureUserProfile(session.user).catch((err) => console.warn("Could not ensure user profile.", err));
             }
@@ -918,6 +934,9 @@
           }
         });
         const { data } = await supabase.auth.getSession();
+        if (data?.session?.user?.id) {
+          persistAuthProviderHint(data?.session?.user?.app_metadata?.provider || "password", data.session.user.id);
+        }
         if (data?.session?.user) {
           ensureUserProfile(data.session.user).catch((err) => console.warn("Could not ensure user profile.", err));
         }
@@ -1008,6 +1027,7 @@
     async function handlePasswordSignIn(event) {
       event.preventDefault();
       sessionStorage.removeItem("gimerr-password-recovery");
+      persistAuthProviderHint("password");
       if (feedbackEl) feedbackEl.textContent = "";
       const email = normalizeEmail(signInEmail?.value);
       const password = String(signInPassword?.value || "");
@@ -1039,6 +1059,10 @@
     async function handleOAuthSignIn(provider, buttonEl) {
       try {
         sessionStorage.removeItem("gimerr-password-recovery");
+        persistAuthProviderHint(provider);
+        if (provider === "discord") {
+          sessionStorage.setItem("gimerr-discord-onboarding-pending", "1");
+        }
         if (googleButtonEl) googleButtonEl.disabled = true;
         if (discordButtonEl) discordButtonEl.disabled = true;
         if (buttonEl) buttonEl.disabled = true;
@@ -1047,10 +1071,15 @@
         const redirectTo = `${window.location.origin}${getNextPath()}`;
         const { error } = await supabase.auth.signInWithOAuth({
           provider,
-          options: { redirectTo },
+          options: provider === "discord"
+            ? { redirectTo, scopes: "identify email guilds" }
+            : { redirectTo },
         });
         if (error) throw error;
       } catch (err) {
+        if (provider === "discord") {
+          sessionStorage.removeItem("gimerr-discord-onboarding-pending");
+        }
         if (feedbackEl) feedbackEl.textContent = mapAuthError(err, "login");
         resetOAuthUi();
       }

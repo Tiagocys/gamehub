@@ -142,7 +142,7 @@
         <p id="settings-password-feedback" class="settings-feedback"></p>
         <div class="danger-zone">
           <strong id="settings-danger-zone-title">Delete profile</strong>
-          <p id="settings-danger-zone-helper" class="settings-helper">This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.</p>
+          <p id="settings-danger-zone-helper" class="settings-helper">This action permanently deletes your account and linked data, including your login. If you come back to Gimerr, you will need to start over.</p>
           <button id="settings-delete-profile-btn" class="btn btn-danger" type="button">Delete profile</button>
         </div>
       </section>
@@ -159,6 +159,8 @@
   <script src="js/site-footer.js"></script>
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2.40.0";
+
+    await (window.__NAVBAR_READY__ || Promise.resolve());
 
     const env = window.__ENV || {};
     const i18n = window.__I18N__ || { locale: "en", t: (_key, fallback = "") => fallback };
@@ -257,6 +259,31 @@
       return err?.message || t("signin.auth_error", "Authentication error.");
     }
 
+    async function clearLocalAuthState(client) {
+      try {
+        if (client?.auth?.signOut) {
+          await client.auth.signOut({ scope: "local" });
+        }
+      } catch (_err) {
+        // Ignore local sign-out failures and clear storage manually below.
+      }
+      try {
+        localStorage.removeItem("gimerr-auth-token");
+        localStorage.removeItem("gimerr-auth-session");
+        localStorage.removeItem("gimerr-auth-provider-hint");
+        localStorage.removeItem("gimerr-discord-oauth-context");
+      } catch (_err) {
+        // Ignore storage failures.
+      }
+      try {
+        sessionStorage.removeItem("gimerr-password-recovery");
+        sessionStorage.removeItem("gimerr-post-discord-link");
+        sessionStorage.removeItem("gimerr-discord-onboarding-pending");
+      } catch (_err) {
+        // Ignore storage failures.
+      }
+    }
+
     async function ensureSession() {
       const client = getClient();
       const params = new URLSearchParams(window.location.search);
@@ -280,70 +307,6 @@
       return true;
     }
 
-    async function requestAvatarDeletion(avatarUrl) {
-      const raw = String(avatarUrl || "").trim();
-      if (!raw) return { ok: true };
-      const client = getClient();
-      const { data } = await client.auth.getSession();
-      const token = data.session?.access_token;
-      if (!token) {
-        throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
-      }
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/r2_sign_upload`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          apikey: SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({
-          mode: "delete",
-          key: raw,
-          userToken: token,
-          assetType: "avatar",
-        }),
-      });
-      if (!response.ok) {
-        let message = t("profile.avatar_delete_error", "Failed to delete the previous avatar.");
-        try {
-          const payload = await response.json();
-          message = payload?.error || message;
-        } catch (_err) {
-          const text = await response.text();
-          if (text) message = text;
-        }
-        throw new Error(message);
-      }
-      return response.json();
-    }
-
-    async function deleteOwnListingsBeforeProfileDelete(accessToken) {
-      const client = getClient();
-      const { data: listings, error: listingsError } = await client
-        .from("listings")
-        .select("id")
-        .eq("user_id", currentUser.id);
-      if (listingsError) throw listingsError;
-      const ids = (listings || []).map((item) => item?.id).filter(Boolean);
-      if (ids.length === 0) return;
-      const failures = [];
-      for (const listingId of ids) {
-        const { data, error } = await client.functions.invoke("listing_delete", {
-          body: { listingId },
-          headers: accessToken
-            ? {
-                Authorization: `Bearer ${accessToken}`,
-                apikey: SUPABASE_ANON_KEY,
-              }
-            : {},
-        });
-        if (error || !data?.ok) failures.push(listingId);
-      }
-      if (failures.length > 0) {
-        throw new Error(t("profile.delete_listings_error", "Could not delete linked listings."));
-      }
-    }
-
     document.title = t("setings.title_default", "Gimerr - Settings");
     document.documentElement.lang = String(i18n.locale || "").startsWith("pt")
       ? "pt-BR"
@@ -359,7 +322,7 @@
     if (passwordRulesEl) passwordRulesEl.textContent = t("signin.password_helper", "Use at least 10 characters, with uppercase, lowercase, number and symbol.");
     if (submitLabelEl) submitLabelEl.textContent = t("signin.reset_submit", "Update password");
     if (dangerZoneTitleEl) dangerZoneTitleEl.textContent = t("profile.delete_profile", "Delete profile");
-    if (dangerZoneHelperEl) dangerZoneHelperEl.textContent = t("settings.delete_profile_helper", "This action removes all your active listings. Your profile data remains saved for possible reactivation on your next login.");
+    if (dangerZoneHelperEl) dangerZoneHelperEl.textContent = t("settings.delete_profile_helper", "This action permanently deletes your account and linked data, including your login. If you come back to Gimerr, you will need to start over.");
     if (deleteProfileBtn) deleteProfileBtn.textContent = t("profile.delete_profile", "Delete profile");
 
     formEl?.addEventListener("submit", async (event) => {
@@ -403,9 +366,9 @@
           window.location.replace("index.html");
           return;
         }
-        const firstConfirm = window.confirm(t("profile.delete_confirm_one", "Do you want to delete your profile? All your listings will be removed."));
+        const firstConfirm = window.confirm(t("profile.delete_confirm_one", "Do you want to permanently delete your account? This will remove your login and linked data."));
         if (!firstConfirm) return;
-        const secondConfirm = window.confirm(t("profile.delete_confirm_two", "Confirm profile deletion now?"));
+        const secondConfirm = window.confirm(t("profile.delete_confirm_two", "Confirm the permanent deletion of your account now?"));
         if (!secondConfirm) return;
 
         deleteProfileBtn.disabled = true;
@@ -418,22 +381,32 @@
           throw new Error(t("profile.session_expired", "Session expired. Please sign in again."));
         }
 
-        await deleteOwnListingsBeforeProfileDelete(token);
-        if (currentProfile?.avatar_url) {
-          try {
-            await requestAvatarDeletion(currentProfile.avatar_url);
-          } catch (avatarDeleteErr) {
-            console.warn("Could not delete avatar during profile removal.", avatarDeleteErr);
-          }
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/account_delete`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            apikey: SUPABASE_ANON_KEY,
+          },
+          body: JSON.stringify({ confirm: true, userToken: token }),
+        });
+        let data = null;
+        let rawBody = "";
+        try {
+          rawBody = await response.text();
+          data = rawBody ? JSON.parse(rawBody) : null;
+        } catch (_err) {
+          data = null;
+        }
+        if (!response.ok || !data?.ok) {
+          throw new Error(
+            data?.error ||
+            rawBody ||
+            `${t("profile.delete_error", "Error deleting profile.")} (${response.status})`
+          );
         }
 
-        const { error: updateError } = await client
-          .from("users")
-          .update({ status: "deleted" })
-          .eq("id", currentUser.id);
-        if (updateError) throw updateError;
-
-        await client.auth.signOut();
+        await clearLocalAuthState(client);
         window.location.replace("index.html");
       } catch (err) {
         console.error(err);

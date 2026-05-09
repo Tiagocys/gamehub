@@ -633,6 +633,7 @@
     let selectedCheckoutRateToBRL = USD_BRL_RATE;
     let selectedCheckoutCountryCode = "";
     let serverPricingById = {};
+    let listingViewTotalsById = {};
     const LISTING_HIGHLIGHT_INFO_IMAGES = [
       "img/listings-ads.png",
       "img/listings-ads-2.png",
@@ -720,6 +721,10 @@
 
     function formatBRLMoney(valueBRL) {
       return formatMoney(valueBRL, "brl");
+    }
+
+    function formatCount(value) {
+      return new Intl.NumberFormat(displayLocale).format(Math.max(0, Math.floor(Number(value || 0))));
     }
 
     function getWalletDisplayCurrency() {
@@ -1294,6 +1299,12 @@
       return myListings.find((item) => String(item.id) === String(id)) || null;
     }
 
+    function isMissingListingViewMetricsError(error) {
+      if (!error) return false;
+      if (error.code === "42P01" || error.code === "42703") return true;
+      return String(error.message || "").toLowerCase().includes("listing_view_daily_metrics");
+    }
+
     function renderListings(list) {
       updateWalletVisibilityState(list);
       listingsGrid.innerHTML = "";
@@ -1313,6 +1324,7 @@
         const safeTitle = escapeHtml(listing.title || t("my_listings.no_title", "Untitled"));
         const safeDescription = escapeHtml(listing.description || t("my_listings.no_description", "No description."));
         const safeServerName = escapeHtml(listing.server_name || "");
+        const totalViews = Math.max(0, Math.floor(Number(listing.total_views || 0)));
         const imageUrl = listing.imageUrl || listing.images?.[0];
         const image = imageUrl
           ? `<div class="listing-media"><img src="${encodeURI(imageUrl)}" alt="${safeTitle}" loading="lazy" /></div>`
@@ -1331,6 +1343,7 @@
             <div class="listing-meta">
               ${safeServerName ? `<span class="pill">${safeServerName}</span>` : `<span class="pill">${escapeHtml(t("my_listings.game_not_informed", "Game: not informed"))}</span>`}
               <span class="pill">${escapeHtml(highlightActive ? t("ad_wallet.highlight_active", "Highlight active") : t("ad_wallet.highlight_inactive", "No highlight"))}</span>
+              <span class="pill">${escapeHtml(t("my_listings.views_count", "Views"))}: ${escapeHtml(formatCount(totalViews))}</span>
             </div>
             <h3>${safeTitle}</h3>
             <p class="listing-description-preserve listing-description-preview">${safeDescription}</p>
@@ -1357,8 +1370,10 @@
       if (error) throw error;
 
       const list = data || [];
+      listingViewTotalsById = {};
       const serverNameById = {};
       const uniqueServerIds = [...new Set(list.map((item) => item.server_id).filter(Boolean))];
+      const listingIds = [...new Set(list.map((item) => String(item.id || "")).filter(Boolean))];
       if (uniqueServerIds.length > 0) {
         const { data: serverRows, error: serverError } = await supabase
           .from("servers")
@@ -1398,10 +1413,42 @@
         }
       }
 
+      if (listingIds.length > 0) {
+        try {
+          const metricRows = [];
+          let from = 0;
+          while (true) {
+            const to = from + 999;
+            const { data: viewRows, error: viewErr } = await supabase
+              .from("listing_view_daily_metrics")
+              .select("listing_id,views_count")
+              .in("listing_id", listingIds)
+              .order("stat_date", { ascending: false })
+              .range(from, to);
+            if (isMissingListingViewMetricsError(viewErr)) {
+              break;
+            }
+            if (viewErr) throw viewErr;
+            const batch = Array.isArray(viewRows) ? viewRows : [];
+            metricRows.push(...batch);
+            if (batch.length < 1000) break;
+            from += 1000;
+          }
+          metricRows.forEach((row) => {
+            const listingId = String(row?.listing_id || "").trim();
+            if (!listingId) return;
+            listingViewTotalsById[listingId] = Number(listingViewTotalsById[listingId] || 0) + Number(row?.views_count || 0);
+          });
+        } catch (viewErr) {
+          console.warn("[my-listings] failed to load listing view metrics", viewErr);
+        }
+      }
+
       myListings = await Promise.all(
         list.map(async (item) => ({
           ...item,
           server_name: item.server_id ? (serverNameById[item.server_id] || "") : "",
+          total_views: Number(listingViewTotalsById[String(item.id)] || 0),
           imageUrl: item.images?.[0] ? await resolveImageUrl(item.images[0]) : null,
         })),
       );

@@ -1289,7 +1289,7 @@
         if (!userId) return;
         const recommendations = getRecommendationCount(userId);
         const reports = Number(profileReportCountMap.get(userId) || 0) + Number(listingReportCountMap.get(userId) || 0);
-        const isVerified = !!user?.phone_verified;
+        const isVerified = /^[0-9]{17,20}$/.test(String(user?.discord_id || "").trim());
         const rating = !isVerified
           ? 0
           : recommendations + reports === 0
@@ -1304,7 +1304,7 @@
       if (ids.length === 0) return new Map();
       const { data, error } = await supabase
         .from("users")
-        .select("id,first_name,last_name,email,avatar_url")
+        .select("id,first_name,last_name,email,avatar_url,discord_id")
         .in("id", ids);
       if (error) throw error;
       const entries = await Promise.all((data || []).map(async (user) => {
@@ -1677,7 +1677,6 @@
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
             ${t("home.search_not_found_prefix", "We couldn't find games or players for")} "${escapeHtml(term)}".
-            <a class="link-ghost" href="game-submit.html" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
           </div>
         `;
         searchSuggestions.style.display = "block";
@@ -1686,7 +1685,6 @@
       const gameItems = gameMatches
         .map((g) => {
           const logoUrl = normalizeR2PublicUrl(g.cover_url || "");
-          const websiteLabel = String(g.website || "").replace(/^https?:\/\//i, "").replace(/\/$/, "") || "No official website";
           return `<div class="suggestion-item suggestion-item-rich" data-kind="game" data-game-id="${g.id}" data-game-name="${escapeHtml(g.name)}">
             <span class="suggestion-thumb suggestion-thumb-game">
               ${logoUrl
@@ -1695,7 +1693,6 @@
             </span>
             <span class="suggestion-copy">
               <strong>${escapeHtml(g.name)}</strong>
-              <small>${escapeHtml(websiteLabel)}</small>
             </span>
             <span class="badge">Game</span>
           </div>`;
@@ -1718,13 +1715,7 @@
         </div>`;
         })
         .join("");
-      const footer = `
-        <div class="suggestion-footer">
-          ${t("home.search_not_found_simple", "We couldn't find")}
-          <a class="link-ghost" href="game-submit.html" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
-        </div>
-      `;
-      searchSuggestions.innerHTML = `${gameItems}${playerItems}${footer}`;
+      searchSuggestions.innerHTML = `${gameItems}${playerItems}`;
       searchSuggestions.style.display = "block";
     }
 
@@ -1773,7 +1764,6 @@
         searchSuggestions.innerHTML = `
           <div class="suggestion-empty">
             ${t("home.search_not_found_simple", "We couldn't find")} "${escapeHtml(term)}".
-            <a href="game-submit.html" class="link-ghost" data-action="game-submit">${t("home.submit_game_cta", "Clique aqui")}</a> ${t("home.submit_game_suffix", "para cadastrar um novo game.")}
           </div>
         `;
         searchSuggestions.style.display = "block";
@@ -1786,19 +1776,6 @@
     });
 
     searchSuggestions?.addEventListener("click", handleSuggestionClick);
-    searchSuggestions?.addEventListener("click", (event) => {
-      const link = event.target.closest('a[data-action="game-submit"]');
-      if (!link) return;
-      event.preventDefault();
-      if (!currentUser) {
-        startOAuthLikeNavbar("game-submit.html").catch((err) => {
-          console.error(err);
-          showSuggestionMessage(err?.message || "Error starting Google sign-in.");
-        });
-        return;
-      }
-      window.location.href = "game-submit.html";
-    });
 
     authBtn?.addEventListener("click", handleAuthClick);
     avatarBtn?.addEventListener("click", (event) => {
