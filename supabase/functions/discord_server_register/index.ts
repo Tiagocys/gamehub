@@ -129,12 +129,6 @@ Deno.serve(async (req) => {
       owner_email: String(authData.user.email || "").trim().toLowerCase() || null,
       discord_guild_id: guildId,
       discord_invite: null,
-      discord_app_installed: false,
-      discord_app_can_create_invite: false,
-      discord_app_can_view_channels: false,
-      discord_app_can_send_messages: false,
-      discord_app_can_embed_links: false,
-      discord_app_permissions_synced_at: null,
       description: null,
     };
 

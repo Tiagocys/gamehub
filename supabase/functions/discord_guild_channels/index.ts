@@ -118,14 +118,11 @@ Deno.serve(async (req) => {
       sendMessages: false,
       embedLinks: false,
     };
+    const permissionsReady = channelsResult.permissionsReady === true;
     const permissionSyncPayload: Record<string, unknown> = {
-      status: channelsResult.botPresent ? "active" : "pending",
-      discord_app_installed: Boolean(channelsResult.botPresent),
-      discord_app_can_create_invite: Boolean(permissionState.createInvite),
-      discord_app_can_view_channels: Boolean(permissionState.viewChannels),
-      discord_app_can_send_messages: Boolean(permissionState.sendMessages),
-      discord_app_can_embed_links: Boolean(permissionState.embedLinks),
-      discord_app_permissions_synced_at: new Date().toISOString(),
+      status: channelsResult.botPresent
+        ? (permissionsReady ? "active" : "inactive")
+        : "pending",
     };
     if (!channelsResult.botPresent) {
       permissionSyncPayload.discord_announcement_channel_id = null;
@@ -152,11 +149,11 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       ok: true,
       botPresent: channelsResult.botPresent,
-      permissionsReady: channelsResult.permissionsReady,
+      permissionsReady,
       permissionState,
       inviteUrl: channelsResult.botPresent
-        ? (channelsResult.inviteUrl || getDiscordBotInviteUrl())
-        : getDiscordBotInviteUrl({ guildId, permissions: "0" }),
+        ? (channelsResult.inviteUrl || getDiscordBotInviteUrl({ guildId, permissions: "19457" }))
+        : getDiscordBotInviteUrl({ guildId, permissions: "19457" }),
       channels: channelsResult.channels,
       currentChannelId,
       currentChannelName,

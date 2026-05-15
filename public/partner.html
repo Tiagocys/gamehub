@@ -199,6 +199,26 @@
       gap: 8px;
     }
 
+    .partner-server-title-link {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .partner-server-title-link:hover {
+      text-decoration: underline;
+    }
+
+    .partner-server-channel-note {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15, 37, 87, 0.12);
+      background: rgba(118, 168, 255, 0.1);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
     .partner-share-link-icon {
       width: 14px;
       height: 14px;
@@ -764,7 +784,6 @@
                   <button id="partner-withdraw-btn" class="btn btn-primary" type="button" disabled hidden>Request withdrawal</button>
                 </div>
                 <p id="partner-withdraw-note" class="partner-feedback"></p>
-                <p id="connect-feedback" class="partner-feedback"></p>
                 <div id="partner-discord-auth-notice" class="partner-discord-auth-notice" style="display:none;">
                   <p id="partner-discord-auth-notice-text">Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.</p>
                   <div class="inline-actions">
@@ -862,6 +881,7 @@
               <h3 id="partner-servers-title">Linked servers</h3>
               <span id="partner-servers-count" class="pill">0 servers</span>
             </div>
+            <p id="connect-feedback" class="partner-feedback"></p>
             <div id="partner-server-list" class="partner-server-list"></div>
             <p id="partner-servers-empty" class="helper" style="display:none;">No servers linked to your user at the moment.</p>
           </section>
@@ -1018,7 +1038,12 @@
           <p id="partner-discord-channel-policy-note" class="partner-wise-note">Ao continuar, você concorda com os <a class="link-ghost" href="terms.html" target="_blank" rel="noopener">termos de uso</a> e com a <a class="link-ghost" href="privacy-policy.html" target="_blank" rel="noopener">política de privacidade</a>.</p>
           <a id="partner-discord-bot-invite-link" class="btn btn-ghost" href="#" target="_blank" rel="noopener" style="display:none;">Adicionar App ao servidor</a>
           <p id="partner-discord-channel-feedback" class="partner-feedback"></p>
+          <div class="field" style="display:none;">
+            <label id="partner-discord-channel-select-label" for="partner-discord-channel-select">Canal de texto</label>
+            <select id="partner-discord-channel-select" class="input"></select>
+          </div>
           <div class="inline-actions">
+            <button id="partner-discord-channel-save" class="btn btn-primary" type="button">Salvar canal</button>
             <button id="partner-discord-channel-cancel" class="btn btn-ghost" type="button">Cancelar</button>
           </div>
         </div>
@@ -1339,7 +1364,9 @@
       setText("partner-discord-channel-title", "partner_page.discord_channel_title", "Conectar App do Gimerr");
       setText("partner-discord-channel-helper", "partner_page.discord_channel_helper", "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.");
       setHtml("partner-discord-channel-policy-note", "partner_page.discord_channel_policy_html", "Ao continuar, você concorda com os <a class=\"link-ghost\" href=\"terms.html\" target=\"_blank\" rel=\"noopener\">termos de uso</a> e com a <a class=\"link-ghost\" href=\"privacy-policy.html\" target=\"_blank\" rel=\"noopener\">política de privacidade</a>.");
+      setText("partner-discord-channel-select-label", "partner_page.discord_channel_label", "Canal de texto");
       setText("partner-discord-bot-invite-link", "partner_page.discord_channel_invite", "Adicionar App ao servidor");
+      setText("partner-discord-channel-save", "partner_page.discord_channel_save", "Salvar canal");
       setText("partner-discord-channel-cancel", "partner_page.cancel", "Cancelar");
       setAttr("partner-discord-channel-close", "aria-label", "common.close", "Close");
       setText("partner-discord-auth-notice-text", "partner_page.discord_reauth_notice", "Reconecte sua conta do Discord para cadastrar servidores e configurar o bot do Gimerr.");
@@ -4315,7 +4342,7 @@
       const shouldSkip = !currentDiscordChannelSetupMode
         || !currentDiscordChannelServerId
         || !currentDiscordChannelInvitePending
-        || currentDiscordChannelBotPresent;
+        || (currentDiscordChannelBotPresent && currentDiscordChannelPermissionsReady);
       if (shouldSkip) return;
       currentDiscordChannelPollingTimer = window.setTimeout(() => {
         loadPartnerDiscordChannelState({ silent: true });
@@ -4338,7 +4365,9 @@
         return;
       }
       if (state === "pending") {
-        partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_inviting", "Adicionando...");
+        partnerDiscordBotInviteLink.textContent = currentDiscordChannelBotPresent && !currentDiscordChannelPermissionsReady
+          ? t("partner_page.discord_channel_reauthorizing", "Reautorizando...")
+          : t("partner_page.discord_channel_inviting", "Tornando público...");
         partnerDiscordBotInviteLink.setAttribute("aria-disabled", "true");
         partnerDiscordBotInviteLink.classList.add("is-disabled");
         return;
@@ -4349,7 +4378,9 @@
         partnerDiscordBotInviteLink.classList.add("is-disabled");
         return;
       }
-      partnerDiscordBotInviteLink.textContent = t("partner_page.discord_channel_invite", "Adicionar App ao servidor");
+      partnerDiscordBotInviteLink.textContent = currentDiscordChannelBotPresent && !currentDiscordChannelPermissionsReady
+        ? t("partner_page.discord_channel_reauthorize", "Tornar meu servidor público")
+        : t("partner_page.discord_channel_invite", "Tornar meu servidor público");
       partnerDiscordBotInviteLink.removeAttribute("aria-disabled");
       partnerDiscordBotInviteLink.classList.remove("is-disabled");
     }
@@ -4358,7 +4389,7 @@
       const normalizedGuildId = String(guildId || "").trim();
       const params = new URLSearchParams({
         client_id: "1500574981959061654",
-        permissions: "0",
+        permissions: "19457",
         integration_type: "0",
         scope: "applications.commands bot",
       });
@@ -4391,11 +4422,12 @@
     function applyPartnerDiscordChannelModalState(server, options = {}) {
       const setupMode = Boolean(options.setupMode);
       const botPresent = Boolean(options.botPresent);
+      const permissionsReady = options.permissionsReady !== false;
       const serverName = String(server?.name || "").trim() || t("partner_page.untitled_server", "Servidor sem nome");
       const guildId = String(server?.discord_guild_id || "").trim();
       currentDiscordChannelSetupMode = setupMode;
       currentDiscordChannelBotPresent = botPresent;
-      currentDiscordChannelPermissionsReady = true;
+      currentDiscordChannelPermissionsReady = permissionsReady;
 
       if (partnerDiscordChannelTitle) {
         partnerDiscordChannelTitle.textContent = formatMessage(
@@ -4411,17 +4443,17 @@
       if (partnerDiscordChannelHelper) {
         partnerDiscordChannelHelper.textContent = setupMode
           ? t(
-              botPresent
+              botPresent && permissionsReady
                 ? "partner_page.discord_channel_setup_helper_ready"
                 : "partner_page.discord_channel_setup_helper_install",
-              botPresent
+              botPresent && permissionsReady
                 ? "App conectado com sucesso. O cadastro deste servidor foi concluído."
-                : "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.",
+                : "Adicione o App do Gimerr ao seu servidor para tornar este servidor público no Gimerr. Vamos usar as permissões concedidas para definir se ele fica público ou privado.",
             )
           : t(
-              "partner_page.discord_channel_helper",
-              "Adicione o App do Gimerr ao seu servidor para concluir o cadastro no Gimerr. As próximas configurações do App serão liberadas em uma etapa futura.",
-            );
+            "partner_page.discord_channel_helper",
+            "Escolha um canal de texto para que o App do Gimerr possa publicar os anúncios deste servidor.",
+          );
       }
       if (partnerDiscordChannelClose) {
         partnerDiscordChannelClose.style.display = setupMode ? "none" : "";
@@ -4436,8 +4468,8 @@
       }
       if (partnerDiscordBotInviteLink) {
         partnerDiscordBotInviteLink.href = buildPartnerDiscordAppInviteUrl(guildId);
-        partnerDiscordBotInviteLink.style.display = setupMode && !botPresent ? "" : "none";
-        if (setupMode && isPartnerDiscordInvitePendingActive() && !botPresent) {
+        partnerDiscordBotInviteLink.style.display = setupMode && (!botPresent || !permissionsReady) ? "" : "none";
+        if (setupMode && isPartnerDiscordInvitePendingActive() && (!botPresent || !permissionsReady)) {
           setPartnerDiscordInviteLinkState("syncing");
         } else {
           setPartnerDiscordInviteLinkState("idle");
@@ -4494,7 +4526,7 @@
 
     async function loadPartnerDiscordChannelState(options = {}) {
       if (currentDiscordChannelLoading) {
-        if (currentDiscordChannelSetupMode && !currentDiscordChannelBotPresent) {
+        if (currentDiscordChannelSetupMode && (!currentDiscordChannelBotPresent || !currentDiscordChannelPermissionsReady)) {
           schedulePartnerDiscordChannelPolling(PARTNER_DISCORD_CHANNEL_POLL_INTERVAL_MS);
         }
         return;
@@ -4509,7 +4541,7 @@
 
       currentDiscordChannelLoading = true;
       try {
-        if (currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent && partnerDiscordBotInviteLink?.style.display !== "none") {
+        if (currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && (!currentDiscordChannelBotPresent || !currentDiscordChannelPermissionsReady) && partnerDiscordBotInviteLink?.style.display !== "none") {
           setPartnerDiscordInviteLinkState("syncing");
         }
         await ensureDiscordPartnerContext();
@@ -4571,19 +4603,16 @@
         }
 
         const botPresent = Boolean(data?.botPresent);
-        const permissionsReady = data?.permissionsReady !== false;
+        const permissionsReady = data?.permissionsReady === true;
         const permissionState = data?.permissionState || {};
+        currentDiscordChannelPermissionsReady = permissionsReady;
         currentServers = currentServers.map((item) => (
           String(item.id) === String(currentDiscordChannelServerId)
             ? {
                 ...item,
-                status: botPresent ? "active" : "pending",
-                discord_app_installed: botPresent,
-                discord_app_can_create_invite: Boolean(permissionState.createInvite),
-                discord_app_can_view_channels: Boolean(permissionState.viewChannels),
-                discord_app_can_send_messages: Boolean(permissionState.sendMessages),
-                discord_app_can_embed_links: Boolean(permissionState.embedLinks),
-                discord_app_permissions_synced_at: new Date().toISOString(),
+                status: botPresent
+                  ? (permissionsReady ? "active" : "inactive")
+                  : "pending",
                 discord_announcement_channel_id: String(data?.currentChannelId || "").trim() || null,
                 discord_announcement_channel_name: String(data?.currentChannelName || "").trim() || null,
                 discord_invite: Boolean(permissionState.createInvite) ? item.discord_invite : null,
@@ -4593,6 +4622,7 @@
         applyPartnerDiscordChannelModalState(server, {
           setupMode: currentDiscordChannelSetupMode,
           botPresent,
+          permissionsReady,
         });
 
         if (!botPresent) {
@@ -4617,6 +4647,52 @@
             currentDiscordChannelInvitePending = false;
             currentDiscordChannelInviteStartedAt = 0;
           }
+          return;
+        }
+
+        if (!permissionsReady) {
+          stopPartnerDiscordChannelPolling();
+          currentDiscordChannelInvitePending = false;
+          clearPendingPartnerBotSetupServerId();
+          connectFeedback.textContent = t(
+            "partner_page.discord_channel_permissions_missing",
+            "O App do Gimerr foi instalado, mas ainda faltam permissões no Discord.",
+          );
+          connectFeedback.style.color = "#c62828";
+          renderServers(currentServers);
+          closePartnerDiscordChannelModal();
+          return;
+        }
+
+        if (!currentDiscordChannelSetupMode) {
+          const channels = Array.isArray(data?.channels) ? data.channels : [];
+          const currentChannelId = String(data?.currentChannelId || "").trim();
+          if (partnerDiscordBotInviteLink) {
+            partnerDiscordBotInviteLink.style.display = "none";
+            partnerDiscordBotInviteLink.setAttribute("href", "#");
+          }
+          if (partnerDiscordChannelFeedback) {
+            partnerDiscordChannelFeedback.textContent = "";
+            partnerDiscordChannelFeedback.style.color = "var(--muted)";
+          }
+          if (partnerDiscordChannelSelect) {
+            const field = partnerDiscordChannelSelect.closest(".field");
+            if (field) field.style.display = "";
+            const options = [`<option value="">${escapeHtml(t("partner_page.select_channel_placeholder", "Selecione um canal"))}</option>`];
+            channels.forEach((channel) => {
+              const channelId = String(channel?.id || "").trim();
+              if (!channelId) return;
+              const selectedAttr = channelId === currentChannelId ? " selected" : "";
+              options.push(`<option value="${escapeHtml(channelId)}"${selectedAttr}>#${escapeHtml(String(channel?.name || channelId))}</option>`);
+            });
+            partnerDiscordChannelSelect.innerHTML = options.join("");
+            partnerDiscordChannelSelect.disabled = !channels.length;
+          }
+          if (partnerDiscordChannelSave) {
+            partnerDiscordChannelSave.style.display = "";
+            partnerDiscordChannelSave.disabled = !channels.length;
+          }
+          renderServers(currentServers);
           return;
         }
 
@@ -4686,10 +4762,11 @@
       if (!server) return;
       const inferredSetupMode = options.setupMode != null
         ? Boolean(options.setupMode)
-        : !String(server?.discord_announcement_channel_id || "").trim();
+        : String(server?.status || "").trim().toLowerCase() !== "active";
       currentDiscordChannelServerId = String(serverId || "");
       currentDiscordChannelSetupMode = inferredSetupMode;
       currentDiscordChannelBotPresent = false;
+      currentDiscordChannelPermissionsReady = true;
       currentDiscordChannelInvitePending = false;
       stopPartnerDiscordChannelPolling();
       applyPartnerDiscordChannelModalState(server, {
@@ -4705,10 +4782,13 @@
         setPartnerDiscordInviteLinkState("loading");
       }
       if (partnerDiscordChannelSelect) {
+        const field = partnerDiscordChannelSelect.closest(".field");
+        if (field) field.style.display = inferredSetupMode ? "none" : "";
         partnerDiscordChannelSelect.disabled = true;
         partnerDiscordChannelSelect.innerHTML = `<option value="">${escapeHtml(t("partner_page.loading_channels", "Carregando canais..."))}</option>`;
       }
       if (partnerDiscordChannelSave) {
+        partnerDiscordChannelSave.style.display = inferredSetupMode ? "none" : "";
         partnerDiscordChannelSave.disabled = true;
       }
       if (partnerDiscordChannelModal) {
@@ -4764,13 +4844,6 @@
                 discord_announcement_channel_id: data?.channelId || null,
                 discord_announcement_channel_name: data?.channelName || null,
                 discord_invite: data?.inviteUrl || null,
-                discord_app_installed: true,
-                discord_app_can_create_invite: Boolean(data?.permissionState?.createInvite),
-                discord_app_can_view_channels: Boolean(data?.permissionState?.viewChannels),
-                discord_app_can_send_messages: Boolean(data?.permissionState?.sendMessages),
-                discord_app_can_embed_links: Boolean(data?.permissionState?.embedLinks),
-                discord_app_permissions_synced_at: new Date().toISOString(),
-                status: selectedChannelId ? "active" : "pending",
               }
             : server
         ));
@@ -4937,9 +5010,11 @@
         const safeName = escapeHtml(server.name || t("partner_page.untitled_server", "Untitled server"));
         const rawStatus = String(server.status || "active").trim().toLowerCase();
         const localizedStatus = rawStatus === "pending"
-          ? t("partner_page.server_status_pending", "Pendente")
+          ? t("partner_page.server_status_pending", "Incompleto")
+          : rawStatus === "inactive"
+            ? t("partner_page.server_status_inactive", "Privado")
           : rawStatus === "active"
-            ? t("partner_page.server_status_active", "Ativo")
+            ? t("partner_page.server_status_active", "Público")
             : rawStatus === "deleted"
               ? t("partner_page.server_status_deleted", "Excluído")
               : String(server.status || "active");
@@ -4958,18 +5033,21 @@
         const followersCount = Math.max(0, Math.floor(Number(server.followers_count || 0)));
         const totalListingViews = Math.max(0, Math.floor(Number(server.total_listing_views || 0)));
         const monetizationEligible = Boolean(server.monetization_eligible);
-        const appInstalled = Boolean(server.discord_app_installed);
+        const appInstalled = String(server.status || "").trim().toLowerCase() === "active";
         const hasDiscordGuildLink = /^[0-9]{17,20}$/.test(String(server.discord_guild_id || "").trim());
         const isPendingServer = String(server.status || "").trim().toLowerCase() === "pending";
+        const isPrivateServer = String(server.status || "").trim().toLowerCase() === "inactive";
+        const isActiveServer = String(server.status || "").trim().toLowerCase() === "active";
         const hasConnectedDiscordApp = hasDiscordGuildLink && Boolean(
           isPendingServer
+          || isPrivateServer
           || appInstalled
           || String(server.discord_announcement_channel_id || "").trim()
           || safeDiscord
         );
-        const appStatusHelper = appInstalled
-          ? t("partner_page.discord_app_installed_status", "App do Gimerr conectado a este servidor.")
-          : t("partner_page.discord_app_not_installed_status", "O App do Gimerr ainda não foi instalado neste servidor.");
+        const appStatusHelper = isPrivateServer
+            ? t("partner_page.discord_app_private_status", "Este servidor está privado no Gimerr porque o App ainda não tem todas as permissões necessárias.")
+            : t("partner_page.discord_app_incomplete_status", "O cadastro deste servidor ainda está incompleto. Autorize o App do Gimerr para continuar.");
         const eligibilityPill = monetizationEligible
           ? `<span class="pill">${escapeHtml(t("partner_page.eligible_badge", "Elegível para monetização"))}</span>`
           : "";
@@ -4992,15 +5070,25 @@
         const descHtml = safeDescription
           ? `<p class="partner-server-desc">${escapeHtml(safeDescription)}</p>`
           : "";
-        const botChannelButton = hasDiscordGuildLink && !appInstalled
+        const botChannelButton = hasDiscordGuildLink && isPendingServer
           ? `<button class="btn btn-ghost partner-configure-discord-channel-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(
-            isPendingServer
-              ? t("partner_page.discord_channel_resume_button", "Retomar conexão")
-              : t("partner_page.discord_channel_button", "Conectar App do Gimerr")
+            t("partner_page.discord_channel_resume_button", "Retomar conexão")
+          )}</button>`
+          : "";
+        const makePublicButton = hasDiscordGuildLink && isPrivateServer
+          ? `<button class="btn btn-ghost partner-configure-discord-channel-btn" type="button" data-server-id="${escapeHtml(server.id)}" data-discord-action="make-public">${escapeHtml(
+            t("partner_page.discord_channel_make_public_button", "Tornar servidor público")
+          )}</button>`
+          : "";
+        const activeChannelButton = hasDiscordGuildLink && isActiveServer
+          ? `<button class="btn btn-ghost partner-configure-discord-channel-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(
+            String(server.discord_announcement_channel_id || "").trim()
+              ? t("partner_page.discord_channel_edit_button", "Editar canal de texto")
+              : t("partner_page.discord_channel_button", "Conectar App a um canal")
           )}</button>`
           : "";
         const removeDiscordAppButton = hasConnectedDiscordApp
-          ? `<button class="btn btn-ghost partner-remove-discord-app-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.discord_app_remove_button", "Remover servidor do Gimerr"))}</button>`
+          ? `<button class="btn btn-danger partner-remove-discord-app-btn" type="button" data-server-id="${escapeHtml(server.id)}">${escapeHtml(t("partner_page.discord_app_remove_button", "Remover Gimerr do servidor"))}</button>`
           : "";
         const card = document.createElement("article");
         card.className = "partner-server-card";
@@ -5008,7 +5096,7 @@
           <div class="partner-server-head">
             <div style="display:flex;align-items:center;gap:10px;">
               <img class="partner-server-logo" src="${escapeHtml(logo)}" alt="Logo de ${safeName}" loading="lazy" data-logo-src="${escapeHtml(logo)}" />
-              <strong>${safeName}</strong>
+              <strong><a class="partner-server-title-link" href="${escapeHtml(gameUrl)}">${safeName}</a></strong>
             </div>
             <span class="pill">${safeStatus}</span>
           </div>
@@ -5022,12 +5110,19 @@
           ${safeSite ? `<a class="link-ghost" href="${escapeHtml(safeSite)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_site_link", "Official website"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
           ${safeDiscord ? `<a class="link-ghost" href="${escapeHtml(safeDiscord)}" target="_blank" rel="noopener">${escapeHtml(t("partner_page.official_discord_link", "Official Discord"))}<img class="partner-share-link-icon" src="img/share.svg" alt="" aria-hidden="true" /></a>` : ""}
           ${descHtml}
-          <p class="helper">${escapeHtml(appStatusHelper)}</p>
-          <p class="helper">${escapeHtml(t("partner_page.created_at", "Created on"))} ${formatDateTime(server.created_at)}</p>
+          ${!isActiveServer ? `<p class="helper">${escapeHtml(appStatusHelper)}</p>` : ""}
+          ${isActiveServer
+            ? `<p class="partner-server-channel-note">${escapeHtml(
+                String(server.discord_announcement_channel_name || "").trim()
+                  ? formatMessage("partner_page.discord_channel_configured", "Canal do App: #{channel}", { channel: String(server.discord_announcement_channel_name || "").trim() })
+                  : t("partner_page.discord_channel_missing", "Canal do App ainda não configurado.")
+              )}</p>`
+            : ""}
           <div class="partner-server-actions">
-            <a class="btn btn-ghost" href="${escapeHtml(gameUrl)}">${escapeHtml(t("partner_page.view_listings", "View listings"))}</a>
             ${feedBoostButton}
             ${botChannelButton}
+            ${makePublicButton}
+            ${activeChannelButton}
             ${removeDiscordAppButton}
           </div>
         `;
@@ -5160,7 +5255,9 @@
         renderServers(servers);
         renderPartnerDiscordRegisterableGuilds(registerableGuilds);
         renderPartnerPayoutSummary(payoutSummary);
-        const topupResult = new URLSearchParams(window.location.search).get("partner_topup");
+        const searchParams = new URLSearchParams(window.location.search);
+        const topupResult = searchParams.get("partner_topup");
+        const discordInstallDenied = searchParams.get("error") === "access_denied";
         if (topupResult === "success") {
           setPartnerTopupFeedback("");
           connectFeedback.textContent = t("partner_page.topup_success_pending", "Payment received. Your partner balance will be updated after confirmation.");
@@ -5168,6 +5265,14 @@
           window.history.replaceState({}, document.title, "partner.html");
         } else if (topupResult === "cancel") {
           connectFeedback.textContent = t("partner_page.topup_cancelled", "Partner balance top-up cancelled.");
+          connectFeedback.style.color = "var(--muted)";
+          window.history.replaceState({}, document.title, "partner.html");
+        } else if (discordInstallDenied) {
+          clearPendingPartnerBotSetupServerId();
+          connectFeedback.textContent = t(
+            "partner_page.discord_install_cancelled",
+            "Instalação do App cancelada. Você pode tentar novamente quando quiser.",
+          );
           connectFeedback.style.color = "var(--muted)";
           window.history.replaceState({}, document.title, "partner.html");
         }
@@ -5235,7 +5340,19 @@
       if (channelButton) {
         const serverId = channelButton.getAttribute("data-server-id");
         if (!serverId) return;
-        openPartnerDiscordChannelModal(serverId);
+        const server = currentServers.find((item) => String(item?.id || "") === String(serverId));
+        const serverStatus = String(server?.status || "").trim().toLowerCase();
+        const discordAction = String(channelButton.getAttribute("data-discord-action") || "").trim();
+        if (serverStatus === "inactive" && discordAction === "make-public") {
+          removePartnerDiscordApp(serverId, channelButton, {
+            successMessage: t(
+              "partner_page.discord_restart_setup_success",
+              "Servidor removido do Gimerr. Cadastre-o novamente para refazer a autorização do App.",
+            ),
+          });
+          return;
+        }
+        openPartnerDiscordChannelModal(serverId, { setupMode: serverStatus !== "active" });
         return;
       }
       const removeDiscordAppButton = event.target?.closest?.(".partner-remove-discord-app-btn");
@@ -5412,7 +5529,7 @@
     });
 
     window.addEventListener("focus", () => {
-      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && (!currentDiscordChannelBotPresent || !currentDiscordChannelPermissionsReady)) {
         if (currentDiscordChannelInvitePending) {
           setPartnerDiscordInviteLinkState("syncing");
         }
@@ -5421,7 +5538,7 @@
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
-      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && (!currentDiscordChannelBotPresent || !currentDiscordChannelPermissionsReady)) {
         if (currentDiscordChannelInvitePending) {
           setPartnerDiscordInviteLinkState("syncing");
         }
@@ -5429,7 +5546,7 @@
       }
     });
     window.addEventListener("pageshow", () => {
-      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && !currentDiscordChannelBotPresent) {
+      if (partnerDiscordChannelModal?.classList.contains("open") && currentDiscordChannelSetupMode && currentDiscordChannelInvitePending && (!currentDiscordChannelBotPresent || !currentDiscordChannelPermissionsReady)) {
         if (currentDiscordChannelInvitePending) {
           setPartnerDiscordInviteLinkState("syncing");
         }

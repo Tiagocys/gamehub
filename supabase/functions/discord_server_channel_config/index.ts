@@ -159,13 +159,6 @@ Deno.serve(async (req) => {
         discord_announcement_channel_id: channelId || null,
         discord_announcement_channel_name: channelId ? selectedChannelName : null,
         discord_invite: inviteUrl,
-        discord_app_installed: true,
-        discord_app_can_create_invite: Boolean(permissionState.createInvite),
-        discord_app_can_view_channels: Boolean(permissionState.viewChannels),
-        discord_app_can_send_messages: Boolean(permissionState.sendMessages),
-        discord_app_can_embed_links: Boolean(permissionState.embedLinks),
-        discord_app_permissions_synced_at: new Date().toISOString(),
-        status: channelId ? "active" : "pending",
       })
       .eq("id", serverRow.id);
     if (updateErr) throw updateErr;

@@ -144,7 +144,10 @@ async function getDiscordBotGuildPermissions(guildId: string) {
     sendMessages: administrator || (permissions & DISCORD_PERMISSION_SEND_MESSAGES) === DISCORD_PERMISSION_SEND_MESSAGES,
     embedLinks: administrator || (permissions & DISCORD_PERMISSION_EMBED_LINKS) === DISCORD_PERMISSION_EMBED_LINKS,
   };
-  const permissionsReady = permissionState.viewChannels && permissionState.sendMessages && permissionState.embedLinks;
+  const permissionsReady = permissionState.createInvite
+    && permissionState.viewChannels
+    && permissionState.sendMessages
+    && permissionState.embedLinks;
   return { botPresent: true, permissionsReady, permissions, permissionState };
 }
 
@@ -167,24 +170,29 @@ export function getDiscordBotClientId() {
 
 export function getDiscordBotInviteUrl(options: { guildId?: string; disableGuildSelect?: boolean; permissions?: string } = {}) {
   const explicit = String(Deno.env.get("DISCORD_BOT_INVITE_URL") || "").trim();
-  if (explicit) return explicit;
   const clientId = getDiscordBotClientId();
-  if (!clientId) return "";
-  const permissions = String(options.permissions || Deno.env.get("DISCORD_BOT_PERMISSIONS") || "0").trim() || "0";
-  const params = new URLSearchParams({
-    client_id: clientId,
-    permissions,
-    integration_type: "0",
-    scope: "applications.commands bot",
-  });
+  if (!clientId && !explicit) return "";
+  const permissions = String(options.permissions || Deno.env.get("DISCORD_BOT_PERMISSIONS") || "19457").trim() || "19457";
+  const inviteUrl = explicit
+    ? new URL(explicit)
+    : new URL("https://discord.com/oauth2/authorize");
+  const params = inviteUrl.searchParams;
+  params.set("client_id", clientId || params.get("client_id") || "");
+  params.set("permissions", permissions);
+  params.set("integration_type", "0");
+  params.set("scope", "applications.commands bot");
   const guildId = normalizeSnowflake(options.guildId);
   if (guildId) {
     params.set("guild_id", guildId);
     if (options.disableGuildSelect !== false) {
       params.set("disable_guild_select", "true");
     }
+  } else {
+    params.delete("guild_id");
+    params.delete("disable_guild_select");
   }
-  return `https://discord.com/oauth2/authorize?${params.toString()}`;
+  inviteUrl.search = params.toString();
+  return inviteUrl.toString();
 }
 
 export function getPublicAppUrl() {
